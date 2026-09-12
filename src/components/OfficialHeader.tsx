@@ -1,5 +1,6 @@
 import type { SchoolSettings } from "@/lib/school";
 import moeLogo from "@/assets/moe-logo-official.png";
+import { Copyright } from "@/components/Copyright";
 
 function todayDate() {
   return new Date().toLocaleDateString("ar-SA-u-ca-gregory", {
@@ -24,7 +25,7 @@ export function OfficialHeader({
 }) {
   return (
     <div className="official-letterhead border-b-2 border-primary bg-card pb-4">
-      <div className="grid grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] items-stretch gap-6 px-2 text-[11px] font-semibold sm:px-6">
+      <div className="grid grid-cols-1 items-stretch gap-3 px-2 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)] sm:gap-4 sm:px-4 lg:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] lg:gap-6 lg:px-6">
         <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
           <p>المملكة العربية السعودية</p>
           <p>وزارة التعليم</p>
@@ -32,13 +33,13 @@ export function OfficialHeader({
           <p>{school?.school_name || "اسم المدرسة"}</p>
         </div>
 
-        <div className="flex min-h-24 w-36 items-center justify-center text-center">
+        <div className="mx-auto flex min-h-20 w-28 items-center justify-center text-center sm:min-h-24 sm:w-28 lg:w-36">
           <img
             src={moeLogo}
             alt="شعار وزارة التعليم"
             width={144}
             height={104}
-            className="h-24 w-36 object-contain"
+            className="h-20 w-28 object-contain sm:h-24 lg:w-36"
           />
         </div>
 
@@ -58,7 +59,7 @@ export function OfficialHeader({
 
 export function OfficialFooter({ school }: { school?: SchoolSettings | null | undefined }) {
   return (
-    <div className="report-signatures mt-8 grid grid-cols-2 gap-12 border-t pt-5 text-xs font-semibold">
+    <div className="report-signatures mt-8 grid grid-cols-1 gap-6 border-t pt-5 text-xs font-semibold sm:grid-cols-2 sm:gap-12">
       <div className="flex min-h-28 flex-col items-center text-center">
         <p>الموجه الطلابي</p>
         {school?.counselor_signature ? (
@@ -73,6 +74,7 @@ export function OfficialFooter({ school }: { school?: SchoolSettings | null | un
         ) : <div className="h-16" />}
         <p>{school?.principal_name || "................."}</p>
       </div>
+      <Copyright className="col-span-full mt-2 border-t pt-3 font-normal" />
     </div>
   );
 }
