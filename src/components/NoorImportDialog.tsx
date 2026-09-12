@@ -431,6 +431,8 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
             </>
           )}
         </DialogFooter>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
