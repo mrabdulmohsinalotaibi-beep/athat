@@ -17,27 +17,30 @@ import {
   LogOut,
   Menu,
   Printer,
+  ChevronDown,
+  FolderKanban,
+  Crown,
 } from "lucide-react";
-import moeLogo from "@/assets/moe-logo-official.png";
+import platformLogo from "@/assets/thaat-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
-  { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/students", label: "سجل الطلاب", icon: Users },
-  { to: "/cases", label: "الحالات الإرشادية", icon: HeartHandshake },
-  { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList },
-  { to: "/programs", label: "البرامج والأنشطة", icon: CalendarDays },
-  { to: "/interviews", label: "المقابلات والتواصل", icon: MessagesSquare },
-  { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
-  { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert },
-  { to: "/referrals", label: "سجل الإحالات", icon: Send },
-  { to: "/committees", label: "اللجان والاجتماعات", icon: Gavel },
-  { to: "/evidences", label: "الشواهد والتوثيق", icon: FolderCheck },
-  { to: "/calendar", label: "التقويم والمتابعة", icon: CalendarDays },
-  { to: "/reports", label: "التقارير والطباعة", icon: Printer },
+  { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
+  { label: "الطلاب والسجلات الإرشادية", icon: Users, children: [
+    { to: "/students", label: "سجل الطلاب", icon: Users }, { to: "/cases", label: "الحالات الإرشادية", icon: HeartHandshake },
+    { to: "/interviews", label: "المقابلات والتواصل", icon: MessagesSquare }, { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
+    { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert }, { to: "/referrals", label: "الإحالات", icon: Send },
+  ]},
+  { label: "الخطط والبرامج", icon: FolderKanban, children: [
+    { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList }, { to: "/programs", label: "البرامج والأنشطة", icon: CalendarDays },
+    { to: "/calendar", label: "التقويم والمتابعة", icon: CalendarDays }, { to: "/committees", label: "اللجان والاجتماعات", icon: Gavel },
+  ]},
+  { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
+  { to: "/reports", label: "التقارير والإحصائيات", icon: Printer },
+  { to: "/subscription", label: "الاشتراك والترقية", icon: Crown },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ] as const;
 
@@ -46,6 +49,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>(["الطلاب والسجلات الإرشادية", "الخطط والبرامج"]);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function signOut() {
@@ -65,8 +69,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-14 items-center justify-center rounded-lg bg-card p-1 shadow-lg">
-              <img src={moeLogo} alt="شعار وزارة التعليم" className="size-full object-contain" />
+            <div className="flex size-14 items-center justify-center rounded-lg bg-sidebar-accent p-1">
+              <img src={platformLogo} alt="شعار منصة ذات" className="size-full object-contain" />
             </div>
             <div>
               <p className="text-2xl font-extrabold text-sidebar-primary">ذات</p>
@@ -75,20 +79,20 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav className="space-y-1 p-3">
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className={cn(
-                "flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent",
-                pathname === to && "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary",
-              )}
-            >
-              <Icon className="size-4 shrink-0" />
-              <span>{label}</span>
-            </Link>
-          ))}
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            if ("children" in item) {
+              const isOpen = expanded.includes(item.label);
+              const active = item.children.some((child) => pathname === child.to);
+              return <div key={item.label}>
+                <Button type="button" variant="ghost" onClick={() => setExpanded((v) => isOpen ? v.filter((x) => x !== item.label) : [...v, item.label])} className={cn("w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground", active && "text-sidebar-primary")}>
+                  <Icon className="size-4" /><span className="flex-1 text-right">{item.label}</span><ChevronDown className={cn("size-4 transition-transform", isOpen && "rotate-180")} />
+                </Button>
+                {isOpen && <div className="mr-5 space-y-1 border-r border-sidebar-border pr-2">{item.children.map((child) => { const ChildIcon=child.icon; return <Link key={child.to} to={child.to} onClick={() => setOpen(false)} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-xs hover:bg-sidebar-accent", pathname === child.to && "bg-sidebar-accent font-semibold text-sidebar-primary")}><ChildIcon className="size-3.5" />{child.label}</Link>; })}</div>}
+              </div>;
+            }
+            return <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={cn("flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm hover:bg-sidebar-accent", pathname === item.to && "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary")}><Icon className="size-4" />{item.label}</Link>;
+          })}
         </nav>
         <div className="p-3">
           <Button
@@ -119,7 +123,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
                 <Menu className="size-5" />
               </Button>
-              <img src={moeLogo} alt="شعار وزارة التعليم" className="hidden h-12 w-16 object-contain sm:block" />
+              <img src={platformLogo} alt="شعار منصة ذات" className="hidden size-12 object-contain sm:block" />
               <div>
                 <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
                 <p className="text-xs text-muted-foreground">

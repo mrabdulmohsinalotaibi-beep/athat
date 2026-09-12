@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, FileCheck2, LineChart, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import platformLogo from "@/assets/thaat-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -50,9 +51,9 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div>
-            <p className="text-2xl font-extrabold text-primary">ذات</p>
-            <p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p>
+           <div className="flex items-center gap-2">
+             <img src={platformLogo} alt="شعار منصة ذات" className="size-12 object-contain" />
+             <div><p className="text-2xl font-extrabold text-primary">ذات</p><p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p></div>
           </div>
           <Button asChild>
             <Link to={ctaTo}>{signedIn ? "لوحة التحكم" : "تسجيل الدخول"}</Link>
