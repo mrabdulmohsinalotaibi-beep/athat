@@ -1,7 +1,16 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, FileSpreadsheet, Loader2, LinkIcon, ShieldCheck, Upload } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FileSpreadsheet,
+  Loader2,
+  LinkIcon,
+  ShieldCheck,
+  Smartphone,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -25,34 +34,77 @@ import {
 type SheetRow = Record<string, unknown>;
 type RowError = { row: number; name: string; reason: string };
 
-const STEPS = ["التحقق من بيانات الدخول", "جلب تقارير الطلاب", "حفظ ومزامنة البيانات في النظام"];
+const STEPS = [
+  "التحقق من الهوية عبر نفاذ",
+  "الاتصال بنظام نور وجلب الكشوفات",
+  "توزيع الطلاب على الصفوف والفصول",
+];
 
-function DirectNoorTab({ onDone }: { onDone: () => void }) {
+const NAFATH_SECONDS = 60;
+
+function NafathTab({ onDone }: { onDone: () => void }) {
   const runImport = useServerFn(importNoorStudents);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
+  const [nationalId, setNationalId] = useState("");
+  const [requestNumber, setRequestNumber] = useState<number | null>(null);
+  const [options, setOptions] = useState<number[]>([]);
+  const [seconds, setSeconds] = useState(NAFATH_SECONDS);
+  const [approved, setApproved] = useState(false);
   const [step, setStep] = useState(-1);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<NoorImportResult | null>(null);
 
-  async function start() {
-    setBusy(true);
+  useEffect(() => {
+    if (requestNumber === null || approved) return;
+    if (seconds <= 0) {
+      setRequestNumber(null);
+      toast.error("انتهت صلاحية طلب نفاذ. أعد المحاولة.");
+      return;
+    }
+    const t = setTimeout(() => setSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [seconds, requestNumber, approved]);
+
+  function requestNafath() {
+    const digits = nationalId.replace(/\D/g, "");
+    if (digits.length !== 10) {
+      toast.error("أدخل رقم هوية وطنية صحيحاً مكوّناً من 10 أرقام");
+      return;
+    }
+    const correct = Math.floor(Math.random() * 80) + 10;
+    const set = new Set<number>([correct]);
+    while (set.size < 3) set.add(Math.floor(Math.random() * 80) + 10);
+    setRequestNumber(correct);
+    setOptions([...set].sort(() => Math.random() - 0.5));
+    setSeconds(NAFATH_SECONDS);
+    setApproved(false);
     setResult(null);
+    setStep(-1);
+  }
+
+  async function approve(choice: number) {
+    if (choice !== requestNumber) {
+      toast.error("الرقم المختار لا يطابق رقم الطلب المعروض. حاول مرة أخرى.");
+      return;
+    }
+    setApproved(true);
+    setBusy(true);
     setStep(0);
     try {
-      const timer1 = setTimeout(() => setStep(1), 700);
-      const data = await runImport({ data: { username, password, otp } });
-      clearTimeout(timer1);
+      const timer = setTimeout(() => setStep(1), 900);
+      const data = await runImport({
+        data: { nationalId: nationalId.replace(/\D/g, ""), requestNumber: String(requestNumber) },
+      });
+      clearTimeout(timer);
       setStep(2);
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 500));
       setResult(data);
       setStep(3);
-      if (data.inserted) toast.success(`تم استيراد ${data.inserted} طالباً من نور`);
+      if (data.inserted) toast.success(`تم استيراد ${data.inserted} طالباً وتوزيعهم على الفصول`);
       else toast.warning("لم تتم إضافة طلاب جدد (قد تكون البيانات مستوردة مسبقاً).");
       onDone();
     } catch (error) {
       setStep(-1);
+      setApproved(false);
       toast.error((error as Error).message || "تعذّر الاتصال بنظام نور");
     } finally {
       setBusy(false);
@@ -64,25 +116,66 @@ function DirectNoorTab({ onDone }: { onDone: () => void }) {
       <div className="flex gap-2 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
         <span>
-          تُستخدم بيانات دخول نور مرة واحدة فقط لجلب كشف الطلاب ولا تُخزَّن في قاعدة البيانات. إن لم يكن خادم الأتمتة
-          مفعّلاً، يعمل الربط في وضع المحاكاة ببيانات تجريبية لعرض خطوات العملية.
+          يتم التحقق من هوية الموجه الطلابي عبر الدخول الوطني الموحد (نفاذ) دون حفظ أي كلمات مرور. بعد قبول الطلب من
+          تطبيق نفاذ يُسمح للنظام بجلب كشوفات الطلاب من نور. إن لم يكن خادم الأتمتة مفعّلاً، يعمل الربط في وضع المحاكاة.
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <Label className="mb-1.5 block text-xs">اسم المستخدم في نور</Label>
-          <Input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" />
+      {requestNumber === null && (
+        <div className="space-y-3">
+          <div>
+            <Label className="mb-1.5 block text-xs">رقم الهوية الوطنية للموجه الطلابي</Label>
+            <Input
+              value={nationalId}
+              onChange={(e) => setNationalId(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              inputMode="numeric"
+              placeholder="10xxxxxxxx"
+              autoComplete="off"
+            />
+          </div>
+          <Button onClick={requestNafath} className="w-full" disabled={nationalId.replace(/\D/g, "").length !== 10}>
+            <LinkIcon className="size-4" /> الدخول عبر نفاذ
+          </Button>
         </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">كلمة المرور</Label>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off" />
+      )}
+
+      {requestNumber !== null && (
+        <div className="rounded-2xl border bg-card p-5 text-center shadow-sm">
+          <div className="mx-auto flex max-w-xs flex-col items-center gap-3 rounded-2xl border bg-muted/40 p-5">
+            <Smartphone className="size-6 text-primary" />
+            <p className="text-sm font-bold">افتح تطبيق نفاذ واختر الرقم التالي</p>
+            <p className="text-5xl font-extrabold tracking-widest text-primary">{requestNumber}</p>
+            {!approved && (
+              <p className="text-xs text-muted-foreground">تنتهي صلاحية الطلب خلال {seconds} ثانية</p>
+            )}
+            {!approved && <Progress value={(seconds / NAFATH_SECONDS) * 100} className="w-full" />}
+          </div>
+
+          {!approved ? (
+            <div className="mt-5">
+              <p className="mb-2 text-xs text-muted-foreground">محاكاة تطبيق نفاذ — اختر الرقم المطابق للقبول:</p>
+              <div className="flex justify-center gap-3">
+                {options.map((o) => (
+                  <button
+                    key={o}
+                    onClick={() => approve(o)}
+                    className="size-16 rounded-xl border-2 text-xl font-bold transition-colors hover:border-primary hover:bg-primary/10"
+                  >
+                    {o}
+                  </button>
+                ))}
+              </div>
+              <Button variant="ghost" className="mt-3" onClick={() => setRequestNumber(null)}>
+                إلغاء الطلب
+              </Button>
+            </div>
+          ) : (
+            <p className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-primary">
+              <CheckCircle2 className="size-4" /> تم قبول الطلب عبر نفاذ
+            </p>
+          )}
         </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">رمز التحقق / OTP (إن وُجد)</Label>
-          <Input value={otp} onChange={(e) => setOtp(e.target.value)} inputMode="numeric" autoComplete="off" />
-        </div>
-      </div>
+      )}
 
       {step >= 0 && (
         <div className="space-y-3 rounded-lg border p-4">
@@ -101,6 +194,7 @@ function DirectNoorTab({ onDone }: { onDone: () => void }) {
               </li>
             ))}
           </ul>
+          {busy && <p className="text-xs text-muted-foreground">جارٍ الاتصال بنظام نور...</p>}
         </div>
       )}
 
@@ -112,6 +206,18 @@ function DirectNoorTab({ onDone }: { onDone: () => void }) {
             <span className="font-bold">{result.inserted}</span> طالباً
             {result.skipped.length > 0 && <> وتجاوز {result.skipped.length} سجلاً</>}.
           </p>
+          {result.distribution.length > 0 && (
+            <div>
+              <p className="mb-2 font-semibold">التوزيع على الصفوف والفصول:</p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {result.distribution.map((d) => (
+                  <span key={`${d.grade}-${d.classroom}`} className="rounded-full bg-secondary px-3 py-1">
+                    {d.grade} / {d.classroom}: {d.count}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           {result.skipped.length > 0 && (
             <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-destructive">
               {result.skipped.map((s, i) => (
@@ -121,23 +227,22 @@ function DirectNoorTab({ onDone }: { onDone: () => void }) {
               ))}
             </ul>
           )}
+          <Button
+            variant="outline"
+            onClick={() => {
+              setRequestNumber(null);
+              setResult(null);
+              setStep(-1);
+            }}
+          >
+            تنفيذ عملية ربط جديدة
+          </Button>
         </div>
       )}
-
-      <Button onClick={start} disabled={busy || !username.trim() || !password.trim()} className="w-full">
-        {busy ? (
-          <>
-            <Loader2 className="size-4 animate-spin" /> جارٍ الاتصال بنظام نور...
-          </>
-        ) : (
-          <>
-            <LinkIcon className="size-4" /> بدء الاستيراد من نور
-          </>
-        )}
-      </Button>
     </div>
   );
 }
+
 
 export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const queryClient = useQueryClient();
