@@ -231,7 +231,7 @@ function ReportsPage() {
         </div>
       </div>
 
-        <div ref={printRef} className="print-area overflow-hidden rounded-xl border bg-card p-3 shadow-sm sm:p-6">
+        <div ref={printRef} className="print-area overflow-hidden rounded-xl border border-paper-border bg-paper p-6 text-paper-foreground shadow-sm">
         <OfficialHeader
           school={school}
           title={title}
@@ -239,13 +239,13 @@ function ReportsPage() {
           period={period}
         />
 
-        <section className="report-summary mt-6 border-r-4 border-primary bg-secondary p-4 text-sm leading-7">
+        <section className="report-summary mt-6 border-r-4 border-primary bg-paper-muted p-4 text-sm leading-7">
           <h3 className="mb-1 font-extrabold">ملخص التقرير / خلاصة الحالة</h3>
           <p className="whitespace-pre-wrap">{reportSummary.trim() || "لم يُضف ملخص لهذا التقرير."}</p>
         </section>
 
         {aiNarrative && (
-          <section className="mt-6 rounded-lg border bg-muted/30 p-4 text-sm leading-7">
+          <section className="mt-6 rounded-lg border border-paper-border bg-paper p-4 text-sm leading-7">
             <h3 className="mb-2 font-extrabold">الصياغة المهنية للتقرير</h3>
             <div className="no-print">
               <Textarea value={aiNarrative} onChange={(event) => setAiNarrative(event.target.value)} rows={12} className="border-0 bg-transparent leading-7 shadow-none focus-visible:ring-0" />
@@ -260,12 +260,12 @@ function ReportsPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {kpis.map((k) => (
                 <div key={k.key} className="rounded-lg border p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{k.label}</p>
+                  <p className="text-xs text-paper-muted-foreground">{k.label}</p>
                   <p className="mt-1 text-2xl font-extrabold text-primary">
                     {k.value}
                     {isPercentKpi(k.key) ? "%" : ""}
                   </p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">{k.hint}</p>
+                  <p className="mt-1 text-[10px] text-paper-muted-foreground">{k.hint}</p>
                 </div>
               ))}
             </div>
@@ -284,7 +284,7 @@ function ReportsPage() {
               <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-right text-xs">
                 <thead>
-                  <tr className="bg-secondary">
+                  <tr className="bg-paper-muted">
                     {columns.map((f) => (
                       <th key={f.name} className="border p-2 font-bold">
                         {f.label}
