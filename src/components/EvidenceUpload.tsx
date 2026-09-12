@@ -16,7 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useSubscription } from "@/lib/subscription";
 
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.pdf,.doc,.docx,.xls,.xlsx";
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -51,7 +50,6 @@ export function EvidenceUploadDialog({
   const [edate, setEdate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
-  const { data: subscription } = useSubscription();
   const inputRef = useRef<HTMLInputElement>(null);
   const previewUrl = useMemo(() => file && kindOf(file.type, file.name) === "image" ? URL.createObjectURL(file) : "", [file]);
 
@@ -115,7 +113,7 @@ export function EvidenceUploadDialog({
       onOpenChange(false);
     } catch (error) {
       const message = (error as Error).message;
-      toast.error(message.includes("FREE_EVIDENCE_LIMIT_REACHED") ? "وصلت إلى حد الخطة المجانية: 10 شواهد. يمكنك الترقية لإضافة المزيد." : `تعذّر رفع الشاهد: ${message}`);
+      toast.error(`تعذّر رفع الشاهد: ${message}`);
     } finally {
       setBusy(false);
     }
@@ -130,7 +128,6 @@ export function EvidenceUploadDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          {subscription?.plan !== "pro" && <p className="rounded-md bg-secondary px-3 py-2 text-xs text-secondary-foreground">الخطة المجانية تشمل حتى 10 شواهد.</p>}
           <div>
             <Label className="mb-1.5 block text-xs">ملف الشاهد</Label>
             <input ref={inputRef} type="file" accept={ACCEPT} className="hidden" onChange={(e) => {
