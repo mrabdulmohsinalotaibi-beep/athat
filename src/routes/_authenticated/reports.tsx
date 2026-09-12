@@ -9,7 +9,6 @@ import { useSchool } from "@/lib/school";
 import { RECORDS, recordByKey } from "@/lib/records";
 import { elementToPdf, elementToPdfFile } from "@/lib/pdf";
 import { whatsappLink } from "@/lib/whatsapp";
-import { useSubscription } from "@/lib/subscription";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { AiDraftAssistant } from "@/components/AiDraftAssistant";
@@ -105,7 +104,6 @@ function ReportsPage() {
   const [aiNarrative, setAiNarrative] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
-  const { data: subscription } = useSubscription();
   const printRef = useRef<HTMLDivElement>(null);
 
   const { data: sections, isLoading } = useSectionRows(selected, from, to);
@@ -119,10 +117,6 @@ function ReportsPage() {
   const period = from || to ? `${from || "—"} إلى ${to || "—"}` : "كامل العام الدراسي";
 
   function toggle(key: string) {
-    if (!selected.includes(key) && subscription?.plan !== "pro") {
-      toast.error("التقارير المجمعة متاحة في باقة الموجه المحترف.");
-      return;
-    }
     setSelected((current) =>
       current.includes(key)
         ? current.length > 1

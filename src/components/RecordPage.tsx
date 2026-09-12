@@ -100,7 +100,7 @@ export function RecordPage({
       setEditing(null);
       toast.success("تم حفظ السجل");
     },
-    onError: (error: Error) => toast.error(error.message.includes("FREE_CASE_LIMIT_REACHED") ? "وصلت إلى حد الخطة المجانية: 5 حالات. يمكنك الترقية لإضافة المزيد." : `تعذّر الحفظ: ${error.message}`),
+    onError: (error: Error) => toast.error(`تعذّر الحفظ: ${error.message}`),
   });
 
   const remove = useMutation({
