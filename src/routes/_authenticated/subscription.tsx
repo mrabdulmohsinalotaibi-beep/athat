@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Crown, Sparkles } from "lucide-react";
-import { useSubscription } from "@/lib/subscription";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,7 +19,6 @@ const currentFeatures = ["حالات وشواهد بلا حدود", "تقاري�
 const futureFeatures = ["خدمات مؤسسية إضافية", "خيارات دعم وتخصيص موسعة", "مزايا جديدة للجهات التعليمية", "تفاصيل الباقة ستعلن لاحقاً"];
 
 function SubscriptionPage() {
-  const { data } = useSubscription();
   return (
     <div className="mx-auto max-w-4xl space-y-7">
       <div>
