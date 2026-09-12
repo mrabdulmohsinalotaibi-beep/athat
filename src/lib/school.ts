@@ -11,6 +11,7 @@ export interface SchoolSettings {
   semester?: string | null;
   counselor_signature?: string | null;
   principal_signature?: string | null;
+  theme?: string | null;
 }
 
 export function useSchool() {
