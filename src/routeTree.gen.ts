@@ -17,11 +17,14 @@ import { Route as AuthenticatedBehaviorRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedCasesRouteImport } from './routes/_authenticated/cases'
 import { Route as AuthenticatedCommitteesRouteImport } from './routes/_authenticated/committees'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEvidencesRouteImport } from './routes/_authenticated/evidences'
 import { Route as AuthenticatedInterviewsRouteImport } from './routes/_authenticated/interviews'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 
 const IndexRoute = IndexRouteImport.update({
@@ -63,6 +66,11 @@ const AuthenticatedCommitteesRoute = AuthenticatedCommitteesRouteImport.update({
   path: '/committees',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEvidencesRoute = AuthenticatedEvidencesRouteImport.update({
   id: '/evidences',
   path: '/evidences',
@@ -88,6 +96,16 @@ const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
   path: '/referrals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStudentsRoute = AuthenticatedStudentsRouteImport.update({
   id: '/students',
   path: '/students',
@@ -102,11 +120,14 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/cases': typeof AuthenticatedCasesRoute
   '/committees': typeof AuthenticatedCommitteesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/evidences': typeof AuthenticatedEvidencesRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
 }
 export interface FileRoutesByTo {
@@ -117,11 +138,14 @@ export interface FileRoutesByTo {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/cases': typeof AuthenticatedCasesRoute
   '/committees': typeof AuthenticatedCommitteesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/evidences': typeof AuthenticatedEvidencesRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
 }
 export interface FileRoutesById {
@@ -134,11 +158,14 @@ export interface FileRoutesById {
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/cases': typeof AuthenticatedCasesRoute
   '/_authenticated/committees': typeof AuthenticatedCommitteesRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/evidences': typeof AuthenticatedEvidencesRoute
   '/_authenticated/interviews': typeof AuthenticatedInterviewsRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
 }
 export interface FileRouteTypes {
@@ -151,11 +178,14 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/cases'
     | '/committees'
+    | '/dashboard'
     | '/evidences'
     | '/interviews'
     | '/plan'
     | '/programs'
     | '/referrals'
+    | '/reports'
+    | '/settings'
     | '/students'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -166,11 +196,14 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/cases'
     | '/committees'
+    | '/dashboard'
     | '/evidences'
     | '/interviews'
     | '/plan'
     | '/programs'
     | '/referrals'
+    | '/reports'
+    | '/settings'
     | '/students'
   id:
     | '__root__'
@@ -182,11 +215,14 @@ export interface FileRouteTypes {
     | '/_authenticated/calendar'
     | '/_authenticated/cases'
     | '/_authenticated/committees'
+    | '/_authenticated/dashboard'
     | '/_authenticated/evidences'
     | '/_authenticated/interviews'
     | '/_authenticated/plan'
     | '/_authenticated/programs'
     | '/_authenticated/referrals'
+    | '/_authenticated/reports'
+    | '/_authenticated/settings'
     | '/_authenticated/students'
   fileRoutesById: FileRoutesById
 }
@@ -254,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCommitteesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/evidences': {
       id: '/_authenticated/evidences'
       path: '/evidences'
@@ -289,6 +332,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReferralsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/students': {
       id: '/_authenticated/students'
       path: '/students'
@@ -305,11 +362,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCasesRoute: typeof AuthenticatedCasesRoute
   AuthenticatedCommitteesRoute: typeof AuthenticatedCommitteesRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEvidencesRoute: typeof AuthenticatedEvidencesRoute
   AuthenticatedInterviewsRoute: typeof AuthenticatedInterviewsRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRoute
 }
 
@@ -319,11 +379,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCasesRoute: AuthenticatedCasesRoute,
   AuthenticatedCommitteesRoute: AuthenticatedCommitteesRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEvidencesRoute: AuthenticatedEvidencesRoute,
   AuthenticatedInterviewsRoute: AuthenticatedInterviewsRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRoute,
 }
 
