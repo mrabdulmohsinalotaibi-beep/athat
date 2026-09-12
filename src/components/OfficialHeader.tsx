@@ -58,14 +58,20 @@ export function OfficialHeader({
 
 export function OfficialFooter({ school }: { school?: SchoolSettings | null | undefined }) {
   return (
-    <div className="mt-8 flex justify-between border-t pt-6 text-xs font-semibold">
-      <div className="text-center">
+    <div className="report-signatures mt-8 grid grid-cols-2 gap-12 border-t pt-5 text-xs font-semibold">
+      <div className="flex min-h-28 flex-col items-center text-center">
         <p>الموجه الطلابي</p>
-        <p className="mt-6">{school?.counselor_name || "................."}</p>
+        {school?.counselor_signature ? (
+          <img src={school.counselor_signature} alt="توقيع الموجه الطلابي" className="mt-2 h-16 w-40 object-contain" />
+        ) : <div className="h-16" />}
+        <p>{school?.counselor_name || "................."}</p>
       </div>
-      <div className="text-center">
+      <div className="flex min-h-28 flex-col items-center text-center">
         <p>مدير المدرسة</p>
-        <p className="mt-6">{school?.principal_name || "................."}</p>
+        {school?.principal_signature ? (
+          <img src={school.principal_signature} alt="توقيع مدير المدرسة" className="mt-2 h-16 w-40 object-contain" />
+        ) : <div className="h-16" />}
+        <p>{school?.principal_name || "................."}</p>
       </div>
     </div>
   );

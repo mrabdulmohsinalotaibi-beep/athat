@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { useSchool } from "@/lib/school";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SignaturePad } from "@/components/SignaturePad";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -35,14 +37,17 @@ const SCHOOL_FIELDS = [
 function SettingsPage() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
+  const [counselorSignature, setCounselorSignature] = useState("");
+  const [principalSignature, setPrincipalSignature] = useState("");
 
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
+      const payload = { ...values, counselor_signature: counselorSignature || school?.counselor_signature || null, principal_signature: principalSignature || school?.principal_signature || null };
       if (school?.id) {
-        const { error } = await supabase.from("school_settings").update(values as never).eq("id", school.id);
+        const { error } = await supabase.from("school_settings").update(payload as never).eq("id", school.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("school_settings").insert(values as never);
+        const { error } = await supabase.from("school_settings").insert(payload as never);
         if (error) throw error;
       }
     },
@@ -115,6 +120,10 @@ function SettingsPage() {
             </div>
           ))}
           <div className="sm:col-span-2">
+            <div className="mb-5 grid gap-5 sm:grid-cols-2">
+              <SignaturePad label="توقيع الموجه الطلابي" value={counselorSignature || school?.counselor_signature || ""} onChange={setCounselorSignature} />
+              <SignaturePad label="توقيع مدير المدرسة" value={principalSignature || school?.principal_signature || ""} onChange={setPrincipalSignature} />
+            </div>
             <Button type="submit" disabled={saveSchool.isPending}>
               حفظ البيانات
             </Button>
