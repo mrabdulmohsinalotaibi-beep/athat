@@ -20,12 +20,13 @@ import {
   HeartHandshake,
   ShieldAlert,
   Users,
+  ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
-import { OfficialHeader } from "@/components/OfficialHeader";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -132,11 +133,15 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <OfficialHeader school={school} title="لوحة مؤشرات التوجيه الطلابي" />
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          مدير المدرسة: {school?.principal_name || "—"} · الموجه الطلابي: {school?.counselor_name || "—"}
-        </p>
+      <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+        <div className="grid gap-5 p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="flex items-center gap-2 text-sm font-bold text-primary"><Sparkles className="size-4" />مساحة عملك اليومية</p>
+            <h1 className="mt-2 text-3xl font-extrabold">أهلاً {school?.counselor_name || "بالموجه الطلابي"}</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{school?.school_name || "أكمل بيانات مدرستك"} · {school?.semester || "الفصل الدراسي"}</p>
+          </div>
+          <Link to="/cases" className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">متابعة الحالات <ArrowLeft className="size-4" /></Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

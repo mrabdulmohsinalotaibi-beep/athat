@@ -25,6 +25,9 @@ export const CHANNELS = ["مقابلة", "اتصال هاتفي", "رسالة ن
 export const STAGES = ["ابتدائي", "متوسط", "ثانوي"];
 export const EVIDENCE_TYPES = ["PDF", "صورة", "تقرير", "كشف حضور", "محضر"];
 export const PROGRAM_TYPES = ["وقائي", "إنمائي", "علاجي"];
+export const REFERRAL_SOURCES = ["الطالب نفسه", "ولي الأمر", "المعلم", "إدارة المدرسة", "لجنة التوجيه الطلابي", "ملاحظة الموجه"];
+export const REFERRAL_REASONS = ["صعوبات أكاديمية", "غياب أو تأخر متكرر", "مشكلة سلوكية", "مشكلة نفسية", "مشكلة اجتماعية أو أسرية", "مشكلة صحية", "حماية من الإيذاء", "احتياج تربوي خاص"];
+export const INTERVENTIONS = ["مقابلة فردية", "جلسة إرشاد جمعي", "تواصل مع ولي الأمر", "خطة تعديل سلوك", "متابعة أكاديمية", "إحالة لجهة مختصة", "تنسيق مع المعلمين", "متابعة دورية"];
 
 const notes: FieldDef = { name: "notes", label: "ملاحظات", type: "textarea" };
 
@@ -62,11 +65,11 @@ export const RECORDS: RecordConfig[] = [
       { name: "student_no", label: "رقم الطالب" },
       { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "domain", label: "المجال", type: "select", options: DOMAINS, list: true },
-      { name: "referral_source", label: "مصدر الإحالة" },
+      { name: "referral_source", label: "مصدر الإحالة", type: "select", options: REFERRAL_SOURCES },
       { name: "case_status", label: "حالة الحالة", type: "select", options: ["مفتوحة", "قيد المتابعة", "مغلقة"], list: true },
       { name: "priority", label: "الأولوية", type: "select", options: PRIORITIES, list: true },
       { name: "summary", label: "ملخص الحالة", type: "textarea" },
-      { name: "intervention_plan", label: "خطة التدخل", type: "textarea" },
+      { name: "intervention_plan", label: "خطة التدخل", type: "select", options: INTERVENTIONS },
       { name: "opened_at", label: "تاريخ الفتح", type: "date" },
       { name: "followup_at", label: "موعد المتابعة", type: "date", list: true },
       { name: "last_followup", label: "آخر متابعة", type: "date" },
@@ -167,9 +170,9 @@ export const RECORDS: RecordConfig[] = [
       { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "bdate", label: "التاريخ", type: "date", list: true },
       { name: "observation", label: "الملاحظة/المخالفة", list: true },
-      { name: "referral_source", label: "مصدر الإحالة" },
-      { name: "action", label: "الإجراء", list: true },
-      { name: "result", label: "النتيجة", list: true },
+      { name: "referral_source", label: "مصدر الإحالة", type: "select", options: REFERRAL_SOURCES },
+      { name: "action", label: "الإجراء", type: "select", options: INTERVENTIONS, list: true },
+      { name: "result", label: "النتيجة", type: "select", options: ["تحسن", "تحسن جزئي", "تحتاج متابعة", "تمت الإحالة", "أغلقت الحالة"], list: true },
       { name: "followup_at", label: "موعد المتابعة", type: "date" },
       { name: "evidence_url", label: "الشاهد/الرابط" },
       notes,
@@ -182,15 +185,16 @@ export const RECORDS: RecordConfig[] = [
     singular: "إحالة",
     fields: [
       { name: "referral_no", label: "رقم الإحالة", list: true },
+      { name: "case_no", label: "رقم الحالة المرتبطة" },
       { name: "student_no", label: "رقم الطالب" },
       { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "referral_date", label: "تاريخ الإحالة", type: "date", list: true },
       { name: "referred_to", label: "الجهة المحال إليها", type: "select", options: ["وحدة الخدمات الإرشادية", "إدارة التعليم", "جهة صحية", "جهة أمنية", "جهة مختصة"], list: true },
-      { name: "reason", label: "سبب الإحالة", type: "textarea" },
+      { name: "reason", label: "سبب الإحالة", type: "select", options: REFERRAL_REASONS },
       { name: "attachments", label: "المستندات المرفقة" },
       { name: "status", label: "الحالة", type: "select", options: ["مرسلة", "قيد المتابعة", "منتهية"], list: true },
       { name: "reply_date", label: "تاريخ الرد", type: "date" },
-      { name: "result", label: "النتيجة", type: "textarea" },
+      { name: "result", label: "نتيجة الإحالة", type: "select", options: ["قبول الإحالة", "إعادة للمدرسة", "خطة علاجية", "متابعة مشتركة", "إغلاق الإحالة"] },
       notes,
     ],
   },

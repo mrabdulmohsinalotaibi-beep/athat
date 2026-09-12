@@ -24,8 +24,8 @@ export function OfficialHeader({
 }) {
   return (
     <div className="official-letterhead border-b-2 border-primary pb-4">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8 px-6 text-[11px] font-semibold sm:px-10">
-        <div className="mx-auto w-full max-w-56 text-center leading-6">
+      <div className="grid grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] items-center gap-5 px-2 text-[11px] font-semibold sm:px-6">
+        <div className="w-full text-right leading-6">
           <p>المملكة العربية السعودية</p>
           <p>وزارة التعليم</p>
           <p>إدارة التعليم {school?.education_dept || "—"}</p>
@@ -42,7 +42,7 @@ export function OfficialHeader({
           />
         </div>
 
-        <div className="mx-auto w-full max-w-56 text-center leading-6">
+        <div className="w-full text-left leading-6" dir="rtl">
           <p>التاريخ: {todayDate()}</p>
           <p>الفصل الدراسي: {school?.semester || "—"}</p>
           <p>نوع التقرير: {reportType || title}</p>

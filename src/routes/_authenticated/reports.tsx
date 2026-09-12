@@ -1,12 +1,15 @@
 import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { FileDown, Printer } from "lucide-react";
+import { FileDown, Printer, Share2, LockKeyhole } from "lucide-react";
+import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { RECORDS, recordByKey } from "@/lib/records";
-import { elementToPdf } from "@/lib/pdf";
+import { elementToPdf, elementToPdfFile } from "@/lib/pdf";
+import { whatsappLink } from "@/lib/whatsapp";
+import { useSubscription } from "@/lib/subscription";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { AiDraftAssistant } from "@/components/AiDraftAssistant";
@@ -14,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -22,6 +26,8 @@ export const Route = createFileRoute("/_authenticated/reports")({
       { name: "description", content: "إعداد التقارير الرسمية وطباعتها أو تصديرها PDF بترويسة وزارية وتوقيع رسمي." },
       { property: "og:title", content: "التقارير والطباعة | منصة ذات" },
       { property: "og:description", content: "تقارير مفردة أو مجمعة جاهزة للطباعة الرسمية لأعمال الموجه الطلابي." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ReportsPage,
@@ -90,6 +96,9 @@ function ReportsPage() {
   const [to, setTo] = useState("");
   const [withKpis, setWithKpis] = useState(true);
   const [aiNarrative, setAiNarrative] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [sharePhone, setSharePhone] = useState("");
+  const { data: subscription } = useSubscription();
   const printRef = useRef<HTMLDivElement>(null);
 
   const { data: sections, isLoading } = useSectionRows(selected, from, to);
@@ -103,6 +112,10 @@ function ReportsPage() {
   const period = from || to ? `${from || "—"} إلى ${to || "—"}` : "كامل العام الدراسي";
 
   function toggle(key: string) {
+    if (!selected.includes(key) && subscription?.plan !== "pro") {
+      toast.error("التقارير المجمعة متاحة في باقة الموجه المحترف.");
+      return;
+    }
     setSelected((current) =>
       current.includes(key)
         ? current.length > 1
@@ -110,6 +123,23 @@ function ReportsPage() {
           : current
         : [...current, key],
     );
+  }
+
+  async function sharePdf() {
+    if (!printRef.current) return;
+    const file = await elementToPdfFile(printRef.current, fileName);
+    const message = `السلام عليكم، مرفق ${title} للفترة: ${period}.`;
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ title, text: message, files: [file] });
+      setShareOpen(false);
+      return;
+    }
+    await elementToPdf(printRef.current, fileName);
+    const link = whatsappLink(sharePhone, `${message}\nتم تنزيل ملف PDF على جهازك؛ يرجى إرفاقه في المحادثة.`);
+    if (!link) return toast.error("أدخل رقم جوال سعودي صحيحاً");
+    window.open(link, "_blank", "noopener,noreferrer");
+    toast.info("تم تنزيل التقرير وفتح واتساب؛ أرفق ملف PDF في المحادثة.");
+    setShareOpen(false);
   }
 
   return (
@@ -159,6 +189,7 @@ function ReportsPage() {
           <Button onClick={() => printRef.current && elementToPdf(printRef.current, fileName)}>
             <FileDown className="size-4" /> تصدير PDF
           </Button>
+          <Button variant="outline" onClick={() => setShareOpen(true)}><Share2 className="size-4" />مشاركة عبر واتساب</Button>
         </div>
 
         <AiDraftAssistant
@@ -265,6 +296,13 @@ function ReportsPage() {
 
         <OfficialFooter school={school} />
       </div>
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader><DialogTitle>مشاركة التقرير</DialogTitle><DialogDescription>على الجوال سيُرفق PDF مباشرة إن كان جهازك يدعم المشاركة. وإلا سننزله ونفتح واتساب.</DialogDescription></DialogHeader>
+          <div><Label className="mb-1.5 block text-xs">رقم الجوال السعودي</Label><Input value={sharePhone} onChange={(e) => setSharePhone(e.target.value)} inputMode="tel" placeholder="05xxxxxxxx" /></div>
+          <DialogFooter className="gap-2"><Button variant="outline" onClick={() => setShareOpen(false)}>إلغاء</Button><Button onClick={sharePdf}><Share2 className="size-4" />إنشاء ومشاركة PDF</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

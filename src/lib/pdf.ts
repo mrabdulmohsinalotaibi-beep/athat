@@ -2,7 +2,7 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
 /** Renders a DOM element into a high-quality multi-page A4 PDF with margins (Arabic-safe, rasterised). */
-export async function elementToPdf(element: HTMLElement, fileName: string) {
+async function createPdf(element: HTMLElement) {
   const canvas = await html2canvas(element, {
     scale: Math.min(3, Math.max(2, window.devicePixelRatio * 2)),
     backgroundColor: "#ffffff",
@@ -29,5 +29,15 @@ export async function elementToPdf(element: HTMLElement, fileName: string) {
     pdf.addImage(image, "JPEG", margin, margin - offset, contentWidth, imgHeight, undefined, "FAST");
     remaining -= contentHeight;
   }
+  return pdf;
+}
+
+export async function elementToPdf(element: HTMLElement, fileName: string) {
+  const pdf = await createPdf(element);
   pdf.save(`${fileName}.pdf`);
+}
+
+export async function elementToPdfFile(element: HTMLElement, fileName: string) {
+  const pdf = await createPdf(element);
+  return new File([pdf.output("blob")], `${fileName}.pdf`, { type: "application/pdf" });
 }

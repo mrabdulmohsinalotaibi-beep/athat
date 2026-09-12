@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileDown, Plus, Printer, Search, Trash2, Upload, Pencil } from "lucide-react";
+import { Download, FileDown, Plus, Printer, Search, Trash2, Upload, Pencil, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AiDraftAssistant } from "@/components/AiDraftAssistant";
+import { EvidenceUploadDialog } from "@/components/EvidenceUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,8 @@ import {
 type Row = Record<string, unknown> & { id: string };
 
 const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports"]);
+const ATTACHABLE_KEYS = new Set(["cases", "programs", "interviews", "attendance", "behavior", "referrals", "committees", "plan"]);
+const LINKED_TYPE: Record<string, string> = { cases: "حالة", programs: "برنامج", interviews: "مقابلة", attendance: "مواظبة", behavior: "سلوك", referrals: "إحالة", committees: "اجتماع", plan: "مهمة" };
 
 export function RecordPage({
   config,
@@ -48,6 +51,7 @@ export function RecordPage({
   const [auto, setAuto] = useState<Record<string, string>>({});
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
+  const [evidenceFor, setEvidenceFor] = useState<Row | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -96,7 +100,7 @@ export function RecordPage({
       setEditing(null);
       toast.success("تم حفظ السجل");
     },
-    onError: (error: Error) => toast.error(`تعذّر الحفظ: ${error.message}`),
+    onError: (error: Error) => toast.error(error.message.includes("FREE_CASE_LIMIT_REACHED") ? "وصلت إلى حد الخطة المجانية: 5 حالات. يمكنك الترقية لإضافة المزيد." : `تعذّر الحفظ: ${error.message}`),
   });
 
   const remove = useMutation({
@@ -270,6 +274,7 @@ export function RecordPage({
                       >
                         <Pencil className="size-4" />
                       </Button>
+                      {ATTACHABLE_KEYS.has(config.key) && <Button variant="ghost" size="icon" title="إرفاق شاهد" onClick={() => setEvidenceFor(row)}><Paperclip className="size-4" /></Button>}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -424,6 +429,7 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <EvidenceUploadDialog open={evidenceFor !== null} onOpenChange={(open) => !open && setEvidenceFor(null)} defaultLinkedType={LINKED_TYPE[config.key] || config.singular} defaultLinkedRef={String(evidenceFor?.[listFields[0]?.name ?? "id"] ?? evidenceFor?.id ?? "")} />
     </div>
   );
 }

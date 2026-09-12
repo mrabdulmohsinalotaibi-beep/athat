@@ -1,277 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  FileSpreadsheet,
-  ExternalLink,
-  Loader2,
-  LinkIcon,
-  ShieldCheck,
-  Smartphone,
-  Upload,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { readExcel, sheetHeaders } from "@/lib/sheet";
 import { NOOR_FIELDS, autoMap, cleanId, cleanPhone } from "@/lib/noor";
-import { importNoorStudents, type NoorImportResult } from "@/lib/noor-import.functions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type SheetRow = Record<string, unknown>;
 type RowError = { row: number; name: string; reason: string };
-
-const STEPS = [
-  "التحقق من الهوية عبر نفاذ",
-  "الاتصال بنظام نور وجلب الكشوفات",
-  "توزيع الطلاب على الصفوف والفصول",
-];
-
-const NAFATH_SECONDS = 60;
-
-function NafathTab({ onDone }: { onDone: () => void }) {
-  const runImport = useServerFn(importNoorStudents);
-  const [nationalId, setNationalId] = useState("");
-  const [requestNumber, setRequestNumber] = useState<number | null>(null);
-  const [options, setOptions] = useState<number[]>([]);
-  const [seconds, setSeconds] = useState(NAFATH_SECONDS);
-  const [approved, setApproved] = useState(false);
-  const [step, setStep] = useState(-1);
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<NoorImportResult | null>(null);
-
-  useEffect(() => {
-    if (requestNumber === null || approved) return;
-    if (seconds <= 0) {
-      setRequestNumber(null);
-      toast.error("انتهت صلاحية طلب نفاذ. أعد المحاولة.");
-      return;
-    }
-    const t = setTimeout(() => setSeconds((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [seconds, requestNumber, approved]);
-
-  function requestNafath() {
-    const digits = nationalId.replace(/\D/g, "");
-    if (digits.length !== 10) {
-      toast.error("أدخل رقم هوية وطنية صحيحاً مكوّناً من 10 أرقام");
-      return;
-    }
-    const correct = Math.floor(Math.random() * 80) + 10;
-    const set = new Set<number>([correct]);
-    while (set.size < 3) set.add(Math.floor(Math.random() * 80) + 10);
-    setRequestNumber(correct);
-    setOptions([...set].sort(() => Math.random() - 0.5));
-    setSeconds(NAFATH_SECONDS);
-    setApproved(false);
-    setResult(null);
-    setStep(-1);
-  }
-
-  async function approve(choice: number) {
-    if (choice !== requestNumber) {
-      toast.error("الرقم المختار لا يطابق رقم الطلب المعروض. حاول مرة أخرى.");
-      return;
-    }
-    setApproved(true);
-    setBusy(true);
-    setStep(0);
-    try {
-      const timer = setTimeout(() => setStep(1), 900);
-      const data = await runImport({
-        data: { nationalId: nationalId.replace(/\D/g, ""), requestNumber: String(requestNumber) },
-      });
-      clearTimeout(timer);
-      setStep(2);
-      await new Promise((r) => setTimeout(r, 500));
-      setResult(data);
-      setStep(3);
-      if (data.inserted) toast.success(`تم استيراد ${data.inserted} طالباً وتوزيعهم على الفصول`);
-      else toast.warning("لم تتم إضافة طلاب جدد (قد تكون البيانات مستوردة مسبقاً).");
-      onDone();
-    } catch (error) {
-      setStep(-1);
-      setApproved(false);
-      toast.error((error as Error).message || "تعذّر الاتصال بنظام نور");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="space-y-5">
-      <div className="overflow-hidden rounded-lg border shadow-sm">
-        <div className="flex items-center justify-between gap-3 bg-sidebar px-4 py-3 text-sidebar-foreground">
-          <div className="leading-tight">
-            <p className="text-sm font-extrabold">النفاذ الوطني الموحد</p>
-            <p className="text-[11px] opacity-90">Nafath — الدخول الآمن للخدمات الحكومية</p>
-          </div>
-          <span className="rounded-md bg-sidebar-accent px-2 py-1 text-[10px]">iam.gov.sa/sso/nafath</span>
-        </div>
-
-        <div className="space-y-4 bg-card p-4">
-          <div className="flex gap-2 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-            <span>
-              هذه تجربة تشغيلية محاكية ولا تُعد ربطاً حكومياً مباشراً. الربط البرمجي الحقيقي مع نفاذ ونور يتطلب ترخيصاً
-              رسمياً وشهادات ربط حكومية معتمدة من مركز المعلومات الوطني. لا تحفظ المنصة كلمة مرور نفاذ أو نور، ويمكنك
-              استخدام الإدخال اليدوي أو رفع ملف Excel كبديل آمن.
-            </span>
-          </div>
-
-          {requestNumber === null && (
-            <div className="space-y-3">
-              <div>
-                <Label className="mb-1.5 block text-xs">رقم الهوية الوطنية / الإقامة</Label>
-                <Input
-                  value={nationalId}
-                  onChange={(e) => setNationalId(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  inputMode="numeric"
-                  placeholder="10xxxxxxxx"
-                  autoComplete="off"
-                  className="tracking-widest"
-                />
-              </div>
-              <Button onClick={requestNafath} className="w-full" disabled={nationalId.replace(/\D/g, "").length !== 10}>
-                <LinkIcon className="size-4" /> تسجيل الدخول عبر نفاذ
-              </Button>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Button asChild variant="outline" size="sm">
-                  <a href="https://www.iam.gov.sa/sso/nafath" target="_blank" rel="noreferrer">
-                    <ExternalLink className="size-4" /> فتح بوابة نفاذ الرسمية
-                  </a>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <a href="https://noor.moe.gov.sa/Noor/Login.aspx" target="_blank" rel="noreferrer">
-                    <ExternalLink className="size-4" /> فتح نظام نور الرسمي
-                  </a>
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {requestNumber !== null && (
-        <div className="rounded-2xl border bg-card p-5 text-center shadow-sm">
-          <div className="mx-auto flex max-w-xs flex-col items-center gap-3 rounded-2xl border bg-muted/40 p-5">
-            <Smartphone className="size-6 text-primary" />
-            <p className="text-sm font-bold">افتح تطبيق نفاذ واختر الرقم التالي</p>
-            <p className="text-5xl font-extrabold tracking-widest text-primary">{requestNumber}</p>
-            {!approved && (
-              <p className="text-xs text-muted-foreground">تنتهي صلاحية الطلب خلال {seconds} ثانية</p>
-            )}
-            {!approved && <Progress value={(seconds / NAFATH_SECONDS) * 100} className="w-full" />}
-          </div>
-
-          {!approved ? (
-            <div className="mt-5">
-              <p className="mb-2 text-xs text-muted-foreground">محاكاة تطبيق نفاذ — اختر الرقم المطابق للقبول:</p>
-              <div className="flex justify-center gap-3">
-                {options.map((o) => (
-                  <Button
-                    key={o}
-                    type="button"
-                    variant="outline"
-                    onClick={() => approve(o)}
-                    className="size-16 text-xl font-bold hover:border-primary hover:bg-primary/10"
-                  >
-                    {o}
-                  </Button>
-                ))}
-              </div>
-              <Button variant="ghost" className="mt-3" onClick={() => setRequestNumber(null)}>
-                إلغاء الطلب
-              </Button>
-            </div>
-          ) : (
-            <p className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-primary">
-              <CheckCircle2 className="size-4" /> تم قبول الطلب عبر نفاذ
-            </p>
-          )}
-        </div>
-      )}
-
-      {step >= 0 && (
-        <div className="space-y-3 rounded-lg border p-4">
-          <Progress value={Math.min(((step + 1) / STEPS.length) * 100, 100)} />
-          <ul className="space-y-2 text-sm">
-            {STEPS.map((s, i) => (
-              <li key={s} className="flex items-center gap-2">
-                {step > i ? (
-                  <CheckCircle2 className="size-4 text-primary" />
-                ) : step === i ? (
-                  <Loader2 className="size-4 animate-spin text-primary" />
-                ) : (
-                  <span className="size-4 rounded-full border" />
-                )}
-                <span className={step >= i ? "text-foreground" : "text-muted-foreground"}>{s}</span>
-              </li>
-            ))}
-          </ul>
-          {busy && <p className="text-xs text-muted-foreground">جارٍ الاتصال بنظام نور...</p>}
-        </div>
-      )}
-
-      {result && (
-        <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
-          <p>{result.message}</p>
-          <p>
-            تم جلب <span className="font-bold">{result.fetched}</span> سجلاً، وإضافة{" "}
-            <span className="font-bold">{result.inserted}</span> طالباً
-            {result.skipped.length > 0 && <> وتجاوز {result.skipped.length} سجلاً</>}.
-          </p>
-          {result.distribution.length > 0 && (
-            <div>
-              <p className="mb-2 font-semibold">التوزيع على الصفوف والفصول:</p>
-              <div className="flex flex-wrap gap-2 text-xs">
-                {result.distribution.map((d) => (
-                  <span key={`${d.grade}-${d.classroom}`} className="rounded-full bg-secondary px-3 py-1">
-                    {d.grade} / {d.classroom}: {d.count}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          {result.skipped.length > 0 && (
-            <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-destructive">
-              {result.skipped.map((s, i) => (
-                <li key={i}>
-                  {s.name} — {s.reason}
-                </li>
-              ))}
-            </ul>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => {
-              setRequestNumber(null);
-              setResult(null);
-              setStep(-1);
-            }}
-          >
-            تنفيذ عملية ربط جديدة
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 
 export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const queryClient = useQueryClient();
@@ -402,21 +142,11 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
         <DialogHeader>
           <DialogTitle>استيراد الطلاب من تقارير نظام نور</DialogTitle>
           <DialogDescription>
-            اربط النظام مباشرة بحساب نور، أو ارفع كشف نور (Excel/CSV) وأكّد ربط الأعمدة قبل الحفظ.
+            ارفع كشف الطلاب بصيغة Excel أو CSV، ثم راجع تعيين الأعمدة قبل الحفظ. ويمكن إضافة طالب يدوياً من شاشة الطلاب.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="file" dir="rtl">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="direct">الربط عبر نفاذ</TabsTrigger>
-            <TabsTrigger value="file">رفع ملف كشف نور</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="direct" className="pt-4">
-            <NafathTab onDone={() => queryClient.invalidateQueries({ queryKey: ["students"] })} />
-          </TabsContent>
-
-          <TabsContent value="file" className="space-y-4 pt-4">
+        <div className="space-y-4 pt-2">
         <input
           ref={fileRef}
           type="file"
@@ -565,8 +295,7 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
             </>
           )}
         </DialogFooter>
-          </TabsContent>
-        </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   );
