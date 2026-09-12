@@ -12,10 +12,13 @@ const DraftInput = z.object({
 const outputSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["summary", "goals", "interventionPlan", "recommendations", "result", "notes", "nextAction"],
+  required: ["summary", "problemDescription", "causes", "goals", "actions", "interventionPlan", "recommendations", "result", "notes", "nextAction"],
   properties: {
     summary: { type: "string" },
+    problemDescription: { type: "string" },
+    causes: { type: "string" },
     goals: { type: "string" },
+    actions: { type: "string" },
     interventionPlan: { type: "string" },
     recommendations: { type: "string" },
     result: { type: "string" },
@@ -26,7 +29,10 @@ const outputSchema = {
 
 export type GuidanceDraft = {
   summary: string;
+  problemDescription: string;
+  causes: string;
   goals: string;
+  actions: string;
   interventionPlan: string;
   recommendations: string;
   result: string;
@@ -130,7 +136,7 @@ export const draftGuidanceReport = createServerFn({ method: "POST" })
     const prompt = `أنت مساعد مهني للموجه الطلابي في مدارس المملكة العربية السعودية.
 صغ مسودة تربوية رصينة ومحايدة باللغة العربية، دون تشخيص طبي أو ادعاء حقائق غير مذكورة.
 لا تذكر أرقام الهوية أو الجوال، ولا تضف أسماء أشخاص لم ترد في المدخلات.
-يجب أن تكون الصياغة عملية، تحفظ خصوصية الطالب، وتشمل تحديد المشكلة والأهداف وخطة التدخل والتوصيات والمتابعة.
+يجب أن تكون الصياغة عملية، تحفظ خصوصية الطالب، وتشمل وصف المشكلة والأسباب المحتملة بصياغة غير جازمة والأهداف والإجراءات وخطة التدخل والنتائج والتوصيات والمتابعة والملخص.
 نوع السجل: ${data.recordKey}
 السياق المتاح:\n${safeContext || "لا يوجد"}
 ملاحظات الموجه السريعة:\n${data.notes}
