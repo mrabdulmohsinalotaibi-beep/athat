@@ -37,12 +37,12 @@ function Filter({
   onChange: (v: string) => void;
 }) {
   return (
-    <div>
+    <div className="w-full sm:w-auto">
       <Label className="mb-1.5 block text-xs">{label}</Label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 min-w-36 rounded-md border border-input bg-background px-3 text-sm"
+        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:min-w-36"
       >
         <option value="">الكل</option>
         {options.map((o) => (

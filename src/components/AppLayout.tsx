@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -26,6 +26,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Copyright } from "@/components/Copyright";
+import { ThemePicker } from "@/components/ThemePicker";
+import { isAppTheme, useTheme } from "@/lib/theme";
 
 const NAV = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
@@ -51,6 +54,24 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string[]>(["الطلاب والسجلات الإرشادية", "الخطط والبرامج"]);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    if (isAppTheme(school?.theme)) setTheme(school.theme);
+  }, [school?.theme, setTheme]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [open]);
+
+  async function persistTheme(theme: "thaat" | "royal" | "sage" | "amber") {
+    if (!school?.id) return;
+    const { error } = await supabase.from("school_settings").update({ theme }).eq("id", school.id);
+    if (!error) queryClient.invalidateQueries({ queryKey: ["school_settings"] });
+  }
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -63,7 +84,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className="app-shell flex min-h-screen bg-background">
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 w-72 shrink-0 overflow-y-auto bg-sidebar text-sidebar-foreground shadow-2xl transition-transform lg:static lg:translate-x-0",
+          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto bg-sidebar text-sidebar-foreground shadow-2xl transition-transform lg:static lg:translate-x-0",
           open ? "translate-x-0" : "translate-x-full lg:translate-x-0",
         )}
       >
@@ -78,7 +99,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <nav className="space-y-1 p-3">
+        <nav className="flex-1 space-y-1 p-3">
           {NAV.map((item) => {
             const Icon = item.icon;
             if ("children" in item) {
@@ -94,7 +115,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             return <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={cn("flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm hover:bg-sidebar-accent", pathname === item.to && "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary")}><Icon className="size-4" />{item.label}</Link>;
           })}
         </nav>
-        <div className="p-3">
+        <div className="mt-auto border-t border-sidebar-border p-3">
           <Button
             variant="ghost"
             onClick={signOut}
@@ -103,6 +124,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <LogOut className="size-4" />
             تسجيل الخروج
           </Button>
+          <Copyright className="mt-3 px-2 text-sidebar-foreground/55" />
         </div>
       </aside>
 
@@ -118,28 +140,32 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-20 border-b bg-card/90 shadow-sm backdrop-blur-xl">
-          <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
-            <div className="flex items-center gap-3">
+          <div className="grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 sm:px-4 lg:px-8">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
                 <Menu className="size-5" />
               </Button>
                <img src={platformLogo.url} alt="شعار منصة الذات" className="hidden size-12 object-contain sm:block" />
-              <div>
-                <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
-                <p className="text-xs text-muted-foreground">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
+                <p className="truncate text-xs text-muted-foreground">
                   {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
                 </p>
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="flex shrink-0 items-center gap-2">
+              <div className="hidden text-xs text-muted-foreground md:block">
               <p>الموجه الطلابي: {school?.counselor_name || "—"}</p>
               <p>
                 {school?.academic_year || "العام الدراسي"} · {school?.semester || "الفصل الدراسي"}
               </p>
+              </div>
+              <ThemePicker compact onChange={persistTheme} />
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 lg:p-8">{children}</main>
+        <main className="min-w-0 flex-1 p-3 sm:p-4 lg:p-8">{children}</main>
+        <footer className="no-print border-t px-4 py-4"><Copyright /></footer>
       </div>
     </div>
   );
