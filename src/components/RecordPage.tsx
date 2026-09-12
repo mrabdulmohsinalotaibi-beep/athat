@@ -9,6 +9,8 @@ import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +42,9 @@ export function RecordPage({
   const { data: school } = useSchool();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [auto, setAuto] = useState<Record<string, string>>({});
+  const hasStudentField = config.fields.some((f) => f.student);
+  const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
