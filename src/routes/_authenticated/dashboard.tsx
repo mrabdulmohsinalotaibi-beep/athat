@@ -24,6 +24,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
+import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { OfficialHeader } from "@/components/OfficialHeader";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
