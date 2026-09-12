@@ -40,14 +40,14 @@ export function AiDraftAssistant({
 
   return (
     <section className="ai-assistant-panel sm:col-span-2">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Label htmlFor="ai-quick-notes" className="flex items-center gap-2 font-bold">
             <Sparkles className="size-4 text-primary" /> المساعد الذكي
           </Label>
           <p className="mt-1 text-xs text-muted-foreground">اكتب كلمات مفتاحية فقط؛ لن تُحفظ هذه الملاحظات تلقائياً.</p>
         </div>
-        <Button type="button" size="sm" onClick={generate} disabled={busy}>
+        <Button type="button" size="sm" onClick={generate} disabled={busy} className="w-full shrink-0 sm:w-auto">
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
           {busy ? "جارٍ الصياغة..." : "إكمال التقرير بالذكاء الاصطناعي"}
         </Button>
