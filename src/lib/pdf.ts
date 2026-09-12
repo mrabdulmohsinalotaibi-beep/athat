@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 /** Renders a DOM element into a high-quality multi-page A4 PDF with margins (Arabic-safe, rasterised). */
 async function createPdf(element: HTMLElement) {
   const canvas = await html2canvas(element, {
-    scale: Math.min(3, Math.max(2, window.devicePixelRatio * 1.5)),
+    scale: Math.min(2.25, Math.max(2, window.devicePixelRatio)),
     backgroundColor: "#ffffff",
     useCORS: true,
     windowWidth: element.scrollWidth,
@@ -39,7 +39,7 @@ async function createPdf(element: HTMLElement) {
     context.drawImage(canvas, 0, sourceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
     const renderedHeight = (sliceHeight * contentWidth) / canvas.width;
     if (pageIndex > 0) pdf.addPage();
-    pdf.addImage(pageCanvas.toDataURL("image/jpeg", 0.96), "JPEG", margin, margin, contentWidth, renderedHeight, undefined, "FAST");
+    pdf.addImage(pageCanvas.toDataURL("image/jpeg", 0.94), "JPEG", margin, margin, contentWidth, renderedHeight, undefined, "FAST");
     sourceY += sliceHeight;
     pageIndex += 1;
   }
@@ -48,7 +48,14 @@ async function createPdf(element: HTMLElement) {
 
 export async function elementToPdf(element: HTMLElement, fileName: string) {
   const pdf = await createPdf(element);
-  pdf.save(`${fileName}.pdf`);
+  const url = URL.createObjectURL(pdf.output("blob"));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${fileName}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
 export async function elementToPdfFile(element: HTMLElement, fileName: string) {
