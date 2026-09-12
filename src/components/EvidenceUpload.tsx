@@ -138,7 +138,7 @@ export function EvidenceUploadDialog({
               if (chosen && chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); e.target.value = ""; return; }
               setFile(chosen); if (chosen && !name) setName(chosen.name);
             }} />
-            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) return toast.error("حجم الملف يتجاوز 50 ميجابايت"); setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
+            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
               {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 h-28 max-w-full object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
               <p className="mt-2 text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
               <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>

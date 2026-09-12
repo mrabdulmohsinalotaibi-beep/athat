@@ -134,19 +134,23 @@ function ReportsPage() {
 
   async function sharePdf() {
     if (!printRef.current) return;
-    const file = await elementToPdfFile(printRef.current, fileName);
-    const message = `السلام عليكم، مرفق ${title} للفترة: ${period}.`;
-    if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ title, text: message, files: [file] });
+    try {
+      const file = await elementToPdfFile(printRef.current, fileName);
+      const message = `السلام عليكم، مرفق ${title} للفترة: ${period}.`;
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title, text: message, files: [file] });
+        setShareOpen(false);
+        return;
+      }
+      await elementToPdf(printRef.current, fileName);
+      const link = whatsappLink(sharePhone, `${message}\nتم تنزيل ملف PDF على جهازك؛ يرجى إرفاقه في المحادثة.`);
+      if (!link) { toast.error("أدخل رقم جوال سعودي صحيحاً"); return; }
+      window.open(link, "_blank", "noopener,noreferrer");
+      toast.info("تم تنزيل التقرير وفتح واتساب؛ أرفق ملف PDF في المحادثة.");
       setShareOpen(false);
-      return;
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") toast.error("تعذّرت مشاركة التقرير. حاول تنزيله أولاً.");
     }
-    await elementToPdf(printRef.current, fileName);
-    const link = whatsappLink(sharePhone, `${message}\nتم تنزيل ملف PDF على جهازك؛ يرجى إرفاقه في المحادثة.`);
-    if (!link) return toast.error("أدخل رقم جوال سعودي صحيحاً");
-    window.open(link, "_blank", "noopener,noreferrer");
-    toast.info("تم تنزيل التقرير وفتح واتساب؛ أرفق ملف PDF في المحادثة.");
-    setShareOpen(false);
   }
 
   return (
