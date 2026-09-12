@@ -1,18 +1,31 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { arabicAuthError } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const DEMO_EMAIL = "demo@thaat.sa";
+const DEMO_PASSWORD = "Thaat-Demo-2026";
+
 export const Route = createFileRoute("/auth")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) throw redirect({ to: "/dashboard" });
+  },
   head: () => ({
     meta: [
       { title: "تسجيل الدخول | منصة ذات" },
-      { name: "description", content: "سجّل الدخول إلى منصة ذات للموجه الطلابي بالبريد الإلكتروني أو حساب Google." },
+      {
+        name: "description",
+        content: "سجّل الدخول إلى منصة ذات للموجه الطلابي بالبريد الإلكتروني أو حساب Google أو جرّب الحساب التجريبي.",
+      },
       { property: "og:title", content: "تسجيل الدخول | منصة ذات" },
       { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة ذات." },
     ],
@@ -25,70 +38,187 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState<"" | "form" | "google" | "demo">("");
+
+  function goToDashboard() {
+    navigate({ to: "/dashboard", replace: true });
+  }
+
+  async function signInWith(mail: string, pass: string) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: mail,
+      password: pass,
+    });
+    return signInError;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    setError("");
+    setBusy("form");
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: window.location.origin + "/auth" },
         });
-        if (error) throw error;
-        toast.success("تم إنشاء الحساب. تفقّد بريدك الإلكتروني لتأكيد التسجيل.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/dashboard" });
+        if (signUpError) throw signUpError;
+
+        if (data.session) {
+          toast.success("تم إنشاء الحساب بنجاح");
+          goToDashboard();
+          return;
+        }
+        // No session returned: try signing in directly, otherwise ask for confirmation.
+        const signInError = await signInWith(email, password);
+        if (!signInError) {
+          toast.success("تم إنشاء الحساب بنجاح");
+          goToDashboard();
+          return;
+        }
+        toast.info("تم إنشاء الحساب. فعّله عبر الرابط المرسل إلى بريدك ثم سجّل الدخول.");
+        setMode("signin");
+        return;
       }
-    } catch (error) {
-      toast.error((error as Error).message);
+
+      const signInError = await signInWith(email, password);
+      if (signInError) throw signInError;
+      toast.success("مرحباً بك");
+      goToDashboard();
+    } catch (err) {
+      const message = arabicAuthError((err as Error).message);
+      setError(message);
+      toast.error(message);
     } finally {
-      setLoading(false);
+      setBusy("");
     }
   }
 
   async function googleSignIn() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("تعذّر الدخول بحساب Google");
-      return;
+    setError("");
+    setBusy("google");
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin + "/auth",
+      });
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+      goToDashboard();
+    } catch (err) {
+      const message = arabicAuthError((err as Error).message ?? "");
+      setError(message);
+      toast.error(message);
+    } finally {
+      setBusy("");
     }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+  }
+
+  async function demoSignIn() {
+    setError("");
+    setBusy("demo");
+    try {
+      let signInError = await signInWith(DEMO_EMAIL, DEMO_PASSWORD);
+      if (signInError) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: DEMO_EMAIL,
+          password: DEMO_PASSWORD,
+        });
+        if (signUpError && !signUpError.message.toLowerCase().includes("already"))
+          throw signUpError;
+        if (!data?.session) {
+          signInError = await signInWith(DEMO_EMAIL, DEMO_PASSWORD);
+          if (signInError) throw signInError;
+        }
+      }
+      toast.success("تم الدخول بالحساب التجريبي");
+      goToDashboard();
+    } catch (err) {
+      const message = arabicAuthError((err as Error).message);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setBusy("");
+    }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border bg-card p-8 shadow-sm">
         <div className="text-center">
           <p className="text-3xl font-extrabold text-primary">ذات</p>
           <p className="mt-1 text-sm text-muted-foreground">منصة الموجه الطلابي</p>
         </div>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
+        <div className="mt-6 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("signin");
+              setError("");
+            }}
+            className={`rounded-md py-2 font-medium transition-colors ${mode === "signin" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+          >
+            تسجيل الدخول
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("signup");
+              setError("");
+            }}
+            className={`rounded-md py-2 font-medium transition-colors ${mode === "signup" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+          >
+            حساب جديد
+          </button>
+        </div>
+
+        {error && (
+          <p
+            role="alert"
+            className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            {error}
+          </p>
+        )}
+
+        <form onSubmit={onSubmit} className="mt-5 space-y-4">
           <div>
-            <Label htmlFor="email" className="mb-1.5 block">البريد الإلكتروني</Label>
-            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Label htmlFor="email" className="mb-1.5 block">
+              البريد الإلكتروني
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              dir="ltr"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div>
-            <Label htmlFor="password" className="mb-1.5 block">كلمة المرور</Label>
+            <Label htmlFor="password" className="mb-1.5 block">
+              كلمة المرور
+            </Label>
             <Input
               id="password"
               type="password"
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
               required
               minLength={6}
+              dir="ltr"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {mode === "signup" && (
+              <p className="mt-1 text-xs text-muted-foreground">6 أحرف على الأقل.</p>
+            )}
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {mode === "signin" ? "دخول" : "إنشاء حساب"}
+          <Button type="submit" className="w-full" disabled={busy !== ""}>
+            {busy === "form" && <Loader2 className="size-4 animate-spin" />}
+            {mode === "signin" ? "دخول" : "إنشاء الحساب"}
           </Button>
         </form>
 
@@ -98,17 +228,20 @@ function AuthPage() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <Button variant="outline" className="w-full" onClick={googleSignIn}>
-          المتابعة بحساب Google
-        </Button>
+        <div className="space-y-2">
+          <Button variant="outline" className="w-full" onClick={googleSignIn} disabled={busy !== ""}>
+            {busy === "google" && <Loader2 className="size-4 animate-spin" />}
+            المتابعة بحساب Google
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={demoSignIn} disabled={busy !== ""}>
+            {busy === "demo" && <Loader2 className="size-4 animate-spin" />}
+            دخول تجريبي بدون تسجيل
+          </Button>
+        </div>
 
-        <button
-          type="button"
-          className="mt-6 w-full text-center text-sm text-primary hover:underline"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-        >
-          {mode === "signin" ? "ليس لديك حساب؟ إنشاء حساب جديد" : "لديك حساب؟ تسجيل الدخول"}
-        </button>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          الدخول التجريبي يفتح حساباً مشتركاً للتجربة فقط، لا تُدخل فيه بيانات طلاب حقيقية.
+        </p>
       </div>
     </div>
   );
