@@ -38,10 +38,10 @@ function SettingsPage() {
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
       if (school?.id) {
-        const { error } = await supabase.from("school_settings").update(values).eq("id", school.id);
+        const { error } = await supabase.from("school_settings").update(values as never).eq("id", school.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("school_settings").insert(values);
+        const { error } = await supabase.from("school_settings").insert(values as never);
         if (error) throw error;
       }
     },
@@ -66,7 +66,7 @@ function SettingsPage() {
 
   const addLookup = useMutation({
     mutationFn: async (values: { category: string; value: string }) => {
-      const { error } = await supabase.from("lookups").insert(values);
+      const { error } = await supabase.from("lookups").insert(values as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -109,7 +109,7 @@ function SettingsPage() {
               <Input
                 id={f.name}
                 name={f.name}
-                defaultValue={(school?.[f.name as keyof typeof school] as string) ?? ""}
+                defaultValue={((school as Record<string, unknown> | null)?.[f.name] as string) ?? ""}
               />
             </div>
           ))}

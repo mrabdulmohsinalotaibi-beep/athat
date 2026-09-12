@@ -135,7 +135,7 @@ function ReportsPage() {
               </tr>
             )}
             {rows.map((row, index) => (
-              <tr key={String(row.id ?? index)}>
+              <tr key={String(row["id"] ?? index)}>
                 {columns.map((f) => (
                   <td key={f.name} className="border p-2 align-top">
                     {String(row[f.name] ?? "—")}

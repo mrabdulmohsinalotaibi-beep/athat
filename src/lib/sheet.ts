@@ -19,7 +19,10 @@ export function exportToExcel(fields: FieldDef[], rows: Record<string, unknown>[
 export async function readExcel(file: File): Promise<Record<string, unknown>[]> {
   const buffer = await file.arrayBuffer();
   const wb = XLSX.read(buffer, { cellDates: true });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const sheetName = wb.SheetNames[0];
+  if (!sheetName) return [];
+  const sheet = wb.Sheets[sheetName];
+  if (!sheet) return [];
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
   return rows;
 }

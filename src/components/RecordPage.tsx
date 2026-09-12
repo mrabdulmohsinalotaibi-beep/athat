@@ -247,7 +247,8 @@ export function RecordPage({ config }: { config: RecordConfig }) {
             onSubmit={(e) => {
               e.preventDefault();
               const data = new FormData(e.currentTarget);
-              const values: Partial<Row> = { id: editing?.id as string | undefined };
+              const values: Partial<Row> = {};
+              if (editing?.id) values.id = editing.id as string;
               config.fields.forEach((f) => {
                 values[f.name] = data.get(f.name) as string;
               });

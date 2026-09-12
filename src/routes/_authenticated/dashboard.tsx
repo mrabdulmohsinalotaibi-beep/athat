@@ -143,7 +143,7 @@ function Dashboard() {
               <PieChart>
                 <Pie data={domainData} dataKey="value" nameKey="name" outerRadius={90} label>
                   {domainData.map((entry, index) => (
-                    <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={entry.name} fill={COLORS[index % COLORS.length] ?? "var(--chart-1)"} />
                   ))}
                 </Pie>
                 <Tooltip />

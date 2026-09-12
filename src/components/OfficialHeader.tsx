@@ -1,6 +1,6 @@
 import type { SchoolSettings } from "@/lib/school";
 
-export function OfficialHeader({ school, title }: { school?: SchoolSettings | null; title: string }) {
+export function OfficialHeader({ school, title }: { school?: SchoolSettings | null | undefined; title: string }) {
   return (
     <div className="border-b-2 border-primary pb-4 text-center">
       <div className="flex items-start justify-between text-xs font-semibold">
@@ -25,7 +25,7 @@ export function OfficialHeader({ school, title }: { school?: SchoolSettings | nu
   );
 }
 
-export function OfficialFooter({ school }: { school?: SchoolSettings | null }) {
+export function OfficialFooter({ school }: { school?: SchoolSettings | null | undefined }) {
   return (
     <div className="mt-8 flex justify-between border-t pt-6 text-xs font-semibold">
       <div className="text-center">
