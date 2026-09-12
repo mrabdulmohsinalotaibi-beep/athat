@@ -173,7 +173,7 @@ export function RecordPage({ config }: { config: RecordConfig }) {
       </div>
 
       <div ref={printRef} className="print-area rounded-xl border bg-card p-4 shadow-sm">
-        <div className="mb-4 hidden print:block">
+        <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
         <div className="overflow-x-auto">
