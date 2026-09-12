@@ -9,6 +9,8 @@ export const Route = createFileRoute("/_authenticated/committees")({
       { name: "description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },
       { property: "og:title", content: "اللجان والاجتماعات | منصة ذات" },
       { property: "og:description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: () => <RecordPage config={recordByKey("committees")} />,

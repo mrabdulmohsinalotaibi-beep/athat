@@ -9,6 +9,8 @@ export const Route = createFileRoute("/_authenticated/attendance")({
       { name: "description", content: "رصد الغياب والتأخر والإجراءات الإرشادية المتخذة." },
       { property: "og:title", content: "الحضور والمواظبة | منصة ذات" },
       { property: "og:description", content: "رصد الغياب والتأخر والإجراءات الإرشادية المتخذة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: () => <RecordPage config={recordByKey("attendance")} />,

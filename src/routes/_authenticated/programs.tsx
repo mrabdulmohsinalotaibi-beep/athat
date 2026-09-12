@@ -28,6 +28,8 @@ export const Route = createFileRoute("/_authenticated/programs")({
         property: "og:description",
         content: "البرامج الإرشادية الوقائية والإنمائية والعلاجية موزعة على الأسابيع الدراسية.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ProgramsPage,

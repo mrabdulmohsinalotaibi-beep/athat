@@ -11,6 +11,7 @@ import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { AiDraftAssistant } from "@/components/AiDraftAssistant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,8 @@ import {
 } from "@/components/ui/dialog";
 
 type Row = Record<string, unknown> & { id: string };
+
+const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports"]);
 
 export function RecordPage({
   config,
@@ -307,6 +310,35 @@ export function RecordPage({
               save.mutate(values);
             }}
           >
+            {AI_RECORD_KEYS.has(config.key) && (
+              <AiDraftAssistant
+                recordKey={config.key as "cases" | "interviews" | "behavior" | "reports"}
+                context={Object.fromEntries(
+                  config.fields.map((field) => [field.name, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
+                )}
+                onDraft={(draft) => {
+                  const generated: Record<string, string> = {};
+                  if (config.key === "cases") {
+                    generated["summary"] = `${draft.summary}\n\nالأهداف الإرشادية:\n${draft.goals}`;
+                    generated["intervention_plan"] = draft.interventionPlan;
+                    generated["next_action"] = draft.nextAction;
+                    generated["notes"] = draft.recommendations;
+                  } else if (config.key === "interviews") {
+                    generated["result"] = `${draft.summary}\n\nالنتيجة:\n${draft.result}`;
+                    generated["recommendations"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
+                    generated["notes"] = draft.notes;
+                  } else if (config.key === "behavior") {
+                    generated["observation"] = draft.summary;
+                    generated["action"] = draft.interventionPlan;
+                    generated["result"] = draft.result;
+                    generated["notes"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
+                  } else {
+                    generated["notes"] = `تحديد الموضوع:\n${draft.summary}\n\nالأهداف:\n${draft.goals}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
+                  }
+                  setAuto((current) => ({ ...current, ...generated }));
+                }}
+              />
+            )}
             {config.fields.map((f) => {
               const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
               return (
@@ -347,7 +379,13 @@ export function RecordPage({
                     <input type="hidden" name={f.name} value={current} readOnly />
                   </div>
                 ) : f.type === "textarea" ? (
-                  <Textarea key={current} id={f.name} name={f.name} defaultValue={current} rows={3} />
+                  <Textarea
+                    key={current}
+                    id={f.name}
+                    name={f.name}
+                    defaultValue={current}
+                    rows={4}
+                  />
                 ) : f.type === "select" ? (
                   <select
                     key={current}

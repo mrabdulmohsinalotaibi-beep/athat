@@ -1,5 +1,5 @@
 import type { SchoolSettings } from "@/lib/school";
-import moeLogo from "@/assets/moe-logo.png";
+import moeLogo from "@/assets/moe-logo-official.png";
 
 function todayDate() {
   return new Date().toLocaleDateString("ar-SA-u-ca-gregory", {
@@ -23,26 +23,26 @@ export function OfficialHeader({
   period?: string;
 }) {
   return (
-    <div className="border-b-2 border-primary pb-4">
-      <div className="grid grid-cols-3 items-start gap-3 text-[11px] font-semibold">
-        <div className="text-right leading-6">
+    <div className="official-letterhead border-b-2 border-primary pb-4">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8 px-6 text-[11px] font-semibold sm:px-10">
+        <div className="mx-auto w-full max-w-56 text-center leading-6">
           <p>المملكة العربية السعودية</p>
           <p>وزارة التعليم</p>
-          <p>{school?.education_dept || "إدارة التعليم"}</p>
+          <p>إدارة التعليم {school?.education_dept || "—"}</p>
           <p>{school?.school_name || "اسم المدرسة"}</p>
         </div>
 
-        <div className="flex flex-col items-center justify-center text-center">
+        <div className="flex w-36 items-center justify-center text-center">
           <img
             src={moeLogo}
             alt="شعار وزارة التعليم"
-            width={112}
-            height={112}
-            className="size-24 object-contain"
+            width={144}
+            height={104}
+            className="h-24 w-36 object-contain"
           />
         </div>
 
-        <div className="text-left leading-6">
+        <div className="mx-auto w-full max-w-56 text-center leading-6">
           <p>التاريخ: {todayDate()}</p>
           <p>الفصل الدراسي: {school?.semester || "—"}</p>
           <p>نوع التقرير: {reportType || title}</p>

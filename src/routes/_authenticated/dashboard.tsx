@@ -34,6 +34,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { name: "description", content: "مؤشرات وإحصائيات أعمال الموجه الطلابي والتنبيهات العاجلة." },
       { property: "og:title", content: "لوحة التحكم | منصة ذات" },
       { property: "og:description", content: "إحصائيات الحالات والمواظبة والسلوك والبرامج الإرشادية." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Dashboard,

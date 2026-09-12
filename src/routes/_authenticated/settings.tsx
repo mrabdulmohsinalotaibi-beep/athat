@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { name: "description", content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة ذات." },
       { property: "og:title", content: "الإعدادات | منصة ذات" },
       { property: "og:description", content: "بيانات المدرسة والعام الدراسي والقوائم المرجعية." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: SettingsPage,

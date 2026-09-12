@@ -9,6 +9,8 @@ export const Route = createFileRoute("/_authenticated/interviews")({
       { name: "description", content: "مقابلات الطلاب وأولياء الأمور والمعلمين ونتائجها." },
       { property: "og:title", content: "المقابلات والتواصل | منصة ذات" },
       { property: "og:description", content: "مقابلات الطلاب وأولياء الأمور والمعلمين ونتائجها." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: () => <RecordPage config={recordByKey("interviews")} />,

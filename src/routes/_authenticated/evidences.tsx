@@ -17,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/evidences")({
         property: "og:description",
         content: "رفع وتصفح شواهد البرامج: صور ومقاطع فيديو ومستندات مرتبطة بالأنشطة الإرشادية.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: EvidencesPage,
