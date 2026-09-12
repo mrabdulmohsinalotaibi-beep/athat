@@ -374,8 +374,7 @@ export function RecordPage({
                 )}
               </div>
               );
-            })
-            ))}
+            })}
           </form>
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => setEditing(null)}>
