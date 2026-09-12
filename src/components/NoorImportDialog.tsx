@@ -268,10 +268,21 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
         <DialogHeader>
           <DialogTitle>استيراد الطلاب من تقارير نظام نور</DialogTitle>
           <DialogDescription>
-            ارفع ملف نور (Excel/CSV)، ثم أكّد ربط الأعمدة السبعة قبل الحفظ.
+            اربط النظام مباشرة بحساب نور، أو ارفع كشف نور (Excel/CSV) وأكّد ربط الأعمدة قبل الحفظ.
           </DialogDescription>
         </DialogHeader>
 
+        <Tabs defaultValue="file" dir="rtl">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="direct">الربط المباشر مع نور</TabsTrigger>
+            <TabsTrigger value="file">رفع ملف كشف نور</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="direct" className="pt-4">
+            <DirectNoorTab onDone={() => queryClient.invalidateQueries({ queryKey: ["students"] })} />
+          </TabsContent>
+
+          <TabsContent value="file" className="space-y-4 pt-4">
         <input
           ref={fileRef}
           type="file"
