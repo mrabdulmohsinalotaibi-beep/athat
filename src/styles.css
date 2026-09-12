@@ -153,7 +153,9 @@
     margin-inline: 2mm;
   }
   .print-area section,
-  .print-area tr {
+  .print-area tr,
+  .report-signatures,
+  .report-summary {
     break-inside: avoid;
   }
 }
