@@ -9,6 +9,8 @@ import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +42,8 @@ export function RecordPage({
   const { data: school } = useSchool();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [auto, setAuto] = useState<Record<string, string>>({});
+  const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -145,7 +149,12 @@ export function RecordPage({
           <p className="text-sm text-muted-foreground">{filtered.length} سجل</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setEditing({})}>
+          <Button
+            onClick={() => {
+              setAuto({});
+              setEditing({});
+            }}
+          >
             <Plus className="size-4" /> إضافة {config.singular}
           </Button>
           {toolbarExtra}
@@ -231,7 +240,31 @@ export function RecordPage({
                   ))}
                   <td className="no-print p-2">
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(row)}>
+                      {(() => {
+                        const phone =
+                          row["guardian_phone"] ??
+                          studentOptions.find(
+                            (s) =>
+                              s.full_name === String(row["student_name"] ?? "") ||
+                              (!!row["student_no"] && s.student_no === String(row["student_no"])),
+                          )?.guardian_phone;
+                        if (!phone) return null;
+                        return (
+                          <WhatsAppButton
+                            phone={phone}
+                            guardian={String(row["guardian_name"] ?? "")}
+                            student={String(row["student_name"] ?? row["full_name"] ?? "")}
+                          />
+                        );
+                      })()}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setAuto({});
+                          setEditing(row);
+                        }}
+                      >
                         <Pencil className="size-4" />
                       </Button>
                       <Button
@@ -274,18 +307,53 @@ export function RecordPage({
               save.mutate(values);
             }}
           >
-            {config.fields.map((f) => (
+            {config.fields.map((f) => {
+              const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
+              return (
               <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
                 <Label htmlFor={f.name} className="mb-1.5 block text-xs">
                   {f.label}
                 </Label>
-                {f.type === "textarea" ? (
-                  <Textarea id={f.name} name={f.name} defaultValue={String(editing?.[f.name] ?? "")} rows={3} />
+                {f.student ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <StudentCombobox
+                        value={current}
+                        onType={(name) => setAuto((a) => ({ ...a, student_name: name }))}
+                        onSelect={(s: StudentOption) =>
+                          setAuto((a) => ({
+                            ...a,
+                            student_name: s.full_name,
+                            student_no: s.student_no || s.national_id,
+                            guardian_name: s.guardian_name,
+                            grade: s.grade,
+                            classroom: s.classroom,
+                            participant: a["participant"] || s.guardian_name,
+                          }))
+                        }
+                      />
+                    </div>
+                    {(() => {
+                      const match = studentOptions.find((s) => s.full_name === current);
+                      if (!match?.guardian_phone) return null;
+                      return (
+                        <WhatsAppButton
+                          phone={match.guardian_phone}
+                          guardian={match.guardian_name}
+                          student={match.full_name}
+                        />
+                      );
+                    })()}
+                    <input type="hidden" name={f.name} value={current} readOnly />
+                  </div>
+                ) : f.type === "textarea" ? (
+                  <Textarea key={current} id={f.name} name={f.name} defaultValue={current} rows={3} />
                 ) : f.type === "select" ? (
                   <select
+                    key={current}
                     id={f.name}
                     name={f.name}
-                    defaultValue={String(editing?.[f.name] ?? "")}
+                    defaultValue={current}
                     className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                   >
                     <option value="">—</option>
@@ -297,14 +365,16 @@ export function RecordPage({
                   </select>
                 ) : (
                   <Input
+                    key={current}
                     id={f.name}
                     name={f.name}
                     type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
-                    defaultValue={String(editing?.[f.name] ?? "")}
+                    defaultValue={current}
                   />
                 )}
               </div>
-            ))}
+              );
+            })}
           </form>
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => setEditing(null)}>
