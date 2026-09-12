@@ -291,10 +291,13 @@ export type Database = {
           doc_status: string | null
           edate: string | null
           etype: string | null
+          file_name: string | null
+          file_path: string | null
           file_url: string | null
           id: string
           linked_ref: string | null
           linked_type: string | null
+          mime_type: string | null
           name: string | null
           notes: string | null
           reviewed_by: string | null
@@ -308,10 +311,13 @@ export type Database = {
           doc_status?: string | null
           edate?: string | null
           etype?: string | null
+          file_name?: string | null
+          file_path?: string | null
           file_url?: string | null
           id?: string
           linked_ref?: string | null
           linked_type?: string | null
+          mime_type?: string | null
           name?: string | null
           notes?: string | null
           reviewed_by?: string | null
@@ -325,10 +331,13 @@ export type Database = {
           doc_status?: string | null
           edate?: string | null
           etype?: string | null
+          file_name?: string | null
+          file_path?: string | null
           file_url?: string | null
           id?: string
           linked_ref?: string | null
           linked_type?: string | null
+          mime_type?: string | null
           name?: string | null
           notes?: string | null
           reviewed_by?: string | null
@@ -496,6 +505,8 @@ export type Database = {
           id: string
           indicator: string | null
           name: string | null
+          noor_sync_ref: string | null
+          noor_synced_at: string | null
           notes: string | null
           program_no: string | null
           ptype: string | null
@@ -516,6 +527,8 @@ export type Database = {
           id?: string
           indicator?: string | null
           name?: string | null
+          noor_sync_ref?: string | null
+          noor_synced_at?: string | null
           notes?: string | null
           program_no?: string | null
           ptype?: string | null
@@ -536,6 +549,8 @@ export type Database = {
           id?: string
           indicator?: string | null
           name?: string | null
+          noor_sync_ref?: string | null
+          noor_synced_at?: string | null
           notes?: string | null
           program_no?: string | null
           ptype?: string | null
