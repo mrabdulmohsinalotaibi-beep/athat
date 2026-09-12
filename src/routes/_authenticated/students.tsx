@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RecordPage } from "@/components/RecordPage";
-import { recordByKey } from "@/lib/records";
+import { StudentsPage } from "@/components/StudentsPage";
 
 export const Route = createFileRoute("/_authenticated/students")({
   head: () => ({
@@ -11,5 +10,5 @@ export const Route = createFileRoute("/_authenticated/students")({
       { property: "og:description", content: "بيانات الطلاب وأولياء الأمور والفصول والحالة الصحية والاجتماعية." },
     ],
   }),
-  component: () => <RecordPage config={recordByKey("students")} />,
+  component: StudentsPage,
 });
