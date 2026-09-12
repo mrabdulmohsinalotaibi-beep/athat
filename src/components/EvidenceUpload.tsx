@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Film, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.pdf,.doc,.docx,.xls,.xlsx";
+const MAX_BYTES = 50 * 1024 * 1024;
 
 function kindOf(mime: string, name: string) {
   const lower = `${mime} ${name}`.toLowerCase();
@@ -33,18 +34,24 @@ function typeLabel(kind: string) {
 export function EvidenceUploadDialog({
   open,
   onOpenChange,
+  defaultLinkedType = "برنامج",
+  defaultLinkedRef = "",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  defaultLinkedType?: string;
+  defaultLinkedRef?: string;
 }) {
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
-  const [linkedRef, setLinkedRef] = useState("");
-  const [linkedType, setLinkedType] = useState("برنامج");
+  const [linkedRef, setLinkedRef] = useState(defaultLinkedRef);
+  const [linkedType, setLinkedType] = useState(defaultLinkedType);
   const [edate, setEdate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = useMemo(() => file && kindOf(file.type, file.name) === "image" ? URL.createObjectURL(file) : "", [file]);
 
   const { data: programs = [] } = useQuery({
     queryKey: ["programs-options"],
@@ -58,13 +65,17 @@ export function EvidenceUploadDialog({
   function reset() {
     setFile(null);
     setName("");
-    setLinkedRef("");
+    setLinkedRef(defaultLinkedRef);
     setDescription("");
   }
 
   async function upload() {
     if (!file) {
       toast.error("اختر ملف الشاهد أولاً");
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      toast.error("حجم الملف يتجاوز 50 ميجابايت");
       return;
     }
     setBusy(true);
@@ -118,7 +129,17 @@ export function EvidenceUploadDialog({
         <div className="space-y-3">
           <div>
             <Label className="mb-1.5 block text-xs">ملف الشاهد</Label>
-            <Input type="file" accept={ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <input ref={inputRef} type="file" accept={ACCEPT} className="hidden" onChange={(e) => {
+              const chosen = e.target.files?.[0] ?? null;
+              if (chosen && chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); e.target.value = ""; return; }
+              setFile(chosen); if (chosen && !name) setName(chosen.name);
+            }} />
+            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) return toast.error("حجم الملف يتجاوز 50 ميجابايت"); setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
+              {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 h-28 max-w-full object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
+              <p className="mt-2 text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
+              <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>
+              <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => inputRef.current?.click()}>اختيار ملف</Button>
+            </div>
           </div>
           <div>
             <Label className="mb-1.5 block text-xs">اسم الشاهد</Label>

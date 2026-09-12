@@ -7,6 +7,7 @@ import { draftGuidanceReport, type GuidanceDraft } from "@/lib/ai.functions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PlanGate } from "@/components/PlanGate";
 
 export function AiDraftAssistant({
   recordKey,
@@ -39,6 +40,7 @@ export function AiDraftAssistant({
   }
 
   return (
+    <PlanGate feature="المساعد الذكي الكامل">
     <section className="ai-assistant-panel sm:col-span-2">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -61,5 +63,6 @@ export function AiDraftAssistant({
         placeholder="مثال: تكرار الغياب، تواصل مع ولي الأمر، تحسن ملحوظ، متابعة بعد أسبوع..."
       />
     </section>
+    </PlanGate>
   );
 }
