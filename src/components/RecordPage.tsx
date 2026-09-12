@@ -150,7 +150,12 @@ export function RecordPage({
           <p className="text-sm text-muted-foreground">{filtered.length} سجل</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setEditing({})}>
+          <Button
+            onClick={() => {
+              setAuto({});
+              setEditing({});
+            }}
+          >
             <Plus className="size-4" /> إضافة {config.singular}
           </Button>
           {toolbarExtra}
@@ -236,7 +241,31 @@ export function RecordPage({
                   ))}
                   <td className="no-print p-2">
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(row)}>
+                      {(() => {
+                        const phone =
+                          row["guardian_phone"] ??
+                          studentOptions.find(
+                            (s) =>
+                              s.full_name === String(row["student_name"] ?? "") ||
+                              (!!row["student_no"] && s.student_no === String(row["student_no"])),
+                          )?.guardian_phone;
+                        if (!phone) return null;
+                        return (
+                          <WhatsAppButton
+                            phone={phone}
+                            guardian={String(row["guardian_name"] ?? "")}
+                            student={String(row["student_name"] ?? row["full_name"] ?? "")}
+                          />
+                        );
+                      })()}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setAuto({});
+                          setEditing(row);
+                        }}
+                      >
                         <Pencil className="size-4" />
                       </Button>
                       <Button
