@@ -113,31 +113,53 @@ function NafathTab({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-2 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-        <span>
-          يتم التحقق من هوية الموجه الطلابي عبر الدخول الوطني الموحد (نفاذ) دون حفظ أي كلمات مرور. بعد قبول الطلب من
-          تطبيق نفاذ يُسمح للنظام بجلب كشوفات الطلاب من نور. إن لم يكن خادم الأتمتة مفعّلاً، يعمل الربط في وضع المحاكاة.
-        </span>
-      </div>
-
-      {requestNumber === null && (
-        <div className="space-y-3">
-          <div>
-            <Label className="mb-1.5 block text-xs">رقم الهوية الوطنية للموجه الطلابي</Label>
-            <Input
-              value={nationalId}
-              onChange={(e) => setNationalId(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              inputMode="numeric"
-              placeholder="10xxxxxxxx"
-              autoComplete="off"
-            />
+      <div className="overflow-hidden rounded-xl border">
+        <div className="flex items-center justify-between gap-3 bg-[#00693e] px-4 py-3 text-white">
+          <div className="leading-tight">
+            <p className="text-sm font-extrabold">النفاذ الوطني الموحد</p>
+            <p className="text-[11px] opacity-90">Nafath — الدخول الآمن للخدمات الحكومية</p>
           </div>
-          <Button onClick={requestNafath} className="w-full" disabled={nationalId.replace(/\D/g, "").length !== 10}>
-            <LinkIcon className="size-4" /> الدخول عبر نفاذ
-          </Button>
+          <span className="rounded-md bg-white/15 px-2 py-1 text-[10px]">iam.gov.sa/sso/nafath</span>
         </div>
-      )}
+
+        <div className="space-y-4 bg-card p-4">
+          <div className="flex gap-2 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+            <span>
+              يتم التحقق من هوية الموجه الطلابي عبر النفاذ الوطني الموحد دون حفظ أي كلمات مرور. بعد قبول الطلب من تطبيق
+              نفاذ يُسمح للنظام بجلب كشوفات الطلاب من نور. هذه واجهة محاكاة داخل المنصة، ويمكنك دائماً استخدام الإدخال
+              اليدوي أو رفع ملف Excel كبديل.
+            </span>
+          </div>
+
+          {requestNumber === null && (
+            <div className="space-y-3">
+              <div>
+                <Label className="mb-1.5 block text-xs">رقم الهوية الوطنية / الإقامة</Label>
+                <Input
+                  value={nationalId}
+                  onChange={(e) => setNationalId(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  inputMode="numeric"
+                  placeholder="10xxxxxxxx"
+                  autoComplete="off"
+                  className="tracking-widest"
+                />
+              </div>
+              <Button onClick={requestNafath} className="w-full" disabled={nationalId.replace(/\D/g, "").length !== 10}>
+                <LinkIcon className="size-4" /> تسجيل الدخول عبر نفاذ
+              </Button>
+              <a
+                href="https://www.iam.gov.sa/sso/nafath"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-center text-[11px] text-muted-foreground underline"
+              >
+                عن بوابة النفاذ الوطني الموحد الرسمية
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
 
       {requestNumber !== null && (
         <div className="rounded-2xl border bg-card p-5 text-center shadow-sm">
