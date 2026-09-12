@@ -145,6 +145,8 @@
     font-size: 11pt;
   }
   .print-area {
+    background: #fff !important;
+    color: #252124 !important;
     box-shadow: none !important;
     border: none !important;
     padding: 0 !important;

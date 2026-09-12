@@ -21,9 +21,9 @@ import {
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
-      { title: "البرامج والأنشطة | منصة ذات" },
+      { title: "البرامج والأنشطة | منصة الذات" },
       { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة موزعة على أسابيع الفصول الدراسية." },
-      { property: "og:title", content: "البرامج والأنشطة | منصة ذات" },
+      { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
       {
         property: "og:description",
         content: "البرامج الإرشادية الوقائية والإنمائية والعلاجية موزعة على الأسابيع الدراسية.",

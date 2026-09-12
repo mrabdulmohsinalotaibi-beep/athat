@@ -447,7 +447,7 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <EvidenceUploadDialog open={evidenceFor !== null} onOpenChange={(open) => !open && setEvidenceFor(null)} defaultLinkedType={LINKED_TYPE[config.key] || config.singular} defaultLinkedRef={String(evidenceFor?.[listFields[0]?.name ?? "id"] ?? evidenceFor?.id ?? "")} />
+      <EvidenceUploadDialog open={evidenceFor !== null} onOpenChange={(open) => !open && setEvidenceFor(null)} defaultLinkedType={LINKED_TYPE[config.key] || config.singular} defaultLinkedRef={displayRecordValue(evidenceFor?.[listFields[0]?.name ?? ""] ?? evidenceFor?.[config.fields.find((field) => field.type === "date")?.name ?? ""] ?? "")} />
     </div>
   );
 }

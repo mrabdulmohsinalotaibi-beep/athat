@@ -22,13 +22,13 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول | منصة ذات" },
+      { title: "تسجيل الدخول | منصة الذات" },
       {
         name: "description",
-        content: "سجّل الدخول إلى منصة ذات للموجه الطلابي بالبريد الإلكتروني أو حساب Google أو جرّب الحساب التجريبي.",
+        content: "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو حساب Google أو جرّب الحساب التجريبي.",
       },
-      { property: "og:title", content: "تسجيل الدخول | منصة ذات" },
-      { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة ذات." },
+      { property: "og:title", content: "تسجيل الدخول | منصة الذات" },
+      { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة الذات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

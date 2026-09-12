@@ -29,7 +29,7 @@ export function SignaturePad({
     context.lineCap = "round";
     context.lineJoin = "round";
     context.lineWidth = 2.4;
-    context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
+    context.strokeStyle = "#2d2022";
 
     if (!value) return;
     const image = new Image();

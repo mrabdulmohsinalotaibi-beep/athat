@@ -22,9 +22,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
-      { title: "التقارير والطباعة | منصة ذات" },
+      { title: "التقارير والطباعة | منصة الذات" },
       { name: "description", content: "إعداد التقارير الرسمية وطباعتها أو تصديرها PDF بترويسة وزارية وتوقيع رسمي." },
-      { property: "og:title", content: "التقارير والطباعة | منصة ذات" },
+      { property: "og:title", content: "التقارير والطباعة | منصة الذات" },
       { property: "og:description", content: "تقارير مفردة أو مجمعة جاهزة للطباعة الرسمية لأعمال الموجه الطلابي." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -247,12 +247,10 @@ function ReportsPage() {
         {aiNarrative && (
           <section className="mt-6 rounded-lg border bg-muted/30 p-4 text-sm leading-7">
             <h3 className="mb-2 font-extrabold">الصياغة المهنية للتقرير</h3>
-            <Textarea
-              value={aiNarrative}
-              onChange={(event) => setAiNarrative(event.target.value)}
-              rows={12}
-              className="border-0 bg-transparent leading-7 shadow-none focus-visible:ring-0"
-            />
+            <div className="no-print">
+              <Textarea value={aiNarrative} onChange={(event) => setAiNarrative(event.target.value)} rows={12} className="border-0 bg-transparent leading-7 shadow-none focus-visible:ring-0" />
+            </div>
+            <p className="hidden whitespace-pre-wrap print:block">{aiNarrative}</p>
           </section>
         )}
 

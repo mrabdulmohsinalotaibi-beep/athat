@@ -14,9 +14,9 @@ import { SignaturePad } from "@/components/SignaturePad";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "الإعدادات | منصة ذات" },
-      { name: "description", content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة ذات." },
-      { property: "og:title", content: "الإعدادات | منصة ذات" },
+      { title: "الإعدادات | منصة الذات" },
+      { name: "description", content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة الذات." },
+      { property: "og:title", content: "الإعدادات | منصة الذات" },
       { property: "og:description", content: "بيانات المدرسة والعام الدراسي والقوائم المرجعية." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
