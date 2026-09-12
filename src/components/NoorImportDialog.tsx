@@ -1,13 +1,18 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { AlertTriangle, CheckCircle2, FileSpreadsheet, Loader2, LinkIcon, ShieldCheck, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { readExcel, sheetHeaders } from "@/lib/sheet";
 import { NOOR_FIELDS, autoMap, cleanId, cleanPhone } from "@/lib/noor";
+import { importNoorStudents, type NoorImportResult } from "@/lib/noor-import.functions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +24,120 @@ import {
 
 type SheetRow = Record<string, unknown>;
 type RowError = { row: number; name: string; reason: string };
+
+const STEPS = ["التحقق من بيانات الدخول", "جلب تقارير الطلاب", "حفظ ومزامنة البيانات في النظام"];
+
+function DirectNoorTab({ onDone }: { onDone: () => void }) {
+  const runImport = useServerFn(importNoorStudents);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(-1);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<NoorImportResult | null>(null);
+
+  async function start() {
+    setBusy(true);
+    setResult(null);
+    setStep(0);
+    try {
+      const timer1 = setTimeout(() => setStep(1), 700);
+      const data = await runImport({ data: { username, password, otp } });
+      clearTimeout(timer1);
+      setStep(2);
+      await new Promise((r) => setTimeout(r, 400));
+      setResult(data);
+      setStep(3);
+      if (data.inserted) toast.success(`تم استيراد ${data.inserted} طالباً من نور`);
+      else toast.warning("لم تتم إضافة طلاب جدد (قد تكون البيانات مستوردة مسبقاً).");
+      onDone();
+    } catch (error) {
+      setStep(-1);
+      toast.error((error as Error).message || "تعذّر الاتصال بنظام نور");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex gap-2 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+        <span>
+          تُستخدم بيانات دخول نور مرة واحدة فقط لجلب كشف الطلاب ولا تُخزَّن في قاعدة البيانات. إن لم يكن خادم الأتمتة
+          مفعّلاً، يعمل الربط في وضع المحاكاة ببيانات تجريبية لعرض خطوات العملية.
+        </span>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <Label className="mb-1.5 block text-xs">اسم المستخدم في نور</Label>
+          <Input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" />
+        </div>
+        <div>
+          <Label className="mb-1.5 block text-xs">كلمة المرور</Label>
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off" />
+        </div>
+        <div>
+          <Label className="mb-1.5 block text-xs">رمز التحقق / OTP (إن وُجد)</Label>
+          <Input value={otp} onChange={(e) => setOtp(e.target.value)} inputMode="numeric" autoComplete="off" />
+        </div>
+      </div>
+
+      {step >= 0 && (
+        <div className="space-y-3 rounded-lg border p-4">
+          <Progress value={Math.min(((step + 1) / STEPS.length) * 100, 100)} />
+          <ul className="space-y-2 text-sm">
+            {STEPS.map((s, i) => (
+              <li key={s} className="flex items-center gap-2">
+                {step > i ? (
+                  <CheckCircle2 className="size-4 text-primary" />
+                ) : step === i ? (
+                  <Loader2 className="size-4 animate-spin text-primary" />
+                ) : (
+                  <span className="size-4 rounded-full border" />
+                )}
+                <span className={step >= i ? "text-foreground" : "text-muted-foreground"}>{s}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+          <p>{result.message}</p>
+          <p>
+            تم جلب <span className="font-bold">{result.fetched}</span> سجلاً، وإضافة{" "}
+            <span className="font-bold">{result.inserted}</span> طالباً
+            {result.skipped.length > 0 && <> وتجاوز {result.skipped.length} سجلاً</>}.
+          </p>
+          {result.skipped.length > 0 && (
+            <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-destructive">
+              {result.skipped.map((s, i) => (
+                <li key={i}>
+                  {s.name} — {s.reason}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <Button onClick={start} disabled={busy || !username.trim() || !password.trim()} className="w-full">
+        {busy ? (
+          <>
+            <Loader2 className="size-4 animate-spin" /> جارٍ الاتصال بنظام نور...
+          </>
+        ) : (
+          <>
+            <LinkIcon className="size-4" /> بدء الاستيراد من نور
+          </>
+        )}
+      </Button>
+    </div>
+  );
+}
 
 export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const queryClient = useQueryClient();
@@ -149,10 +268,21 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
         <DialogHeader>
           <DialogTitle>استيراد الطلاب من تقارير نظام نور</DialogTitle>
           <DialogDescription>
-            ارفع ملف نور (Excel/CSV)، ثم أكّد ربط الأعمدة السبعة قبل الحفظ.
+            اربط النظام مباشرة بحساب نور، أو ارفع كشف نور (Excel/CSV) وأكّد ربط الأعمدة قبل الحفظ.
           </DialogDescription>
         </DialogHeader>
 
+        <Tabs defaultValue="file" dir="rtl">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="direct">الربط المباشر مع نور</TabsTrigger>
+            <TabsTrigger value="file">رفع ملف كشف نور</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="direct" className="pt-4">
+            <DirectNoorTab onDone={() => queryClient.invalidateQueries({ queryKey: ["students"] })} />
+          </TabsContent>
+
+          <TabsContent value="file" className="space-y-4 pt-4">
         <input
           ref={fileRef}
           type="file"
@@ -301,6 +431,8 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
             </>
           )}
         </DialogFooter>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
