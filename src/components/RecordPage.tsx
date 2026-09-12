@@ -375,7 +375,8 @@ export function RecordPage({
                   const generated: Record<string, string> = {};
                   if (config.key === "cases") {
                     generated["summary"] = `${draft.summary}\n\nوصف المشكلة:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف الإرشادية:\n${draft.goals}`;
-                    generated["intervention_plan"] = draft.interventionPlan;
+                    const interventionField = config.fields.find((field) => field.name === "intervention_plan");
+                    if (interventionField && optionsFor(interventionField).includes(draft.interventionPlan)) generated["intervention_plan"] = draft.interventionPlan;
                     generated["next_action"] = draft.nextAction;
                     generated["notes"] = `الإجراءات:\n${draft.actions}\n\nالتوصيات:\n${draft.recommendations}\n\n${draft.notes}`;
                   } else if (config.key === "interviews") {
@@ -385,8 +386,11 @@ export function RecordPage({
                     generated["notes"] = draft.notes;
                   } else if (config.key === "behavior") {
                     generated["observation"] = `${draft.problemDescription}\n\nالأسباب المحتملة: ${draft.causes}`;
-                    generated["action"] = draft.actions || draft.interventionPlan;
-                    generated["result"] = draft.result;
+                    const actionField = config.fields.find((field) => field.name === "action");
+                    const resultField = config.fields.find((field) => field.name === "result");
+                    const action = draft.actions || draft.interventionPlan;
+                    if (actionField && optionsFor(actionField).includes(action)) generated["action"] = action;
+                    if (resultField && optionsFor(resultField).includes(draft.result)) generated["result"] = draft.result;
                     generated["notes"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
                   } else {
                     generated["summary"] = draft.summary;

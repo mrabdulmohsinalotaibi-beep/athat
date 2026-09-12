@@ -77,7 +77,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className="app-shell flex min-h-screen bg-background">
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto bg-sidebar text-sidebar-foreground shadow-2xl transition-transform lg:static lg:translate-x-0",
+          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-transform lg:static lg:translate-x-0",
           open ? "translate-x-0" : "translate-x-full lg:translate-x-0",
         )}
       >

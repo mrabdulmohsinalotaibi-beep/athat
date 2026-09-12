@@ -201,7 +201,7 @@ function SettingsPage() {
               {editingLookup?.id === item.id ? (
                 <Input value={editingLookup.value} onChange={(event) => setEditingLookup({ id: item.id, value: event.target.value })} className="ml-2" autoFocus />
               ) : (
-                <span><span className="text-muted-foreground">{lookupCategoryLabel(item.category)}:</span> {item.value}</span>
+                <span><span className="text-muted-foreground">{lookupCategoryLabel(item.category ?? "")}:</span> {item.value}</span>
               )}
               <div className="flex shrink-0 gap-1">
                 {editingLookup?.id === item.id ? (
