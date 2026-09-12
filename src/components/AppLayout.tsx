@@ -27,7 +27,6 @@ import { useSchool } from "@/lib/school";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
-import { ThemePicker } from "@/components/ThemePicker";
 import { isAppTheme, useTheme } from "@/lib/theme";
 
 const NAV = [
@@ -140,31 +139,28 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-20 border-b bg-card/90 shadow-sm backdrop-blur-xl">
-          <div className="grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 sm:px-4 lg:px-8">
-            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
+            <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
                 <Menu className="size-5" />
               </Button>
                <img src={platformLogo.url} alt="شعار منصة الذات" className="hidden size-12 object-contain sm:block" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
-                <p className="truncate text-xs text-muted-foreground">
+              <div>
+                <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
+                <p className="text-xs text-muted-foreground">
                   {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
                 </p>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="hidden text-xs text-muted-foreground md:block">
+            <div className="text-xs text-muted-foreground">
               <p>الموجه الطلابي: {school?.counselor_name || "—"}</p>
               <p>
                 {school?.academic_year || "العام الدراسي"} · {school?.semester || "الفصل الدراسي"}
               </p>
-              </div>
-              <ThemePicker compact onChange={persistTheme} />
             </div>
           </div>
         </header>
-        <main className="min-w-0 flex-1 p-3 sm:p-4 lg:p-8">{children}</main>
+        <main className="min-w-0 flex-1 p-4 lg:p-8">{children}</main>
         <footer className="no-print border-t px-4 py-4"><Copyright /></footer>
       </div>
     </div>

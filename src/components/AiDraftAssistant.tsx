@@ -13,10 +13,12 @@ export function AiDraftAssistant({
   recordKey,
   context,
   onDraft,
+  availableOptions = {},
 }: {
   recordKey: "cases" | "interviews" | "behavior" | "reports";
   context: Record<string, string>;
   onDraft: (draft: GuidanceDraft) => void;
+  availableOptions?: Record<string, string[]>;
 }) {
   const draftReport = useServerFn(draftGuidanceReport);
   const [notes, setNotes] = useState("");
@@ -29,7 +31,7 @@ export function AiDraftAssistant({
     }
     setBusy(true);
     try {
-      const draft = await draftReport({ data: { recordKey, notes: notes.trim(), context } });
+      const draft = await draftReport({ data: { recordKey, notes: notes.trim(), context, availableOptions } });
       onDraft(draft);
       toast.success("تم إعداد المسودة. راجعها وعدّلها قبل الحفظ.");
     } catch (error) {
