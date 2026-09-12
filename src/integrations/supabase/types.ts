@@ -682,6 +682,7 @@ export type Database = {
           principal_signature: string | null
           school_name: string | null
           semester: string | null
+          theme: string
           updated_at: string
           user_id: string
         }
@@ -698,6 +699,7 @@ export type Database = {
           principal_signature?: string | null
           school_name?: string | null
           semester?: string | null
+          theme?: string
           updated_at?: string
           user_id?: string
         }
@@ -714,6 +716,7 @@ export type Database = {
           principal_signature?: string | null
           school_name?: string | null
           semester?: string | null
+          theme?: string
           updated_at?: string
           user_id?: string
         }
