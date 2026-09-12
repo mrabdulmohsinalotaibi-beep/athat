@@ -9,6 +9,8 @@ export interface SchoolSettings {
   counselor_name?: string | null;
   academic_year?: string | null;
   semester?: string | null;
+  counselor_signature?: string | null;
+  principal_signature?: string | null;
 }
 
 export function useSchool() {

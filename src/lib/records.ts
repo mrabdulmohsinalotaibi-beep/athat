@@ -247,6 +247,7 @@ export const RECORDS: RecordConfig[] = [
       { name: "report_date", label: "تاريخ التقرير", type: "date", list: true },
       { name: "prepared_by", label: "المُعد" },
       { name: "status", label: "الحالة", type: "select", options: ["مسودة", "معتمد", "مرسل"], list: true },
+      { name: "summary", label: "ملخص التقرير / خلاصة الحالة", type: "textarea" },
       { name: "file_url", label: "الرابط/الملف" },
       notes,
     ],

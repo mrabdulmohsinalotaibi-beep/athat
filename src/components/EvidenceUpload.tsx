@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { displayRecordValue } from "@/lib/display";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -268,7 +269,7 @@ export function EvidenceGallery() {
             <div className="space-y-1 p-3">
               <p className="truncate text-sm font-bold">{String(it.name ?? "—")}</p>
               <p className="truncate text-[11px] text-muted-foreground">
-                {String(it.linked_type ?? "")} {it.linked_ref ? `· ${String(it.linked_ref)}` : ""} ·{" "}
+                {String(it.linked_type ?? "")} {it.linked_ref ? `· ${displayRecordValue(it.linked_ref)}` : ""} ·{" "}
                 {String(it.edate ?? "")}
               </p>
               <div className="flex gap-1 pt-1">

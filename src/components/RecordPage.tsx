@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
+import { displayRecordValue } from "@/lib/display";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
@@ -52,6 +53,7 @@ export function RecordPage({
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const [evidenceFor, setEvidenceFor] = useState<Row | null>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -148,6 +150,19 @@ export function RecordPage({
     }
   }
 
+  async function exportPdf() {
+    if (!printRef.current || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      await elementToPdf(printRef.current, config.title);
+      toast.success("تم تجهيز ملف PDF");
+    } catch {
+      toast.error("تعذّر تصدير PDF. حاول مرة أخرى.");
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
@@ -178,9 +193,10 @@ export function RecordPage({
           </Button>
           <Button
             variant="outline"
-            onClick={() => printRef.current && elementToPdf(printRef.current, config.title)}
+            onClick={exportPdf}
+            disabled={exportingPdf}
           >
-            <FileDown className="size-4" /> تصدير PDF
+            <FileDown className="size-4" /> {exportingPdf ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
           </Button>
           <input
             ref={fileRef}
@@ -242,7 +258,7 @@ export function RecordPage({
                 <tr key={row.id} className="border-b last:border-0 hover:bg-muted/40">
                   {listFields.map((f) => (
                     <td key={f.name} className="p-3 align-top">
-                      {String(row[f.name] ?? "—")}
+                      {displayRecordValue(row[f.name])}
                     </td>
                   ))}
                   <td className="no-print p-2">
@@ -324,21 +340,23 @@ export function RecordPage({
                 onDraft={(draft) => {
                   const generated: Record<string, string> = {};
                   if (config.key === "cases") {
-                    generated["summary"] = `${draft.summary}\n\nالأهداف الإرشادية:\n${draft.goals}`;
+                    generated["summary"] = `${draft.summary}\n\nوصف المشكلة:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف الإرشادية:\n${draft.goals}`;
                     generated["intervention_plan"] = draft.interventionPlan;
                     generated["next_action"] = draft.nextAction;
-                    generated["notes"] = draft.recommendations;
+                    generated["notes"] = `الإجراءات:\n${draft.actions}\n\nالتوصيات:\n${draft.recommendations}\n\n${draft.notes}`;
                   } else if (config.key === "interviews") {
-                    generated["result"] = `${draft.summary}\n\nالنتيجة:\n${draft.result}`;
+                    generated["topic"] = draft.problemDescription || draft.summary;
+                    generated["result"] = `${draft.actions}\n\nالنتيجة:\n${draft.result}`;
                     generated["recommendations"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
                     generated["notes"] = draft.notes;
                   } else if (config.key === "behavior") {
-                    generated["observation"] = draft.summary;
-                    generated["action"] = draft.interventionPlan;
+                    generated["observation"] = `${draft.problemDescription}\n\nالأسباب المحتملة: ${draft.causes}`;
+                    generated["action"] = draft.actions || draft.interventionPlan;
                     generated["result"] = draft.result;
                     generated["notes"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
                   } else {
-                    generated["notes"] = `تحديد الموضوع:\n${draft.summary}\n\nالأهداف:\n${draft.goals}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
+                    generated["summary"] = draft.summary;
+                    generated["notes"] = `وصف الموضوع:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف:\n${draft.goals}\n\nالإجراءات:\n${draft.actions}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
                   }
                   setAuto((current) => ({ ...current, ...generated }));
                 }}
@@ -429,7 +447,7 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <EvidenceUploadDialog open={evidenceFor !== null} onOpenChange={(open) => !open && setEvidenceFor(null)} defaultLinkedType={LINKED_TYPE[config.key] || config.singular} defaultLinkedRef={String(evidenceFor?.[listFields[0]?.name ?? "id"] ?? evidenceFor?.id ?? "")} />
+      <EvidenceUploadDialog open={evidenceFor !== null} onOpenChange={(open) => !open && setEvidenceFor(null)} defaultLinkedType={LINKED_TYPE[config.key] || config.singular} defaultLinkedRef={displayRecordValue(evidenceFor?.[listFields[0]?.name ?? ""] ?? evidenceFor?.[config.fields.find((field) => field.type === "date")?.name ?? ""] ?? "")} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { RECORDS, recordByKey } from "@/lib/records";
 import { elementToPdf, elementToPdfFile } from "@/lib/pdf";
 import { whatsappLink } from "@/lib/whatsapp";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
+import { displayRecordValue } from "@/lib/display";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { AiDraftAssistant } from "@/components/AiDraftAssistant";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
-      { title: "التقارير والطباعة | منصة ذات" },
+      { title: "التقارير والطباعة | منصة الذات" },
       { name: "description", content: "إعداد التقارير الرسمية وطباعتها أو تصديرها PDF بترويسة وزارية وتوقيع رسمي." },
-      { property: "og:title", content: "التقارير والطباعة | منصة ذات" },
+      { property: "og:title", content: "التقارير والطباعة | منصة الذات" },
       { property: "og:description", content: "تقارير مفردة أو مجمعة جاهزة للطباعة الرسمية لأعمال الموجه الطلابي." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -102,6 +103,8 @@ function ReportsPage() {
   const [to, setTo] = useState("");
   const [withKpis, setWithKpis] = useState(true);
   const [aiNarrative, setAiNarrative] = useState("");
+  const [reportSummary, setReportSummary] = useState("");
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
   const printRef = useRef<HTMLDivElement>(null);
@@ -144,6 +147,19 @@ function ReportsPage() {
       setShareOpen(false);
     } catch (error) {
       if ((error as Error).name !== "AbortError") toast.error("تعذّرت مشاركة التقرير. حاول تنزيله أولاً.");
+    }
+  }
+
+  async function exportPdf() {
+    if (!printRef.current || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      await elementToPdf(printRef.current, fileName);
+      toast.success("تم تجهيز ملف PDF");
+    } catch {
+      toast.error("تعذّر تصدير PDF. حاول مرة أخرى.");
+    } finally {
+      setExportingPdf(false);
     }
   }
 
@@ -191,8 +207,8 @@ function ReportsPage() {
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="size-4" /> طباعة فورية
           </Button>
-          <Button onClick={() => printRef.current && elementToPdf(printRef.current, fileName)}>
-            <FileDown className="size-4" /> تصدير PDF
+          <Button onClick={exportPdf} disabled={exportingPdf}>
+            <FileDown className="size-4" /> {exportingPdf ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
           </Button>
           <Button variant="outline" onClick={() => setShareOpen(true)}><Share2 className="size-4" />مشاركة عبر واتساب</Button>
         </div>
@@ -204,12 +220,15 @@ function ReportsPage() {
             period,
             included_records: selected.map((key) => recordByKey(key).title).join("، "),
           }}
-          onDraft={(draft) =>
-            setAiNarrative(
-              `ملخص التقرير:\n${draft.summary}\n\nالأهداف:\n${draft.goals}\n\nمنهجية العمل والتدخل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`,
-            )
-          }
+          onDraft={(draft) => {
+            setReportSummary(draft.summary);
+            setAiNarrative(`وصف الموضوع:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف:\n${draft.goals}\n\nالإجراءات المنفذة:\n${draft.actions}\n\nخطة العمل والتدخل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`);
+          }}
         />
+        <div>
+          <Label htmlFor="report-summary" className="mb-1.5 block font-bold">ملخص التقرير / خلاصة الحالة</Label>
+          <Textarea id="report-summary" value={reportSummary} onChange={(event) => setReportSummary(event.target.value)} rows={4} placeholder="اكتب خلاصة موجزة لأبرز محتوى التقرير ونتائجه، أو استخدم المساعد الذكي." />
+        </div>
       </div>
 
       <div ref={printRef} className="print-area rounded-xl border bg-card p-6 shadow-sm">
@@ -220,15 +239,18 @@ function ReportsPage() {
           period={period}
         />
 
+        <section className="report-summary mt-6 border-r-4 border-primary bg-secondary p-4 text-sm leading-7">
+          <h3 className="mb-1 font-extrabold">ملخص التقرير / خلاصة الحالة</h3>
+          <p className="whitespace-pre-wrap">{reportSummary.trim() || "لم يُضف ملخص لهذا التقرير."}</p>
+        </section>
+
         {aiNarrative && (
           <section className="mt-6 rounded-lg border bg-muted/30 p-4 text-sm leading-7">
             <h3 className="mb-2 font-extrabold">الصياغة المهنية للتقرير</h3>
-            <Textarea
-              value={aiNarrative}
-              onChange={(event) => setAiNarrative(event.target.value)}
-              rows={12}
-              className="border-0 bg-transparent leading-7 shadow-none focus-visible:ring-0"
-            />
+            <div className="no-print">
+              <Textarea value={aiNarrative} onChange={(event) => setAiNarrative(event.target.value)} rows={12} className="border-0 bg-transparent leading-7 shadow-none focus-visible:ring-0" />
+            </div>
+            <p className="hidden whitespace-pre-wrap print:block">{aiNarrative}</p>
           </section>
         )}
 
@@ -288,7 +310,7 @@ function ReportsPage() {
                     <tr key={String(row["id"] ?? index)}>
                       {columns.map((f) => (
                         <td key={f.name} className="border p-2 align-top">
-                          {String(row[f.name] ?? "—")}
+                          {displayRecordValue(row[f.name])}
                         </td>
                       ))}
                     </tr>

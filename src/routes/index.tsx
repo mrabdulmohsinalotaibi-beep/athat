@@ -3,18 +3,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, FileCheck2, LineChart, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import platformLogo from "@/assets/thaat-logo.png.asset.json";
+import platformLogo from "@/assets/althaat-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ذات | منصة الموجه الطلابي الشاملة" },
+      { title: "الذات | منصة الموجه الطلابي الشاملة" },
       {
         name: "description",
         content:
-          "منصة ذات لإدارة سجلات التوجيه الطلابي: الحالات الإرشادية، الخطة التشغيلية، المقابلات، المواظبة والسلوك، الشواهد والتقارير الرسمية.",
+          "منصة الذات لإدارة سجلات التوجيه الطلابي: الحالات الإرشادية، الخطة التشغيلية، المقابلات، المواظبة والسلوك، الشواهد والتقارير الرسمية.",
       },
-      { property: "og:title", content: "ذات | منصة الموجه الطلابي الشاملة" },
+       { property: "og:title", content: "الذات | منصة الموجه الطلابي الشاملة" },
       {
         property: "og:description",
         content: "سجلات الموجه الطلابي إلكترونياً مع تقارير جاهزة للطباعة الرسمية.",
@@ -52,8 +52,8 @@ function Landing() {
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
            <div className="flex items-center gap-2">
-             <img src={platformLogo.url} alt="شعار منصة ذات" className="size-12 object-contain" />
-             <div><p className="text-2xl font-extrabold text-primary">ذات</p><p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p></div>
+              <img src={platformLogo.url} alt="شعار منصة الذات" className="size-12 object-contain" />
+              <div><p className="text-2xl font-extrabold text-primary">الذات</p><p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p></div>
           </div>
           <Button asChild>
             <Link to={ctaTo}>{signedIn ? "لوحة التحكم" : "تسجيل الدخول"}</Link>

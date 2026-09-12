@@ -5,9 +5,9 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/committees")({
   head: () => ({
     meta: [
-      { title: "اللجان والاجتماعات | منصة ذات" },
+      { title: "اللجان والاجتماعات | منصة الذات" },
       { name: "description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },
-      { property: "og:title", content: "اللجان والاجتماعات | منصة ذات" },
+      { property: "og:title", content: "اللجان والاجتماعات | منصة الذات" },
       { property: "og:description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

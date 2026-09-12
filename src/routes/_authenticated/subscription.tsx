@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/subscription")({
   head: () => ({ meta: [
-    { title: "الاشتراك والترقية | منصة ذات" },
-    { name: "description", content: "إدارة خطة منصة ذات ومقارنة مزايا الخطة المجانية وباقة الموجه المحترف." },
-    { property: "og:title", content: "الاشتراك والترقية | منصة ذات" },
-    { property: "og:description", content: "مقارنة خطط منصة ذات للموجه الطلابي." },
+    { title: "الاشتراك والترقية | منصة الذات" },
+    { name: "description", content: "إدارة خطة منصة الذات ومقارنة مزايا الخطة المجانية وباقة الموجه المحترف." },
+    { property: "og:title", content: "الاشتراك والترقية | منصة الذات" },
+    { property: "og:description", content: "مقارنة خطط منصة الذات للموجه الطلابي." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
@@ -24,7 +24,7 @@ function SubscriptionPage() {
       <div>
         <Badge variant="secondary">جميع الخصائص مفتوحة حالياً</Badge>
         <h1 className="mt-3 text-3xl font-extrabold">الاشتراكات المستقبلية</h1>
-        <p className="mt-2 text-sm text-muted-foreground">يمكنك الآن استخدام جميع أدوات منصة ذات دون قيود، وستبقى هذه الصفحة مرجعاً للخطط المستقبلية.</p>
+        <p className="mt-2 text-sm text-muted-foreground">يمكنك الآن استخدام جميع أدوات منصة الذات دون قيود، وستبقى هذه الصفحة مرجعاً للخطط المستقبلية.</p>
       </div>
       <div className="grid gap-5 md:grid-cols-2">
         <div className="rounded-lg border bg-card p-6 shadow-sm">

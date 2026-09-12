@@ -47,11 +47,11 @@ export function AiDraftAssistant({
           <Label htmlFor="ai-quick-notes" className="flex items-center gap-2 font-bold">
             <Sparkles className="size-4 text-primary" /> المساعد الذكي
           </Label>
-          <p className="mt-1 text-xs text-muted-foreground">اكتب كلمات مفتاحية فقط؛ لن تُحفظ هذه الملاحظات تلقائياً.</p>
+          <p className="mt-1 text-xs text-muted-foreground">اكتب فكرة الحالة أو التقرير باختصار؛ لن تُحفظ هذه الملاحظات تلقائياً.</p>
         </div>
         <Button type="button" size="sm" onClick={generate} disabled={busy} className="w-full shrink-0 sm:w-auto">
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-          {busy ? "جارٍ الصياغة..." : "إكمال التقرير بالذكاء الاصطناعي"}
+          {busy ? "جارٍ تعبئة الحقول..." : "تعبئة الحقول آلياً بالذكاء الاصطناعي"}
         </Button>
       </div>
       <Textarea
@@ -60,7 +60,7 @@ export function AiDraftAssistant({
         rows={3}
         value={notes}
         onChange={(event) => setNotes(event.target.value)}
-        placeholder="مثال: تكرار الغياب، تواصل مع ولي الأمر، تحسن ملحوظ، متابعة بعد أسبوع..."
+        placeholder="مثال: غياب متكرر، أسباب أسرية محتملة، تواصل مع ولي الأمر، خطة متابعة أسبوعية..."
       />
     </section>
     </PlanGate>

@@ -31,9 +31,9 @@ import { computeKpis, isPercentKpi } from "@/lib/kpi";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "لوحة التحكم | منصة ذات" },
+      { title: "لوحة التحكم | منصة الذات" },
       { name: "description", content: "مؤشرات وإحصائيات أعمال الموجه الطلابي والتنبيهات العاجلة." },
-      { property: "og:title", content: "لوحة التحكم | منصة ذات" },
+      { property: "og:title", content: "لوحة التحكم | منصة الذات" },
       { property: "og:description", content: "إحصائيات الحالات والمواظبة والسلوك والبرامج الإرشادية." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

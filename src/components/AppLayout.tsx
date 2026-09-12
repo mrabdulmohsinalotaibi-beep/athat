@@ -21,7 +21,7 @@ import {
   FolderKanban,
   Crown,
 } from "lucide-react";
-import platformLogo from "@/assets/thaat-logo.png.asset.json";
+import platformLogo from "@/assets/althaat-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { cn } from "@/lib/utils";
@@ -70,10 +70,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center rounded-lg bg-sidebar-accent p-1">
-              <img src={platformLogo.url} alt="شعار منصة ذات" className="size-full object-contain" />
+               <img src={platformLogo.url} alt="شعار منصة الذات" className="size-full object-contain" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-sidebar-primary">ذات</p>
+               <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
               <p className="mt-1 text-xs text-sidebar-foreground/70">منصة الموجه الطلابي</p>
             </div>
           </div>
@@ -123,7 +123,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
                 <Menu className="size-5" />
               </Button>
-              <img src={platformLogo.url} alt="شعار منصة ذات" className="hidden size-12 object-contain sm:block" />
+               <img src={platformLogo.url} alt="شعار منصة الذات" className="hidden size-12 object-contain sm:block" />
               <div>
                 <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
                 <p className="text-xs text-muted-foreground">

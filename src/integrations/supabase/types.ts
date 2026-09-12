@@ -632,6 +632,7 @@ export type Database = {
           report_no: string | null
           report_type: string | null
           status: string | null
+          summary: string | null
           updated_at: string
           user_id: string
         }
@@ -646,6 +647,7 @@ export type Database = {
           report_no?: string | null
           report_type?: string | null
           status?: string | null
+          summary?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -660,6 +662,7 @@ export type Database = {
           report_no?: string | null
           report_type?: string | null
           status?: string | null
+          summary?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -669,12 +672,14 @@ export type Database = {
         Row: {
           academic_year: string | null
           counselor_name: string | null
+          counselor_signature: string | null
           created_at: string
           education_dept: string | null
           education_office: string | null
           id: string
           logo_url: string | null
           principal_name: string | null
+          principal_signature: string | null
           school_name: string | null
           semester: string | null
           updated_at: string
@@ -683,12 +688,14 @@ export type Database = {
         Insert: {
           academic_year?: string | null
           counselor_name?: string | null
+          counselor_signature?: string | null
           created_at?: string
           education_dept?: string | null
           education_office?: string | null
           id?: string
           logo_url?: string | null
           principal_name?: string | null
+          principal_signature?: string | null
           school_name?: string | null
           semester?: string | null
           updated_at?: string
@@ -697,12 +704,14 @@ export type Database = {
         Update: {
           academic_year?: string | null
           counselor_name?: string | null
+          counselor_signature?: string | null
           created_at?: string
           education_dept?: string | null
           education_office?: string | null
           id?: string
           logo_url?: string | null
           principal_name?: string | null
+          principal_signature?: string | null
           school_name?: string | null
           semester?: string | null
           updated_at?: string
