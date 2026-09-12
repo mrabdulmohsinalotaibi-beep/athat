@@ -6,6 +6,7 @@ export interface FieldDef {
   type?: FieldType;
   options?: string[];
   list?: boolean; // show in table
+  student?: boolean; // searchable student picker
 }
 
 export interface RecordConfig {
@@ -59,7 +60,7 @@ export const RECORDS: RecordConfig[] = [
     fields: [
       { name: "case_no", label: "رقم الحالة", list: true },
       { name: "student_no", label: "رقم الطالب" },
-      { name: "student_name", label: "اسم الطالب", list: true },
+      { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "domain", label: "المجال", type: "select", options: DOMAINS, list: true },
       { name: "referral_source", label: "مصدر الإحالة" },
       { name: "case_status", label: "حالة الحالة", type: "select", options: ["مفتوحة", "قيد المتابعة", "مغلقة"], list: true },
@@ -126,7 +127,7 @@ export const RECORDS: RecordConfig[] = [
       { name: "idate", label: "التاريخ", type: "date", list: true },
       { name: "itype", label: "النوع", type: "select", options: ["مقابلة فردية", "مقابلة جماعية", "ولي أمر", "معلم"], list: true },
       { name: "student_no", label: "رقم الطالب" },
-      { name: "student_name", label: "اسم الطالب", list: true },
+      { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "participant", label: "المشارك/ولي الأمر" },
       { name: "channel", label: "وسيلة التواصل", type: "select", options: CHANNELS, list: true },
       { name: "topic", label: "موضوع اللقاء", list: true },
@@ -145,7 +146,7 @@ export const RECORDS: RecordConfig[] = [
     fields: [
       { name: "seq", label: "رقم السجل" },
       { name: "student_no", label: "رقم الطالب" },
-      { name: "student_name", label: "اسم الطالب", list: true },
+      { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "adate", label: "التاريخ", type: "date", list: true },
       { name: "case_type", label: "نوع الحالة", type: "select", options: ["غياب", "تأخر", "هروب", "غياب بعذر"], list: true },
       { name: "count_days", label: "عدد الأيام/المرات", type: "number", list: true },
@@ -163,7 +164,7 @@ export const RECORDS: RecordConfig[] = [
     fields: [
       { name: "seq", label: "رقم السجل" },
       { name: "student_no", label: "رقم الطالب" },
-      { name: "student_name", label: "اسم الطالب", list: true },
+      { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "bdate", label: "التاريخ", type: "date", list: true },
       { name: "observation", label: "الملاحظة/المخالفة", list: true },
       { name: "referral_source", label: "مصدر الإحالة" },
@@ -182,7 +183,7 @@ export const RECORDS: RecordConfig[] = [
     fields: [
       { name: "referral_no", label: "رقم الإحالة", list: true },
       { name: "student_no", label: "رقم الطالب" },
-      { name: "student_name", label: "اسم الطالب", list: true },
+      { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "referral_date", label: "تاريخ الإحالة", type: "date", list: true },
       { name: "referred_to", label: "الجهة المحال إليها", type: "select", options: ["وحدة الخدمات الإرشادية", "إدارة التعليم", "جهة صحية", "جهة أمنية", "جهة مختصة"], list: true },
       { name: "reason", label: "سبب الإحالة", type: "textarea" },
