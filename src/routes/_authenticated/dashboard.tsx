@@ -119,6 +119,14 @@ function Dashboard() {
     }, {}),
   ).map(([name, value]) => ({ name, value }));
 
+  const kpis = computeKpis({
+    planTasks: data?.planTasks ?? [],
+    cases,
+    attendance,
+    interviews: data?.interviews ?? [],
+    students,
+  });
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl border bg-card p-5 shadow-sm">
@@ -138,6 +146,27 @@ function Dashboard() {
             <p className="mt-3 text-3xl font-extrabold">{isLoading ? "—" : value}</p>
           </Link>
         ))}
+      </div>
+
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <h2 className="mb-4 font-bold">مؤشرات قياس أداء التوجيه الطلابي</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {kpis.map((k) => (
+            <div key={k.key} className="rounded-lg border p-4">
+              <p className="text-xs text-muted-foreground">{k.label}</p>
+              <p className="mt-2 text-2xl font-extrabold text-primary">
+                {k.value}
+                {isPercentKpi(k.key) ? "%" : ""}
+              </p>
+              {isPercentKpi(k.key) && (
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(k.value, 100)}%` }} />
+                </div>
+              )}
+              <p className="mt-2 text-[11px] text-muted-foreground">{k.hint}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
