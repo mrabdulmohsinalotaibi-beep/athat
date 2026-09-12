@@ -9,6 +9,7 @@ import { arabicAuthError } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import platformLogo from "@/assets/althaat-logo.png.asset.json";
 
 const DEMO_EMAIL = "demo@thaat.sa";
 const DEMO_PASSWORD = "Thaat-Demo-2026";
@@ -149,7 +150,8 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border bg-card p-8 shadow-sm">
         <div className="text-center">
-          <p className="text-3xl font-extrabold text-primary">ذات</p>
+          <img src={platformLogo.url} alt="شعار منصة الذات" className="mx-auto size-24 object-contain" />
+          <p className="mt-2 text-3xl font-extrabold text-primary">الذات</p>
           <p className="mt-1 text-sm text-muted-foreground">منصة الموجه الطلابي</p>
         </div>
 
