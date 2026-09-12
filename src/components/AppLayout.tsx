@@ -84,7 +84,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className="app-shell flex min-h-screen bg-background">
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 w-72 shrink-0 overflow-y-auto bg-sidebar text-sidebar-foreground shadow-2xl transition-transform lg:static lg:translate-x-0",
+          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto bg-sidebar text-sidebar-foreground shadow-2xl transition-transform lg:static lg:translate-x-0",
           open ? "translate-x-0" : "translate-x-full lg:translate-x-0",
         )}
       >
@@ -99,7 +99,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <nav className="space-y-1 p-3">
+        <nav className="flex-1 space-y-1 p-3">
           {NAV.map((item) => {
             const Icon = item.icon;
             if ("children" in item) {

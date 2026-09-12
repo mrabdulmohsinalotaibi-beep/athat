@@ -34,7 +34,7 @@ export function ThemePicker({ compact = false, onChange }: { compact?: boolean; 
             <Palette className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" dir="rtl" className="w-52">
+        <DropdownMenuContent align="end" className="w-52 text-right">
           <DropdownMenuLabel>ثيم المنصة</DropdownMenuLabel>
           {THEMES.map((item) => (
             <DropdownMenuItem key={item.id} onSelect={() => choose(item.id)} className="min-h-10">

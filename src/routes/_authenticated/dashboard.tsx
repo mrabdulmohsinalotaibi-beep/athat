@@ -134,13 +134,13 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-        <div className="grid gap-5 p-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
+        <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="min-w-0">
             <p className="flex items-center gap-2 text-sm font-bold text-primary"><Sparkles className="size-4" />مساحة عملك اليومية</p>
             <h1 className="mt-2 text-3xl font-extrabold">أهلاً {school?.counselor_name || "بالموجه الطلابي"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">{school?.school_name || "أكمل بيانات مدرستك"} · {school?.semester || "الفصل الدراسي"}</p>
           </div>
-          <Link to="/cases" className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">متابعة الحالات <ArrowLeft className="size-4" /></Link>
+          <Link to="/cases" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">متابعة الحالات <ArrowLeft className="size-4" /></Link>
         </div>
       </div>
 
@@ -183,7 +183,7 @@ function Dashboard() {
           {domainData.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات بعد.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={260} minWidth={0}>
               <PieChart>
                 <Pie data={domainData} dataKey="value" nameKey="name" outerRadius={90} label>
                   {domainData.map((entry, index) => (
@@ -202,7 +202,7 @@ function Dashboard() {
           {attendanceData.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات بعد.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={260} minWidth={0}>
               <BarChart data={attendanceData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
@@ -225,9 +225,9 @@ function Dashboard() {
           ) : (
             <ul className="space-y-2 text-sm">
               {overdue.slice(0, 6).map((c) => (
-                <li key={c.id} className="flex justify-between rounded-lg bg-secondary/60 px-3 py-2">
-                  <span>{c.student_name || "حالة إرشادية"}</span>
-                  <span className="text-xs text-muted-foreground">{String(c.followup_at)}</span>
+                <li key={c.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-lg bg-secondary/60 px-3 py-2">
+                  <span className="min-w-0 break-words">{c.student_name || "حالة إرشادية"}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{String(c.followup_at)}</span>
                 </li>
               ))}
             </ul>
@@ -243,9 +243,9 @@ function Dashboard() {
           ) : (
             <ul className="space-y-2 text-sm">
               {upcoming.map((e) => (
-                <li key={e.id} className="flex justify-between rounded-lg bg-secondary/60 px-3 py-2">
-                  <span>{e.title || e.etype}</span>
-                  <span className="text-xs text-muted-foreground">{String(e.edate)}</span>
+                <li key={e.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-lg bg-secondary/60 px-3 py-2">
+                  <span className="min-w-0 break-words">{e.title || e.etype}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{String(e.edate)}</span>
                 </li>
               ))}
             </ul>
