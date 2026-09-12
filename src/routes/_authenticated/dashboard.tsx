@@ -44,13 +44,17 @@ function useDashboard() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [students, cases, attendance, behavior, programs, calendar] = await Promise.all([
+      const [students, cases, attendance, behavior, programs, calendar, planTasks, interviews] = await Promise.all([
         supabase.from("students").select("id, stage"),
-        supabase.from("counseling_cases").select("id, domain, case_status, priority, followup_at, student_name"),
-        supabase.from("attendance").select("id, adate, case_type"),
+        supabase
+          .from("counseling_cases")
+          .select("id, domain, case_status, priority, followup_at, last_followup, student_name"),
+        supabase.from("attendance").select("id, adate, case_type, count_days"),
         supabase.from("behavior").select("id, bdate"),
         supabase.from("programs").select("id, exec_status"),
         supabase.from("calendar_events").select("id, edate, title, etype, status, priority"),
+        supabase.from("plan_tasks").select("id, exec_status"),
+        supabase.from("interviews").select("id, itype"),
       ]);
       return {
         students: students.data ?? [],
@@ -59,10 +63,13 @@ function useDashboard() {
         behavior: behavior.data ?? [],
         programs: programs.data ?? [],
         calendar: calendar.data ?? [],
+        planTasks: planTasks.data ?? [],
+        interviews: interviews.data ?? [],
       };
     },
   });
 }
+
 
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
