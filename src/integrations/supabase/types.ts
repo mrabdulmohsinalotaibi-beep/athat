@@ -705,6 +705,7 @@ export type Database = {
           health_status: string | null
           id: string
           national_id: string | null
+          nationality: string | null
           notes: string | null
           social_status: string | null
           stage: string | null
@@ -725,6 +726,7 @@ export type Database = {
           health_status?: string | null
           id?: string
           national_id?: string | null
+          nationality?: string | null
           notes?: string | null
           social_status?: string | null
           stage?: string | null
@@ -745,6 +747,7 @@ export type Database = {
           health_status?: string | null
           id?: string
           national_id?: string | null
+          nationality?: string | null
           notes?: string | null
           social_status?: string | null
           stage?: string | null
