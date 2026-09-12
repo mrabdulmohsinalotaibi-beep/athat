@@ -112,8 +112,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <div>
                 <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {[school?.education_dept, school?.education_office].filter(Boolean).join(" — ") ||
-                    "أكمل بيانات المدرسة من صفحة الإعدادات"}
+                  {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
                 </p>
               </div>
             </div>
