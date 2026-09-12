@@ -566,6 +566,7 @@ export type Database = {
       referrals: {
         Row: {
           attachments: string | null
+          case_no: string | null
           created_at: string
           id: string
           notes: string | null
@@ -583,6 +584,7 @@ export type Database = {
         }
         Insert: {
           attachments?: string | null
+          case_no?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -600,6 +602,7 @@ export type Database = {
         }
         Update: {
           attachments?: string | null
+          case_no?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -768,6 +771,39 @@ export type Database = {
           stage?: string | null
           status?: string | null
           student_no?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cases_limit: number
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cases_limit?: number
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          cases_limit?: number
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }
