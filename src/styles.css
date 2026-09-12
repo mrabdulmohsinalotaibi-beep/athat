@@ -134,14 +134,24 @@
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
   .no-print {
     display: none !important;
   }
   body {
     background: #fff;
+    font-size: 11pt;
   }
   .print-area {
     box-shadow: none !important;
     border: none !important;
+    padding: 0 !important;
+  }
+  .print-area section,
+  .print-area tr {
+    break-inside: avoid;
   }
 }
