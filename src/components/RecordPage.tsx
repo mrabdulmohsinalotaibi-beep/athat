@@ -385,7 +385,6 @@ export function RecordPage({
                     name={f.name}
                     defaultValue={current}
                     rows={4}
-                    onChange={(event) => setAuto((values) => ({ ...values, [f.name]: event.target.value }))}
                   />
                 ) : f.type === "select" ? (
                   <select

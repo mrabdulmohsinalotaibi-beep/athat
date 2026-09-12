@@ -13,6 +13,7 @@ import { AiDraftAssistant } from "@/components/AiDraftAssistant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -184,9 +185,14 @@ function ReportsPage() {
         />
 
         {aiNarrative && (
-          <section className="mt-6 whitespace-pre-wrap rounded-lg border bg-muted/30 p-4 text-sm leading-7">
+          <section className="mt-6 rounded-lg border bg-muted/30 p-4 text-sm leading-7">
             <h3 className="mb-2 font-extrabold">الصياغة المهنية للتقرير</h3>
-            {aiNarrative}
+            <Textarea
+              value={aiNarrative}
+              onChange={(event) => setAiNarrative(event.target.value)}
+              rows={12}
+              className="border-0 bg-transparent leading-7 shadow-none focus-visible:ring-0"
+            />
           </section>
         )}
 
