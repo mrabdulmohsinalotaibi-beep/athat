@@ -314,7 +314,7 @@ export function RecordPage({
               <AiDraftAssistant
                 recordKey={config.key as "cases" | "interviews" | "behavior" | "reports"}
                 context={Object.fromEntries(
-                  config.fields.map((field) => [field.label, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
+                  config.fields.map((field) => [field.name, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
                 )}
                 onDraft={(draft) => {
                   const generated: Record<string, string> = {};

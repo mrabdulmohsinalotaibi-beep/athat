@@ -13,7 +13,6 @@ import {
   Send,
   Gavel,
   FolderCheck,
-  FileText,
   Settings,
   LogOut,
   Menu,
@@ -104,9 +103,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {open && (
-        <button
+        <Button
+          type="button"
+          variant="ghost"
           aria-label="إغلاق القائمة"
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-30 h-auto w-auto rounded-none bg-foreground/40 p-0 hover:bg-foreground/40 lg:hidden"
           onClick={() => setOpen(false)}
         />
       )}
