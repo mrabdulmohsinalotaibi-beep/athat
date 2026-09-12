@@ -66,12 +66,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
     return () => { document.body.style.overflow = previous; };
   }, [open]);
 
-  async function persistTheme(theme: "thaat" | "royal" | "sage" | "amber") {
-    if (!school?.id) return;
-    const { error } = await supabase.from("school_settings").update({ theme }).eq("id", school.id);
-    if (!error) queryClient.invalidateQueries({ queryKey: ["school_settings"] });
-  }
-
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
