@@ -63,7 +63,10 @@ export function EvidenceUploadDialog({
   }
 
   async function upload() {
-    if (!file) return toast.error("اختر ملف الشاهد أولاً");
+    if (!file) {
+      toast.error("اختر ملف الشاهد أولاً");
+      return;
+    }
     setBusy(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -72,7 +75,7 @@ export function EvidenceUploadDialog({
       const safe = file.name.replace(/[^\w.\-\u0600-\u06FF]/g, "_");
       const path = `${uid}/${Date.now()}-${safe}`;
       const { error: upErr } = await supabase.storage.from("evidences").upload(path, file, {
-        contentType: file.type || undefined,
+        ...(file.type ? { contentType: file.type } : {}),
         upsert: false,
       });
       if (upErr) throw upErr;
