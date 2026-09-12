@@ -50,6 +50,10 @@
   --color-theme-primary: var(--primary);
   --color-theme-deep: var(--sidebar);
   --color-theme-soft: var(--accent);
+  --color-theme-thaat: oklch(0.400774 0.125802 26.4494);
+  --color-theme-royal: oklch(0.36 0.095 255);
+  --color-theme-sage: oklch(0.43 0.09 158);
+  --color-theme-amber: oklch(0.52 0.12 65);
 }
 
 :root {
