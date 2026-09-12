@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, FileCheck2, LineChart, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +31,19 @@ const FEATURES = [
 ];
 
 function Landing() {
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+    const { data } = supabase.auth.onAuthStateChange((_event, session) =>
+      setSignedIn(Boolean(session)),
+    );
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  const ctaTo = signedIn ? "/dashboard" : "/auth";
+  const ctaLabel = signedIn ? "الذهاب للوحة التحكم" : "ابدأ الآن";
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -38,7 +53,7 @@ function Landing() {
             <p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p>
           </div>
           <Button asChild>
-            <Link to="/auth">تسجيل الدخول</Link>
+            <Link to={ctaTo}>{signedIn ? "لوحة التحكم" : "تسجيل الدخول"}</Link>
           </Button>
         </div>
       </header>
@@ -54,7 +69,7 @@ function Landing() {
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button asChild size="lg">
-              <Link to="/auth">ابدأ الآن</Link>
+              <Link to={ctaTo}>{ctaLabel}</Link>
             </Button>
           </div>
         </section>
