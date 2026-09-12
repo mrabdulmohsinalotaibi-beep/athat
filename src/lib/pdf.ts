@@ -1,19 +1,18 @@
-import html2canvas from "html2canvas";
+import { toCanvas } from "html-to-image";
 import { jsPDF } from "jspdf";
 
 /** Renders a DOM element into a high-quality multi-page A4 PDF with margins (Arabic-safe, rasterised). */
 async function createPdf(element: HTMLElement) {
-  const canvas = await html2canvas(element, {
-    scale: Math.min(2.25, Math.max(2, window.devicePixelRatio)),
+  const pixelRatio = Math.min(2, Math.max(1.5, window.devicePixelRatio));
+  const canvas = await toCanvas(element, {
     backgroundColor: "#ffffff",
-    useCORS: true,
-    windowWidth: element.scrollWidth,
-    imageTimeout: 15000,
-    onclone: (document) => {
-      document.querySelectorAll<HTMLElement>(".print-area").forEach((node) => {
-        node.style.background = "#ffffff";
-        node.style.boxShadow = "none";
-      });
+    cacheBust: true,
+    pixelRatio,
+    width: element.scrollWidth,
+    height: element.scrollHeight,
+    style: {
+      background: "#ffffff",
+      boxShadow: "none",
     },
   });
 
