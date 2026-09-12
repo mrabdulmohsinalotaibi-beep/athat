@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileDown, Plus, Printer, Search, Trash2, Upload, Pencil } from "lucide-react";
 import { toast } from "sonner";
@@ -23,7 +23,19 @@ import {
 
 type Row = Record<string, unknown> & { id: string };
 
-export function RecordPage({ config }: { config: RecordConfig }) {
+export function RecordPage({
+  config,
+  hideImport,
+  toolbarExtra,
+  filters,
+  extraFilter,
+}: {
+  config: RecordConfig;
+  hideImport?: boolean;
+  toolbarExtra?: ReactNode;
+  filters?: ReactNode;
+  extraFilter?: (row: Record<string, unknown>) => boolean;
+}) {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
   const [search, setSearch] = useState("");
@@ -48,11 +60,13 @@ export function RecordPage({ config }: { config: RecordConfig }) {
 
   const filtered = useMemo(() => {
     const term = search.trim();
-    if (!term) return rows;
-    return rows.filter((row) =>
-      config.fields.some((f) => String(row[f.name] ?? "").includes(term)),
-    );
-  }, [rows, search, config.fields]);
+    let out = rows;
+    if (term) {
+      out = out.filter((row) => config.fields.some((f) => String(row[f.name] ?? "").includes(term)));
+    }
+    if (extraFilter) out = out.filter((row) => extraFilter(row));
+    return out;
+  }, [rows, search, config.fields, extraFilter]);
 
   const save = useMutation({
     mutationFn: async (values: Partial<Row>) => {
@@ -134,9 +148,12 @@ export function RecordPage({ config }: { config: RecordConfig }) {
           <Button onClick={() => setEditing({})}>
             <Plus className="size-4" /> إضافة {config.singular}
           </Button>
-          <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={importing}>
-            <Upload className="size-4" /> استيراد Excel
-          </Button>
+          {toolbarExtra}
+          {!hideImport && (
+            <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={importing}>
+              <Upload className="size-4" /> استيراد Excel
+            </Button>
+          )}
           <Button variant="outline" onClick={() => exportToExcel(config.fields, filtered, config.title)}>
             <Download className="size-4" /> تصدير Excel
           </Button>
@@ -161,6 +178,8 @@ export function RecordPage({ config }: { config: RecordConfig }) {
           />
         </div>
       </div>
+
+      {filters && <div className="no-print flex flex-wrap items-end gap-3">{filters}</div>}
 
       <div className="no-print relative max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
