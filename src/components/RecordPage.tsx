@@ -8,6 +8,7 @@ import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
 import { displayRecordValue } from "@/lib/display";
+import { mergeLookupOptions } from "@/lib/lookups";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
@@ -59,6 +60,38 @@ export function RecordPage({
 
   const listFields = config.fields.filter((f) => f.list).slice(0, 7);
 
+  const { data: lookups = [] } = useQuery({
+    queryKey: ["lookups"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("lookups").select("id, category, value, sort_order").order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const optionsFor = (field: (typeof config.fields)[number]) => mergeLookupOptions(
+    field.options,
+    lookups.filter((item) => item.category === field.lookupCategory).map((item) => item.value ?? ""),
+  );
+
+  async function addOption(category: string, label: string) {
+    const value = window.prompt(`أدخل خياراً جديداً في ${label}`)?.trim();
+    if (!value) return;
+    const exists = lookups.some((item) => item.category === category && item.value?.trim() === value);
+    if (exists) {
+      toast.info("هذا الخيار موجود بالفعل");
+      return;
+    }
+    const { error } = await supabase.from("lookups").insert({ category, value } as never);
+    if (error) {
+      toast.error(`تعذّرت إضافة الخيار: ${error.message}`);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["lookups"] });
+    setAuto((current) => ({ ...current, [config.fields.find((field) => field.lookupCategory === category)?.name ?? ""]: value }));
+    toast.success("تمت إضافة الخيار للقائمة");
+  }
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: [config.table],
     queryFn: async () => {
@@ -84,7 +117,7 @@ export function RecordPage({
   const save = useMutation({
     mutationFn: async (values: Partial<Row>) => {
       const payload: Record<string, unknown> = {};
-      config.fields.forEach((f) => {
+      config.fields.filter((field) => !field.generated).forEach((f) => {
         const raw = values[f.name];
         if (f.type === "number") payload[f.name] = raw === "" || raw == null ? null : Number(raw);
         else payload[f.name] = raw === "" ? null : (raw ?? null);
@@ -123,7 +156,7 @@ export function RecordPage({
       const payloads = sheetRows
         .map((sheetRow) => {
           const payload: Record<string, unknown> = {};
-          config.fields.forEach((f) => {
+          config.fields.filter((field) => !field.generated).forEach((f) => {
             const value = sheetRow[f.label] ?? sheetRow[f.name];
             if (value === undefined || value === "") return;
             if (f.type === "date") payload[f.name] = toIsoDate(value);
@@ -165,12 +198,12 @@ export function RecordPage({
 
   return (
     <div className="space-y-4">
-      <div className="no-print grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <div className="min-w-0">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3">
+        <div>
           <h1 className="text-2xl font-extrabold">{config.title}</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} سجل</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
               setAuto({});
@@ -213,7 +246,7 @@ export function RecordPage({
 
       {filters && <div className="no-print flex flex-wrap items-end gap-3">{filters}</div>}
 
-      <div className="no-print relative w-full sm:max-w-sm">
+      <div className="no-print relative max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -227,8 +260,8 @@ export function RecordPage({
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
-        <div className="hidden overflow-x-auto sm:block print:block">
-          <table className="min-w-full text-right text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-sm">
             <thead>
               <tr className="border-b bg-muted/60 text-xs">
                 {listFields.map((f) => (
@@ -307,27 +340,6 @@ export function RecordPage({
             </tbody>
           </table>
         </div>
-        <div className="space-y-3 sm:hidden print:hidden">
-          {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">جارٍ التحميل...</p>}
-          {!isLoading && filtered.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">لا توجد سجلات بعد.</p>}
-          {filtered.map((row) => (
-            <article key={row.id} className="rounded-lg border bg-background p-3">
-              <dl className="space-y-2 text-sm">
-                {listFields.map((field) => (
-                  <div key={field.name} className="grid grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)] gap-2 border-b pb-2 last:border-0 last:pb-0">
-                    <dt className="text-xs font-bold text-muted-foreground">{field.label}</dt>
-                    <dd className="min-w-0 break-words">{displayRecordValue(row[field.name])}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div className="mt-3 flex justify-end gap-1 border-t pt-2">
-                <Button variant="ghost" size="icon" aria-label={`تعديل ${config.singular}`} onClick={() => { setAuto({}); setEditing(row); }}><Pencil className="size-4" /></Button>
-                {ATTACHABLE_KEYS.has(config.key) && <Button variant="ghost" size="icon" aria-label="إرفاق شاهد" onClick={() => setEvidenceFor(row)}><Paperclip className="size-4" /></Button>}
-                <Button variant="ghost" size="icon" aria-label={`حذف ${config.singular}`} onClick={() => { if (confirm("هل تريد حذف هذا السجل؟")) remove.mutate(row.id); }}><Trash2 className="size-4 text-destructive" /></Button>
-              </div>
-            </article>
-          ))}
-        </div>
         <div className="hidden print:block">
           <OfficialFooter school={school} />
         </div>
@@ -346,7 +358,7 @@ export function RecordPage({
               const data = new FormData(e.currentTarget);
               const values: Partial<Row> = {};
               if (editing?.id) values.id = editing.id as string;
-              config.fields.forEach((f) => {
+              config.fields.filter((field) => !field.generated).forEach((f) => {
                 values[f.name] = data.get(f.name) as string;
               });
               save.mutate(values);
@@ -358,11 +370,13 @@ export function RecordPage({
                 context={Object.fromEntries(
                   config.fields.map((field) => [field.name, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
                 )}
+                availableOptions={Object.fromEntries(config.fields.filter((field) => field.type === "select").map((field) => [field.name, optionsFor(field)]))}
                 onDraft={(draft) => {
                   const generated: Record<string, string> = {};
                   if (config.key === "cases") {
                     generated["summary"] = `${draft.summary}\n\nوصف المشكلة:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف الإرشادية:\n${draft.goals}`;
-                    generated["intervention_plan"] = draft.interventionPlan;
+                    const interventionField = config.fields.find((field) => field.name === "intervention_plan");
+                    if (interventionField && optionsFor(interventionField).includes(draft.interventionPlan)) generated["intervention_plan"] = draft.interventionPlan;
                     generated["next_action"] = draft.nextAction;
                     generated["notes"] = `الإجراءات:\n${draft.actions}\n\nالتوصيات:\n${draft.recommendations}\n\n${draft.notes}`;
                   } else if (config.key === "interviews") {
@@ -372,18 +386,25 @@ export function RecordPage({
                     generated["notes"] = draft.notes;
                   } else if (config.key === "behavior") {
                     generated["observation"] = `${draft.problemDescription}\n\nالأسباب المحتملة: ${draft.causes}`;
-                    generated["action"] = draft.actions || draft.interventionPlan;
-                    generated["result"] = draft.result;
+                    const actionField = config.fields.find((field) => field.name === "action");
+                    const resultField = config.fields.find((field) => field.name === "result");
+                    const action = draft.actions || draft.interventionPlan;
+                    if (actionField && optionsFor(actionField).includes(action)) generated["action"] = action;
+                    if (resultField && optionsFor(resultField).includes(draft.result)) generated["result"] = draft.result;
                     generated["notes"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
                   } else {
                     generated["summary"] = draft.summary;
                     generated["notes"] = `وصف الموضوع:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف:\n${draft.goals}\n\nالإجراءات:\n${draft.actions}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
                   }
+                  Object.entries(draft.suggestedSelections).forEach(([fieldName, value]) => {
+                    const field = config.fields.find((item) => item.name === fieldName);
+                    if (field?.type === "select" && value && optionsFor(field).includes(value)) generated[fieldName] = value;
+                  });
                   setAuto((current) => ({ ...current, ...generated }));
                 }}
               />
             )}
-            {config.fields.map((f) => {
+            {config.fields.filter((field) => !field.generated).map((f) => {
               const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
               return (
               <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
@@ -431,20 +452,25 @@ export function RecordPage({
                     rows={4}
                   />
                 ) : f.type === "select" ? (
-                  <select
-                    key={current}
-                    id={f.name}
-                    name={f.name}
-                    defaultValue={current}
-                    className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    <option value="">—</option>
-                    {f.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex gap-2">
+                    <select
+                      key={current}
+                      id={f.name}
+                      name={f.name}
+                      defaultValue={current}
+                      className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="">—</option>
+                      {optionsFor(f).map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    {f.lookupCategory && (
+                      <Button type="button" variant="outline" size="icon" title={`إضافة خيار إلى ${f.label}`} aria-label={`إضافة خيار إلى ${f.label}`} onClick={() => addOption(f.lookupCategory ?? "", f.label)}>
+                        <Plus className="size-4" />
+                      </Button>
+                    )}
+                  </div>
                 ) : (
                   <Input
                     key={current}

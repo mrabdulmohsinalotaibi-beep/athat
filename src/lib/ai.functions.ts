@@ -7,12 +7,13 @@ const DraftInput = z.object({
   recordKey: z.enum(["cases", "interviews", "behavior", "reports"]),
   notes: z.string().trim().min(3).max(4000),
   context: z.record(z.string(), z.string().max(1000)).default({}),
+  availableOptions: z.record(z.string(), z.array(z.string().max(120)).max(80)).default({}),
 });
 
 const outputSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["summary", "problemDescription", "causes", "goals", "actions", "interventionPlan", "recommendations", "result", "notes", "nextAction"],
+  required: ["summary", "problemDescription", "causes", "goals", "actions", "interventionPlan", "recommendations", "result", "notes", "nextAction", "suggestedSelections"],
   properties: {
     summary: { type: "string" },
     problemDescription: { type: "string" },
@@ -24,6 +25,22 @@ const outputSchema = {
     result: { type: "string" },
     notes: { type: "string" },
     nextAction: { type: "string" },
+    suggestedSelections: {
+      type: "object",
+      additionalProperties: false,
+      required: ["domain", "referral_source", "case_status", "priority", "intervention_plan", "action", "result", "meeting_type", "channel"],
+      properties: {
+        domain: { type: "string" },
+        referral_source: { type: "string" },
+        case_status: { type: "string" },
+        priority: { type: "string" },
+        intervention_plan: { type: "string" },
+        action: { type: "string" },
+        result: { type: "string" },
+        meeting_type: { type: "string" },
+        channel: { type: "string" },
+      },
+    },
   },
 } as const;
 
@@ -38,6 +55,7 @@ export type GuidanceDraft = {
   result: string;
   notes: string;
   nextAction: string;
+  suggestedSelections: Record<string, string>;
 };
 
 function readGatewayMessage(raw: string, fallback: string) {
@@ -137,8 +155,10 @@ export const draftGuidanceReport = createServerFn({ method: "POST" })
 صغ مسودة تربوية رصينة ومحايدة باللغة العربية، دون تشخيص طبي أو ادعاء حقائق غير مذكورة.
 لا تذكر أرقام الهوية أو الجوال، ولا تضف أسماء أشخاص لم ترد في المدخلات.
 يجب أن تكون الصياغة عملية، تحفظ خصوصية الطالب، وتشمل وصف المشكلة والأسباب المحتملة بصياغة غير جازمة والأهداف والإجراءات وخطة التدخل والنتائج والتوصيات والمتابعة والملخص.
+عند تعبئة suggestedSelections اختر فقط قيمة مطابقة حرفياً من الخيارات المتاحة لكل حقل، أو أعد نصاً فارغاً إذا لم توجد قيمة مناسبة.
 نوع السجل: ${data.recordKey}
 السياق المتاح:\n${safeContext || "لا يوجد"}
+الخيارات المتاحة للقوائم:\n${JSON.stringify(data.availableOptions)}
 ملاحظات الموجه السريعة:\n${data.notes}
 أعد JSON مطابقاً للمخطط فقط، واجعل كل قسم موجزاً وقابلاً للتعديل.`;
 

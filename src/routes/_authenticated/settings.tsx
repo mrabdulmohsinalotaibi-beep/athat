@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ThemePicker } from "@/components/ThemePicker";
 import { useTheme } from "@/lib/theme";
+import { LOOKUP_CATEGORIES, lookupCategoryLabel } from "@/lib/lookups";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -41,6 +42,7 @@ function SettingsPage() {
   const { data: school } = useSchool();
   const [counselorSignature, setCounselorSignature] = useState<string | null>(null);
   const [principalSignature, setPrincipalSignature] = useState<string | null>(null);
+  const [editingLookup, setEditingLookup] = useState<{ id: string; value: string } | null>(null);
   const { theme } = useTheme();
 
   async function persistTheme(nextTheme: "thaat" | "royal" | "sage" | "amber") {
@@ -82,6 +84,8 @@ function SettingsPage() {
 
   const addLookup = useMutation({
     mutationFn: async (values: { category: string; value: string }) => {
+      const duplicate = lookups.some((item) => item.category === values.category && item.value?.trim() === values.value.trim());
+      if (duplicate) throw new Error("هذه القيمة موجودة في القائمة بالفعل");
       const { error } = await supabase.from("lookups").insert(values as never);
       if (error) throw error;
     },
@@ -89,6 +93,22 @@ function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["lookups"] });
       toast.success("تمت الإضافة للقائمة");
     },
+  });
+
+  const updateLookup = useMutation({
+    mutationFn: async (values: { id: string; value: string }) => {
+      const current = lookups.find((item) => item.id === values.id);
+      const duplicate = lookups.some((item) => item.id !== values.id && item.category === current?.category && item.value?.trim() === values.value.trim());
+      if (duplicate) throw new Error("هذه القيمة موجودة في القائمة بالفعل");
+      const { error } = await supabase.from("lookups").update({ value: values.value } as never).eq("id", values.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lookups"] });
+      setEditingLookup(null);
+      toast.success("تم تعديل الخيار");
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   const removeLookup = useMutation({
@@ -150,7 +170,7 @@ function SettingsPage() {
       <section className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-1 font-bold">القوائم المرجعية</h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          أضف قيماً خاصة بمدرستك (مثل: المجالات، أنواع البرامج، وسائل التواصل).
+          أضف أو عدّل الخيارات التي تظهر في نماذج الحالات والإحالات والإجراءات واللجان.
         </p>
         <form
           className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_minmax(0,12rem)_auto]"
@@ -165,7 +185,10 @@ function SettingsPage() {
             form.reset();
           }}
         >
-          <Input name="category" placeholder="اسم القائمة" />
+          <select name="category" required className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+            <option value="">اختر القائمة</option>
+            {LOOKUP_CATEGORIES.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
+          </select>
           <Input name="value" placeholder="القيمة" />
           <Button type="submit" variant="outline">
             <Plus className="size-4" /> إضافة
@@ -175,12 +198,22 @@ function SettingsPage() {
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {lookups.map((item) => (
             <li key={item.id} className="flex items-center justify-between rounded-lg bg-secondary/60 px-3 py-2 text-sm">
-              <span>
-                <span className="text-muted-foreground">{item.category}:</span> {item.value}
-              </span>
-              <Button type="button" variant="ghost" size="icon" onClick={() => removeLookup.mutate(item.id)} aria-label="حذف">
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
+              {editingLookup?.id === item.id ? (
+                <Input value={editingLookup.value} onChange={(event) => setEditingLookup({ id: item.id, value: event.target.value })} className="ml-2" autoFocus />
+              ) : (
+                <span><span className="text-muted-foreground">{lookupCategoryLabel(item.category ?? "")}:</span> {item.value}</span>
+              )}
+              <div className="flex shrink-0 gap-1">
+                {editingLookup?.id === item.id ? (
+                  <>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => { const value = editingLookup.value.trim(); if (value) updateLookup.mutate({ id: item.id, value }); }} aria-label="حفظ التعديل"><Check className="size-4 text-primary" /></Button>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setEditingLookup(null)} aria-label="إلغاء التعديل"><X className="size-4" /></Button>
+                  </>
+                ) : (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setEditingLookup({ id: item.id, value: item.value ?? "" })} aria-label="تعديل"><Pencil className="size-4" /></Button>
+                )}
+                <Button type="button" variant="ghost" size="icon" onClick={() => removeLookup.mutate(item.id)} aria-label="حذف"><Trash2 className="size-4 text-destructive" /></Button>
+              </div>
             </li>
           ))}
         </ul>

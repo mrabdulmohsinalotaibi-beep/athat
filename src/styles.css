@@ -54,6 +54,11 @@
   --color-theme-royal: oklch(0.36 0.095 255);
   --color-theme-sage: oklch(0.43 0.09 158);
   --color-theme-amber: oklch(0.52 0.12 65);
+  --color-paper: var(--paper);
+  --color-paper-foreground: var(--paper-foreground);
+  --color-paper-muted: var(--paper-muted);
+  --color-paper-muted-foreground: var(--paper-muted-foreground);
+  --color-paper-border: var(--paper-border);
 }
 
 :root {
@@ -82,14 +87,19 @@
   --chart-3: oklch(0.45 0.025 20);
   --chart-4: oklch(0.67 0.08 55);
   --chart-5: oklch(0.6 0.03 20);
-  --sidebar: oklch(0.185404 0.005178 248.1074);
-  --sidebar-foreground: oklch(0.97 0.002 200);
+  --sidebar: oklch(0.985 0.004 75);
+  --sidebar-foreground: oklch(0.25 0.015 25);
   --sidebar-primary: oklch(0.400774 0.125802 26.4494);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.245 0.008 248);
-  --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(0.32 0.01 248);
+  --sidebar-accent: oklch(0.945 0.014 28);
+  --sidebar-accent-foreground: oklch(0.36 0.095 26);
+  --sidebar-border: oklch(0.89 0.008 50);
   --sidebar-ring: oklch(0.400774 0.125802 26.4494);
+  --paper: oklch(1 0 0);
+  --paper-foreground: oklch(0.18 0.004 250);
+  --paper-muted: oklch(0.965 0.002 250);
+  --paper-muted-foreground: oklch(0.42 0.006 250);
+  --paper-border: oklch(0.78 0.004 250);
   --shadow-soft: 0 10px 32px -18px oklch(0.2 0.03 20 / 0.28);
   --shadow-card: 0 5px 18px -12px oklch(0.2 0.025 20 / 0.18);
 }
@@ -104,11 +114,13 @@
   --chart-3: oklch(0.5 0.06 270);
   --chart-4: oklch(0.69 0.095 72);
   --chart-5: oklch(0.57 0.035 250);
-  --sidebar: oklch(0.18 0.032 255);
-  --sidebar-primary: oklch(0.72 0.1 80);
-  --sidebar-accent: oklch(0.25 0.04 255);
-  --sidebar-border: oklch(0.32 0.035 255);
-  --sidebar-ring: oklch(0.72 0.1 80);
+  --sidebar: oklch(0.982 0.008 250);
+  --sidebar-foreground: oklch(0.25 0.025 255);
+  --sidebar-primary: oklch(0.36 0.095 255);
+  --sidebar-accent: oklch(0.93 0.025 250);
+  --sidebar-accent-foreground: oklch(0.31 0.08 255);
+  --sidebar-border: oklch(0.87 0.018 250);
+  --sidebar-ring: oklch(0.36 0.095 255);
 }
 
 :root[data-theme="sage"] {
@@ -121,11 +133,13 @@
   --chart-3: oklch(0.48 0.055 195);
   --chart-4: oklch(0.7 0.09 80);
   --chart-5: oklch(0.58 0.045 120);
-  --sidebar: oklch(0.19 0.025 165);
-  --sidebar-primary: oklch(0.7 0.11 150);
-  --sidebar-accent: oklch(0.255 0.035 165);
-  --sidebar-border: oklch(0.33 0.035 165);
-  --sidebar-ring: oklch(0.7 0.11 150);
+  --sidebar: oklch(0.982 0.01 150);
+  --sidebar-foreground: oklch(0.25 0.025 158);
+  --sidebar-primary: oklch(0.43 0.09 158);
+  --sidebar-accent: oklch(0.93 0.035 150);
+  --sidebar-accent-foreground: oklch(0.34 0.075 158);
+  --sidebar-border: oklch(0.87 0.02 150);
+  --sidebar-ring: oklch(0.43 0.09 158);
 }
 
 :root[data-theme="amber"] {
@@ -138,11 +152,13 @@
   --chart-3: oklch(0.43 0.045 40);
   --chart-4: oklch(0.62 0.08 150);
   --chart-5: oklch(0.56 0.06 25);
-  --sidebar: oklch(0.18 0.012 50);
-  --sidebar-primary: oklch(0.74 0.12 78);
-  --sidebar-accent: oklch(0.25 0.025 55);
-  --sidebar-border: oklch(0.33 0.025 55);
-  --sidebar-ring: oklch(0.74 0.12 78);
+  --sidebar: oklch(0.985 0.012 78);
+  --sidebar-foreground: oklch(0.28 0.025 55);
+  --sidebar-primary: oklch(0.52 0.12 65);
+  --sidebar-accent: oklch(0.94 0.04 78);
+  --sidebar-accent-foreground: oklch(0.39 0.085 58);
+  --sidebar-border: oklch(0.88 0.025 78);
+  --sidebar-ring: oklch(0.52 0.12 65);
 }
 
 .dark {
@@ -196,6 +212,20 @@
     padding: 1rem;
     box-shadow: var(--shadow-card);
   }
+
+  .print-area {
+    background: var(--paper);
+    color: var(--paper-foreground);
+  }
+
+  .print-area table {
+    border-collapse: collapse;
+  }
+
+  .print-area th,
+  .print-area td {
+    border-color: var(--paper-border);
+  }
 }
 
 @media print {
@@ -217,6 +247,14 @@
     box-shadow: none !important;
     border: none !important;
     padding: 0 !important;
+  }
+  .print-area thead tr,
+  .print-area .report-summary {
+    background: #f3f4f6 !important;
+  }
+  .print-area th,
+  .print-area td {
+    border-color: #b8bcc2 !important;
   }
   .official-letterhead {
     margin-inline: 2mm;
