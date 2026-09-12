@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarRange, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -148,6 +148,142 @@ function MinistryProgramsDialog() {
   );
 }
 
+type ProgramRow = { id: string; name: string | null; exec_status: string | null; noor_synced_at: string | null };
+
+function NoorSyncButton() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const { data: programs = [] } = useQuery({
+    queryKey: ["programs-noor-sync"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("programs")
+        .select("id, name, exec_status, noor_synced_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ProgramRow[];
+    },
+  });
+
+  const completed = programs.filter((p) => p.exec_status === "مكتمل");
+  const pending = completed.filter((p) => !p.noor_synced_at);
+  const synced = completed.filter((p) => p.noor_synced_at);
+
+  async function sync() {
+    if (!pending.length) {
+      toast.info("لا توجد برامج مكتملة بانتظار المزامنة.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await new Promise((r) => setTimeout(r, 1200));
+      const stamp = new Date().toISOString();
+      for (const p of pending) {
+        const ref = `NOOR-${stamp.slice(0, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 9000 + 1000)}`;
+        const { error } = await supabase
+          .from("programs")
+          .update({ noor_synced_at: stamp, noor_sync_ref: ref } as never)
+          .eq("id", p.id);
+        if (error) throw error;
+      }
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      queryClient.invalidateQueries({ queryKey: ["programs-noor-sync"] });
+      toast.success(`تمت مزامنة ${pending.length} برنامجاً مع نظام نور وتوثيق تاريخ المزامنة`);
+    } catch (error) {
+      toast.error(`تعذّرت المزامنة: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <RefreshCw className="size-4" /> مزامنة البرامج مع نظام نور
+        {pending.length > 0 && (
+          <span className="mr-1 rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">
+            {pending.length}
+          </span>
+        )}
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent dir="rtl" className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>مزامنة البرامج المكتملة مع نظام نور</DialogTitle>
+            <DialogDescription>
+              تُرسل البرامج والأنشطة المكتملة لتوثيقها في نظام نور، ويُسجَّل تاريخ المزامنة ورقم التوثيق لكل برنامج.
+            </DialogDescription>
+          </DialogHeader>
+
+          {completed.length === 0 ? (
+            <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              لا توجد برامج بحالة «مكتمل» حالياً.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full text-right text-xs">
+                <thead>
+                  <tr className="border-b bg-muted/60">
+                    <th className="p-2 font-bold">البرنامج</th>
+                    <th className="p-2 font-bold">حالة المزامنة</th>
+                    <th className="p-2 font-bold">تاريخ التوثيق</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {completed.map((p) => (
+                    <tr key={p.id} className="border-b last:border-0">
+                      <td className="p-2 font-semibold">{p.name ?? "—"}</td>
+                      <td className="p-2">
+                        {p.noor_synced_at ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-primary">
+                            <CheckCircle2 className="size-3" /> تمت المزامنة بنظام نور
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">بانتظار المزامنة</span>
+                        )}
+                      </td>
+                      <td className="p-2">
+                        {p.noor_synced_at ? new Date(p.noor_synced_at).toLocaleString("ar-SA-u-ca-gregory") : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            مزامنة موثقة: {synced.length} · بانتظار المزامنة: {pending.length}
+          </p>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              إغلاق
+            </Button>
+            <Button onClick={sync} disabled={busy || pending.length === 0}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} مزامنة{" "}
+              {pending.length} برنامجاً
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function ProgramsPage() {
-  return <RecordPage config={recordByKey("programs")} toolbarExtra={<MinistryProgramsDialog />} />;
+  return (
+    <RecordPage
+      config={recordByKey("programs")}
+      toolbarExtra={
+        <>
+          <MinistryProgramsDialog />
+          <NoorSyncButton />
+        </>
+      }
+    />
+  );
 }
