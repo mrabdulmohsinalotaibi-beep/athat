@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { FileDown, Printer, Share2, LockKeyhole } from "lucide-react";
+import { FileDown, Printer, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +60,14 @@ function useSectionRows(keys: string[], from: string, to: string) {
         if (dateField && to) query = query.lte(dateField, to);
         const { data, error } = await query;
         if (error) throw error;
-        out[key] = (data ?? []) as unknown as Record<string, unknown>[];
+        let rows = (data ?? []) as unknown as Record<string, unknown>[];
+        if (key === "evidences") {
+          const paths = rows.map((row) => String(row["file_path"] ?? "")).filter(Boolean);
+          const signed = paths.length ? (await supabase.storage.from("evidences").createSignedUrls(paths, 3600)).data ?? [] : [];
+          const urls = new Map(paths.map((path, index) => [path, signed[index]?.signedUrl ?? ""]));
+          rows = rows.map((row) => ({ ...row, preview_url: urls.get(String(row["file_path"] ?? "")) ?? "" }));
+        }
+        out[key] = rows;
       }
       return out;
     },
@@ -127,19 +134,23 @@ function ReportsPage() {
 
   async function sharePdf() {
     if (!printRef.current) return;
-    const file = await elementToPdfFile(printRef.current, fileName);
-    const message = `السلام عليكم، مرفق ${title} للفترة: ${period}.`;
-    if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ title, text: message, files: [file] });
+    try {
+      const file = await elementToPdfFile(printRef.current, fileName);
+      const message = `السلام عليكم، مرفق ${title} للفترة: ${period}.`;
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title, text: message, files: [file] });
+        setShareOpen(false);
+        return;
+      }
+      await elementToPdf(printRef.current, fileName);
+      const link = whatsappLink(sharePhone, `${message}\nتم تنزيل ملف PDF على جهازك؛ يرجى إرفاقه في المحادثة.`);
+      if (!link) { toast.error("أدخل رقم جوال سعودي صحيحاً"); return; }
+      window.open(link, "_blank", "noopener,noreferrer");
+      toast.info("تم تنزيل التقرير وفتح واتساب؛ أرفق ملف PDF في المحادثة.");
       setShareOpen(false);
-      return;
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") toast.error("تعذّرت مشاركة التقرير. حاول تنزيله أولاً.");
     }
-    await elementToPdf(printRef.current, fileName);
-    const link = whatsappLink(sharePhone, `${message}\nتم تنزيل ملف PDF على جهازك؛ يرجى إرفاقه في المحادثة.`);
-    if (!link) return toast.error("أدخل رقم جوال سعودي صحيحاً");
-    window.open(link, "_blank", "noopener,noreferrer");
-    toast.info("تم تنزيل التقرير وفتح واتساب؛ أرفق ملف PDF في المحادثة.");
-    setShareOpen(false);
   }
 
   return (
@@ -290,6 +301,16 @@ function ReportsPage() {
                   ))}
                 </tbody>
               </table>
+              {key === "evidences" && rows.some((row) => String(row["mime_type"] ?? "").startsWith("image/") && row["preview_url"]) && (
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {rows.filter((row) => String(row["mime_type"] ?? "").startsWith("image/") && row["preview_url"]).slice(0, 9).map((row, index) => (
+                    <figure key={String(row["id"] ?? index)} className="break-inside-avoid border p-2">
+                      <img src={String(row["preview_url"])} alt={String(row["name"] ?? "شاهد مصور")} className="aspect-video w-full object-cover" />
+                      <figcaption className="mt-1 text-center text-[10px]">{String(row["name"] ?? "شاهد")}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              )}
             </section>
           );
         })}

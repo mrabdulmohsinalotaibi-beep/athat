@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useSubscription } from "@/lib/subscription";
 
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.pdf,.doc,.docx,.xls,.xlsx";
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -50,6 +51,7 @@ export function EvidenceUploadDialog({
   const [edate, setEdate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
+  const { data: subscription } = useSubscription();
   const inputRef = useRef<HTMLInputElement>(null);
   const previewUrl = useMemo(() => file && kindOf(file.type, file.name) === "image" ? URL.createObjectURL(file) : "", [file]);
 
@@ -112,7 +114,8 @@ export function EvidenceUploadDialog({
       reset();
       onOpenChange(false);
     } catch (error) {
-      toast.error(`تعذّر رفع الشاهد: ${(error as Error).message}`);
+      const message = (error as Error).message;
+      toast.error(message.includes("FREE_EVIDENCE_LIMIT_REACHED") ? "وصلت إلى حد الخطة المجانية: 10 شواهد. يمكنك الترقية لإضافة المزيد." : `تعذّر رفع الشاهد: ${message}`);
     } finally {
       setBusy(false);
     }
@@ -127,6 +130,7 @@ export function EvidenceUploadDialog({
         </DialogHeader>
 
         <div className="space-y-3">
+          {subscription?.plan !== "pro" && <p className="rounded-md bg-secondary px-3 py-2 text-xs text-secondary-foreground">الخطة المجانية تشمل حتى 10 شواهد.</p>}
           <div>
             <Label className="mb-1.5 block text-xs">ملف الشاهد</Label>
             <input ref={inputRef} type="file" accept={ACCEPT} className="hidden" onChange={(e) => {
@@ -134,7 +138,7 @@ export function EvidenceUploadDialog({
               if (chosen && chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); e.target.value = ""; return; }
               setFile(chosen); if (chosen && !name) setName(chosen.name);
             }} />
-            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) return toast.error("حجم الملف يتجاوز 50 ميجابايت"); setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
+            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
               {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 h-28 max-w-full object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
               <p className="mt-2 text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
               <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>
