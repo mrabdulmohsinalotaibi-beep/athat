@@ -43,7 +43,6 @@ export function RecordPage({
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
-  const hasStudentField = config.fields.some((f) => f.student);
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
