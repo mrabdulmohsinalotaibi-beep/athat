@@ -10,8 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignaturePad } from "@/components/SignaturePad";
-import { ThemePicker } from "@/components/ThemePicker";
-import { useTheme } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -41,18 +39,10 @@ function SettingsPage() {
   const { data: school } = useSchool();
   const [counselorSignature, setCounselorSignature] = useState<string | null>(null);
   const [principalSignature, setPrincipalSignature] = useState<string | null>(null);
-  const { theme } = useTheme();
-
-  async function persistTheme(nextTheme: "thaat" | "royal" | "sage" | "amber") {
-    if (!school?.id) return;
-    const { error } = await supabase.from("school_settings").update({ theme: nextTheme }).eq("id", school.id);
-    if (error) toast.error("تعذّر حفظ الثيم");
-    else queryClient.invalidateQueries({ queryKey: ["school_settings"] });
-  }
 
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
-      const payload = { ...values, theme, counselor_signature: counselorSignature ?? school?.counselor_signature ?? null, principal_signature: principalSignature ?? school?.principal_signature ?? null };
+      const payload = { ...values, counselor_signature: counselorSignature ?? school?.counselor_signature ?? null, principal_signature: principalSignature ?? school?.principal_signature ?? null };
       if (school?.id) {
         const { error } = await supabase.from("school_settings").update(payload as never).eq("id", school.id);
         if (error) throw error;
@@ -104,12 +94,6 @@ function SettingsPage() {
       <h1 className="text-2xl font-extrabold">الإعدادات</h1>
 
       <section className="rounded-xl border bg-card p-5 shadow-sm">
-        <h2 className="mb-1 font-bold">ألوان المنصة</h2>
-        <p className="mb-4 text-xs text-muted-foreground">اختر اللوحة الأنسب لك؛ يتغير المظهر فوراً ويُحفظ مع بيانات المدرسة.</p>
-        <ThemePicker onChange={persistTheme} />
-      </section>
-
-      <section className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-4 font-bold">بيانات المدرسة والموجه</h2>
         <form
           className="grid gap-4 sm:grid-cols-2"
@@ -153,7 +137,7 @@ function SettingsPage() {
           أضف قيماً خاصة بمدرستك (مثل: المجالات، أنواع البرامج، وسائل التواصل).
         </p>
         <form
-          className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_minmax(0,12rem)_auto]"
+          className="flex flex-wrap gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             const form = e.currentTarget;
@@ -165,8 +149,8 @@ function SettingsPage() {
             form.reset();
           }}
         >
-          <Input name="category" placeholder="اسم القائمة" />
-          <Input name="value" placeholder="القيمة" />
+          <Input name="category" placeholder="اسم القائمة" className="max-w-48" />
+          <Input name="value" placeholder="القيمة" className="max-w-48" />
           <Button type="submit" variant="outline">
             <Plus className="size-4" /> إضافة
           </Button>
@@ -178,9 +162,9 @@ function SettingsPage() {
               <span>
                 <span className="text-muted-foreground">{item.category}:</span> {item.value}
               </span>
-              <Button type="button" variant="ghost" size="icon" onClick={() => removeLookup.mutate(item.id)} aria-label="حذف">
+              <button onClick={() => removeLookup.mutate(item.id)} aria-label="حذف">
                 <Trash2 className="size-4 text-destructive" />
-              </Button>
+              </button>
             </li>
           ))}
         </ul>

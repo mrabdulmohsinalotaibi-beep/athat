@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, FileCheck2, LineChart, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import platformLogo from "@/assets/althaat-logo.png.asset.json";
-import { Copyright } from "@/components/Copyright";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -51,8 +50,8 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4">
-           <div className="flex min-w-0 items-center gap-2">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+           <div className="flex items-center gap-2">
               <img src={platformLogo.url} alt="شعار منصة الذات" className="size-12 object-contain" />
               <div><p className="text-2xl font-extrabold text-primary">الذات</p><p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p></div>
           </div>
@@ -88,7 +87,6 @@ function Landing() {
           ))}
         </section>
       </main>
-      <footer className="border-t px-4 py-5"><Copyright /></footer>
     </div>
   );
 }

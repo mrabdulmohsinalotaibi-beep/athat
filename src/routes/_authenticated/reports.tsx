@@ -191,12 +191,12 @@ function ReportsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
-          <div className="min-w-0">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
             <Label className="mb-1.5 block text-xs">من تاريخ</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
-          <div className="min-w-0">
+          <div>
             <Label className="mb-1.5 block text-xs">إلى تاريخ</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
@@ -231,7 +231,7 @@ function ReportsPage() {
         </div>
       </div>
 
-        <div ref={printRef} className="print-area overflow-hidden rounded-xl border bg-card p-3 shadow-sm sm:p-6">
+      <div ref={printRef} className="print-area rounded-xl border bg-card p-6 shadow-sm">
         <OfficialHeader
           school={school}
           title={title}
@@ -281,8 +281,7 @@ function ReportsPage() {
               <h3 className="mb-2 text-sm font-extrabold">
                 {config.title} <span className="text-xs font-normal text-muted-foreground">({rows.length} سجل)</span>
               </h3>
-              <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-right text-xs">
+              <table className="w-full border-collapse text-right text-xs">
                 <thead>
                   <tr className="bg-secondary">
                     {columns.map((f) => (
@@ -318,7 +317,6 @@ function ReportsPage() {
                   ))}
                 </tbody>
               </table>
-              </div>
               {key === "evidences" && rows.some((row) => String(row["mime_type"] ?? "").startsWith("image/") && row["preview_url"]) && (
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   {rows.filter((row) => String(row["mime_type"] ?? "").startsWith("image/") && row["preview_url"]).slice(0, 9).map((row, index) => (

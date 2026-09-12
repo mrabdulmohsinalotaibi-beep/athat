@@ -165,12 +165,12 @@ export function RecordPage({
 
   return (
     <div className="space-y-4">
-      <div className="no-print grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <div className="min-w-0">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3">
+        <div>
           <h1 className="text-2xl font-extrabold">{config.title}</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} سجل</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
               setAuto({});
@@ -213,7 +213,7 @@ export function RecordPage({
 
       {filters && <div className="no-print flex flex-wrap items-end gap-3">{filters}</div>}
 
-      <div className="no-print relative w-full sm:max-w-sm">
+      <div className="no-print relative max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -227,8 +227,8 @@ export function RecordPage({
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
-        <div className="hidden overflow-x-auto sm:block print:block">
-          <table className="min-w-full text-right text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-sm">
             <thead>
               <tr className="border-b bg-muted/60 text-xs">
                 {listFields.map((f) => (
@@ -306,27 +306,6 @@ export function RecordPage({
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="space-y-3 sm:hidden print:hidden">
-          {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">جارٍ التحميل...</p>}
-          {!isLoading && filtered.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">لا توجد سجلات بعد.</p>}
-          {filtered.map((row) => (
-            <article key={row.id} className="rounded-lg border bg-background p-3">
-              <dl className="space-y-2 text-sm">
-                {listFields.map((field) => (
-                  <div key={field.name} className="grid grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)] gap-2 border-b pb-2 last:border-0 last:pb-0">
-                    <dt className="text-xs font-bold text-muted-foreground">{field.label}</dt>
-                    <dd className="min-w-0 break-words">{displayRecordValue(row[field.name])}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div className="mt-3 flex justify-end gap-1 border-t pt-2">
-                <Button variant="ghost" size="icon" aria-label={`تعديل ${config.singular}`} onClick={() => { setAuto({}); setEditing(row); }}><Pencil className="size-4" /></Button>
-                {ATTACHABLE_KEYS.has(config.key) && <Button variant="ghost" size="icon" aria-label="إرفاق شاهد" onClick={() => setEvidenceFor(row)}><Paperclip className="size-4" /></Button>}
-                <Button variant="ghost" size="icon" aria-label={`حذف ${config.singular}`} onClick={() => { if (confirm("هل تريد حذف هذا السجل؟")) remove.mutate(row.id); }}><Trash2 className="size-4 text-destructive" /></Button>
-              </div>
-            </article>
-          ))}
         </div>
         <div className="hidden print:block">
           <OfficialFooter school={school} />

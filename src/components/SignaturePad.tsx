@@ -79,7 +79,7 @@ export function SignaturePad({
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-2 text-sm font-bold"><PenLine className="size-4 text-primary" />{label}</p>
         <Button type="button" variant="ghost" size="sm" onClick={clear} disabled={!hasInk}>
           <Eraser className="size-4" /> مسح
@@ -87,7 +87,7 @@ export function SignaturePad({
       </div>
       <canvas
         ref={canvasRef}
-        className="h-36 w-full max-w-full touch-none rounded-md border bg-background cursor-crosshair"
+        className="h-36 w-full touch-none rounded-md border bg-background cursor-crosshair"
         aria-label={label}
         onPointerDown={start}
         onPointerMove={draw}

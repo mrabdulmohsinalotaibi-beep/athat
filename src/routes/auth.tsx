@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import platformLogo from "@/assets/althaat-logo.png.asset.json";
-import { Copyright } from "@/components/Copyright";
 
 const DEMO_EMAIL = "demo@thaat.sa";
 const DEMO_PASSWORD = "Thaat-Demo-2026";
@@ -148,8 +147,8 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-secondary/40 px-4 py-8">
-      <div className="w-full max-w-md rounded-2xl border bg-card p-5 shadow-sm sm:p-8">
+    <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4 py-10">
+      <div className="w-full max-w-md rounded-2xl border bg-card p-8 shadow-sm">
         <div className="text-center">
           <img src={platformLogo.url} alt="شعار منصة الذات" className="mx-auto size-24 object-contain" />
           <p className="mt-2 text-3xl font-extrabold text-primary">الذات</p>
@@ -248,7 +247,6 @@ function AuthPage() {
           الدخول التجريبي يفتح حساباً مشتركاً للتجربة فقط، لا تُدخل فيه بيانات طلاب حقيقية.
         </p>
       </div>
-      <Copyright className="mt-6" />
     </div>
   );
 }
