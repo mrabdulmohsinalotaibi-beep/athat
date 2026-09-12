@@ -1,24 +1,74 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ClipboardList, FileCheck2, LineChart, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "ذات | منصة الموجه الطلابي الشاملة" },
+      {
+        name: "description",
+        content:
+          "منصة ذات لإدارة سجلات التوجيه الطلابي: الحالات الإرشادية، الخطة التشغيلية، المقابلات، المواظبة والسلوك، الشواهد والتقارير الرسمية.",
+      },
+      { property: "og:title", content: "ذات | منصة الموجه الطلابي الشاملة" },
+      {
+        property: "og:description",
+        content: "سجلات الموجه الطلابي إلكترونياً مع تقارير جاهزة للطباعة الرسمية.",
+      },
+    ],
+  }),
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const FEATURES = [
+  { icon: ClipboardList, title: "سجلات شاملة", text: "الطلاب والحالات والخطة التشغيلية والبرامج والمقابلات في مكان واحد." },
+  { icon: LineChart, title: "مؤشرات ولوحة تحكم", text: "إحصائيات فورية وتنبيهات للمتابعات والمواعيد القادمة." },
+  { icon: FileCheck2, title: "تقارير رسمية", text: "طباعة وتصدير PDF بترويسة رسمية وتوقيع الموجه ومدير المدرسة." },
+  { icon: ShieldCheck, title: "خصوصية تامة", text: "بيانات كل موجه محفوظة في حسابه ولا يطّلع عليها أحد سواه." },
+];
+
+function Landing() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-background">
+      <header className="border-b">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <div>
+            <p className="text-2xl font-extrabold text-primary">ذات</p>
+            <p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p>
+          </div>
+          <Button asChild>
+            <Link to="/auth">تسجيل الدخول</Link>
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-4 py-16">
+        <section className="text-center">
+          <h1 className="text-3xl font-extrabold leading-relaxed sm:text-4xl">
+            كل أعمال الموجه الطلابي في منصة واحدة
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+            نظّم سجلاتك الإرشادية اليومية، وتابع الحالات والمواظبة والسلوك، وجهّز تقاريرك وشواهدك
+            للطباعة الرسمية بضغطة واحدة.
+          </p>
+          <div className="mt-8 flex justify-center gap-3">
+            <Button asChild size="lg">
+              <Link to="/auth">ابدأ الآن</Link>
+            </Button>
+          </div>
+        </section>
+
+        <section className="mt-16 grid gap-4 sm:grid-cols-2">
+          {FEATURES.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="rounded-xl border bg-card p-5 shadow-sm">
+              <Icon className="size-6 text-primary" />
+              <h2 className="mt-3 font-bold">{title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+            </div>
+          ))}
+        </section>
+      </main>
     </div>
   );
 }
