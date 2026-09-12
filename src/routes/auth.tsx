@@ -28,6 +28,8 @@ export const Route = createFileRoute("/auth")({
       },
       { property: "og:title", content: "تسجيل الدخول | منصة ذات" },
       { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة ذات." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AuthPage,

@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   FileSpreadsheet,
+  ExternalLink,
   Loader2,
   LinkIcon,
   ShieldCheck,
@@ -113,22 +114,22 @@ function NafathTab({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="space-y-5">
-      <div className="overflow-hidden rounded-xl border">
-        <div className="flex items-center justify-between gap-3 bg-[#00693e] px-4 py-3 text-white">
+      <div className="overflow-hidden rounded-lg border shadow-sm">
+        <div className="flex items-center justify-between gap-3 bg-sidebar px-4 py-3 text-sidebar-foreground">
           <div className="leading-tight">
             <p className="text-sm font-extrabold">النفاذ الوطني الموحد</p>
             <p className="text-[11px] opacity-90">Nafath — الدخول الآمن للخدمات الحكومية</p>
           </div>
-          <span className="rounded-md bg-white/15 px-2 py-1 text-[10px]">iam.gov.sa/sso/nafath</span>
+          <span className="rounded-md bg-sidebar-accent px-2 py-1 text-[10px]">iam.gov.sa/sso/nafath</span>
         </div>
 
         <div className="space-y-4 bg-card p-4">
           <div className="flex gap-2 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
             <span>
-              يتم التحقق من هوية الموجه الطلابي عبر النفاذ الوطني الموحد دون حفظ أي كلمات مرور. بعد قبول الطلب من تطبيق
-              نفاذ يُسمح للنظام بجلب كشوفات الطلاب من نور. هذه واجهة محاكاة داخل المنصة، ويمكنك دائماً استخدام الإدخال
-              اليدوي أو رفع ملف Excel كبديل.
+              هذه تجربة تشغيلية محاكية ولا تُعد ربطاً حكومياً مباشراً. الربط البرمجي الحقيقي مع نفاذ ونور يتطلب ترخيصاً
+              رسمياً وشهادات ربط حكومية معتمدة من مركز المعلومات الوطني. لا تحفظ المنصة كلمة مرور نفاذ أو نور، ويمكنك
+              استخدام الإدخال اليدوي أو رفع ملف Excel كبديل آمن.
             </span>
           </div>
 
@@ -148,14 +149,18 @@ function NafathTab({ onDone }: { onDone: () => void }) {
               <Button onClick={requestNafath} className="w-full" disabled={nationalId.replace(/\D/g, "").length !== 10}>
                 <LinkIcon className="size-4" /> تسجيل الدخول عبر نفاذ
               </Button>
-              <a
-                href="https://www.iam.gov.sa/sso/nafath"
-                target="_blank"
-                rel="noreferrer"
-                className="block text-center text-[11px] text-muted-foreground underline"
-              >
-                عن بوابة النفاذ الوطني الموحد الرسمية
-              </a>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button asChild variant="outline" size="sm">
+                  <a href="https://www.iam.gov.sa/sso/nafath" target="_blank" rel="noreferrer">
+                    <ExternalLink className="size-4" /> فتح بوابة نفاذ الرسمية
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <a href="https://noor.moe.gov.sa/Noor/Login.aspx" target="_blank" rel="noreferrer">
+                    <ExternalLink className="size-4" /> فتح نظام نور الرسمي
+                  </a>
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -178,13 +183,15 @@ function NafathTab({ onDone }: { onDone: () => void }) {
               <p className="mb-2 text-xs text-muted-foreground">محاكاة تطبيق نفاذ — اختر الرقم المطابق للقبول:</p>
               <div className="flex justify-center gap-3">
                 {options.map((o) => (
-                  <button
+                  <Button
                     key={o}
+                    type="button"
+                    variant="outline"
                     onClick={() => approve(o)}
-                    className="size-16 rounded-xl border-2 text-xl font-bold transition-colors hover:border-primary hover:bg-primary/10"
+                    className="size-16 text-xl font-bold hover:border-primary hover:bg-primary/10"
                   >
                     {o}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <Button variant="ghost" className="mt-3" onClick={() => setRequestNumber(null)}>
