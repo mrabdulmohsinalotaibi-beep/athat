@@ -69,7 +69,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-14 items-center justify-center rounded-lg bg-sidebar-accent p-1">
+            <div className="flex size-14 items-center justify-center p-0.5">
                <img src={platformLogo.url} alt="شعار منصة الذات" className="size-full object-contain" />
             </div>
             <div>
