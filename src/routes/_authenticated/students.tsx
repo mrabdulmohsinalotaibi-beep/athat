@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RecordPage } from "@/components/RecordPage";
-import { recordByKey } from "@/lib/records";
+import { StudentsPage } from "@/components/StudentsPage";
 
 export const Route = createFileRoute("/_authenticated/students")({
   head: () => ({

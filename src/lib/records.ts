@@ -34,7 +34,7 @@ export const RECORDS: RecordConfig[] = [
     title: "سجل الطلاب",
     singular: "طالب",
     fields: [
-      { name: "student_no", label: "رقم الطالب", list: true },
+      { name: "student_no", label: "رقم الطالب" },
       { name: "full_name", label: "اسم الطالب", list: true },
       { name: "national_id", label: "رقم الهوية", list: true },
       { name: "nationality", label: "الجنسية", list: true },
