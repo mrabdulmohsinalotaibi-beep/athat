@@ -24,7 +24,6 @@ export const Route = createFileRoute("/_authenticated/settings")({
 const SCHOOL_FIELDS = [
   { name: "school_name", label: "اسم المدرسة" },
   { name: "education_dept", label: "إدارة التعليم" },
-  { name: "education_office", label: "مكتب التعليم" },
   { name: "principal_name", label: "مدير المدرسة" },
   { name: "counselor_name", label: "اسم الموجه الطلابي" },
   { name: "academic_year", label: "العام الدراسي" },

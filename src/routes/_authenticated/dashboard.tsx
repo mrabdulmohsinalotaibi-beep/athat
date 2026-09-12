@@ -24,6 +24,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
+import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { OfficialHeader } from "@/components/OfficialHeader";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -44,13 +45,17 @@ function useDashboard() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [students, cases, attendance, behavior, programs, calendar] = await Promise.all([
+      const [students, cases, attendance, behavior, programs, calendar, planTasks, interviews] = await Promise.all([
         supabase.from("students").select("id, stage"),
-        supabase.from("counseling_cases").select("id, domain, case_status, priority, followup_at, student_name"),
-        supabase.from("attendance").select("id, adate, case_type"),
+        supabase
+          .from("counseling_cases")
+          .select("id, domain, case_status, priority, followup_at, last_followup, student_name"),
+        supabase.from("attendance").select("id, adate, case_type, count_days"),
         supabase.from("behavior").select("id, bdate"),
         supabase.from("programs").select("id, exec_status"),
         supabase.from("calendar_events").select("id, edate, title, etype, status, priority"),
+        supabase.from("plan_tasks").select("id, exec_status"),
+        supabase.from("interviews").select("id, itype"),
       ]);
       return {
         students: students.data ?? [],
@@ -59,10 +64,13 @@ function useDashboard() {
         behavior: behavior.data ?? [],
         programs: programs.data ?? [],
         calendar: calendar.data ?? [],
+        planTasks: planTasks.data ?? [],
+        interviews: interviews.data ?? [],
       };
     },
   });
 }
+
 
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
@@ -112,6 +120,14 @@ function Dashboard() {
     }, {}),
   ).map(([name, value]) => ({ name, value }));
 
+  const kpis = computeKpis({
+    planTasks: data?.planTasks ?? [],
+    cases,
+    attendance,
+    interviews: data?.interviews ?? [],
+    students,
+  });
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl border bg-card p-5 shadow-sm">
@@ -131,6 +147,27 @@ function Dashboard() {
             <p className="mt-3 text-3xl font-extrabold">{isLoading ? "—" : value}</p>
           </Link>
         ))}
+      </div>
+
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <h2 className="mb-4 font-bold">مؤشرات قياس أداء التوجيه الطلابي</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {kpis.map((k) => (
+            <div key={k.key} className="rounded-lg border p-4">
+              <p className="text-xs text-muted-foreground">{k.label}</p>
+              <p className="mt-2 text-2xl font-extrabold text-primary">
+                {k.value}
+                {isPercentKpi(k.key) ? "%" : ""}
+              </p>
+              {isPercentKpi(k.key) && (
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(k.value, 100)}%` }} />
+                </div>
+              )}
+              <p className="mt-2 text-[11px] text-muted-foreground">{k.hint}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

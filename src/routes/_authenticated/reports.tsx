@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { RECORDS, recordByKey } from "@/lib/records";
 import { elementToPdf } from "@/lib/pdf";
+import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
       { title: "التقارير والطباعة | منصة ذات" },
       { name: "description", content: "إعداد التقارير الرسمية وطباعتها أو تصديرها PDF بترويسة وزارية وتوقيع رسمي." },
       { property: "og:title", content: "التقارير والطباعة | منصة ذات" },
-      { property: "og:description", content: "تقارير جاهزة للطباعة الرسمية لأعمال الموجه الطلابي." },
+      { property: "og:description", content: "تقارير مفردة أو مجمعة جاهزة للطباعة الرسمية لأعمال الموجه الطلابي." },
     ],
   }),
   component: ReportsPage,
@@ -38,113 +39,201 @@ const DATE_FIELD: Record<string, string> = {
   reports: "report_date",
 };
 
-function ReportsPage() {
-  const { data: school } = useSchool();
-  const [recordKey, setRecordKey] = useState("cases");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const config = recordByKey(recordKey);
-  const dateField = DATE_FIELD[recordKey];
-
-  const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["report", recordKey, from, to],
+function useSectionRows(keys: string[], from: string, to: string) {
+  return useQuery({
+    queryKey: ["report", keys.join(","), from, to],
     queryFn: async () => {
-      let query = supabase.from(config.table as never).select("*");
-      if (dateField && from) query = query.gte(dateField, from);
-      if (dateField && to) query = query.lte(dateField, to);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as unknown as Record<string, unknown>[];
+      const out: Record<string, Record<string, unknown>[]> = {};
+      for (const key of keys) {
+        const config = recordByKey(key);
+        const dateField = DATE_FIELD[key];
+        let query = supabase.from(config.table as never).select("*");
+        if (dateField && from) query = query.gte(dateField, from);
+        if (dateField && to) query = query.lte(dateField, to);
+        const { data, error } = await query;
+        if (error) throw error;
+        out[key] = (data ?? []) as unknown as Record<string, unknown>[];
+      }
+      return out;
     },
   });
+}
 
-  const columns = config.fields.filter((f) => f.list).slice(0, 7);
-  const title = `${config.title} — تقرير رسمي`;
+function useKpiData() {
+  return useQuery({
+    queryKey: ["report-kpis"],
+    queryFn: async () => {
+      const [planTasks, cases, attendance, interviews, students] = await Promise.all([
+        supabase.from("plan_tasks").select("exec_status"),
+        supabase.from("counseling_cases").select("case_status, last_followup, followup_at"),
+        supabase.from("attendance").select("case_type, count_days"),
+        supabase.from("interviews").select("itype"),
+        supabase.from("students").select("id"),
+      ]);
+      return computeKpis({
+        planTasks: planTasks.data ?? [],
+        cases: cases.data ?? [],
+        attendance: attendance.data ?? [],
+        interviews: interviews.data ?? [],
+        students: students.data ?? [],
+      });
+    },
+  });
+}
+
+function ReportsPage() {
+  const { data: school } = useSchool();
+  const [selected, setSelected] = useState<string[]>(["cases"]);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [withKpis, setWithKpis] = useState(true);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const { data: sections, isLoading } = useSectionRows(selected, from, to);
+  const { data: kpis = [] } = useKpiData();
+
+  const merged = selected.length > 1;
+  const title = merged
+    ? "تقرير مجمّع لأعمال التوجيه الطلابي"
+    : `${recordByKey(selected[0] ?? "cases").title} — تقرير رسمي`;
+  const fileName = merged ? "تقرير_مجمع" : recordByKey(selected[0] ?? "cases").title;
+  const period = from || to ? `${from || "—"} إلى ${to || "—"}` : "كامل العام الدراسي";
+
+  function toggle(key: string) {
+    setSelected((current) =>
+      current.includes(key)
+        ? current.length > 1
+          ? current.filter((k) => k !== key)
+          : current
+        : [...current, key],
+    );
+  }
 
   return (
     <div className="space-y-5">
       <div className="no-print">
         <h1 className="text-2xl font-extrabold">التقارير والطباعة</h1>
         <p className="text-sm text-muted-foreground">
-          اختر السجل والفترة، ثم اطبع التقرير أو صدّره بصيغة PDF بترويسة رسمية.
+          اختر سجلاً واحداً لتقرير منفرد، أو عدّة سجلات لدمجها في تقرير شامل، ثم اطبعه أو صدّره PDF بجودة عالية.
         </p>
       </div>
 
-      <div className="no-print flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4 shadow-sm">
+      <div className="no-print space-y-4 rounded-xl border bg-card p-4 shadow-sm">
         <div>
-          <Label className="mb-1.5 block text-xs">السجل</Label>
-          <select
-            value={recordKey}
-            onChange={(e) => setRecordKey(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-          >
+          <Label className="mb-2 block text-xs">السجلات المضمّنة في التقرير</Label>
+          <div className="flex flex-wrap gap-2">
             {RECORDS.map((r) => (
-              <option key={r.key} value={r.key}>
+              <button
+                key={r.key}
+                onClick={() => toggle(r.key)}
+                className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                  selected.includes(r.key)
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "hover:border-primary"
+                }`}
+              >
                 {r.title}
-              </option>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">من تاريخ</Label>
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} disabled={!dateField} />
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <Label className="mb-1.5 block text-xs">من تاريخ</Label>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label className="mb-1.5 block text-xs">إلى تاريخ</Label>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </div>
+          <label className="flex items-center gap-2 pb-2 text-xs">
+            <input type="checkbox" checked={withKpis} onChange={(e) => setWithKpis(e.target.checked)} />
+            تضمين مؤشرات الأداء
+          </label>
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="size-4" /> طباعة فورية
+          </Button>
+          <Button onClick={() => printRef.current && elementToPdf(printRef.current, fileName)}>
+            <FileDown className="size-4" /> تصدير PDF
+          </Button>
         </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">إلى تاريخ</Label>
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} disabled={!dateField} />
-        </div>
-        <Button variant="outline" onClick={() => window.print()}>
-          <Printer className="size-4" /> طباعة
-        </Button>
-        <Button onClick={() => printRef.current && elementToPdf(printRef.current, config.title)}>
-          <FileDown className="size-4" /> تصدير PDF
-        </Button>
       </div>
 
       <div ref={printRef} className="print-area rounded-xl border bg-card p-6 shadow-sm">
-        <OfficialHeader school={school} title={title} />
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          {from || to ? `الفترة: ${from || "—"} إلى ${to || "—"}` : "جميع السجلات"} · عدد السجلات: {rows.length}
-        </p>
+        <OfficialHeader
+          school={school}
+          title={title}
+          reportType={merged ? "تقرير مجمّع" : "تقرير سجل"}
+          period={period}
+        />
 
-        <table className="mt-5 w-full border-collapse text-right text-xs">
-          <thead>
-            <tr className="bg-secondary">
-              {columns.map((f) => (
-                <th key={f.name} className="border p-2 font-bold">
-                  {f.label}
-                </th>
+        {withKpis && kpis.length > 0 && (
+          <section className="mt-6">
+            <h3 className="mb-3 text-sm font-extrabold">مؤشرات أداء التوجيه الطلابي</h3>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {kpis.map((k) => (
+                <div key={k.key} className="rounded-lg border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">{k.label}</p>
+                  <p className="mt-1 text-2xl font-extrabold text-primary">
+                    {k.value}
+                    {isPercentKpi(k.key) ? "%" : ""}
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{k.hint}</p>
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={columns.length} className="border p-4 text-center">
-                  جارٍ التحميل...
-                </td>
-              </tr>
-            )}
-            {!isLoading && rows.length === 0 && (
-              <tr>
-                <td colSpan={columns.length} className="border p-4 text-center text-muted-foreground">
-                  لا توجد سجلات ضمن الفترة المحددة.
-                </td>
-              </tr>
-            )}
-            {rows.map((row, index) => (
-              <tr key={String(row["id"] ?? index)}>
-                {columns.map((f) => (
-                  <td key={f.name} className="border p-2 align-top">
-                    {String(row[f.name] ?? "—")}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </div>
+          </section>
+        )}
+
+        {selected.map((key) => {
+          const config = recordByKey(key);
+          const columns = config.fields.filter((f) => f.list).slice(0, 7);
+          const rows = sections?.[key] ?? [];
+          return (
+            <section key={key} className="mt-7 break-inside-avoid">
+              <h3 className="mb-2 text-sm font-extrabold">
+                {config.title} <span className="text-xs font-normal text-muted-foreground">({rows.length} سجل)</span>
+              </h3>
+              <table className="w-full border-collapse text-right text-xs">
+                <thead>
+                  <tr className="bg-secondary">
+                    {columns.map((f) => (
+                      <th key={f.name} className="border p-2 font-bold">
+                        {f.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading && (
+                    <tr>
+                      <td colSpan={columns.length} className="border p-4 text-center">
+                        جارٍ التحميل...
+                      </td>
+                    </tr>
+                  )}
+                  {!isLoading && rows.length === 0 && (
+                    <tr>
+                      <td colSpan={columns.length} className="border p-4 text-center text-muted-foreground">
+                        لا توجد سجلات ضمن الفترة المحددة.
+                      </td>
+                    </tr>
+                  )}
+                  {rows.map((row, index) => (
+                    <tr key={String(row["id"] ?? index)}>
+                      {columns.map((f) => (
+                        <td key={f.name} className="border p-2 align-top">
+                          {String(row[f.name] ?? "—")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          );
+        })}
 
         <OfficialFooter school={school} />
       </div>

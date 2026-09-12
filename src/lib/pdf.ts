@@ -1,24 +1,33 @@
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
-/** Renders a DOM element into a multi-page A4 PDF (works with Arabic text since it rasterises). */
+/** Renders a DOM element into a high-quality multi-page A4 PDF with margins (Arabic-safe, rasterised). */
 export async function elementToPdf(element: HTMLElement, fileName: string) {
-  const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
-  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const canvas = await html2canvas(element, {
+    scale: Math.min(3, Math.max(2, window.devicePixelRatio * 2)),
+    backgroundColor: "#ffffff",
+    useCORS: true,
+    windowWidth: element.scrollWidth,
+  });
+
+  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+  const margin = 8;
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const imgHeight = (canvas.height * pageWidth) / canvas.width;
-  const image = canvas.toDataURL("image/jpeg", 0.95);
+  const contentWidth = pageWidth - margin * 2;
+  const contentHeight = pageHeight - margin * 2;
+  const imgHeight = (canvas.height * contentWidth) / canvas.width;
+  const image = canvas.toDataURL("image/jpeg", 0.98);
 
   let remaining = imgHeight;
-  let position = 0;
-  pdf.addImage(image, "JPEG", 0, position, pageWidth, imgHeight);
-  remaining -= pageHeight;
+  let offset = 0;
+  pdf.addImage(image, "JPEG", margin, margin, contentWidth, imgHeight, undefined, "FAST");
+  remaining -= contentHeight;
   while (remaining > 0) {
-    position -= pageHeight;
+    offset += contentHeight;
     pdf.addPage();
-    pdf.addImage(image, "JPEG", 0, position, pageWidth, imgHeight);
-    remaining -= pageHeight;
+    pdf.addImage(image, "JPEG", margin, margin - offset, contentWidth, imgHeight, undefined, "FAST");
+    remaining -= contentHeight;
   }
   pdf.save(`${fileName}.pdf`);
 }

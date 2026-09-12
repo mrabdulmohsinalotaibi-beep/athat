@@ -5,7 +5,6 @@ export interface SchoolSettings {
   id?: string;
   school_name?: string | null;
   education_dept?: string | null;
-  education_office?: string | null;
   principal_name?: string | null;
   counselor_name?: string | null;
   academic_year?: string | null;
