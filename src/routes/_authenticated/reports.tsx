@@ -9,6 +9,7 @@ import { RECORDS, recordByKey } from "@/lib/records";
 import { elementToPdf } from "@/lib/pdf";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { AiDraftAssistant } from "@/components/AiDraftAssistant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,6 +88,7 @@ function ReportsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [withKpis, setWithKpis] = useState(true);
+  const [aiNarrative, setAiNarrative] = useState("");
   const printRef = useRef<HTMLDivElement>(null);
 
   const { data: sections, isLoading } = useSectionRows(selected, from, to);
@@ -123,17 +125,16 @@ function ReportsPage() {
           <Label className="mb-2 block text-xs">السجلات المضمّنة في التقرير</Label>
           <div className="flex flex-wrap gap-2">
             {RECORDS.map((r) => (
-              <button
+              <Button
                 key={r.key}
+                type="button"
+                variant={selected.includes(r.key) ? "default" : "outline"}
+                size="sm"
                 onClick={() => toggle(r.key)}
-                className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                  selected.includes(r.key)
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "hover:border-primary"
-                }`}
+                className="rounded-full"
               >
                 {r.title}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -158,6 +159,20 @@ function ReportsPage() {
             <FileDown className="size-4" /> تصدير PDF
           </Button>
         </div>
+
+        <AiDraftAssistant
+          recordKey="reports"
+          context={{
+            report_type: title,
+            period,
+            included_records: selected.map((key) => recordByKey(key).title).join("، "),
+          }}
+          onDraft={(draft) =>
+            setAiNarrative(
+              `ملخص التقرير:\n${draft.summary}\n\nالأهداف:\n${draft.goals}\n\nمنهجية العمل والتدخل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`,
+            )
+          }
+        />
       </div>
 
       <div ref={printRef} className="print-area rounded-xl border bg-card p-6 shadow-sm">
@@ -167,6 +182,13 @@ function ReportsPage() {
           reportType={merged ? "تقرير مجمّع" : "تقرير سجل"}
           period={period}
         />
+
+        {aiNarrative && (
+          <section className="mt-6 whitespace-pre-wrap rounded-lg border bg-muted/30 p-4 text-sm leading-7">
+            <h3 className="mb-2 font-extrabold">الصياغة المهنية للتقرير</h3>
+            {aiNarrative}
+          </section>
+        )}
 
         {withKpis && kpis.length > 0 && (
           <section className="mt-6">
