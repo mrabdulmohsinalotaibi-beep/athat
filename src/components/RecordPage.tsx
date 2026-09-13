@@ -501,6 +501,7 @@ export function RecordPage({
                             participant: a["participant"] || s.guardian_name,
                           }))
                         }
+                        onClear={() => setAuto((a) => ({ ...a, student_name: "" }))}
                       />
                     </div>
                     {(() => {
