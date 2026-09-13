@@ -56,8 +56,10 @@ export function RecordPage({
   const [auto, setAuto] = useState<Record<string, string>>({});
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
-  const [evidenceFor, setEvidenceFor] = useState<Row | null>(null);
+  const [attachFor, setAttachFor] = useState<Row | null>(null);
+  const [printFor, setPrintFor] = useState<Row | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const smartMap = useServerFn(mapImportColumns);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
