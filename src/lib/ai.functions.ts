@@ -89,9 +89,9 @@ async function streamDraft(apiKey: string, prompt: string, schema: unknown = out
         text: {
           format: {
             type: "json_schema",
-            name: "guidance_report",
+            name: schemaName,
             strict: true,
-            schema: outputSchema,
+            schema,
           },
         },
       }),
