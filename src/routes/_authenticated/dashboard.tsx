@@ -144,6 +144,25 @@ function Dashboard() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {[
+          { label: "حالة إرشادية جديدة", to: "/cases" as const },
+          { label: "تسجيل مقابلة", to: "/interviews" as const },
+          { label: "رصد مواظبة", to: "/attendance" as const },
+          { label: "إحالة جديدة", to: "/referrals" as const },
+          { label: "تقرير رسمي", to: "/reports" as const },
+        ].map((action) => (
+          <Link
+            key={action.label}
+            to={action.to}
+            className="inline-flex min-h-9 items-center rounded-md border bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary"
+          >
+            {action.label}
+          </Link>
+        ))}
+      </div>
+
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {stats.map(({ label, value, icon: Icon, to }) => (
           <Link key={label} to={to} className="rounded-xl border bg-card p-5 shadow-sm transition-colors hover:border-primary">

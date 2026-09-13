@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, FileDown, Plus, Printer, Search, Send, Trash2, Upload, Pencil, Paperclip, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Copy, Download, FileDown, Plus, Printer, Search, Send, Trash2, Upload, Pencil, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +52,9 @@ export function RecordPage({
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
   const { data: studentOptions = [] } = useStudentOptions();
@@ -116,8 +119,31 @@ export function RecordPage({
       out = out.filter((row) => config.fields.some((f) => String(row[f.name] ?? "").includes(term)));
     }
     if (extraFilter) out = out.filter((row) => extraFilter(row));
+    if (sort) {
+      const dir = sort.dir === "asc" ? 1 : -1;
+      out = [...out].sort((a, b) => {
+        const av = a[sort.key];
+        const bv = b[sort.key];
+        if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
+        return String(av ?? "").localeCompare(String(bv ?? ""), "ar") * dir;
+      });
+    }
     return out;
-  }, [rows, search, config.fields, extraFilter]);
+  }, [rows, search, config.fields, extraFilter, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const paged = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage],
+  );
+
+  function toggleSort(key: string) {
+    setPage(1);
+    setSort((current) =>
+      current?.key === key ? (current.dir === "asc" ? { key, dir: "desc" } : null) : { key, dir: "asc" },
+    );
+  }
 
   const save = useMutation({
     mutationFn: async (values: Partial<Row>) => {
@@ -278,7 +304,10 @@ export function RecordPage({
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           placeholder="بحث في السجل..."
           className="pr-9 pl-9"
         />
@@ -305,7 +334,16 @@ export function RecordPage({
               <tr className="border-b bg-muted/60 text-xs">
                 {listFields.map((f) => (
                   <th key={f.name} className="whitespace-nowrap p-3 font-bold">
-                    {f.label}
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(f.name)}
+                      title={`ترتيب حسب ${f.label}`}
+                      className="inline-flex items-center gap-1 hover:text-primary"
+                    >
+                      {f.label}
+                      {sort?.key === f.name &&
+                        (sort.dir === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
+                    </button>
                   </th>
                 ))}
                 <th className="no-print p-3" />
@@ -326,7 +364,7 @@ export function RecordPage({
                   </td>
                 </tr>
               )}
-              {filtered.map((row) => (
+              {paged.map((row) => (
                 <tr key={row.id} className="border-b last:border-0 hover:bg-muted/40">
                   {listFields.map((f) => (
                     <td key={f.name} className="p-3 align-top">
@@ -361,6 +399,23 @@ export function RecordPage({
                         }}
                       >
                         <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="نسخ السجل كنسخة جديدة"
+                        onClick={() => {
+                          const copy: Record<string, string> = {};
+                          config.fields
+                            .filter((field) => !field.generated)
+                            .forEach((field) => {
+                              copy[field.name] = String(row[field.name] ?? "");
+                            });
+                          setAuto(copy);
+                          setEditing({});
+                        }}
+                      >
+                        <Copy className="size-4" />
                       </Button>
                       <Button variant="ghost" size="icon" title="المرفقات" onClick={() => setAttachFor(row)}>
                         <Paperclip className="size-4" />
@@ -408,6 +463,17 @@ export function RecordPage({
             </tbody>
           </table>
         </div>
+        {pageCount > 1 && (
+          <div className="no-print mt-4 flex items-center justify-between gap-3 text-sm">
+            <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>
+              <ChevronRight className="size-4" /> السابق
+            </Button>
+            <span className="text-muted-foreground">صفحة {currentPage} من {pageCount}</span>
+            <Button variant="outline" size="sm" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>
+              التالي <ChevronLeft className="size-4" />
+            </Button>
+          </div>
+        )}
         <div className="hidden print:block">
           <OfficialFooter school={school} />
         </div>
