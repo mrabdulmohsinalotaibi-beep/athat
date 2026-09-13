@@ -71,7 +71,7 @@ async function wait(milliseconds: number) {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function streamDraft(apiKey: string, prompt: string) {
+async function streamDraft(apiKey: string, prompt: string, schema: unknown = outputSchema, schemaName = "guidance_report") {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
