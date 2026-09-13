@@ -28,3 +28,46 @@ export function whatsappLink(phone: unknown, message: string) {
   if (!number) return "";
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
+
+export function referralMessage(opts: {
+  student?: string;
+  studentNo?: string;
+  grade?: string;
+  destination?: string;
+  reason?: string;
+  actions?: string;
+  recommendations?: string;
+  date?: string;
+  school?: string;
+  counselor?: string;
+}) {
+  const line = (label: string, value?: string) => (value && value.trim() ? `${label}: ${value.trim()}` : "");
+  return [
+    "السلام عليكم ورحمة الله وبركاته",
+    opts.school ? `من التوجيه الطلابي بـ${opts.school}` : "من التوجيه الطلابي بالمدرسة",
+    "نرفع لكم نموذج إحالة طالب وفق التالي:",
+    "",
+    line("اسم الطالب", opts.student),
+    line("رقم الطالب", opts.studentNo),
+    line("الصف", opts.grade),
+    line("الجهة المحال إليها", opts.destination),
+    line("تاريخ الإحالة", opts.date),
+    line("سبب الإحالة", opts.reason),
+    line("الإجراءات السابقة", opts.actions),
+    line("التوصيات", opts.recommendations),
+    "",
+    opts.counselor ? `الموجه الطلابي: ${opts.counselor}` : "",
+    "شاكرين لكم تعاونكم.",
+  ]
+    .filter((item) => item !== "")
+    .join("\n");
+}
+
+/** Opens WhatsApp with a message; when no number is given the user picks the chat inside WhatsApp. */
+export function shareOnWhatsApp(message: string, phone?: unknown) {
+  const number = normalizeSaudiPhone(phone);
+  const url = number
+    ? `https://wa.me/${number}?text=${encodeURIComponent(message)}`
+    : `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank", "noopener");
+}
