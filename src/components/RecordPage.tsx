@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileDown, Plus, Printer, Search, Trash2, Upload, Pencil, Paperclip } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Download, FileDown, Plus, Printer, Search, Send, Trash2, Upload, Pencil, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -9,12 +10,15 @@ import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
 import { displayRecordValue } from "@/lib/display";
 import { mergeLookupOptions } from "@/lib/lookups";
+import { mapImportColumns } from "@/lib/ai.functions";
+import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AiDraftAssistant } from "@/components/AiDraftAssistant";
-import { EvidenceUploadDialog } from "@/components/EvidenceUpload";
+import { RecordPrintDialog } from "@/components/RecordPrintDialog";
+import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
