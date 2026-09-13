@@ -580,7 +580,19 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <EvidenceUploadDialog open={evidenceFor !== null} onOpenChange={(open) => !open && setEvidenceFor(null)} defaultLinkedType={LINKED_TYPE[config.key] || config.singular} defaultLinkedRef={displayRecordValue(evidenceFor?.[listFields[0]?.name ?? ""] ?? evidenceFor?.[config.fields.find((field) => field.type === "date")?.name ?? ""] ?? "")} />
+      <RecordAttachmentsDialog
+        open={attachFor !== null}
+        onOpenChange={(open) => !open && setAttachFor(null)}
+        recordId={attachFor?.id ?? null}
+        recordTitle={displayRecordValue(attachFor?.[listFields[0]?.name ?? ""] ?? "")}
+        linkedType={LINKED_TYPE[config.key] || config.singular}
+      />
+      <RecordPrintDialog
+        open={printFor !== null}
+        onOpenChange={(open) => !open && setPrintFor(null)}
+        config={config}
+        row={printFor}
+      />
     </div>
   );
 }
