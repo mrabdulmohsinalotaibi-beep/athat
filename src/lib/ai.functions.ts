@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const DraftInput = z.object({
-  recordKey: z.enum(["cases", "interviews", "behavior", "reports"]),
+  recordKey: z.enum(["cases", "interviews", "behavior", "reports", "referrals"]),
   notes: z.string().trim().min(3).max(4000),
   context: z.record(z.string(), z.string().max(1000)).default({}),
   availableOptions: z.record(z.string(), z.array(z.string().max(120)).max(80)).default({}),
