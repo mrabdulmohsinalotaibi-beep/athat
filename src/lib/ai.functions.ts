@@ -169,3 +169,66 @@ export const draftGuidanceReport = createServerFn({ method: "POST" })
       throw new Error("تعذّر قراءة الصياغة الناتجة. حاول مرة أخرى.");
     }
   });
+const MapInput = z.object({
+  headers: z.array(z.string().max(200)).min(1).max(80),
+  sample: z.array(z.record(z.string(), z.string().max(300))).max(5).default([]),
+  fields: z.array(z.object({ name: z.string().max(80), label: z.string().max(160) })).min(1).max(40),
+});
+
+const mappingSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["mapping"],
+  properties: {
+    mapping: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["field", "column"],
+        properties: {
+          field: { type: "string" },
+          column: { type: "string" },
+        },
+      },
+    },
+  },
+} as const;
+
+export type ImportMapping = Record<string, string>;
+
+export const mapImportColumns = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => MapInput.parse(input))
+  .handler(async ({ data }): Promise<ImportMapping> => {
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة حالياً.");
+
+    const prompt = `أنت مساعد لتحليل كشوفات Excel العربية الخاصة بمدارس وزارة التعليم السعودية ونظام نور.
+مهمتك: مطابقة أعمدة الملف مع حقول النظام.
+أعمدة الملف: ${JSON.stringify(data.headers)}
+عينة من الصفوف: ${JSON.stringify(data.sample)}
+حقول النظام المطلوبة: ${JSON.stringify(data.fields)}
+لكل حقل من حقول النظام أعد اسم العمود المطابق حرفياً كما ورد في أعمدة الملف، أو نصاً فارغاً إذا لا يوجد عمود مناسب.
+استرشد بمحتوى العينة (أرقام الهوية 10 أرقام، الجوال يبدأ بـ 05، الصف والفصل نصوص قصيرة).
+لا تكرر العمود نفسه لأكثر من حقل. أعد JSON مطابقاً للمخطط فقط.`;
+
+    const raw = await streamDraft(apiKey, prompt, mappingSchema, "import_mapping");
+    let parsed: { mapping?: { field: string; column: string }[] };
+    try {
+      parsed = JSON.parse(raw) as { mapping?: { field: string; column: string }[] };
+    } catch {
+      throw new Error("تعذّرت قراءة نتيجة التعيين الذكي. حاول مرة أخرى.");
+    }
+    const allowed = new Set(data.headers);
+    const fieldNames = new Set(data.fields.map((field) => field.name));
+    const out: ImportMapping = {};
+    const used = new Set<string>();
+    for (const item of parsed.mapping ?? []) {
+      if (!fieldNames.has(item.field)) continue;
+      if (!item.column || !allowed.has(item.column) || used.has(item.column)) continue;
+      out[item.field] = item.column;
+      used.add(item.column);
+    }
+    return out;
+  });
