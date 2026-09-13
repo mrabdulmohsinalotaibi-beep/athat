@@ -33,8 +33,7 @@ import {
 
 type Row = Record<string, unknown> & { id: string };
 
-const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports"]);
-const ATTACHABLE_KEYS = new Set(["cases", "programs", "interviews", "attendance", "behavior", "referrals", "committees", "plan"]);
+const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports", "referrals"]);
 const LINKED_TYPE: Record<string, string> = { cases: "حالة", programs: "برنامج", interviews: "مقابلة", attendance: "مواظبة", behavior: "سلوك", referrals: "إحالة", committees: "اجتماع", plan: "مهمة" };
 
 export function RecordPage({
