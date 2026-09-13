@@ -158,11 +158,34 @@ export function RecordPage({
     setImporting(true);
     try {
       const sheetRows = await readExcel(file);
+      const importFields = config.fields.filter((field) => !field.generated);
+      const headers = Array.from(new Set(sheetRows.flatMap((row) => Object.keys(row))));
+      const unmatched = importFields.filter((f) => !headers.includes(f.label) && !headers.includes(f.name));
+
+      let smart: Record<string, string> = {};
+      if (headers.length && unmatched.length) {
+        try {
+          smart = await smartMap({
+            data: {
+              headers,
+              sample: sheetRows.slice(0, 3).map((row) =>
+                Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? "").slice(0, 300)])),
+              ),
+              fields: importFields.map((f) => ({ name: f.name, label: f.label })),
+            },
+          });
+          if (Object.keys(smart).length) toast.success("تم تعيين الأعمدة آلياً بالذكاء الاصطناعي");
+        } catch {
+          // Fall back to direct header matching.
+        }
+      }
+
       const payloads = sheetRows
         .map((sheetRow) => {
           const payload: Record<string, unknown> = {};
-          config.fields.filter((field) => !field.generated).forEach((f) => {
-            const value = sheetRow[f.label] ?? sheetRow[f.name];
+          importFields.forEach((f) => {
+            const smartColumn = smart[f.name];
+            const value = sheetRow[f.label] ?? sheetRow[f.name] ?? (smartColumn ? sheetRow[smartColumn] : undefined);
             if (value === undefined || value === "") return;
             if (f.type === "date") payload[f.name] = toIsoDate(value);
             else if (f.type === "number") payload[f.name] = Number(value) || null;
