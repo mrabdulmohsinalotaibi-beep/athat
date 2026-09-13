@@ -69,17 +69,34 @@ export function StudentCombobox({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          className="h-9 w-full justify-between font-normal"
-        >
-          <span className={cn(!value && "text-muted-foreground")}>{value || "اختر الطالب أو ابحث..."}</span>
-          <ChevronsUpDown className="size-4 opacity-50" />
-        </Button>
-      </PopoverTrigger>
+      <div className="relative">
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            className={cn("h-9 w-full justify-between font-normal", value && "pl-9")}
+          >
+            <span className={cn(!value && "text-muted-foreground")}>{value || "اختر الطالب أو ابحث..."}</span>
+            <ChevronsUpDown className="size-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        {value && onClear && (
+          <button
+            type="button"
+            aria-label="مسح اختيار الطالب"
+            title="مسح الاختيار"
+            onClick={(event) => {
+              event.stopPropagation();
+              setTerm("");
+              onClear();
+            }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
       <PopoverContent dir="rtl" align="start" className="w-[min(26rem,90vw)] p-0">
         <div className="relative border-b p-2">
           <Search className="absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
