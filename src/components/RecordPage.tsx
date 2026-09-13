@@ -434,7 +434,7 @@ export function RecordPage({
           >
             {AI_RECORD_KEYS.has(config.key) && (
               <AiDraftAssistant
-                recordKey={config.key as "cases" | "interviews" | "behavior" | "reports"}
+                recordKey={config.key as "cases" | "interviews" | "behavior" | "reports" | "referrals"}
                 context={Object.fromEntries(
                   config.fields.map((field) => [field.name, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
                 )}
