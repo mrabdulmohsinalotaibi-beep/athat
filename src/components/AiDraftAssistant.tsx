@@ -15,7 +15,7 @@ export function AiDraftAssistant({
   onDraft,
   availableOptions = {},
 }: {
-  recordKey: "cases" | "interviews" | "behavior" | "reports";
+  recordKey: "cases" | "interviews" | "behavior" | "reports" | "referrals";
   context: Record<string, string>;
   onDraft: (draft: GuidanceDraft) => void;
   availableOptions?: Record<string, string[]>;
