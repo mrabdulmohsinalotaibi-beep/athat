@@ -460,6 +460,11 @@ export function RecordPage({
                     if (actionField && optionsFor(actionField).includes(action)) generated["action"] = action;
                     if (resultField && optionsFor(resultField).includes(draft.result)) generated["result"] = draft.result;
                     generated["notes"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
+                  } else if (config.key === "referrals") {
+                    generated["reason"] = `${draft.problemDescription}\n\nالمبررات:\n${draft.causes}`;
+                    generated["attachments"] = `الإجراءات السابقة:\n${draft.actions}`;
+                    generated["result"] = draft.recommendations || draft.result;
+                    generated["notes"] = `التوصيات:\n${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}\n\n${draft.notes}`;
                   } else {
                     generated["summary"] = draft.summary;
                     generated["notes"] = `وصف الموضوع:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف:\n${draft.goals}\n\nالإجراءات:\n${draft.actions}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
