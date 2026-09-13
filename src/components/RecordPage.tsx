@@ -351,7 +351,36 @@ export function RecordPage({
                       >
                         <Pencil className="size-4" />
                       </Button>
-                      {ATTACHABLE_KEYS.has(config.key) && <Button variant="ghost" size="icon" title="إرفاق شاهد" onClick={() => setEvidenceFor(row)}><Paperclip className="size-4" /></Button>}
+                      <Button variant="ghost" size="icon" title="المرفقات" onClick={() => setAttachFor(row)}>
+                        <Paperclip className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="طباعة رسمية / PDF" onClick={() => setPrintFor(row)}>
+                        <Printer className="size-4" />
+                      </Button>
+                      {config.key === "referrals" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="مشاركة الإحالة عبر واتساب"
+                          onClick={() =>
+                            shareOnWhatsApp(
+                              referralMessage({
+                                student: String(row["student_name"] ?? ""),
+                                studentNo: String(row["student_no"] ?? ""),
+                                destination: String(row["referred_to"] ?? ""),
+                                reason: String(row["reason"] ?? ""),
+                                actions: String(row["attachments"] ?? ""),
+                                recommendations: String(row["result"] ?? ""),
+                                date: String(row["referral_date"] ?? ""),
+                                school: school?.school_name ?? "",
+                                counselor: school?.counselor_name ?? "",
+                              }),
+                            )
+                          }
+                        >
+                          <Send className="size-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
