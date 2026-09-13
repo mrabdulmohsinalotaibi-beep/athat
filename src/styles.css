@@ -266,3 +266,22 @@
     break-inside: avoid;
   }
 }
+
+@media print {
+  body:has(.single-print-sheet) .app-shell,
+  body:has(.single-print-sheet) [data-state="open"].fixed.inset-0 {
+    display: none !important;
+  }
+  .single-print-sheet {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}

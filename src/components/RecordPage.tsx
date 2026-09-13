@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileDown, Plus, Printer, Search, Trash2, Upload, Pencil, Paperclip } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Download, FileDown, Plus, Printer, Search, Send, Trash2, Upload, Pencil, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -9,12 +10,15 @@ import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
 import { displayRecordValue } from "@/lib/display";
 import { mergeLookupOptions } from "@/lib/lookups";
+import { mapImportColumns } from "@/lib/ai.functions";
+import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AiDraftAssistant } from "@/components/AiDraftAssistant";
-import { EvidenceUploadDialog } from "@/components/EvidenceUpload";
+import { RecordPrintDialog } from "@/components/RecordPrintDialog";
+import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,8 +33,7 @@ import {
 
 type Row = Record<string, unknown> & { id: string };
 
-const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports"]);
-const ATTACHABLE_KEYS = new Set(["cases", "programs", "interviews", "attendance", "behavior", "referrals", "committees", "plan"]);
+const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports", "referrals"]);
 const LINKED_TYPE: Record<string, string> = { cases: "حالة", programs: "برنامج", interviews: "مقابلة", attendance: "مواظبة", behavior: "سلوك", referrals: "إحالة", committees: "اجتماع", plan: "مهمة" };
 
 export function RecordPage({
@@ -53,8 +56,10 @@ export function RecordPage({
   const [auto, setAuto] = useState<Record<string, string>>({});
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
-  const [evidenceFor, setEvidenceFor] = useState<Row | null>(null);
+  const [attachFor, setAttachFor] = useState<Row | null>(null);
+  const [printFor, setPrintFor] = useState<Row | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const smartMap = useServerFn(mapImportColumns);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -153,11 +158,34 @@ export function RecordPage({
     setImporting(true);
     try {
       const sheetRows = await readExcel(file);
+      const importFields = config.fields.filter((field) => !field.generated);
+      const headers = Array.from(new Set(sheetRows.flatMap((row) => Object.keys(row))));
+      const unmatched = importFields.filter((f) => !headers.includes(f.label) && !headers.includes(f.name));
+
+      let smart: Record<string, string> = {};
+      if (headers.length && unmatched.length) {
+        try {
+          smart = await smartMap({
+            data: {
+              headers,
+              sample: sheetRows.slice(0, 3).map((row) =>
+                Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? "").slice(0, 300)])),
+              ),
+              fields: importFields.map((f) => ({ name: f.name, label: f.label })),
+            },
+          });
+          if (Object.keys(smart).length) toast.success("تم تعيين الأعمدة آلياً بالذكاء الاصطناعي");
+        } catch {
+          // Fall back to direct header matching.
+        }
+      }
+
       const payloads = sheetRows
         .map((sheetRow) => {
           const payload: Record<string, unknown> = {};
-          config.fields.filter((field) => !field.generated).forEach((f) => {
-            const value = sheetRow[f.label] ?? sheetRow[f.name];
+          importFields.forEach((f) => {
+            const smartColumn = smart[f.name];
+            const value = sheetRow[f.label] ?? sheetRow[f.name] ?? (smartColumn ? sheetRow[smartColumn] : undefined);
             if (value === undefined || value === "") return;
             if (f.type === "date") payload[f.name] = toIsoDate(value);
             else if (f.type === "number") payload[f.name] = Number(value) || null;
@@ -252,8 +280,19 @@ export function RecordPage({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="بحث في السجل..."
-          className="pr-9"
+          className="pr-9 pl-9"
         />
+        {search && (
+          <button
+            type="button"
+            aria-label="مسح البحث"
+            title="مسح البحث"
+            onClick={() => setSearch("")}
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
       <div ref={printRef} className="print-area rounded-xl border bg-card p-4 shadow-sm">
@@ -323,7 +362,36 @@ export function RecordPage({
                       >
                         <Pencil className="size-4" />
                       </Button>
-                      {ATTACHABLE_KEYS.has(config.key) && <Button variant="ghost" size="icon" title="إرفاق شاهد" onClick={() => setEvidenceFor(row)}><Paperclip className="size-4" /></Button>}
+                      <Button variant="ghost" size="icon" title="المرفقات" onClick={() => setAttachFor(row)}>
+                        <Paperclip className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="طباعة رسمية / PDF" onClick={() => setPrintFor(row)}>
+                        <Printer className="size-4" />
+                      </Button>
+                      {config.key === "referrals" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="مشاركة الإحالة عبر واتساب"
+                          onClick={() =>
+                            shareOnWhatsApp(
+                              referralMessage({
+                                student: String(row["student_name"] ?? ""),
+                                studentNo: String(row["student_no"] ?? ""),
+                                destination: String(row["referred_to"] ?? ""),
+                                reason: String(row["reason"] ?? ""),
+                                actions: String(row["attachments"] ?? ""),
+                                recommendations: String(row["result"] ?? ""),
+                                date: String(row["referral_date"] ?? ""),
+                                school: school?.school_name ?? "",
+                                counselor: school?.counselor_name ?? "",
+                              }),
+                            )
+                          }
+                        >
+                          <Send className="size-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -366,7 +434,7 @@ export function RecordPage({
           >
             {AI_RECORD_KEYS.has(config.key) && (
               <AiDraftAssistant
-                recordKey={config.key as "cases" | "interviews" | "behavior" | "reports"}
+                recordKey={config.key as "cases" | "interviews" | "behavior" | "reports" | "referrals"}
                 context={Object.fromEntries(
                   config.fields.map((field) => [field.name, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
                 )}
@@ -392,6 +460,11 @@ export function RecordPage({
                     if (actionField && optionsFor(actionField).includes(action)) generated["action"] = action;
                     if (resultField && optionsFor(resultField).includes(draft.result)) generated["result"] = draft.result;
                     generated["notes"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
+                  } else if (config.key === "referrals") {
+                    generated["reason"] = `${draft.problemDescription}\n\nالمبررات:\n${draft.causes}`;
+                    generated["attachments"] = `الإجراءات السابقة:\n${draft.actions}`;
+                    generated["result"] = draft.recommendations || draft.result;
+                    generated["notes"] = `التوصيات:\n${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}\n\n${draft.notes}`;
                   } else {
                     generated["summary"] = draft.summary;
                     generated["notes"] = `وصف الموضوع:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف:\n${draft.goals}\n\nالإجراءات:\n${draft.actions}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
@@ -428,6 +501,7 @@ export function RecordPage({
                             participant: a["participant"] || s.guardian_name,
                           }))
                         }
+                        onClear={() => setAuto((a) => ({ ...a, student_name: "" }))}
                       />
                     </div>
                     {(() => {
@@ -465,6 +539,18 @@ export function RecordPage({
                         <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
+                    {current && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        title={`مسح اختيار ${f.label}`}
+                        aria-label={`مسح اختيار ${f.label}`}
+                        onClick={() => setAuto((a) => ({ ...a, [f.name]: "" }))}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    )}
                     {f.lookupCategory && (
                       <Button type="button" variant="outline" size="icon" title={`إضافة خيار إلى ${f.label}`} aria-label={`إضافة خيار إلى ${f.label}`} onClick={() => addOption(f.lookupCategory ?? "", f.label)}>
                         <Plus className="size-4" />
@@ -494,7 +580,19 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <EvidenceUploadDialog open={evidenceFor !== null} onOpenChange={(open) => !open && setEvidenceFor(null)} defaultLinkedType={LINKED_TYPE[config.key] || config.singular} defaultLinkedRef={displayRecordValue(evidenceFor?.[listFields[0]?.name ?? ""] ?? evidenceFor?.[config.fields.find((field) => field.type === "date")?.name ?? ""] ?? "")} />
+      <RecordAttachmentsDialog
+        open={attachFor !== null}
+        onOpenChange={(open) => !open && setAttachFor(null)}
+        recordId={attachFor?.id ?? null}
+        recordTitle={displayRecordValue(attachFor?.[listFields[0]?.name ?? ""] ?? "")}
+        linkedType={LINKED_TYPE[config.key] || config.singular}
+      />
+      <RecordPrintDialog
+        open={printFor !== null}
+        onOpenChange={(open) => !open && setPrintFor(null)}
+        config={config}
+        row={printFor}
+      />
     </div>
   );
 }

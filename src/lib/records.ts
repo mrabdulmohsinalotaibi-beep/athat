@@ -29,6 +29,9 @@ export const EVIDENCE_TYPES = ["PDF", "صورة", "تقرير", "كشف حضور
 export const PROGRAM_TYPES = ["وقائي", "إنمائي", "علاجي"];
 export const REFERRAL_SOURCES = ["الطالب نفسه", "ولي الأمر", "المعلم", "إدارة المدرسة", "لجنة التوجيه الطلابي", "ملاحظة الموجه"];
 export const REFERRAL_REASONS = ["صعوبات أكاديمية", "غياب أو تأخر متكرر", "مشكلة سلوكية", "مشكلة نفسية", "مشكلة اجتماعية أو أسرية", "مشكلة صحية", "حماية من الإيذاء", "احتياج تربوي خاص"];
+export const INTERNAL_REFERRAL_DESTINATIONS = ["إدارة المدرسة", "وكيل شؤون الطلاب", "لجنة التوجيه الطلابي", "المعلم", "المرشد الصحي"];
+export const EXTERNAL_REFERRAL_DESTINATIONS = ["وحدة الخدمات الإرشادية", "وحدة الرعاية الطلابية", "إدارة التعليم", "المركز الصحي", "جهة صحية", "جهة أمنية", "جهة مختصة"];
+export const REFERRAL_DESTINATIONS = [...INTERNAL_REFERRAL_DESTINATIONS, ...EXTERNAL_REFERRAL_DESTINATIONS];
 export const INTERVENTIONS = ["مقابلة فردية", "جلسة إرشاد جمعي", "تواصل مع ولي الأمر", "خطة تعديل سلوك", "متابعة أكاديمية", "إحالة لجهة مختصة", "تنسيق مع المعلمين", "متابعة دورية"];
 
 const notes: FieldDef = { name: "notes", label: "ملاحظات", type: "textarea" };
@@ -191,9 +194,9 @@ export const RECORDS: RecordConfig[] = [
       { name: "student_no", label: "رقم الطالب" },
       { name: "student_name", label: "اسم الطالب", list: true, student: true },
       { name: "referral_date", label: "تاريخ الإحالة", type: "date", list: true },
-      { name: "referred_to", label: "الجهة المحال إليها", type: "select", options: ["وحدة الخدمات الإرشادية", "إدارة التعليم", "جهة صحية", "جهة أمنية", "جهة مختصة"], list: true, lookupCategory: "referral_destinations" },
-      { name: "reason", label: "سبب الإحالة", type: "select", options: REFERRAL_REASONS, lookupCategory: "referral_reasons" },
-      { name: "attachments", label: "المستندات المرفقة" },
+      { name: "referred_to", label: "الجهة المحال إليها", type: "select", options: REFERRAL_DESTINATIONS, list: true, lookupCategory: "referral_destinations" },
+      { name: "reason", label: "سبب الإحالة / المبررات", type: "textarea", lookupCategory: "referral_reasons" },
+      { name: "attachments", label: "الإجراءات السابقة والمستندات المرفقة", type: "textarea" },
       { name: "status", label: "الحالة", type: "select", options: ["مرسلة", "قيد المتابعة", "منتهية"], list: true },
       { name: "reply_date", label: "تاريخ الرد", type: "date" },
       { name: "result", label: "نتيجة الإحالة", type: "select", options: ["قبول الإحالة", "إعادة للمدرسة", "خطة علاجية", "متابعة مشتركة", "إغلاق الإحالة"], lookupCategory: "referral_results" },
