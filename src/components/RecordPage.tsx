@@ -280,8 +280,19 @@ export function RecordPage({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="بحث في السجل..."
-          className="pr-9"
+          className="pr-9 pl-9"
         />
+        {search && (
+          <button
+            type="button"
+            aria-label="مسح البحث"
+            title="مسح البحث"
+            onClick={() => setSearch("")}
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
       <div ref={printRef} className="print-area rounded-xl border bg-card p-4 shadow-sm">
