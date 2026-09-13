@@ -46,10 +46,12 @@ export function StudentCombobox({
   value,
   onSelect,
   onType,
+  onClear,
 }: {
   value: string;
   onSelect: (student: StudentOption) => void;
   onType: (name: string) => void;
+  onClear?: () => void;
 }) {
   const { data: students = [], isLoading } = useStudentOptions();
   const [open, setOpen] = useState(false);
