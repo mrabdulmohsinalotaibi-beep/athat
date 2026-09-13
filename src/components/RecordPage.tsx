@@ -539,6 +539,18 @@ export function RecordPage({
                         <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
+                    {current && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        title={`مسح اختيار ${f.label}`}
+                        aria-label={`مسح اختيار ${f.label}`}
+                        onClick={() => setAuto((a) => ({ ...a, [f.name]: "" }))}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    )}
                     {f.lookupCategory && (
                       <Button type="button" variant="outline" size="icon" title={`إضافة خيار إلى ${f.label}`} aria-label={`إضافة خيار إلى ${f.label}`} onClick={() => addOption(f.lookupCategory ?? "", f.label)}>
                         <Plus className="size-4" />
