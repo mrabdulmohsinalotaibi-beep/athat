@@ -2,7 +2,7 @@
   "meta": {
     "name": "Guidance Hub",
     "package": "@ws-7eb7e713de717d6d83a6/ff86189b-6cdb-4a8a-b190-a1c210e48686",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "framework": "react",
     "css_framework": "tailwind",
     "starter_template": "custom_design_system_tailwind",
@@ -13,6 +13,7 @@
     "source_manifest": {
       "#enrichment": "16567b11adb48665830163a93c5d0483cec50c1806024999c6abacb5a0573f58",
       ".gitignore": "6d9e901a692b46a83707c245fb03bc91",
+      ".lovable/meta.yaml": "954a981e8847ec1692669dbb04ae9ae9",
       ".lovable/plan.md": "f23b2d121c40b6520a525331b12159bd",
       ".lovable/plan/إعادة-ضبط-منصة-الذات-والسجلات-والتقارير-2026-09-12.md": "1ef58d25339e894c6194faf22b65136c",
       ".lovable/plan/تحديث-الهوية-والكليشة-والمساعد-الذكي-2026-09-12.md": "bf76a793c9480edf705033614fa51a9e",
@@ -22,6 +23,7 @@
       ".lovable/plan/ثيمات-منصة-الذات-والحقوق-والتوافق-مع-الجوال-والتابلت-2026-09-12.md": "6d4aea43159a4ad3749ca9282e7a730a",
       ".lovable/plan/منصة-ذات-الموجه-الطلابي-2026-09-12.md": "049e17388c3a8c930135e9bb63496777",
       ".lovable/project.json": "0d13739ea141bcde251eb54ed872cb3e",
+      ".lovable/sources.yaml": "ee6247f6fe77fe1387244cd3c757e6a3",
       ".prettierignore": "7279a476f196a2da5f7edd18db568dc6",
       ".prettierrc": "185ef0234746ab738ac1ab6cec5e2bd9",
       "AGENTS.md": "3da3c4cd15b686e79a248c25735d6aaf",
@@ -99,6 +101,7 @@
       "src/components/ui/toggle.tsx": "ee8c5adac74e7242b85b544db1a8fbad",
       "src/components/ui/tooltip.tsx": "67d71db5a1ab935695d1def497f5b8a6",
       "src/hooks/use-mobile.tsx": "c0a0bdd4638c391a1dd06ac82074e60b",
+      "src/index.ts": "47846eb12d749d9f7b7ef90873c03345",
       "src/integrations/lovable/index.ts": "e9cf6e6968dd0392b2222ee0745ecece",
       "src/integrations/supabase/auth-attacher.ts": "dad043cda134d909e52de0346c16625e",
       "src/integrations/supabase/auth-middleware.ts": "eabaf8c8ba32205717921ce5f255185e",
