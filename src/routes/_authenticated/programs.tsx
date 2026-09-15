@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Bot, Wand2 } from "lucide-react";
+import { CalendarRange, Loader2, Sparkles, Printer, Bot, Wand2, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -234,11 +234,12 @@ export const MINISTRY_PROGRAMS: MinistryProgram[] = [
 ];
 
 // ==========================================
-// 2. مكون حوار خطة تعليم مكة
+// 2. مكون معالج خطة تعليم مكة التفاعلي (Step-by-Step Wizard)
 // ==========================================
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(1); // 1: المقدمة والترحيب, 2: المعاينة التفاعلية, 3: تأكيد الاعتماد
   const [busy, setBusy] = useState(false);
 
   async function seed() {
@@ -264,6 +265,8 @@ function MinistryProgramsDialog() {
 
       if (!payloads.length) {
         toast.info("جميع برامج خطة تعليم مكة 1448هـ المعتمدة مضافة مسبقاً.");
+        setOpen(false);
+        setStep(1);
         return;
       }
       const { error } = await supabase.from("programs").insert(payloads as never);
@@ -271,6 +274,7 @@ function MinistryProgramsDialog() {
       queryClient.invalidateQueries({ queryKey: ["programs"] });
       toast.success(`تمت إضافة واستبدال ${payloads.length} برنامجاً وزارياً رسمياً بنجاح`);
       setOpen(false);
+      setStep(1);
     } catch (error) {
       toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
     } finally {
@@ -281,53 +285,122 @@ function MinistryProgramsDialog() {
   return (
     <>
       <Button 
-        onClick={() => setOpen(true)}
+        onClick={() => { setStep(1); setOpen(true); }}
         className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white shadow-sm hover:opacity-95 transition-all"
       >
-        <CalendarRange className="size-4 ml-2" /> خطة تعليم مكة 1448هـ الرسمية
+        <CalendarRange className="size-4 ml-2" /> خطة تعليم مكة 1448هـ التفاعلية
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto rounded-xl border border-border/40 bg-background shadow-2xl" dir="rtl">
-          <DialogHeader className="space-y-2 pb-4 border-b">
+      
+      <Dialog open={open} onOpenChange={(val) => { setOpen(val); if(!val) setStep(1); }}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-xl border border-border/40 bg-background shadow-2xl" dir="rtl">
+          
+          {/* مؤشر الخطوات (Step Indicator) */}
+          <div className="flex items-center justify-between pb-4 border-b px-2">
             <div className="flex items-center gap-2 text-emerald-700">
               <Sparkles className="size-5" />
-              <DialogTitle className="text-xl font-bold">خطة برامج وخدمات التوجيه الطلابي (تعليم مكة 1448هـ)</DialogTitle>
+              <DialogTitle className="text-lg font-bold">معالج خطة تعليم مكة 1448هـ</DialogTitle>
             </div>
-            <DialogDescription className="text-muted-foreground text-sm">
-              استعراض الخطة الفصلية المعتمدة من قسم التوجيه الطلابي بالإدارة العامة للتعليم بمنطقة مكة المكرمة.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="overflow-x-auto rounded-lg border border-border/60 shadow-xs max-h-[50vh]">
-            <table className="w-full text-right text-xs">
-              <thead className="sticky top-0 bg-muted/90 text-muted-foreground font-semibold">
-                <tr className="border-b">
-                  <th className="p-3">الأسبوع</th>
-                  <th className="p-3">التاريخ الهجري</th>
-                  <th className="p-3">اسم البرنامج / الخدمة</th>
-                  <th className="p-3">النوع والمجال</th>
-                  <th className="p-3">الهدف الأساسي</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {MINISTRY_PROGRAMS.map((p, idx) => (
-                  <tr key={idx} className="hover:bg-muted/30 transition-colors">
-                    <td className="whitespace-nowrap p-3 font-bold text-foreground">أسبوع {p.week}</td>
-                    <td className="whitespace-nowrap p-3 text-emerald-700 font-semibold">{p.hijri_date}</td>
-                    <td className="p-3 font-semibold text-foreground">{p.name}</td>
-                    <td className="p-3 text-muted-foreground">{p.ptype} ({p.domain})</td>
-                    <td className="p-3 text-muted-foreground">{p.goal}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted px-3 py-1 rounded-full">
+              <span>الخطوة {step} من 3</span>
+            </div>
           </div>
 
-          <DialogFooter className="gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
-            <Button onClick={seed} disabled={busy} className="bg-emerald-700 text-white hover:bg-emerald-800">
-              {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : null} اعتماد الخطة وتعبئة السجلات
-            </Button>
+          {/* محتوى الخطوات المتتالية */}
+          <div className="py-2">
+            {step === 1 && (
+              <div className="space-y-4 py-4 text-center sm:text-right">
+                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-emerald-900 space-y-2">
+                  <h4 className="font-bold text-base">مرحباً بك في معالج خطة التوجيه الطلابي</h4>
+                  <p className="text-xs leading-relaxed text-emerald-800">
+                    تم إعداد وتنسيق خطة برامج وخدمات التوجيه الطلابي للفصل الدراسي الأول لعام 1448هـ المعتمدة من الإدارة العامة للتعليم بمنطقة مكة المكرمة لتتواءم مع نظامك الإلكتروني.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-right">
+                  <div className="p-3 border rounded-lg bg-card shadow-xs">
+                    <span className="font-bold text-emerald-700 block mb-1">⏱️ 18 أسبوعاً</span>
+                    <span className="text-muted-foreground">تغطية زمنية كاملة ومفصلة لجميع الأسابيع الدراسية.</span>
+                  </div>
+                  <div className="p-3 border rounded-lg bg-card shadow-xs">
+                    <span className="font-bold text-emerald-700 block mb-1">📅 تواريخ هجرية</span>
+                    <span className="text-muted-foreground">ربط دقيق للأنشطة بالفترات الزمنية المعتمدة رسمياً.</span>
+                  </div>
+                  <div className="p-3 border rounded-lg bg-card shadow-xs">
+                    <span className="font-bold text-emerald-700 block mb-1">📋 مؤشرات التحقق</span>
+                    <span className="text-muted-foreground">تحديد الشواهد المطلوبة وأهداف كل برنامج مسبقاً.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-3">
+                <DialogDescription className="text-xs text-muted-foreground">
+                  معاينة سريعة لعينة من البرامج الوزارية المعتمدة التي سيتم إدراجها في سجلك التشغيلي:
+                </DialogDescription>
+                <div className="overflow-x-auto rounded-lg border border-border/60 shadow-xs max-h-[45vh]">
+                  <table className="w-full text-right text-xs">
+                    <thead className="sticky top-0 bg-muted/90 text-muted-foreground font-semibold">
+                      <tr className="border-b">
+                        <th className="p-2.5">الأسبوع</th>
+                        <th className="p-2.5">التاريخ الهجري</th>
+                        <th className="p-2.5">اسم البرنامج / الخدمة</th>
+                        <th className="p-2.5">المجال</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {MINISTRY_PROGRAMS.slice(0, 6).map((p, idx) => (
+                        <tr key={idx} className="hover:bg-muted/30">
+                          <td className="p-2.5 font-bold">أسبوع {p.week}</td>
+                          <td className="p-2.5 text-emerald-700 font-semibold">{p.hijri_date}</td>
+                          <td className="p-2.5 font-semibold">{p.name}</td>
+                          <td className="p-2.5 text-muted-foreground">{p.domain}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-[11px] text-center text-muted-foreground">... و 12 برنامجاً إضافياً تغطي كافة أسابيع الفصل الدراسي.</p>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4 py-6 text-center">
+                <div className="size-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="size-6" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-base text-foreground">جاهز للاعتماد النهائي</h4>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    بالضغط على زر "تأكيد واستيراد الخطة" أدناه، سيتم حقن جميع البرامج والأنشطة الإرشادية لتعليم مكة 1448هـ مباشرة في جدول السجلات الخاص بك.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* أزرار التنقل المتتالي (Wizard Navigation) */}
+          <DialogFooter className="flex items-center justify-between pt-4 border-t gap-2">
+            <div>
+              {step > 1 && (
+                <Button variant="outline" size="sm" onClick={() => setStep(step - 1)}>
+                  <ChevronRight className="size-4 ml-1" /> السابق
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+                إلغاء
+              </Button>
+              {step < 3 ? (
+                <Button size="sm" onClick={() => setStep(step + 1)} className="bg-emerald-700 text-white hover:bg-emerald-800">
+                  التالي <ChevronLeft className="size-4 mr-1" />
+                </Button>
+              ) : (
+                <Button size="sm" onClick={seed} disabled={busy} className="bg-emerald-700 text-white hover:bg-emerald-800">
+                  {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : null} تأكيد واستيراد الخطة
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
