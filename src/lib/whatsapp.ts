@@ -1,18 +1,47 @@
 export function normalizeSaudiPhone(raw: unknown): string {
-  let digits = String(raw ?? "").replace(/[^\d+]/g, "").replace(/\+/g, "");
+  if (raw === null || raw === undefined) return "";
+  
+  // استخراج الأرقام فقط
+  let digits = String(raw).replace(/\D/g, "");
   if (!digits) return "";
-  if (digits.startsWith("00966")) digits = digits.slice(2);
-  if (digits.startsWith("966")) return digits;
-  if (digits.startsWith("0")) digits = digits.slice(1);
-  if (digits.length === 9 && digits.startsWith("5")) return `966${digits}`;
-  if (digits.length === 10 && digits.startsWith("5")) return `966${digits.slice(0, 9)}`;
+
+  // إزالة البادئة الدولية 00966 إن وجدت
+  if (digits.startsWith("00966")) {
+    digits = digits.slice(2);
+  }
+
+  // إذا كان الرقم يبدأ بـ 966 مسبقاً، نتحقق من صحة الطول المقبول
+  if (digits.startsWith("966")) {
+    return digits.length === 12 ? digits : digits.slice(0, 12);
+  }
+
+  // إزالة الصفر المحلي 05XXXXXXXX -> 5XXXXXXXX
+  if (digits.startsWith("0")) {
+    digits = digits.slice(1);
+  }
+
+  // التحقق من رقم الجوال السعودي (يبدأ بـ 5 وتكمله 8 أرقام)
+  if (digits.startsWith("5")) {
+    const mobileDigits = digits.slice(0, 9);
+    if (mobileDigits.length === 9) {
+      return `966${mobileDigits}`;
+    }
+  }
+
   return digits;
 }
 
-export function defaultGuardianMessage(opts: { guardian?: string; student?: string; school?: string }) {
+export interface GuardianMessageOptions {
+  guardian?: string;
+  student?: string;
+  school?: string;
+}
+
+export function defaultGuardianMessage(opts: GuardianMessageOptions = {}): string {
   const guardian = opts.guardian?.trim();
   const student = opts.student?.trim();
   const school = opts.school?.trim();
+
   return [
     `السلام عليكم ورحمة الله وبركاته${guardian ? `، الأستاذ/ ${guardian}` : ""}`,
     school ? `معكم الموجه الطلابي بـ${school}.` : "معكم الموجه الطلابي بالمدرسة.",
@@ -23,13 +52,16 @@ export function defaultGuardianMessage(opts: { guardian?: string; student?: stri
     .join("\n");
 }
 
-export function whatsappLink(phone: unknown, message: string) {
+export function whatsappLink(phone: unknown, message: string): string {
   const number = normalizeSaudiPhone(phone);
-  if (!number) return "";
-  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+  const encodedText = encodeURIComponent(message);
+  
+  return number
+    ? `https://wa.me/${number}?text=${encodedText}`
+    : `https://wa.me/?text=${encodedText}`;
 }
 
-export function referralMessage(opts: {
+export interface ReferralMessageOptions {
   student?: string;
   studentNo?: string;
   grade?: string;
@@ -40,11 +72,17 @@ export function referralMessage(opts: {
   date?: string;
   school?: string;
   counselor?: string;
-}) {
-  const line = (label: string, value?: string) => (value && value.trim() ? `${label}: ${value.trim()}` : "");
+}
+
+export function referralMessage(opts: ReferralMessageOptions = {}): string {
+  const line = (label: string, value?: string) => {
+    const trimmed = value?.trim();
+    return trimmed ? `${label}: ${trimmed}` : "";
+  };
+
   return [
     "السلام عليكم ورحمة الله وبركاته",
-    opts.school ? `من التوجيه الطلابي بـ${opts.school}` : "من التوجيه الطلابي بالمدرسة",
+    opts.school ? `من التوجيه الطلابي بـ${opts.school.trim()}` : "من التوجيه الطلابي بالمدرسة",
     "نرفع لكم نموذج إحالة طالب وفق التالي:",
     "",
     line("اسم الطالب", opts.student),
@@ -56,7 +94,7 @@ export function referralMessage(opts: {
     line("الإجراءات السابقة", opts.actions),
     line("التوصيات", opts.recommendations),
     "",
-    opts.counselor ? `الموجه الطلابي: ${opts.counselor}` : "",
+    opts.counselor?.trim() ? `الموجه الطلابي: ${opts.counselor.trim()}` : "",
     "شاكرين لكم تعاونكم.",
   ]
     .filter((item) => item !== "")
@@ -64,10 +102,9 @@ export function referralMessage(opts: {
 }
 
 /** Opens WhatsApp with a message; when no number is given the user picks the chat inside WhatsApp. */
-export function shareOnWhatsApp(message: string, phone?: unknown) {
-  const number = normalizeSaudiPhone(phone);
-  const url = number
-    ? `https://wa.me/${number}?text=${encodeURIComponent(message)}`
-    : `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank", "noopener");
+export function shareOnWhatsApp(message: string, phone?: unknown): void {
+  const url = whatsappLink(phone, message);
+  if (typeof window !== "undefined" && url) {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 }
