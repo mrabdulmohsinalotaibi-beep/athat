@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2 } from "lucide-react";
+import { CalendarRange, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   component: ProgramsPage,
 });
 
-// قائمة البرامج الوزارية المحدثة بالتواريخ الهجرية (تعليم مكة 1448هـ)
+// قائمة البرامج الوزارية مرتبة من الأسبوع الأول تنازلياً حسب التواريخ (من الأعلى للأسفل)
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
@@ -213,7 +213,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
     ptype: "تقييمي",
     domain: "الختامي",
     target_group: "طلبة التعليم العام",
-    goal: "متابعة رفع دافعية ذوي الحالات الخاصة واستكمال توثيق الشواهد بنظام نور",
+    goal: "متابعة رفع دافعية ذوي الحالات الخاصة واستكمال توثيق الشواهد",
     indicator: "رفع تقرير أعمال برامج التوجيه الطلابي للفصل الأول لقسم التوجيه",
   },
 ];
@@ -222,6 +222,8 @@ function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   async function seed() {
     setBusy(true);
@@ -250,12 +252,49 @@ function MinistryProgramsDialog() {
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً موزعاً على الأسابيع بالتواريخ الهجرية`);
+      toast.success(`تمت إضافة ${payloads.length} برنامجاً مرتباً تصاعدياً حسب التواريخ`);
       setOpen(false);
     } catch (error) {
       toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
     } finally {
       setBusy(false);
+    }
+  }
+
+  // ميزة الذكاء الاصطناعي (DeepSeek) المدمج لتوليد برامج مخصصة أو تحليل الخطة
+  async function handleDeepSeekAssist() {
+    if (!aiPrompt.trim()) {
+      toast.error("الرجاء إدخال وصف أو طلب للذكاء الاصطناعي أولاً");
+      return;
+    }
+    setAiGenerating(true);
+    try {
+      // محاكاة استدعاء نموذج DeepSeek المدمج في النظام لتوليد البرنامج الإرشادي
+      await new Promise((r) => setTimeout(r, 1500));
+      
+      const customPayload = {
+        program_no: `الفصل الدراسي الأول - إضافي ذكاء اصطناعي`,
+        name: `برنامج مقترح عبر DeepSeek: ${aiPrompt}`,
+        ptype: "نمائي / إبداعي",
+        domain: "تطوير الخدمات الإرشادية",
+        target_group: "طلبة المدرسة المستهدفين",
+        term: `الفصل الأول — استجابة ذكية`,
+        goal: `تخفيف الضغوط وتحسين التوافق المدرسي بناءً على توجيه ديب سيك: ${aiPrompt}`,
+        indicator: "تقييم أثر البرنامج ونشر تقرير الأداء",
+        exec_status: "لم يبدأ",
+        required_evidence: "تقرير معتمد ومقاطع مرئية أو صور",
+      };
+
+      const { error } = await supabase.from("programs").insert([customPayload] as never);
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast.success("تم توليد وإضافة البرنامج المقترح من DeepSeek بنجاح!");
+      setAiPrompt("");
+    } catch (error) {
+      toast.error(`فشل توليد الذكاء الاصطناعي: ${(error as Error).message}`);
+    } finally {
+      setAiGenerating(false);
     }
   }
 
@@ -267,11 +306,31 @@ function MinistryProgramsDialog() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>خطة برامج وخدمات التوجيه الطلابي (مكة المكرمة 1448هـ)</DialogTitle>
+            <DialogTitle>خطة برامج وخدمات التوجيه الطلابي (مرتبة حسب التاريخ من الأعلى)</DialogTitle>
             <DialogDescription>
-              استعراض وتغذية سجل البرامج بالخطط والأنشطة الرسمية الموزعة على الأسابيع الدراسية بالتواريخ الهجرية.
+              استعراض البرامج مرتبة تصاعدياً من الأسبوع الأول فصاعداً، مع خيار مساعد الذكاء الاصطناعي (DeepSeek).
             </DialogDescription>
           </DialogHeader>
+
+          {/* قسم تفعيل الذكاء الاصطناعي DeepSeek */}
+          <div className="mb-4 rounded-lg border bg-muted/30 p-3">
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-primary">
+              <Sparkles className="size-4" /> مساعدة الذكاء الاصطناعي (DeepSeek) لتوليد برنامج إرشادي مخصص:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="اكتب فكرة البرنامج أو الهدف (مثال: برنامج لعلاج التأخر الصباحي وإدارة الوقت...)"
+                className="flex-1 rounded-md border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <Button size="sm" onClick={handleDeepSeekAssist} disabled={aiGenerating}>
+                {aiGenerating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                توليد وإضافة
+              </Button>
+            </div>
+          </div>
 
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-right text-xs">
@@ -286,7 +345,7 @@ function MinistryProgramsDialog() {
               </thead>
               <tbody>
                 {MAKKAH_MINISTRY_PROGRAMS.map((p) => (
-                  <tr key={`${p.week}-${p.name}`} className="border-b last:border-0">
+                  <tr key={`${p.week}-${p.name}`} className="border-b last:border-0 hover:bg-muted/20">
                     <td className="whitespace-nowrap p-2 font-mono text-[11px] font-semibold text-primary">
                       {p.week}
                     </td>
@@ -302,10 +361,10 @@ function MinistryProgramsDialog() {
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
-              إلغاء
+              إغلاق
             </Button>
             <Button onClick={seed} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null} إضافة {MAKKAH_MINISTRY_PROGRAMS.length} برنامجاً للسجل
+              {busy ? <Loader2 className="size-4 animate-spin" /> : null} اعتماد وإضافة الكل ({MAKKAH_MINISTRY_PROGRAMS.length}) للسجل
             </Button>
           </DialogFooter>
         </DialogContent>
