@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { CalendarRange, Loader2, Sparkles, Trash2, Paperclip, Plus, Printer, Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
       { title: "البرامج والأنشطة | منصة الذات" },
-      { name: "description", content: "البرامج الإرشادية والخطط الإجرائية المعتمدة بالهجري." },
+      { name: "description", content: "البرامج الإرشادية والخطط الإجرائية المعتمدة بالهجري لمنصة الذات." },
       { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
       { property: "og:type", content: "website" },
     ],
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   component: ProgramsPage,
 });
 
-// قائمة البرامج الوزارية مرتبة تصاعدياً حسب الأسبوع والتاريخ الهجري
+// قائمة البرامج الوزارية المرتبطة بمنظومة التوجيه الطلابي
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
@@ -239,13 +239,13 @@ function MinistryProgramsDialog() {
         }));
 
       if (!payloads.length) {
-        toast.info("جميع البرامج مضافة مسبقاً.");
+        toast.info("جميع برامج منصة الذات مضافة مسبقاً.");
         return;
       }
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تم استيراد ${payloads.length} برنامجاً وزارياً مرتباً تصاعدياً بنجاح`);
+      toast.success(`تم استيراد ${payloads.length} برنامجاً بنجاح إلى منصة الذات`);
       setOpen(false);
     } catch (error) {
       toast.error(`تعذّرت الإضافة: ${(error as Error).message}`);
@@ -256,13 +256,13 @@ function MinistryProgramsDialog() {
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        <CalendarRange className="size-4" /> الخطة الوزارية (مكة 1448هـ)
+      <Button variant="outline" onClick={() => setOpen(true)} className="gap-2">
+        <CalendarRange className="size-4 text-primary" /> خطة برامج منصة الذات (1448هـ)
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>خطة برامج التوجيه الطلابي (مرتبة حسب التاريخ الهجري)</DialogTitle>
+            <DialogTitle>خطة برامج التوجيه الطلابي المعتمدة في منصة الذات</DialogTitle>
             <DialogDescription>استعراض واعتماد الخطة الدراسية كاملة وموزعة على الأسابيع.</DialogDescription>
           </DialogHeader>
 
@@ -298,7 +298,7 @@ function MinistryProgramsDialog() {
               إغلاق
             </Button>
             <Button onClick={seed} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} استيراد واعتماد الكل
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} اعتماد واستيراد الكل
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -307,14 +307,14 @@ function MinistryProgramsDialog() {
   );
 }
 
-// أداة الذكاء الاصطناعي DeepSeek المدمجة داخل نافذة البرنامج لتعبئة الحقول بصياغة تربوية
+// مساعد DeepSeek الذكي المتكامل لتعبئة الحقول بصياغة تربوية تعليمية داخل البرنامج
 export function DeepSeekModalAssistant({ onFillData }: { onFillData: (data: any) => void }) {
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSmartFill() {
     if (!topic.trim()) {
-      toast.error("يرجى كتابة عنوان أو فكرة البرنامج ليقوم DeepSeek بصياغتها تربوياً");
+      toast.error("يرجى كتابة عنوان أو فكرة البرنامج ليقوم مساعد DeepSeek بصياغتها تربوياً");
       return;
     }
     setLoading(true);
@@ -326,11 +326,11 @@ export function DeepSeekModalAssistant({ onFillData }: { onFillData: (data: any)
         ptype: "وقائي / نمائي",
         domain: "المهاري والتربوي والنفسي",
         target_group: "طلبة المدرسة وأولياء الأمور",
-        goal: `تفعيل الجانب الإرشادي والوقائي للبرنامج (${topic}) بما يحقق بيئة مدرسية آمنة ومحفزة للتعلم وفق المعايير الوزارية.`,
+        goal: `تفعيل الجانب الإرشادي والوقائي للبرنامج (${topic}) بما يحقق بيئة مدرسية آمنة ومحفزة للتعلم وفق المعايير الوزارية لمنصة الذات.`,
         indicator: "تنفيذ الورش الإرشادية، رصد تفاعل المستفيدين، وتقديم تقرير الأثر.",
         term: "الفصل الدراسي الأول - 1448 هـ",
-        required_evidence: "صور فوتوغرافية للتفعيل، تقرير PDF معتمد، ومقطع فيديو توثيقي",
-        notes: "تمت الصياغة والتعبئة آلياً بواسطة نموذج الذكاء الاصطناعي DeepSeek المدمج.",
+        required_evidence: "صور فوتوغرافية للتفعيل، تقرير PDF معتمد، ومقطع فيديو توثيقي للبرنامج",
+        notes: "تمت الصياغة والتعبئة آلياً بواسطة نموذج الذكاء الاصطناعي DeepSeek المدمج بمنصة الذات.",
       };
 
       onFillData(aiResponse);
@@ -347,7 +347,7 @@ export function DeepSeekModalAssistant({ onFillData }: { onFillData: (data: any)
     <div className="mb-4 rounded-lg border border-primary/40 bg-primary/5 p-3" dir="rtl">
       <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-primary">
         <Sparkles className="size-4 text-primary animate-pulse" />
-        <span>مساعد DeepSeek الذكي لتعبئة البرنامج (صياغة تربوية تعليمية)</span>
+        <span>مساعد DeepSeek الذكي لمنصة الذات (تعبئة بصياغة تربوية تعليمية)</span>
       </div>
       <div className="flex gap-2">
         <input
@@ -359,14 +359,14 @@ export function DeepSeekModalAssistant({ onFillData }: { onFillData: (data: any)
         />
         <Button type="button" size="sm" onClick={handleSmartFill} disabled={loading} className="gap-1.5 text-xs shrink-0">
           {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-          تعبئة ذكية بالكامل
+          تعبئة ذكية
         </Button>
       </div>
     </div>
   );
 }
 
-// مكون رفع الملفات والشواهد الداخلي (صور، PDF، فيديو) مع العرض والوضوح التام
+// مكون رفع الملفات والشواهد الداخلي (صور، PDF، فيديو) مع الوضوح التام في الحفظ والتقرير
 export function ProgramFileUploadField({ value, onChange }: { value: string; onChange: (val: string) => void }) {
   const [uploading, setUploading] = useState(false);
 
@@ -378,7 +378,7 @@ export function ProgramFileUploadField({ value, onChange }: { value: string; onC
       const fileNames = Array.from(files).map((f) => f.name).join("، ");
       const updatedValue = value ? `${value}، ${fileNames}` : fileNames;
       onChange(updatedValue);
-      toast.success("تم إرفاق الملفات والشواهد بنجاح وحفظها في التقرير");
+      toast.success("تم إرفاق الملفات والشواهد وحفظها بنجاح في سجلات منصة الذات");
     } catch (err) {
       toast.error("فشل رفع الملف");
     } finally {
@@ -396,7 +396,7 @@ export function ProgramFileUploadField({ value, onChange }: { value: string; onC
           type="text"
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="أسماء الملفات المرفقة أو الروابط والشواهد..."
+          placeholder="أسماء أو روابط الشواهد والمرفقات..."
           className="flex-1 rounded border bg-background px-3 py-1.5 text-xs"
         />
         <label className="cursor-pointer inline-flex items-center justify-center rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 shrink-0">
@@ -407,14 +407,14 @@ export function ProgramFileUploadField({ value, onChange }: { value: string; onC
       </div>
       {value && (
         <div className="text-[11px] text-emerald-600 font-medium bg-emerald-50 p-1.5 rounded border border-emerald-200">
-          ✓ المرفقات الحالية المعتمدة للتقرير: {value}
+          ✓ الشواهد والمرفقات المعتمدة للتقرير: {value}
         </div>
       )}
     </div>
   );
 }
 
-// زر طباعة تقرير البرنامج بمقاس A4 بدقة واحترافية عالية
+// زر طباعة تقرير البرنامج بمقاس A4 رسمي منسق باحترافية تامة
 export function PrintProgramA4Button({ program }: { program: any }) {
   function handlePrint() {
     const printWindow = window.open("", "_blank");
@@ -443,7 +443,7 @@ export function PrintProgramA4Button({ program }: { program: any }) {
         <body>
           <div class="header">
             <h2>المملكة العربية السعودية - وزارة التعليم</h2>
-            <p>إدارة التعليم بمنطقة مكة المكرمة | التوجيه الطلابي</p>
+            <p>منصة الذات | التوجيه الطلابي والخطط الإجرائية</p>
             <h2 style="margin-top: 8px; font-size: 15px;">تقرير تنفيذ برنامج إرشادي معتمد</h2>
           </div>
 
@@ -460,7 +460,7 @@ export function PrintProgramA4Button({ program }: { program: any }) {
           </div>
 
           <div class="section">
-            <h3>الأهداف ومؤشرات التحقق</h3>
+            <h3>الأهداف ومؤشرات التحقق التربوية</h3>
             <div class="field" style="margin-bottom: 8px;"><span>الهدف العام:</span> ${program.goal || "-"}</div>
             <div class="field"><span>مؤشر التحقق:</span> ${program.indicator || "-"}</div>
           </div>
