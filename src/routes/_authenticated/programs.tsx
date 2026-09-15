@@ -126,10 +126,10 @@ function ProgramsPage() {
         evidence_images: [],
       };
 
-      const { error } = await supabase.from("programs").insert([payload as never]);
+      const { error } = await supabase.from("programs").insert([payload]);
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
       toast.success("تمت إضافة البرنامج بنجاح إلى القائمة");
       setAddDialogOpen(false);
       setSelectedMinistryProg("");
@@ -144,12 +144,12 @@ function ProgramsPage() {
 
   // حذف برنامج
   async function handleDeleteProgram(id: string) {
-    if (!confirm("هل أنت متأكد من حذف هذا البرنامج؟ يمكنك إعادته لاحقاً من القائمة الوزارية.")) return;
+    if (!window.confirm("هل أنت متأكد من حذف هذا البرنامج؟")) return;
     try {
       const { error } = await supabase.from("programs").delete().eq("id", id);
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تم حذف البرنامج بنجاح");
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تم حذف البرنامج");
     } catch (err) {
       toast.error(`تعذر الحذف: ${(err as Error).message}`);
     }
@@ -162,24 +162,18 @@ function ProgramsPage() {
       await new Promise((res) => setTimeout(res, 1200));
       const aiSummary = `تم تنفيذ برنامج (${program.name}) لخدمة (${program.target_group || "جميع الطلاب"})، ويهدف بالأساس إلى ${program.goal || "تعزيز السلوك الإيجابي ورفع الوعي"}. تم تحقيق مؤشر القياس وهو: [${program.indicator || "تفاعل واكتساب المهارات المطلوبة"}] بنسبة نجاح عالية وتفاعل ممتاز من جميع المستهدفين.`;
 
-      const updated = {
-        ...program,
-        summary: aiSummary,
-        exec_status: "مكتمل",
-      };
-
       const { error } = await supabase
         .from("programs")
-        .update({ summary: aiSummary, exec_status: "مكتمل" } as never)
+        .update({ summary: aiSummary, exec_status: "مكتمل" })
         .eq("id", program.id);
 
       if (error) throw error;
 
-      setEditProgram(updated);
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تمت صياغة وتطوير التقرير بنجاح بواسطة الذكاء الاصطناعي");
+      setEditProgram((prev) => (prev ? { ...prev, summary: aiSummary, exec_status: "مكتمل" } : null));
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تمت الصياغة وتطوير التقرير بنجاح");
     } catch (err) {
-      toast.error(`خطأ أثناء توليد التقرير: ${(err as Error).message}`);
+      toast.error(`خطأ أثناء التوليد: ${(err as Error).message}`);
     } finally {
       setAiGenerating(false);
     }
@@ -197,10 +191,11 @@ function ProgramsPage() {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const fileExt = file.name.split(".").pop();
-        const filePath = `programs/${program.id}/${Math.random()}.${fileExt}`;
+        const filePath = `programs/${program.id}/${Date.now()}-${Math.random()}.${fileExt}`;
 
         const { error: uploadErr } = await supabase.storage.from("evidence").upload(filePath, file);
         if (uploadErr) {
+          // استخدام Base64 كبديل مؤقت في حال لم يتم إعداد التخزين السحابي بالكامل
           const reader = new FileReader();
           const base64Promise = new Promise<string>((res) => {
             reader.onload = () => res(reader.result as string);
@@ -216,14 +211,13 @@ function ProgramsPage() {
 
       const { error } = await supabase
         .from("programs")
-        .update({ evidence_images: uploadedUrls } as never)
+        .update({ evidence_images: uploadedUrls })
         .eq("id", program.id);
 
       if (error) throw error;
 
-      const updated = { ...program, evidence_images: uploadedUrls };
-      setEditProgram(updated);
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      setEditProgram((prev) => (prev ? { ...prev, evidence_images: uploadedUrls } : null));
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
       toast.success("تم رفع الشواهد بنجاح");
     } catch (err) {
       toast.error(`تعذر رفع الصور: ${(err as Error).message}`);
@@ -244,12 +238,12 @@ function ProgramsPage() {
           end_date: editProgram.end_date,
           exec_status: editProgram.exec_status,
           summary: editProgram.summary,
-        } as never)
+        })
         .eq("id", editProgram.id);
 
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تم حفظ بيانات البرنامج بنجاح");
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تم حفظ بيانات البرنامج");
       setEditProgram(null);
     } catch (err) {
       toast.error(`تعذر الحفظ: ${(err as Error).message}`);
@@ -263,13 +257,13 @@ function ProgramsPage() {
     setPrintProgram(program);
     setTimeout(() => {
       window.print();
-    }, 300);
+    }, 400);
   }
 
   return (
     <div className="space-y-6 dir-rtl">
       {/* 1. Hero Card - ترويسة الصفحة */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-6 text-primary-foreground shadow-xl shadow-primary/10 sm:p-8">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-6 text-primary-foreground shadow-xl sm:p-8">
         <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
 
@@ -281,7 +275,7 @@ function ProgramsPage() {
             </div>
             <h1 className="text-2xl font-black tracking-tight sm:text-4xl">سجل خطة البرامج والتنفيذ</h1>
             <p className="text-xs font-medium text-primary-foreground/80 sm:text-sm">
-              إضافة البرامج وتوثيق التقارير بالشواهد والطباعة بالكليشة الرسمية المعتمدة
+              إضافة البرامج وتوثيق التقرير بالشواهد والطباعة بالكليشة الرسمية
             </p>
           </div>
 
@@ -336,7 +330,7 @@ function ProgramsPage() {
 
                   <h3 className="mt-3 text-base font-black text-foreground leading-snug">{prog.name}</h3>
                   <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                    الفئة المستهدفة: {prog.target_group || "جميع الطلاب"}
+                    الفئة: {prog.target_group || "جميع الطلاب"}
                   </p>
 
                   <div className="mt-4 space-y-1.5 text-xs font-medium text-muted-foreground">
@@ -452,128 +446,130 @@ function ProgramsPage() {
       </Dialog>
 
       {/* 4. نافذة تعديل وتعبئة التقرير والشواهد */}
-      {editProgram && (
-        <Dialog open={!!editProgram} onOpenChange={() => setEditProgram(null)}>
-          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-3xl" dir="rtl">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-black">{editProgram.name}</DialogTitle>
-              <DialogDescription className="text-xs">
-                تعبئة بيانات التقرير وتوليده بالذكاء الاصطناعي ورفع صور الشواهد.
-              </DialogDescription>
-            </DialogHeader>
+      <Dialog open={!!editProgram} onOpenChange={(open) => !open && setEditProgram(null)}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-3xl" dir="rtl">
+          {editProgram && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-lg font-black">{editProgram.name}</DialogTitle>
+                <DialogDescription className="text-xs">
+                  تعبئة بيانات التقرير وتوليده بالذكاء الاصطناعي ورفع صور الشواهد.
+                </DialogDescription>
+              </DialogHeader>
 
-            <div className="space-y-5 py-2">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => handleAiGenerate(editProgram)}
-                  disabled={aiGenerating}
-                  className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90 font-bold"
-                >
-                  {aiGenerating ? <Loader2 className="size-4 animate-spin ml-1" /> : <Sparkles className="size-4 ml-1 text-amber-300" />}
-                  توليد وتعبئة التقرير بالذكاء الاصطناعي
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground">تاريخ البداية</label>
-                  <input
-                    type="date"
-                    value={editProgram.start_date || ""}
-                    onChange={(e) => setEditProgram({ ...editProgram, start_date: e.target.value })}
-                    className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
-                  />
-                  <p className="text-[10px] text-primary font-bold">الموافق هجري: {toHijriDate(editProgram.start_date)}</p>
+              <div className="space-y-5 py-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleAiGenerate(editProgram)}
+                    disabled={aiGenerating}
+                    className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90 font-bold"
+                  >
+                    {aiGenerating ? <Loader2 className="size-4 animate-spin ml-1" /> : <Sparkles className="size-4 ml-1 text-amber-300" />}
+                    توليد وتعبئة التقرير بالذكاء الاصطناعي
+                  </Button>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground">تاريخ النهاية</label>
-                  <input
-                    type="date"
-                    value={editProgram.end_date || ""}
-                    onChange={(e) => setEditProgram({ ...editProgram, end_date: e.target.value })}
-                    className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
-                  />
-                  <p className="text-[10px] text-primary font-bold">الموافق هجري: {toHijriDate(editProgram.end_date)}</p>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">حالة التنفيذ</label>
-                <select
-                  value={editProgram.exec_status || "قيد التنفيذ"}
-                  onChange={(e) => setEditProgram({ ...editProgram, exec_status: e.target.value })}
-                  className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs font-bold"
-                >
-                  <option value="قيد التنفيذ">قيد التنفيذ</option>
-                  <option value="مكتمل">مكتمل</option>
-                  <option value="مؤجل">مؤجل</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">ملخص تقرير التنفيذ والنتائج</label>
-                <textarea
-                  rows={4}
-                  value={editProgram.summary || ""}
-                  onChange={(e) => setEditProgram({ ...editProgram, summary: e.target.value })}
-                  placeholder="اكتب التقرير أو استخدم خيار الذكاء الاصطناعي..."
-                  className="w-full rounded-2xl border border-input bg-background p-3 text-xs leading-relaxed"
-                />
-              </div>
-
-              {/* قسم رفع الصور الشواهد */}
-              <div className="space-y-2 border-t border-border/60 pt-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                    <ImageIcon className="size-4 text-primary" />
-                    شواهد التنفيذ والتوثيق (صور)
-                  </label>
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20">
-                    <Upload className="size-3.5" />
-                    <span>رفع صور جديدة</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">تاريخ البداية (هجري موثق)</label>
                     <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, editProgram)}
-                      className="hidden"
+                      type="date"
+                      value={editProgram.start_date || ""}
+                      onChange={(e) => setEditProgram({ ...editProgram, start_date: e.target.value })}
+                      className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
                     />
-                  </label>
+                    <p className="text-[10px] text-primary font-bold">الهجري: {toHijriDate(editProgram.start_date)}</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">تاريخ النهاية (هجري موثق)</label>
+                    <input
+                      type="date"
+                      value={editProgram.end_date || ""}
+                      onChange={(e) => setEditProgram({ ...editProgram, end_date: e.target.value })}
+                      className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
+                    />
+                    <p className="text-[10px] text-primary font-bold">الهجري: {toHijriDate(editProgram.end_date)}</p>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-2">
-                  {editProgram.evidence_images && editProgram.evidence_images.length > 0 ? (
-                    editProgram.evidence_images.map((img, idx) => (
-                      <div key={idx} className="relative aspect-video overflow-hidden rounded-xl border border-border">
-                        <img src={img} alt={`شاهد ${idx + 1}`} className="h-full w-full object-cover" />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="col-span-3 text-center py-6 text-xs text-muted-foreground border border-dashed rounded-2xl">
-                      لا توجد صور شواهد مرفقة بعد.
-                    </p>
-                  )}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">حالة التنفيذ</label>
+                  <select
+                    value={editProgram.exec_status || "قيد التنفيذ"}
+                    onChange={(e) => setEditProgram({ ...editProgram, exec_status: e.target.value })}
+                    className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs font-bold"
+                  >
+                    <option value="قيد التنفيذ">قيد التنفيذ</option>
+                    <option value="مكتمل">مكتمل</option>
+                    <option value="مؤجل">مؤجل</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">ملخص تقرير التنفيذ والنتائج</label>
+                  <textarea
+                    rows={4}
+                    value={editProgram.summary || ""}
+                    onChange={(e) => setEditProgram({ ...editProgram, summary: e.target.value })}
+                    placeholder="اكتب التقرير أو استخدم زر الذكاء الاصطناعي أعلاه..."
+                    className="w-full rounded-2xl border border-input bg-background p-3 text-xs leading-relaxed"
+                  />
+                </div>
+
+                {/* قسم رفع الصور الشواهد */}
+                <div className="space-y-2 border-t border-border/60 pt-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <ImageIcon className="size-4 text-primary" />
+                      شواهد التنفيذ (صور)
+                    </label>
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20">
+                      <Upload className="size-3.5" />
+                      <span>رفع صور جديدة</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, editProgram)}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-2">
+                    {editProgram.evidence_images && editProgram.evidence_images.length > 0 ? (
+                      editProgram.evidence_images.map((img, idx) => (
+                        <div key={idx} className="relative aspect-video overflow-hidden rounded-xl border border-border">
+                          <img src={img} alt={`شاهد ${idx + 1}`} className="h-full w-full object-cover" />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="col-span-3 text-center py-6 text-xs text-muted-foreground border border-dashed rounded-2xl">
+                        لا توجد صور شواهد مرفقة بعد.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setEditProgram(null)} className="rounded-xl">
-                إغلاق
-              </Button>
-              <Button onClick={handleSaveProgramEdit} disabled={busy} className="rounded-xl">
-                {busy && <Loader2 className="size-4 animate-spin ml-2" />}
-                حفظ التقرير
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setEditProgram(null)} className="rounded-xl">
+                  إغلاق
+                </Button>
+                <Button onClick={handleSaveProgramEdit} disabled={busy} className="rounded-xl">
+                  {busy && <Loader2 className="size-4 animate-spin ml-2" />}
+                  حفظ التقرير
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      {/* 5. نموذج طباعة A4 بالكليشة الرسمية */}
+      {/* 5. نموذج طباعة A4 الرسمي */}
       {printProgram && (
         <div className="hidden print:block fixed inset-0 bg-white p-0 text-black z-50 dir-rtl" ref={printRef}>
           <style>{`
@@ -588,14 +584,14 @@ function ProgramsPage() {
           `}</style>
 
           <div className="w-full h-full border-4 border-double border-gray-800 p-6 flex flex-col justify-between">
+            {/* الكليشة الرسمية أعلى الورقة */}
             <div>
-              {/* الكليشة الرسمية أعلى الورقة */}
               <div className="flex items-center justify-between border-b-2 border-gray-800 pb-4 mb-6">
                 <div className="text-right text-xs font-bold leading-relaxed">
                   <p>المملكة العربية السعودية</p>
                   <p>وزارة التعليم</p>
-                  <p>الإدارة العامة للتعليم بمحافظة {school?.city || "مكة المكرمة"}</p>
-                  <p>المدرسة: {school?.school_name || "علاء بن الحضرمي المتوسطة"}</p>
+                  <p>الإدارة العامة للتعليم بمحافظة {school?.city || "المعنية"}</p>
+                  <p>مدرسة: {school?.school_name || "المرحلة الدراسية"}</p>
                 </div>
 
                 <div className="text-center">
@@ -607,7 +603,7 @@ function ProgramsPage() {
 
                 <div className="text-left text-xs font-bold leading-relaxed">
                   <p>الفصل الدراسي: {school?.semester || "الحالي"}</p>
-                  <p>التاريخ: {toHijriDate(printProgram.start_date)}</p>
+                  <p>التاريخ الهجري: {toHijriDate(printProgram.start_date)}</p>
                   <p>المجال: {printProgram.domain || "المجال الإرشادي"}</p>
                 </div>
               </div>
@@ -671,7 +667,7 @@ function ProgramsPage() {
             <div className="flex items-center justify-between pt-8 border-t border-gray-800 text-xs font-black">
               <div className="text-center w-1/3">
                 <p>الموجه الطلابي</p>
-                <p className="mt-8">{school?.counselor_name || "عبدالمحسن بن مرزوق العتيبي"}</p>
+                <p className="mt-8">{school?.counselor_name || "الموجه الطلابي"}</p>
                 <p className="text-[10px] text-gray-500">التوقيع: .....................</p>
               </div>
               <div className="text-center w-1/3">
