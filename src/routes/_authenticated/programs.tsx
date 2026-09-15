@@ -11,17 +11,13 @@ import {
   FileText,
   Upload,
   Image as ImageIcon,
-  CheckCircle2,
-  Clock,
   BookOpen,
-  School,
-  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
-import { MINISTRY_PROGRAMS, MINISTRY_TERMS } from "@/lib/ministry-programs";
+import { MINISTRY_PROGRAMS } from "@/lib/ministry-programs";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,7 +31,7 @@ import {
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
-      { title: "البرامج والأنشطة الإرشادية | منصة الذات" },
+      { title: "البرامج والأنشطة الإرشادية | منصة ذات" },
       { name: "description", content: "إدارة وتوثيق البرامج الإرشادية والأنشطة الوزارية بالشهادات والشواهد." },
     ],
   }),
@@ -43,10 +39,11 @@ export const Route = createFileRoute("/_authenticated/programs")({
 });
 
 // تحويل التاريخ الجريغوري إلى هجري
-function toHijriDate(dateStr?: string) {
+function toHijriDate(dateStr?: string | null) {
   if (!dateStr) return "—";
   try {
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
     return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
       day: "numeric",
       month: "long",
@@ -67,8 +64,8 @@ export type ProgramItem = {
   term?: string;
   goal?: string;
   indicator?: string;
-  start_date?: string;
-  end_date?: string;
+  start_date?: string | null;
+  end_date?: string | null;
   exec_status?: string;
   summary?: string;
   evidence_images?: string[];
@@ -133,7 +130,7 @@ function ProgramsPage() {
       const { error } = await supabase.from("programs").insert([payload as never]);
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
       toast.success("تمت إضافة البرنامج بنجاح إلى القائمة");
       setAddDialogOpen(false);
       setSelectedMinistryProg("");
@@ -146,14 +143,14 @@ function ProgramsPage() {
     }
   }
 
-  // حذف برنامج
+  // حذف برنامج مع تحديث الكاش بشكل صحيح
   async function handleDeleteProgram(id: string) {
-    if (!confirm("هل أنت تأكد من حذف هذا البرنامج؟ يمكنك إعادته لاحقاً من القائمة الوزارية.")) return;
+    if (!window.confirm("هل أنت متأكد من حذف هذا البرنامج؟ يمكنك إعادته لاحقاً من القائمة الوزارية.")) return;
     try {
       const { error } = await supabase.from("programs").delete().eq("id", id);
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تم حذف البرنامج");
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تم حذف البرنامج بنجاح");
     } catch (err) {
       toast.error(`تعذر الحذف: ${(err as Error).message}`);
     }
@@ -163,15 +160,8 @@ function ProgramsPage() {
   async function handleAiGenerate(program: ProgramItem) {
     setAiGenerating(true);
     try {
-      // محاكاة صياغة التقرير الإرشادي المتقدم بالذكاء الاصطناعي
       await new Promise((res) => setTimeout(res, 1200));
-      const aiSummary = `تم تنفيذ برنامج (${program.name}) لخدمة (${program.target_group || "جميع الطلاب"})، ويهدف بالأساس إلى ${program.goal || "تعزيز السلوك الإيجابي ورفع الوعي"}. تم تحقيق مؤشر القياس وهو: [${program.indicator || "تفاعل واكتساب المهارات المطلوب"}] بنسبة نجاح عالية وتفاعل ممتاز من جميع المستهدفين.`;
-
-      const updated = {
-        ...program,
-        summary: aiSummary,
-        exec_status: "مكتمل",
-      };
+      const aiSummary = `تم تنفيذ برنامج (${program.name}) لخدمة (${program.target_group || "جميع الطلاب"})، ويهدف بالأساس إلى ${program.goal || "تعزيز السلوك الإيجابي ورفع الوعي"}. تم تحقيق مؤشر القياس وهو: [${program.indicator || "تفاعل واكتساب المهارات المطلوبة"}] بنسبة نجاح عالية وتفاعل ممتاز من جميع المستهدفين.`;
 
       const { error } = await supabase
         .from("programs")
@@ -180,11 +170,17 @@ function ProgramsPage() {
 
       if (error) throw error;
 
+      const updated = {
+        ...program,
+        summary: aiSummary,
+        exec_status: "مكتمل",
+      };
+
       setEditProgram(updated);
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تمت التعبئة الصياغية وتطوير التقرير بواسطة الذكاء الاصطناعي");
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تمت صياغة وتطوير التقرير بواسطة الذكاء الاصطناعي بنجاح");
     } catch (err) {
-      toast.error(`خطأ أثناء توليد الذكاء الاصطناعي: ${(err as Error).message}`);
+      toast.error(`خطأ أثناء توليد التقرير: ${(err as Error).message}`);
     } finally {
       setAiGenerating(false);
     }
@@ -202,11 +198,11 @@ function ProgramsPage() {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const fileExt = file.name.split(".").pop();
-        const filePath = `programs/${program.id}/${Math.random()}.${fileExt}`;
+        const filePath = `programs/${program.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
         const { error: uploadErr } = await supabase.storage.from("evidence").upload(filePath, file);
         if (uploadErr) {
-          // في حال عدم توفر Storage Bucket محلياً يتم استخدام Base64 مؤقتاً
+          // قراءة الملف كـ Base64 في حال عدم توفر التخزين السحابي مؤقتاً
           const reader = new FileReader();
           const base64Promise = new Promise<string>((res) => {
             reader.onload = () => res(reader.result as string);
@@ -229,7 +225,7 @@ function ProgramsPage() {
 
       const updated = { ...program, evidence_images: uploadedUrls };
       setEditProgram(updated);
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
       toast.success("تم رفع الشواهد بنجاح");
     } catch (err) {
       toast.error(`تعذر رفع الصور: ${(err as Error).message}`);
@@ -246,16 +242,16 @@ function ProgramsPage() {
       const { error } = await supabase
         .from("programs")
         .update({
-          start_date: editProgram.start_date,
-          end_date: editProgram.end_date,
+          start_date: editProgram.start_date || null,
+          end_date: editProgram.end_date || null,
           exec_status: editProgram.exec_status,
           summary: editProgram.summary,
         } as never)
         .eq("id", editProgram.id);
 
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تم حفظ بيانات البرنامج");
+      await queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تم حفظ بيانات البرنامج بنجاح");
       setEditProgram(null);
     } catch (err) {
       toast.error(`تعذر الحفظ: ${(err as Error).message}`);
@@ -274,7 +270,7 @@ function ProgramsPage() {
 
   return (
     <div className="space-y-6 dir-rtl">
-      {/* 1. Hero Card - ترويسة الصفحة بتصميم الداشبورد */}
+      {/* 1. Hero Card */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-6 text-primary-foreground shadow-xl shadow-primary/10 sm:p-8">
         <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
@@ -287,7 +283,7 @@ function ProgramsPage() {
             </div>
             <h1 className="text-2xl font-black tracking-tight sm:text-4xl">سجل خطة البرامج والتنفيذ</h1>
             <p className="text-xs font-medium text-primary-foreground/80 sm:text-sm">
-              إضافة البرامج وتوثيق التقرير بالشواهد والطباعة بالكليشة الرسمية
+              إضافة البرامج وتوثيق التقارير بالشواهد والطباعة بالكليشة الرسمية المعتمدة
             </p>
           </div>
 
@@ -484,7 +480,7 @@ function ProgramsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground">تاريخ البداية (هجري موثق)</label>
+                  <label className="text-xs font-bold text-muted-foreground">تاريخ البداية</label>
                   <input
                     type="date"
                     value={editProgram.start_date || ""}
@@ -495,7 +491,7 @@ function ProgramsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground">تاريخ النهاية (هجري موثق)</label>
+                  <label className="text-xs font-bold text-muted-foreground">تاريخ النهاية</label>
                   <input
                     type="date"
                     value={editProgram.end_date || ""}
@@ -525,7 +521,7 @@ function ProgramsPage() {
                   rows={4}
                   value={editProgram.summary || ""}
                   onChange={(e) => setEditProgram({ ...editProgram, summary: e.target.value })}
-                  placeholder="اكتب التقرير أو استخدم زر الذكاء الاصطناعي بالفي أعلى..."
+                  placeholder="اكتب التقرير أو استخدم زر الذكاء الاصطناعي..."
                   className="w-full rounded-2xl border border-input bg-background p-3 text-xs leading-relaxed"
                 />
               </div>
@@ -535,7 +531,7 @@ function ProgramsPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <ImageIcon className="size-4 text-primary" />
-                    شواهد التنفيذ (صور وفيديوهات)
+                    شواهد التنفيذ (صور)
                   </label>
                   <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20">
                     <Upload className="size-3.5" />
@@ -677,7 +673,7 @@ function ProgramsPage() {
             <div className="flex items-center justify-between pt-8 border-t border-gray-800 text-xs font-black">
               <div className="text-center w-1/3">
                 <p>الموجه الطلابي</p>
-                <p className="mt-8">{school?.counselor_name || "عبدالمحسن بن مرزوق العتيبي"}</p>
+                <p className="mt-8">{school?.counselor_name || "الموجه الطلابي"}</p>
                 <p className="text-[10px] text-gray-500">التوقيع: .....................</p>
               </div>
               <div className="text-center w-1/3">
