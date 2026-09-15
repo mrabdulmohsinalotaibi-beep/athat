@@ -81,7 +81,7 @@ export function normalizeHeader(value: string): string {
     .trim();
 }
 
-/** يحاول ربط أعمدة الملف بحقول نور تلقائياً */
+/** المطابقة البرمجية السريعة */
 export function autoMap(headers: string[]): Record<string, string> {
   const map: Record<string, string> = {};
   const used = new Set<string>();
@@ -103,6 +103,68 @@ export function autoMap(headers: string[]): Record<string, string> {
     }
   }
   return map;
+}
+
+/** 
+ * الربط الذكي باستخدام DeepSeek لقراءة الملفات العشوائية وغير المرتبة 
+ * @param headers عناوين الأعمدة في الملف
+ * @param sampleRows عينة من أسطر البيانات للتحليل الذكي (أول 3 أسطر)
+ * @param apiKey مفتاح DeepSeek API الخاص بك
+ */
+export async function aiAutoMapWithDeepSeek(
+  headers: string[],
+  sampleRows: Record<string, any>[],
+  apiKey: string
+): Promise<Record<string, string>> {
+  const basicMap = autoMap(headers);
+  const unmappedFields = NOOR_FIELDS.filter((f) => !basicMap[f.name]);
+
+  // إذا تم التعرف على كافة الحقول تلقائياً، يُكتفى بالمطابقة البرمجية
+  if (unmappedFields.length === 0) {
+    return basicMap;
+  }
+
+  const prompt = `
+أنت خبير في تحليل بيانات الجداول والملفات غير المرتبة.
+لدينا الحقول التالية المطلوبة لنظامنا:
+${JSON.stringify(NOOR_FIELDS.map((f) => ({ key: f.name, label: f.label })), null, 2)}
+
+عناوين الأعمدة المتاحة في ملف إكسل المستخدم هي:
+${JSON.stringify(headers)}
+
+وهذه عينة من البيانات الفعلية في أول بضعة أسطر للمساعدة في التمييز:
+${JSON.stringify(sampleRows, null, 2)}
+
+المطلوب: قم بمطابقة كل مفتاح (key) من الحقول المطلوبة مع اسم العمود المناسب له تماماً من الملف.
+قم بإرجاع النتيجة بصيغة JSON فقط كـ Object تكون المفاتيح هي (key) والقيم هي اسم العمود الدقيق من الجداول المتاحة. إذا لم تجد عموداً مناسباً، اجعل القيمة "".
+`;
+
+  try {
+    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: "أنت مساعد ذكي متخصص في معالجة البيانات وتصنيف الجداول." },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.1,
+      }),
+    });
+
+    const data = await response.json();
+    const aiMapping = JSON.parse(data.choices[0].message.content);
+
+    return { ...basicMap, ...aiMapping };
+  } catch (error) {
+    console.error("خطأ أثناء الاتصال بـ DeepSeek:", error);
+    return basicMap;
+  }
 }
 
 export function cleanPhone(value: unknown): string {
