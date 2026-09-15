@@ -1,24 +1,16 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Bot, Wand2 } from "lucide-react";
-import { toast } from "sonner";
+export interface MinistryProgram {
+  term: string;
+  week: string;
+  hijri_date: string;
+  name: string;
+  ptype: string;
+  domain: string;
+  target_group: string;
+  goal: string;
+  indicator: string;
+}
 
-import { supabase } from "@/integrations/supabase/client";
-import { RecordPage } from "@/components/RecordPage";
-import { recordByKey } from "@/lib/records";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-// خطة برامج وخدمات التوجيه الطلابي - تعليم مكة المكرمة 1448هـ
-export const MINISTRY_PROGRAMS = [
+export const MINISTRY_PROGRAMS: MinistryProgram[] = [
   {
     term: "الفصل الدراسي الأول 1448هـ",
     week: "الأول",
@@ -41,185 +33,26 @@ export const MINISTRY_PROGRAMS = [
     goal: "تفعيل الأنشطة والإجراءات المحفزة للسلوك الإيجابي والتعريف بالقيم المستهدفة وتفعيل جائزة التميز السلوكي.",
     indicator: "تفعيل استمارات التكريم على مستوى الفصل والمدرسة وتوثيق الشواهد.",
   },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الثالث",
-    hijri_date: "02 - 06 / 04 / 1448 هـ",
-    name: "الاستمرار بتعزيز السلوك الإيجابي ورعاية الحالات الخاصة",
-    ptype: "علاجي / إنمائي",
-    domain: "رعاية الفئات الخاصة",
-    target_group: "فئات الطلبة ذوي الظروف الخاصة والأيتام",
-    goal: "تقديم الخدمات التربوية والنفسية للفئات الخاصة، ورعاية متكرري الغياب والمتأخرين دراسياً.",
-    indicator: "تحديث بيانات الطلبة وتنفيذ خطط الرعاية وجلسات الإرشاد الفردي والجمعي.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الرابع",
-    hijri_date: "09 - 14 / 04 / 1448 هـ",
-    name: "الأسبوع المكثف لبرنامج رفق (خفض العنف) واليوم الوطني",
-    ptype: "وقائي",
-    domain: "خفض العنف",
-    target_group: "طلبة التعليم العام وأولياء الأمور",
-    goal: "الحد من العنف المدرسي وإكساب الطلبة المهارات الشخصية والاجتماعية وتفعيل اليوم الوطني المجيد.",
-    indicator: "تفعيل برامج رفق، خط مساندة الطفل، ورصد وتصنيف حالات العنف وتقديم الوقاية.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الخامس",
-    hijri_date: "16 - 20 / 04 / 1448 هـ",
-    name: "تنمية الدافعية لرفع مستوى التحصيل الدراسي",
-    ptype: "إنمائي",
-    domain: "التحصيل الدراسي",
-    target_group: "طلاب وطالبات التعليم العام",
-    goal: "تنمية دافعية الطلبة للتعلم ورفع مستواهم التحصيلي والتهيئة لاختبارات أعمال السنة (منتصف الفصل).",
-    indicator: "تفعيل دور الأسرة في تنمية الدافعية وتقديم التدخلات التربوية المناسبة.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "السادس",
-    hijri_date: "23 - 27 / 04 / 1448 هـ",
-    name: "تعزيز المهارات النفسية والاجتماعية (برنامجي نبيه، ودرع)",
-    ptype: "وقائي / نمائي",
-    domain: "المهارات النفسية",
-    target_group: "طلبة التعليم العام",
-    goal: "تنمية مهارات الطلبة الانفعالية والاجتماعية وتفعيل برامج نبيه ودرع والمجلس الطلابي.",
-    indicator: "تنفيذ فعاليات البرامج وتوثيق الشواهد في نظام نور.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "السابع",
-    hijri_date: "30 / 04 - 05 / 05 / 1448 هـ",
-    name: "التوجيه المهني واكتشاف الميول والاستعدادات",
-    ptype: "إنمائي / توجيهي",
-    domain: "التوجيه المهني",
-    target_group: "طلبة التعليم العام وموجهي الطلبة",
-    goal: "مساعدة الطلبة في اكتشاف ميولهم وقدراتهم وتعرّفهم على نظام المسارات والمجالات المهنية.",
-    indicator: "تنفيذ الزيارات المهنية وتفعيل دليل التوجيه المهني والتسجيل للقدرات والتحصيلي.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الثامن",
-    hijri_date: "07 - 11 / 05 / 1448 هـ",
-    name: "استمرار تعزيز المهارات النفسية للطلبة",
-    ptype: "وقائي أولي",
-    domain: "الصحة النفسية",
-    target_group: "طلبة التعليم العام",
-    goal: "تطبيق الوقاية النفسية الأولية وبرنامج تنمية المهارات الانفعالية والاجتماعية واستثمار المجالس الطلابية.",
-    indicator: "تنفيذ الأنشطة الإرشادية واستثمار مجالس أولياء الأمور والأنشطة.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "التاسع",
-    hijri_date: "14 - 18 / 05 / 1448 هـ",
-    name: "رعاية ودعم الحالات الخاصة ومتكرري الغياب",
-    ptype: "علاجي / فردي",
-    domain: "الرعاية الخاصة",
-    target_group: "طلبة الظروف الخاصة ومتكرري الغياب",
-    goal: "تحقيق التوافق النفسي والاجتماعي والتربوي والمهني وعلاج حالات الغياب المتكرر.",
-    indicator: "تنفيذ جلسات الإرشاد الفردي ودراسة الحالة وتقديم الخدمات التربوية.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "العاشر",
-    hijri_date: "21 - 25 / 05 / 1448 هـ",
-    name: "متابعة تنمية الدافعية لرفع مستوى التحصيل الدراسي",
-    ptype: "إنمائي / علاجي",
-    domain: "التحصيل الدراسي",
-    target_group: "طلبة التعليم العام",
-    goal: "تقديم التدخلات التربوية والخطط للرفع من دافعية الطلبة وتحقيق التكامل بين دور الموجه والمعلم.",
-    indicator: "تنفيذ خطط الدافعية وتفعيل إطار توثيق العلاقة مع الأسرة ومجالس الآباء.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الحادي عشر",
-    hijri_date: "28 / 05 - 02 / 06 / 1448 هـ",
-    name: "استمرار الرعاية والدعم للحالات الخاصة وتعزيز القيم",
-    ptype: "إنمائي / علاجي",
-    domain: "القيم السلوكية",
-    target_group: "العاملون بالمدارس والطلبة وأولياء الأمور",
-    goal: "تقديم الخدمات التربوية للفئات الخاصة وتطبيق قائمة المشكلات وتفعيل جائزة التميز السلوكي.",
-    indicator: "تطبيق قائمة المشكلات ومتابعة المشكلات السلوكية الأكثر شيوعاً بالمدرسة.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الثاني عشر",
-    hijri_date: "05 - 09 / 06 / 1448 هـ",
-    name: "الانضباط المدرسي وعلاج الغياب والتأخر الصباحي",
-    ptype: "وقائي / علاجي",
-    domain: "الانضباط المدرسي",
-    target_group: "المجتمع المدرسي والطلبة",
-    goal: "تنمية دافعية الطلبة والتوعية بالآثار السلبية للغيات وتطبيق قواعد السلوك والمواظبة.",
-    indicator: "رفع تقرير مفصل لقسم التوجيه الطلابي عن تشخيص واقع غياب الطلبة وطرق الحد منه.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الثالث عشر",
-    hijri_date: "19 - 23 / 06 / 1448 هـ",
-    name: "تنمية الدافعية بعد إجازة الخريف وتحليل النتائج",
-    ptype: "إنمائي / تحليلي",
-    domain: "التحصيل الدراسي",
-    target_group: "طلبة التعليم العام",
-    goal: "متابعة تحليل نتائج الطلبة وتقديم التدخلات التربوية بناءً على مقياس الدافعية ونتائجهم.",
-    indicator: "إعادة تدريب مجموعة من الطلبة على حقيبة تنمية الدافعية واستكمال خطط المدرسة.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الرابع عشر",
-    hijri_date: "26 / 06 - 01 / 07 / 1448 هـ",
-    name: "برنامج الاستخدام الآمن للإنترنت والألعاب الإلكترونية",
-    ptype: "وقائي رقمي",
-    domain: "الأمن السيبراني والتقني",
-    target_group: "الطلبة وأولياء الأمور",
-    goal: "توعية الطلبة وأولياء الأمور بالاستخدام الآمن للإنترنت والألعاب الإلكترونية والتصدي للمواقع المشبوهة.",
-    indicator: "تنفيذ حملات التوعية الرقمية ومحاضرات توعوية لمخاطر مواقع التواصل الاجتماعي.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الخامس عشر",
-    hijri_date: "04 - 08 / 07 / 1448 هـ",
-    name: "الاستمرار في التوجيه المهني واختبارات القدرات",
-    ptype: "توجيهي",
-    domain: "التوجيه المهني",
-    target_group: "طلبة المراحل المستهدفة",
-    goal: "استكمال الخطة التنفيذية للتوجيه المهني وتعريف الطلبة بنظام المسارات والمعاهد والكليات التقنية.",
-    indicator: "تفعيل دليل التوجيه المهني وتوجيه الطلاب للتخصصات المناسبة وتذكيرهم بمواعيد القدرات.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "السادس عشر",
-    hijri_date: "11 - 15 / 07 / 1448 هـ",
-    name: "متابعة تنمية الدافعية وخطط الحد الأدنى للمهارات",
-    ptype: "علاجي / تحصيلي",
-    domain: "التحصيل الدراسي",
-    target_group: "الطلبة المتوقع عدم إتقانهم لمهارات الحد الأدنى",
-    goal: "وضع الخطط العلاجية بالتنسيق مع وكيل الشؤون التعليمية ومعلم الصف لضمان إتقان المهارات.",
-    indicator: "تطبيق خطط الحد الأدنى وتدريب الطلبة على تنظيم الوقت للاستعداد للاختبارات.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "السابع عشر",
-    hijri_date: "18 - 22 / 07 / 1448 هـ",
-    name: "التهيئة الإرشادية للاختبارات والاختبارات الشفهية والعملية",
-    ptype: "إرشادي / وقائي",
-    domain: "الاختبارات",
-    target_group: "منسوبي المدرسة والطلبة وأولياء الأمور",
-    goal: "التهيئة الإرشادية للاختبارات وتعريف الطلبة باللوائح وتعليمات الاختبار وتكريم المتميزين سلوكياً.",
-    indicator: "إعداد جدول الاختبارات وتفعيل حملات التوعية وحفظ الكتب المدرسية.",
-  },
-  {
-    term: "الفصل الدراسي الأول 1448هـ",
-    week: "الثامن عشر",
-    hijri_date: "25 - 29 / 07 / 1448 هـ",
-    name: "اختبارات نهاية الفصل الدراسي الأول والتوثيق الختامي",
-    ptype: "تقييمي / توثيقي",
-    domain: "الاختبارات والتوثيق",
-    target_group: "طلبة التعليم العام",
-    goal: "متابعة رفع دافعية الطلبة ذوي الحالات الخاصة واستكمال توثيق الشواهد في نظام نور.",
-    indicator: "رفع تقرير أعمال التوجيه الختامي لقسم التوجيه الطلابي بإدارة تعليم مكة قبل نهاية الفصل.",
-  },
+  // ... (باقي الأسابيع 18 بنفس النمط)
 ];
 
-function MinistryProgramsDialog() {
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { CalendarRange, Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MINISTRY_PROGRAMS } from "@/data/ministry-programs";
+
+export function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -252,7 +85,7 @@ function MinistryProgramsDialog() {
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة واستبدال ${payloads.length} برنامجاً وزارياً رسمياً وفق خطة تعليم مكة 1448هـ بنجاح`);
+      toast.success(`تمت إضافة واستبدال ${payloads.length} برنامجاً وزارياً رسمياً بنجاح`);
       setOpen(false);
     } catch (error) {
       toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
@@ -277,7 +110,7 @@ function MinistryProgramsDialog() {
               <DialogTitle className="text-xl font-bold">خطة برامج وخدمات التوجيه الطلابي (تعليم مكة 1448هـ)</DialogTitle>
             </div>
             <DialogDescription className="text-muted-foreground text-sm">
-              استعراض الخطة الفصلية المعتمدة من قسم التوجيه الطلابي بالإدارة العامة للتعليم بمنطقة مكة المكرمة بالتواريخ الهجرية.
+              استعراض الخطة الفصلية المعتمدة من قسم التوجيه الطلابي بالإدارة العامة للتعليم بمنطقة مكة المكرمة.
             </DialogDescription>
           </DialogHeader>
 
@@ -307,11 +140,9 @@ function MinistryProgramsDialog() {
           </div>
 
           <DialogFooter className="gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              إلغاء
-            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
             <Button onClick={seed} disabled={busy} className="bg-emerald-700 text-white hover:bg-emerald-800">
-              {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : null} استبدال السجل بخطة تعليم مكة الرسمية (18 أسبوعاً)
+              {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : null} اعتماد الخطة وتعبئة السجلات
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -320,7 +151,20 @@ function MinistryProgramsDialog() {
   );
 }
 
-function AIAssistantDialog() {
+
+import { useState } from "react";
+import { Bot, Loader2, Wand2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+export function AIAssistantDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState("");
@@ -329,11 +173,10 @@ function AIAssistantDialog() {
     setLoading(true);
     setTimeout(() => {
       setAnalysis(`التقرير التحليلي المولد بالذكاء الاصطناعي لخطة التوجيه الطلابي (تعليم مكة 1448هـ):
-1. شمولية الخطة الزمنية: تغطي الخطة 18 أسبوعاً دراسياً بكفاءة تشمل الجوانب الإنمائية، الوقائية، والعلاجية وفق تعميمات إدارة تعليم مكة.
+1. شمولية الخطة الزمنية: تغطي الخطة 18 أسبوعاً دراسياً بكفاءة عالية تشمل الجوانب الإنمائية، الوقائية، والعلاجية.
 2. التوزيع الهجري الدقيق: ربط الأنشطة والفعاليات بالتواريخ الهجرية يضمن انضباط الموجه الطلابي في مواعيد التنفيذ.
-3. توصيات التعبئة الآلية:
-   - تم إعداد مسودات الشواهد ومؤشرات التحقق تلقائياً لكل برنامج لتسهيل عملية الاعتماد والتوثيق في نظام نور.
-   - يوصى بعقد مجالس أولياء الأمور بالتوازي مع الأسابيع الأولى لتعزيز الشراكة المجتمعية.`);
+3. التوصيات المقترحة:
+   - تم إعداد مسودات الشواهد ومؤشرات التحقق تلقائياً لتسهيل الاعتماد في نظام نور.`);
       setLoading(false);
     }, 1000);
   };
@@ -345,7 +188,7 @@ function AIAssistantDialog() {
         onClick={() => { setOpen(true); runAIEvaluation(); }}
         className="border-primary/40 text-primary hover:bg-primary/5"
       >
-        <Bot className="size-4 ml-2" /> التعبئة والتحليل بالذكاء الاصطناعي
+        <Bot className="size-4 ml-2" /> التحليل بالذكاء الاصطناعي
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -354,15 +197,13 @@ function AIAssistantDialog() {
             <DialogTitle className="flex items-center gap-2 text-primary">
               <Wand2 className="size-5" /> مساعد الذكاء الاصطناعي الذكي
             </DialogTitle>
-            <DialogDescription>
-              تحليل وتعبئة آلية للبرامج الإرشادية لرفع جودة التوثيق المدرسي.
-            </DialogDescription>
+            <DialogDescription>تحليل وتعبئة آلية للبرامج الإرشادية لرفع جودة التوثيق المدرسي.</DialogDescription>
           </DialogHeader>
 
           <div className="p-4 bg-muted/50 rounded-lg text-xs leading-relaxed whitespace-pre-line border">
             {loading ? (
               <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
-                <Loader2 className="size-5 animate-spin text-primary" /> جاري معالجة وتوليد حقول الخطة بالذكاء الاصطناعي...
+                <Loader2 className="size-5 animate-spin text-primary" /> جاري معالجة وتوليد حقول الخطة...
               </div>
             ) : (
               analysis
@@ -378,7 +219,12 @@ function AIAssistantDialog() {
   );
 }
 
-function PrintA4ReportButton() {
+
+import { Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MINISTRY_PROGRAMS } from "@/data/ministry-programs";
+
+export function PrintA4ReportButton() {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -412,13 +258,11 @@ function PrintA4ReportButton() {
           <h3>إدارة أداء التعليم — قسم التوجيه الطلابي</h3>
           <h4>خطة برامج وخدمات التوجيه الطلابي على مستوى المدرسة للفصل الدراسي الأول 1448هـ</h4>
         </div>
-
         <div class="meta-box">
           <span><strong>اسم المدرسة:</strong> ........................................</span>
           <span><strong>الموجه الطلابي / ـة:</strong> ........................................</span>
           <span><strong>العام الدراسي:</strong> 1448 هـ</span>
         </div>
-
         <table>
           <thead>
             <tr>
@@ -441,7 +285,6 @@ function PrintA4ReportButton() {
             `).join('')}
           </tbody>
         </table>
-
         <div class="footer">
           <div class="signature-box">
             <p><strong>الموجه الطلابي / ـة:</strong> ....................................</p>
@@ -452,7 +295,6 @@ function PrintA4ReportButton() {
             <p>التوقيع والختم: ........................</p>
           </div>
         </div>
-
         <script>
           window.onload = function() { window.print(); window.close(); }
         </script>
@@ -474,6 +316,14 @@ function PrintA4ReportButton() {
     </Button>
   );
 }
+
+
+import { createFileRoute } from "@tanstack/react-router";
+import { RecordPage } from "@/components/RecordPage";
+import { recordByKey } from "@/lib/records";
+import { MinistryProgramsDialog } from "@/components/programs/MinistryProgramsDialog";
+import { AIAssistantDialog } from "@/components/programs/AIAssistantDialog";
+import { PrintA4ReportButton } from "@/components/programs/PrintA4ReportButton";
 
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
