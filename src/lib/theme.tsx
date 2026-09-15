@@ -23,23 +23,19 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   // استخدام التهيئة الابتدائية لمنع وميض الشاشة عند التحميل
   const [theme, setTheme] = useState<AppTheme>(() => {
-    if (typeof window === "undefined") return "royal";
+    if (typeof window === "undefined") return "thaat";
     try {
       const saved = localStorage.getItem("app-theme");
-      return isAppTheme(saved) ? saved : "royal";
+      return isAppTheme(saved) ? saved : "thaat";
     } catch {
-      return "royal";
+      return "thaat";
     }
   });
 
   useEffect(() => {
     const root = document.documentElement;
     root.dataset["theme"] = theme;
-    
-    // تطبيق الألوان كمتغيرات CSS مباشرة فور التحميل
-    root.style.setProperty("--theme-primary", "#1F3A52");
-    root.style.setProperty("--theme-primary-hover", "#152838");
-    
+
     try {
       localStorage.setItem("app-theme", theme);
     } catch (e) {
