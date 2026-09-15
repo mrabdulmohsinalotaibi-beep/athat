@@ -13,7 +13,19 @@ const DraftInput = z.object({
 const outputSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["summary", "problemDescription", "causes", "goals", "actions", "interventionPlan", "recommendations", "result", "notes", "nextAction", "suggestedSelections"],
+  required: [
+    "summary",
+    "problemDescription",
+    "causes",
+    "goals",
+    "actions",
+    "interventionPlan",
+    "recommendations",
+    "result",
+    "notes",
+    "nextAction",
+    "suggestedSelections",
+  ],
   properties: {
     summary: { type: "string" },
     problemDescription: { type: "string" },
@@ -28,7 +40,17 @@ const outputSchema = {
     suggestedSelections: {
       type: "object",
       additionalProperties: false,
-      required: ["domain", "referral_source", "case_status", "priority", "intervention_plan", "action", "result", "meeting_type", "channel"],
+      required: [
+        "domain",
+        "referral_source",
+        "case_status",
+        "priority",
+        "intervention_plan",
+        "action",
+        "result",
+        "meeting_type",
+        "channel",
+      ],
       properties: {
         domain: { type: "string" },
         referral_source: { type: "string" },
@@ -44,6 +66,7 @@ const outputSchema = {
   },
 } as const;
 
+// تم تصحيح نوع suggestedDraft ليطابق الخصائص الدقيقة للـ Schema تماماً
 export type GuidanceDraft = {
   summary: string;
   problemDescription: string;
@@ -55,7 +78,17 @@ export type GuidanceDraft = {
   result: string;
   notes: string;
   nextAction: string;
-  suggestedSelections: Record<string, string>;
+  suggestedSelections: {
+    domain: string;
+    referral_source: string;
+    case_status: string;
+    priority: string;
+    intervention_plan: string;
+    action: string;
+    result: string;
+    meeting_type: string;
+    channel: string;
+  };
 };
 
 function readGatewayMessage(raw: string, fallback: string) {
@@ -71,7 +104,12 @@ async function wait(milliseconds: number) {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function streamDraft(apiKey: string, prompt: string, schema: unknown = outputSchema, schemaName = "guidance_report") {
+async function streamDraft(
+  apiKey: string,
+  prompt: string,
+  schema: unknown = outputSchema,
+  schemaName = "guidance_report",
+) {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
@@ -169,10 +207,17 @@ export const draftGuidanceReport = createServerFn({ method: "POST" })
       throw new Error("تعذّر قراءة الصياغة الناتجة. حاول مرة أخرى.");
     }
   });
+
 const MapInput = z.object({
   headers: z.array(z.string().max(200)).min(1).max(80),
-  sample: z.array(z.record(z.string(), z.string().max(300))).max(5).default([]),
-  fields: z.array(z.object({ name: z.string().max(80), label: z.string().max(160) })).min(1).max(40),
+  sample: z
+    .array(z.record(z.string(), z.string().max(300)))
+    .max(5)
+    .default([]),
+  fields: z
+    .array(z.object({ name: z.string().max(80), label: z.string().max(160) }))
+    .min(1)
+    .max(40),
 });
 
 const mappingSchema = {
