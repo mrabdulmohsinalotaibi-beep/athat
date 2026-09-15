@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { CalendarRange, Loader2, Plus, Sparkles, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   component: ProgramsPage,
 });
 
-// قائمة البرامج الوزارية مرتبة تصاعدياً حسب التواريخ (من الأسبوع الأول في الأعلى)
+// خطة برامج مكة 1448هـ مرتبة تصاعدياً من الأسبوع الأول في الأعلى
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
@@ -213,7 +213,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
     ptype: "تقييمي",
     domain: "الختامي",
     target_group: "طلبة التعليم العام",
-    goal: "متابعة رفع دافعية ذوي الحالات الخاصة واستكمال توثيق الشواهد",
+    goal: "متابعة رفع دافعية ذوي الحالات الخاصة واستكمال توثيق الشواهد بنظام نور",
     indicator: "رفع تقرير أعمال برامج التوجيه الطلابي للفصل الأول لقسم التوجيه",
   },
 ];
@@ -221,162 +221,99 @@ const MAKKAH_MINISTRY_PROGRAMS = [
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [programsList, setProgramsList] = useState(MAKKAH_MINISTRY_PROGRAMS);
-  
-  // حالة الذكاء الاصطناعي التوليدي اليدوي لكل برنامج على حدة
-  const [aiLoadingIdx, setAiLoadingIdx] = useState<number | null>(null);
-  const [customAiPrompts, setCustomAiPrompts] = useState<{ [key: number]: string }>({});
+  const [addingName, setAddingName] = useState<string | null>(null);
 
-  // زر توليد ذكي خاص بكل برنامج
-  async function handleRowDeepSeek(index: number) {
-    const promptText = customAiPrompts[index];
-    if (!promptText || !promptText.trim()) {
-      toast.error("الرجاء كتابة طلبك للذكاء الاصطناعي لهذا البرنامج أولاً");
-      return;
-    }
-
-    setAiLoadingIdx(index);
+  // دالة لإضافة برنامج واحد على حدة
+  async function addSingleProgram(p: typeof MAKKAH_MINISTRY_PROGRAMS[0]) {
+    setAddingName(p.name);
     try {
-      // محاكاة معالجة DeepSeek اليدوية للبرنامج
-      await new Promise((r) => setTimeout(r, 1200));
+      const { data: existing } = await supabase
+        .from("programs")
+        .select("name")
+        .eq("name", p.name)
+        .maybeSingle();
 
-      const updated = [...programsList];
-      const target = updated[index];
-      
-      // تحديث الهدف أو تفاصيل البرنامج بناءً على طلب المستخدم عبر الذكاء الاصطناعي
-      target.goal = `${target.goal} (تعديل ذكي عبر DeepSeek: ${promptText})`;
-      setProgramsList(updated);
-      
-      toast.success(`تم تحديث البرنامج رقم (${index + 1}) بنجاح بواسطة DeepSeek!`);
-      setCustomAiPrompts({ ...customAiPrompts, [index]: "" });
-    } catch (error) {
-      toast.error("فشل التوليد الذكي، حاول مرة أخرى.");
-    } finally {
-      setAiLoadingIdx(null);
-    }
-  }
-
-  async function seedAll() {
-    setBusy(true);
-    try {
-      const { data: existing } = await supabase.from("programs").select("name");
-      const known = new Set((existing ?? []).map((p) => String((p as { name: string | null }).name ?? "").trim()));
-      const payloads = programsList
-        .filter((p) => !known.has(p.name))
-        .map((p) => ({
-          program_no: `${p.term} - ${p.week}`,
-          name: p.name,
-          ptype: p.ptype,
-          domain: p.domain,
-          target_group: p.target_group,
-          term: `${p.term} — ${p.week}`,
-          goal: p.goal,
-          indicator: p.indicator,
-          exec_status: "لم يبدأ",
-          required_evidence: "صور وتقرير تنفيذ البرنامج",
-        }));
-
-      if (!payloads.length) {
-        toast.info("جميع البرامج مضافة مسبقاً.");
+      if (existing) {
+        toast.info(`البرنامج "${p.name}" مضاف مسبقاً.`);
+        setAddingName(null);
         return;
       }
-      const { error } = await supabase.from("programs").insert(payloads as never);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تم اعتماد وإضافة ${payloads.length} برنامجاً مرتباً بنجاح`);
-      setOpen(false);
-    } catch (error) {
-      toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
-    } finally {
-      setBusy(false);
-    }
-  }
 
-  // دالة الطباعة المتوافقة مع A4 لكل الأجهزة
-  function handlePrint() {
-    window.print();
+      const payload = {
+        program_no: `${p.term} - ${p.week}`,
+        name: p.name,
+        ptype: p.ptype,
+        domain: p.domain,
+        target_group: p.target_group,
+        term: `${p.term} — ${p.week}`,
+        goal: p.goal,
+        indicator: p.indicator,
+        exec_status: "لم يبدأ",
+        required_evidence: "صور وتقرير تنفيذ البرنامج",
+      };
+
+      const { error } = await supabase.from("programs").insert([payload] as never);
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast.success(`تمت إضافة برنامج "${p.name}" بنجاح`);
+    } catch (error) {
+      toast.error(`تعذرت الإضافة: ${(error as Error).message}`);
+    } finally {
+      setAddingName(null);
+    }
   }
 
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <CalendarRange className="size-4" /> البرامج الوزارية المرتبة (خطة مكة 1448هـ)
+        <CalendarRange className="size-4" /> البرامج الوزارية (خطة مكة 1448هـ)
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto print:max-h-none print:max-w-none print:border-none print:shadow-none" dir="rtl">
-          <DialogHeader className="print:hidden">
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>خطة برامج وخدمات التوجيه الطلابي (مرتبة من الأسبوع الأول)</DialogTitle>
-                <DialogDescription>
-                  استعراض الجدول، إمكانية التعديل والتوليد اليدوي الذكي (DeepSeek) لكل برنامج، أو الطباعة المباشرة بصيغة A4.
-                </DialogDescription>
-              </div>
-              <Button variant="secondary" size="sm" onClick={handlePrint} className="gap-1.5">
-                <Printer className="size-4" /> طباعة الخطة (A4)
-              </Button>
-            </div>
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>البرامج الوزارية المعتمدة (مرتبة تصاعدياً بالتاريخ الهجري)</DialogTitle>
+            <DialogDescription>
+              استعرض الخطة التدريبية والإرشادية وأضف كل برنامج على حدة حسب الاحتياج.
+            </DialogDescription>
           </DialogHeader>
 
-          {/* محتوى الجدول القابل للطباعة والتعديل */}
-          <div id="printable-plan-area" className="overflow-x-auto rounded-lg border bg-background p-2 print:border-none print:p-0">
-            <div className="hidden print:mb-4 print:block print:text-center">
-              <h2 className="text-lg font-bold">خطة برامج التوجيه الطلابي - الفصل الدراسي الأول (1448 هـ)</h2>
-              <p className="text-xs text-gray-600">إدارة التعليم بمنطقة مكة المكرمة</p>
-            </div>
-
+          <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-right text-xs">
               <thead>
-                <tr className="border-b bg-muted/60 print:bg-gray-100 print:text-black">
-                  <th className="p-2 font-bold">الأسابيع والتواريخ</th>
-                  <th className="p-2 font-bold">اسم البرنامج</th>
-                  <th className="p-2 font-bold">النوع والهدف (قابل للتخصيص بالذكاء الاصطناعي)</th>
-                  <th className="p-2 font-bold print:hidden">إجراءات DeepSeek اليدوية</th>
+                <tr className="border-b bg-muted/60">
+                  <th className="p-2 font-bold">الأسبوع والتاريخ الهجري</th>
+                  <th className="p-2 font-bold">البرنامج</th>
+                  <th className="p-2 font-bold">النوع</th>
+                  <th className="p-2 font-bold">الفئة المستهدفة</th>
+                  <th className="p-2 font-bold text-center">إجراء</th>
                 </tr>
               </thead>
               <tbody>
-                {programsList.map((p, idx) => (
+                {MAKKAH_MINISTRY_PROGRAMS.map((p) => (
                   <tr key={`${p.week}-${p.name}`} className="border-b last:border-0 hover:bg-muted/20">
-                    <td className="whitespace-nowrap p-2 font-mono text-[11px] font-semibold text-primary print:text-black">
+                    <td className="whitespace-nowrap p-2 font-mono text-[11px] font-semibold text-primary">
                       {p.week}
                     </td>
-                    <td className="p-2 font-bold">
-                      {p.name}
-                      <div className="text-[10px] text-muted-foreground font-normal">{p.target_group}</div>
-                    </td>
-                    <td className="p-2">
-                      <div className="font-semibold text-foreground">{p.goal}</div>
-                      <div className="text-[10px] text-muted-foreground">المؤشر: {p.indicator}</div>
-                    </td>
-                    <td className="p-2 print:hidden">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex gap-1">
-                          <input
-                            type="text"
-                            placeholder="اطلب تعديل/إضافة ذكية لهذا البرنامج..."
-                            value={customAiPrompts[idx] || ""}
-                            onChange={(e) =>
-                              setCustomAiPrompts({ ...customAiPrompts, [idx]: e.target.value })
-                            }
-                            className="w-48 rounded border bg-background px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 px-2 text-[10px]"
-                            disabled={aiLoadingIdx === idx}
-                            onClick={() => handleRowDeepSeek(idx)}
-                          >
-                            {aiLoadingIdx === idx ? (
-                              <Loader2 className="size-3 animate-spin" />
-                            ) : (
-                              <Sparkles className="size-3 text-primary" />
-                            )}
-                            توليد
-                          </Button>
-                        </div>
-                      </div>
+                    <td className="p-2 font-bold">{p.name}</td>
+                    <td className="p-2">{p.ptype}</td>
+                    <td className="p-2">{p.target_group}</td>
+                    <td className="p-2 text-center">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-primary hover:bg-primary/10"
+                        onClick={() => addSingleProgram(p)}
+                        disabled={addingName === p.name}
+                      >
+                        {addingName === p.name ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <Plus className="size-3.5 ml-1" /> إضافة
+                          </>
+                        )}
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -384,54 +321,56 @@ function MinistryProgramsDialog() {
             </table>
           </div>
 
-          <DialogFooter className="gap-2 print:hidden">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               إغلاق
-            </Button>
-            <Button onClick={seedAll} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null} اعتماد وتصدير الكل للسجل المعتمد ({programsList.length})
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* أنماط طباعة مخصصة لتنسيق A4 متوافق تماماً مع الهواتف والحواسب */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #printable-plan-area, #printable-plan-area * {
-            visibility: visible;
-          }
-          #printable-plan-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            margin: 0;
-            padding: 10mm;
-            background: white !important;
-          }
-          @page {
-            size: A4 portrait;
-            margin: 10mm;
-          }
-        }
-      `}} />
     </>
   );
 }
 
 function ProgramsPage() {
   return (
-    <RecordPage
-      config={recordByKey("programs")}
-      toolbarExtra={
-        <>
-          <MinistryProgramsDialog />
-        </>
-      }
-    />
+    <>
+      {/* تنسيقات الطباعة المتوافقة مع A4 لكافة الأجهزة */}
+      <style>{`
+        @media print {
+          body {
+            background: white !important;
+            color: black !important;
+            font-size: 12pt !important;
+          }
+          header, nav, aside, footer, button, .no-print {
+            display: none !important;
+          }
+          .container, main, div {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 1cm;
+          }
+        }
+      `}</style>
+
+      <RecordPage
+        config={recordByKey("programs")}
+        toolbarExtra={
+          <>
+            <MinistryProgramsDialog />
+            <Button variant="outline" onClick={() => window.print()} className="no-print">
+              <Printer className="size-4 ml-1.5" /> طباعة السجل (A4)
+            </Button>
+          </>
+        }
+      />
+    </>
   );
 }
