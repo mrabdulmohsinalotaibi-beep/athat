@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-// تثبيت الثيم الكحلي الملكي المطابق للصورة
 export const THEMES = [
+  { id: "thaat", name: "العنابي (الذات)", primary: "#7E2320" },
   { id: "royal", name: "الكحلي الملكي", primary: "#1F3A52" },
+  { id: "sage", name: "الأخضر الهادئ", primary: "#2F6B52" },
+  { id: "amber", name: "العنبري الدافئ", primary: "#8A5A16" },
 ] as const;
 
 export type AppTheme = (typeof THEMES)[number]["id"];
