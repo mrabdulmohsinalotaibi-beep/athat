@@ -22,6 +22,13 @@ import {
   Users,
   ArrowLeft,
   Sparkles,
+  PlusCircle,
+  ClipboardList,
+  UserCheck,
+  FileText,
+  Activity,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +81,6 @@ function useDashboard() {
   });
 }
 
-
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
 function Dashboard() {
@@ -99,12 +105,12 @@ function Dashboard() {
   const donePrograms = programs.filter((p) => p.exec_status === "مكتمل");
 
   const stats = [
-    { label: "إجمالي الطلاب", value: students.length, icon: Users, to: "/students" as const },
-    { label: "الحالات الإرشادية النشطة", value: activeCases.length, icon: HeartHandshake, to: "/cases" as const },
-    { label: "غياب وتأخر اليوم", value: todayAbsence.length, icon: CalendarCheck, to: "/attendance" as const },
-    { label: "المواعيد المجدولة", value: upcoming.length, icon: CalendarDays, to: "/calendar" as const },
-    { label: "المخالفات السلوكية", value: behavior.length, icon: ShieldAlert, to: "/behavior" as const },
-    { label: "البرامج المنفذة", value: donePrograms.length, icon: CalendarDays, to: "/programs" as const },
+    { label: "إجمالي الطلاب", value: students.length, icon: Users, to: "/students" as const, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "الحالات الإرشادية النشطة", value: activeCases.length, icon: HeartHandshake, to: "/cases" as const, color: "text-rose-500", bg: "bg-rose-500/10" },
+    { label: "غياب وتأخر اليوم", value: todayAbsence.length, icon: CalendarCheck, to: "/attendance" as const, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "المواعيد المجدولة", value: upcoming.length, icon: CalendarDays, to: "/calendar" as const, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { label: "المخالفات السلوكية", value: behavior.length, icon: ShieldAlert, to: "/behavior" as const, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: "البرامج المنفذة", value: donePrograms.length, icon: CheckCircle2, to: "/programs" as const, color: "text-teal-500", bg: "bg-teal-500/10" },
   ];
 
   const domainData = Object.entries(
@@ -131,76 +137,112 @@ function Dashboard() {
     students,
   });
 
+  const quickActions = [
+    { label: "حالة إرشادية جديدة", to: "/cases" as const, icon: PlusCircle },
+    { label: "تسجيل مقابلة", to: "/interviews" as const, icon: UserCheck },
+    { label: "رصد مواظبة", to: "/attendance" as const, icon: ClipboardList },
+    { label: "إحالة جديدة", to: "/referrals" as const, icon: HeartHandshake },
+    { label: "تقرير رسمي", to: "/reports" as const, icon: FileText },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-        <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="min-w-0">
-            <p className="flex items-center gap-2 text-sm font-bold text-primary"><Sparkles className="size-4" />مساحة عملك اليومية</p>
-            <h1 className="mt-2 text-3xl font-extrabold">أهلاً {school?.counselor_name || "بالموجه الطلابي"}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{school?.school_name || "أكمل بيانات مدرستك"} · {school?.semester || "الفصل الدراسي"}</p>
+    <div className="space-y-6 dir-rtl">
+      {/* الترويسة الرئيسية */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <Sparkles className="size-3.5" /> مساحة عملك اليومية
+            </div>
+            <h1 className="text-2xl font-black text-foreground sm:text-3xl">
+              أهلاً {school?.counselor_name || "بالموجه الطلابي"}
+            </h1>
+            <p className="text-xs font-medium text-muted-foreground sm:text-sm">
+              {school?.school_name || "أكمل بيانات مدرستك"} · {school?.semester || "الفصل الدراسي"}
+            </p>
           </div>
-          <Link to="/cases" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">متابعة الحالات <ArrowLeft className="size-4" /></Link>
+          <Link
+            to="/cases"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-transform hover:scale-[1.02]"
+          >
+            <span>متابعة الحالات</span>
+            <ArrowLeft className="size-4" />
+          </Link>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {[
-          { label: "حالة إرشادية جديدة", to: "/cases" as const },
-          { label: "تسجيل مقابلة", to: "/interviews" as const },
-          { label: "رصد مواظبة", to: "/attendance" as const },
-          { label: "إحالة جديدة", to: "/referrals" as const },
-          { label: "تقرير رسمي", to: "/reports" as const },
-        ].map((action) => (
+      {/* شريط الإجراءات السريعة */}
+      <div className="flex flex-wrap gap-2.5">
+        {quickActions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link
+              key={action.label}
+              to={action.to}
+              className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-card px-3.5 py-2 text-xs font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary/5 hover:text-primary"
+            >
+              <Icon className="size-4 text-primary" />
+              <span>{action.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* شبكة الإحصائيات الرئيسية */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {stats.map(({ label, value, icon: Icon, to, color, bg }) => (
           <Link
-            key={action.label}
-            to={action.to}
-            className="inline-flex min-h-9 items-center rounded-md border bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary"
+            key={label}
+            to={to}
+            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
           >
-            {action.label}
-          </Link>
-        ))}
-      </div>
-
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {stats.map(({ label, value, icon: Icon, to }) => (
-          <Link key={label} to={to} className="rounded-xl border bg-card p-5 shadow-sm transition-colors hover:border-primary">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">{label}</p>
-              <Icon className="size-5 text-primary" />
+              <span className="text-xs font-bold text-muted-foreground">{label}</span>
+              <div className={`rounded-xl p-2.5 ${bg} ${color}`}>
+                <Icon className="size-5" />
+              </div>
             </div>
-            <p className="mt-3 text-3xl font-extrabold">{isLoading ? "—" : value}</p>
+            <p className="mt-4 text-3xl font-black tracking-tight text-foreground">
+              {isLoading ? "—" : value}
+            </p>
           </Link>
         ))}
       </div>
 
-      <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <h2 className="mb-4 font-bold">مؤشرات قياس أداء التوجيه الطلابي</h2>
+      {/* مؤشرات الأداء (KPIs) */}
+      <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+        <div className="mb-5 flex items-center gap-2 border-b border-border/40 pb-4">
+          <Activity className="size-5 text-primary" />
+          <h2 className="text-base font-bold text-foreground">مؤشرات قياس أداء التوجيه الطلابي</h2>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {kpis.map((k) => (
-            <div key={k.key} className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground">{k.label}</p>
-              <p className="mt-2 text-2xl font-extrabold text-primary">
+            <div key={k.key} className="rounded-xl border border-border/50 bg-background/50 p-4">
+              <p className="text-xs font-semibold text-muted-foreground">{k.label}</p>
+              <p className="mt-2 text-2xl font-black text-primary">
                 {k.value}
                 {isPercentKpi(k.key) ? "%" : ""}
               </p>
               {isPercentKpi(k.key) && (
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(k.value, 100)}%` }} />
+                <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-500"
+                    style={{ width: `${Math.min(k.value, 100)}%` }}
+                  />
                 </div>
               )}
-              <p className="mt-2 text-[11px] text-muted-foreground">{k.hint}</p>
+              <p className="mt-2 text-[11px] font-medium text-muted-foreground">{k.hint}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h2 className="mb-4 font-bold">توزيع الحالات حسب المجال</h2>
+      {/* الرسوم البيانية */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+          <h2 className="mb-4 text-sm font-bold text-foreground">توزيع الحالات حسب المجال</h2>
           {domainData.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات بعد.</p>
+            <p className="py-12 text-center text-xs text-muted-foreground">لا توجد بيانات بعد.</p>
           ) : (
             <ResponsiveContainer width="100%" height={260} minWidth={0}>
               <PieChart>
@@ -216,16 +258,16 @@ function Dashboard() {
           )}
         </div>
 
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h2 className="mb-4 font-bold">مؤشر المواظبة</h2>
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+          <h2 className="mb-4 text-sm font-bold text-foreground">مؤشر المواظبة</h2>
           {attendanceData.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات بعد.</p>
+            <p className="py-12 text-center text-xs text-muted-foreground">لا توجد بيانات بعد.</p>
           ) : (
             <ResponsiveContainer width="100%" height={260} minWidth={0}>
               <BarChart data={attendanceData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Bar dataKey="value" fill="var(--chart-1)" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -234,37 +276,51 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h2 className="mb-3 flex items-center gap-2 font-bold">
-            <AlertTriangle className="size-4 text-destructive" /> متابعات عاجلة
+      {/* التنبيهات والمواعيد */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* متابعات عاجلة */}
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+          <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
+            <AlertTriangle className="size-4 text-destructive" />
+            <span>متابعات عاجلة</span>
           </h2>
           {overdue.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">لا توجد متابعات متأخرة.</p>
+            <p className="py-8 text-center text-xs text-muted-foreground">لا توجد متابعات متأخرة.</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2.5">
               {overdue.slice(0, 6).map((c) => (
-                <li key={c.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-lg bg-secondary/60 px-3 py-2">
-                  <span className="min-w-0 break-words">{c.student_name || "حالة إرشادية"}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{String(c.followup_at)}</span>
+                <li
+                  key={c.id}
+                  className="flex items-center justify-between rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-xs"
+                >
+                  <span className="font-semibold text-foreground">{c.student_name || "حالة إرشادية"}</span>
+                  <span className="flex items-center gap-1 font-mono text-destructive font-medium">
+                    <Clock className="size-3" />
+                    {String(c.followup_at)}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h2 className="mb-3 flex items-center gap-2 font-bold">
-            <CalendarDays className="size-4 text-primary" /> المواعيد القادمة
+        {/* المواعيد القادمة */}
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+          <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
+            <CalendarDays className="size-4 text-primary" />
+            <span>المواعيد القادمة</span>
           </h2>
           {upcoming.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">لا توجد مواعيد مجدولة.</p>
+            <p className="py-8 text-center text-xs text-muted-foreground">لا توجد مواعيد مجدولة.</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2.5">
               {upcoming.map((e) => (
-                <li key={e.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-lg bg-secondary/60 px-3 py-2">
-                  <span className="min-w-0 break-words">{e.title || e.etype}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{String(e.edate)}</span>
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-xs"
+                >
+                  <span className="font-semibold text-foreground">{e.title || e.etype}</span>
+                  <span className="font-mono text-muted-foreground font-medium">{String(e.edate)}</span>
                 </li>
               ))}
             </ul>
