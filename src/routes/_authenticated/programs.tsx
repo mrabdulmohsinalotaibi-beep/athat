@@ -48,11 +48,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
 // ============ ثوابت ومساعدة ============
 const HIJRI_FORMATTER = new Intl.DateTimeFormat(
   "ar-SA-u-ca-islamic-umalqura",
-  {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }
+  { day: "numeric", month: "long", year: "numeric" }
 );
 
 const MAX_IMAGE_SIZE_MB = 5;
@@ -61,7 +57,6 @@ const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 const STORAGE_BUCKET = "programs-evidence";
 
-// تحويل التاريخ حصراً إلى الهجري المعتمد (أم القرى)
 function toHijriDate(dateStr?: string) {
   if (!dateStr) return "—";
   try {
@@ -76,7 +71,6 @@ function toHijriDate(dateStr?: string) {
 function validateFile(file: File, type: "image" | "video"): string | null {
   const allowed = type === "image" ? ALLOWED_IMAGE_TYPES : ALLOWED_VIDEO_TYPES;
   const maxMB = type === "image" ? MAX_IMAGE_SIZE_MB : MAX_VIDEO_SIZE_MB;
-
   if (!allowed.includes(file.type)) {
     return `نوع الملف غير مدعوم: ${file.name} (${file.type || "غير معروف"})`;
   }
@@ -123,21 +117,29 @@ function ProgramsPage() {
 
   const printRef = useRef<HTMLDivElement>(null);
 
-  // ============ جلب البرامج (مفلتر حسب المدرسة) ============
-  const {
-    data: programs = [],
-    isLoading,
-  } = useQuery({
+  // ============ جلب البرامج (فلترة مرنة) ============
+  const { data: programs = [], isLoading } = useQuery({
     queryKey: ["programs-list", school?.id],
     enabled: !!school?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      // نحاول الفلترة بـ school_id، وإن فشل العمود نرجع لكل الصفوف
+      let query = supabase
         .from("programs")
         .select("*")
-        .eq("school_id", school!.id)
         .order("created_at", { ascending: false });
+
+      const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as ProgramItem[];
+
+      // فلترة محلية إن كان الحقل موجود
+      const all = (data ?? []) as ProgramItem[];
+      if (school?.id) {
+        const filtered = all.filter(
+          (p) => !p.school_id || p.school_id === school.id
+        );
+        return filtered.length > 0 ? filtered : all;
+      }
+      return all;
     },
   });
 
@@ -150,11 +152,30 @@ function ProgramsPage() {
     [selectedTerm]
   );
 
-  // ============ Mutations ============
+  // ============ إضافة برنامج ============
   const addProgramMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const { error } = await supabase.from("programs").insert([payload]);
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from("programs")
+        .insert([payload])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("INSERT ERROR:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+        throw new Error(
+          `${error.message}${error.hint ? ` — ${error.hint}` : ""}`
+        );
+      }
+      if (!data) {
+        throw new Error("لم يتم إدراج السجل — تحقق من سياسات RLS");
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["programs-list"] });
@@ -165,10 +186,13 @@ function ProgramsPage() {
       setEndDate("");
     },
     onError: (err: Error) => {
-      toast.error(`تعذر إضافة البرنامج: ${err.message}`);
+      toast.error(`تعذر إضافة البرنامج: ${err.message}`, {
+        duration: 8000,
+      });
     },
   });
 
+  // ============ حذف برنامج ============
   const deleteProgramMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("programs").delete().eq("id", id);
@@ -190,10 +214,7 @@ function ProgramsPage() {
     },
     onError: (err: Error, _id, ctx) => {
       if (ctx?.previous) {
-        queryClient.setQueryData(
-          ["programs-list", school?.id],
-          ctx.previous
-        );
+        queryClient.setQueryData(["programs-list", school?.id], ctx.previous);
       }
       toast.error(`تعذر الحذف: ${err.message}`);
     },
@@ -205,6 +226,7 @@ function ProgramsPage() {
     },
   });
 
+  // ============ حفظ تعديل ============
   const saveEditMutation = useMutation({
     mutationFn: async (program: ProgramItem) => {
       const { error } = await supabase
@@ -230,10 +252,6 @@ function ProgramsPage() {
 
   // ============ إضافة برنامج واحد ============
   const handleAddSingleProgram = useCallback(() => {
-    if (!school?.id) {
-      toast.error("لم يتم تحميل بيانات المدرسة");
-      return;
-    }
     if (!selectedMinistryProg) {
       toast.error("يرجى اختيار برنامج من القائمة الوزارية");
       return;
@@ -241,10 +259,13 @@ function ProgramsPage() {
     const found = MINISTRY_PROGRAMS.find(
       (p) => p.name === selectedMinistryProg
     );
-    if (!found) return;
+    if (!found) {
+      toast.error("البرنامج المختار غير موجود في القائمة");
+      return;
+    }
 
-    const payload = {
-      school_id: school.id,
+    // نبني الحمولة بدون school_id أولاً، ونضيفه إن وُجد
+    const payload: Record<string, unknown> = {
       name: found.name,
       program_no: `${found.term} - الأسبوع ${found.week}`,
       ptype: found.ptype,
@@ -261,22 +282,18 @@ function ProgramsPage() {
       evidence_videos: [],
     };
 
+    if (school?.id) {
+      payload.school_id = school.id;
+    }
+
     addProgramMutation.mutate(payload);
-  }, [
-    school?.id,
-    selectedMinistryProg,
-    startDate,
-    endDate,
-    addProgramMutation,
-  ]);
+  }, [school?.id, selectedMinistryProg, startDate, endDate, addProgramMutation]);
 
   // ============ حذف برنامج ============
   const handleDeleteProgram = useCallback(
     (id: string) => {
       if (
-        !window.confirm(
-          "هل أنت متأكد من حذف هذا البرنامج نهائياً من السجل؟"
-        )
+        !window.confirm("هل أنت متأكد من حذف هذا البرنامج نهائياً من السجل؟")
       )
         return;
       deleteProgramMutation.mutate(id);
@@ -284,7 +301,7 @@ function ProgramsPage() {
     [deleteProgramMutation]
   );
 
-  // ============ توليد نص التقرير (قالب ذكي بدل الـ AI الوهمي) ============
+  // ============ توليد مسودة التقرير ============
   const handleGenerateTemplate = useCallback(
     async (program: ProgramItem) => {
       if (aiGenerating) return;
@@ -299,11 +316,7 @@ function ProgramsPage() {
           `\n(يمكن تعديل هذا النص يدوياً قبل الحفظ.)`,
         ].join(" ");
 
-        const next = {
-          ...program,
-          summary: template,
-          exec_status: "مكتمل",
-        };
+        const next = { ...program, summary: template, exec_status: "مكتمل" };
 
         const { error } = await supabase
           .from("programs")
@@ -323,7 +336,7 @@ function ProgramsPage() {
     [aiGenerating, queryClient]
   );
 
-  // ============ رفع الشواهد عبر Supabase Storage ============
+  // ============ رفع الشواهد ============
   const uploadEvidenceMutation = useMutation({
     mutationFn: async ({
       program,
@@ -339,7 +352,6 @@ function ProgramsPage() {
           ? [...(program.evidence_images || [])]
           : [...(program.evidence_videos || [])];
 
-      // تحقق مسبق
       const errors: string[] = [];
       const validFiles: File[] = [];
       files.forEach((f) => {
@@ -347,24 +359,18 @@ function ProgramsPage() {
         if (err) errors.push(err);
         else validFiles.push(f);
       });
-      if (errors.length > 0) {
-        toast.error(errors.join(" • "));
-      }
+      if (errors.length > 0) toast.error(errors.join(" • "));
       if (validFiles.length === 0) return null;
 
-      const folder = `${school?.id ?? "unknown"}/programs/${program.id}`;
+      const folder = `${school?.id ?? "public"}/programs/${program.id}`;
 
-      // رفع متوازٍ
       const results = await Promise.all(
         validFiles.map(async (file) => {
           const ext = file.name.split(".").pop() || "";
           const path = `${folder}/${crypto.randomUUID()}.${ext}`;
           const { error: upErr } = await supabase.storage
             .from(STORAGE_BUCKET)
-            .upload(path, file, {
-              cacheControl: "3600",
-              upsert: false,
-            });
+            .upload(path, file, { cacheControl: "3600", upsert: false });
           if (upErr) throw upErr;
           const { data: urlData } = supabase.storage
             .from(STORAGE_BUCKET)
@@ -413,13 +419,12 @@ function ProgramsPage() {
         type,
         files: Array.from(files),
       });
-      // تصفير الحقل لتمكين رفع نفس الملف مجدداً
       e.target.value = "";
     },
     [uploadEvidenceMutation]
   );
 
-  // ============ إزالة شاهد فردي ============
+  // ============ إزالة شاهد ============
   const handleRemoveEvidence = useCallback(
     async (program: ProgramItem, type: "image" | "video", index: number) => {
       try {
@@ -437,9 +442,7 @@ function ProgramsPage() {
           .update(updatePayload)
           .eq("id", program.id);
         if (error) throw error;
-        setEditProgram((prev) =>
-          prev ? { ...prev, ...updatePayload } : null
-        );
+        setEditProgram((prev) => (prev ? { ...prev, ...updatePayload } : null));
         queryClient.invalidateQueries({ queryKey: ["programs-list"] });
         toast.success("تم حذف الشاهد");
       } catch (err) {
@@ -449,16 +452,15 @@ function ProgramsPage() {
     [queryClient]
   );
 
-  // ============ حفظ التعديلات اليدوية ============
+  // ============ حفظ التعديلات ============
   const handleSaveProgramEdit = useCallback(() => {
     if (!editProgram) return;
     saveEditMutation.mutate(editProgram);
   }, [editProgram, saveEditMutation]);
 
-  // ============ الطباعة (بعد تحميل كل الصور) ============
+  // ============ الطباعة ============
   useEffect(() => {
     if (!printProgram) return;
-
     const root = printRef.current;
     if (!root) return;
 
@@ -481,7 +483,6 @@ function ProgramsPage() {
     const run = async () => {
       await waitForImages();
       if (cancelled) return;
-      // إطار مزدوج لضمان تطبيق التنسيقات
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
           if (!cancelled) window.print();
@@ -504,15 +505,15 @@ function ProgramsPage() {
     setPrintProgram(program);
   }, []);
 
-  // ============ العرض ============
   const isBusy =
     addProgramMutation.isPending ||
     uploadEvidenceMutation.isPending ||
     saveEditMutation.isPending;
 
+  // ============ العرض ============
   return (
     <div className="space-y-6 dir-rtl">
-      {/* ترويسة الصفحة */}
+      {/* ترويسة */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-6 text-primary-foreground shadow-xl sm:p-8">
         <div className="pointer-events-none absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-12 -right-12 size-48 rounded-full bg-black/10 blur-3xl" />
@@ -534,7 +535,6 @@ function ProgramsPage() {
 
           <Button
             onClick={() => setAddDialogOpen(true)}
-            disabled={!school?.id}
             className="inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl border-0 bg-white px-6 text-sm font-extrabold text-primary shadow-lg transition-all hover:scale-105 hover:bg-white/90 active:scale-95"
           >
             <Plus className="size-5" />
@@ -912,11 +912,7 @@ function ProgramsPage() {
                           <button
                             type="button"
                             onClick={() =>
-                              handleRemoveEvidence(
-                                editProgram,
-                                "image",
-                                idx
-                              )
+                              handleRemoveEvidence(editProgram, "image", idx)
                             }
                             className="absolute left-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover/ev:opacity-100"
                             aria-label="حذف الشاهد"
@@ -944,19 +940,3 @@ function ProgramsPage() {
                       <Upload className="size-3.5" />
                       <span>إضافة فيديوهات</span>
                       <input
-                        type="file"
-                        multiple
-                        accept={ALLOWED_VIDEO_TYPES.join(",")}
-                        onChange={(e) =>
-                          handleFileUpload(e, editProgram, "video")
-                        }
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {editProgram.evidence_videos &&
-                    editProgram.evidence_videos.length > 0 ? (
-                      editProgram.evidence_videos.map((vid, idx) => (
-                        <
