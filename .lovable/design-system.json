@@ -2,7 +2,7 @@
   "meta": {
     "name": "Guidance Hub",
     "package": "@ws-7eb7e713de717d6d83a6/ff86189b-6cdb-4a8a-b190-a1c210e48686",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "framework": "react",
     "css_framework": "tailwind",
     "starter_template": "custom_design_system_tailwind",
@@ -11,7 +11,7 @@
     ],
     "source_type": "local",
     "source_manifest": {
-      "#enrichment": "16567b11adb48665830163a93c5d0483cec50c1806024999c6abacb5a0573f58",
+      "#enrichment": "0dd4c6468ba09e39106550f82fa4b0ee77fa3c2ffc3f868742b76f9a5c300a19",
       ".gitignore": "6d9e901a692b46a83707c245fb03bc91",
       ".lovable/meta.yaml": "954a981e8847ec1692669dbb04ae9ae9",
       ".lovable/plan.md": "f23b2d121c40b6520a525331b12159bd",
@@ -27,7 +27,7 @@
       ".prettierignore": "7279a476f196a2da5f7edd18db568dc6",
       ".prettierrc": "185ef0234746ab738ac1ab6cec5e2bd9",
       "AGENTS.md": "3da3c4cd15b686e79a248c25735d6aaf",
-      "README.md": "15ccc2c959c0bff2136261ce044c418f",
+      "README.md": "63fa88357ce51367e50fce9bc9d0abe5",
       "bunfig.toml": "89115995d9de72fdfc894e16b1e75297",
       "components.json": "30d3d035361ce807021f5c54620962e9",
       "eslint.config.js": "345bdd57e188e0e4525edcd00e5003f5",
@@ -115,7 +115,7 @@
       "src/lib/display.ts": "a6945d8d86279c4256664c4c6df322bd",
       "src/lib/error-capture.ts": "50040d9c14f0f07088f87ae80485c8d4",
       "src/lib/error-page.ts": "a6d8d86a245053776d65bf6db1f612bd",
-      "src/lib/kpi.ts": "b46c3160c1b72d1292c46878ebb7acf5",
+      "src/lib/kpi.ts": "fcbee9b61a3da4c31e29fe806193dd9e",
       "src/lib/lookups.ts": "881054f9f7610d7e3204cd7caad1a405",
       "src/lib/lovable-error-reporting.ts": "0367e03b7d71917510e4dc1cdae172ec",
       "src/lib/ministry-programs.ts": "435b5efaef3bf093665b6f89aa571963",
@@ -775,6 +775,11 @@
     {
       "name": "Constants",
       "file": "src/integrations/supabase/types",
+      "import_path": ""
+    },
+    {
+      "name": "CompactKpiDashboard",
+      "file": "src/lib/kpi",
       "import_path": ""
     },
     {
