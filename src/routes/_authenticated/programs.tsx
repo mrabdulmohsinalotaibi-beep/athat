@@ -1,235 +1,99 @@
 import React, { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase"; // تأكد من مسار ملف السوبابيس لديك
+import { supabase } from "@/lib/supabaseClient";
+import { MINISTRY_TERMS, MINISTRY_PROGRAMS, MinistryProgramDef } from "@/lib/ministry-programs";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Calendar as CalendarIcon, 
+  Plus, 
+  Trash2, 
+  Edit3, 
+  FileText, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle,
+  Search,
+  Filter
+} from "lucide-react";
 
-// ==========================================
-// 1. ملف الثوابت المدمج (Ministry Programs)
-// ==========================================
-export const MINISTRY_TERMS = [
-  "الفصل الدراسي الأول",
-  "الفصل الدراسي الثاني",
-  "الفصل الدراسي الثالث",
-];
-
-export type MinistryProgramDef = {
-  term: string;
-  week: string;
-  name: string;
-  ptype: string;
-  domain: string;
-  target_group: string;
-  goal: string;
-  indicator: string;
-};
-
-export const MINISTRY_PROGRAMS: MinistryProgramDef[] = [
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الأول",
-    name: "برنامج التهيئة الإرشادية والأسبوع التمهيدي",
-    ptype: "برنامج وزاري نمائي ووقائي",
-    domain: "المهاري والتربوي",
-    target_group: "طلبة المستجدين والمرحلة الدراسية",
-    goal: "التهيئة النفسية والتربوية والاجتماعية لتحقيق تكيف الطلبة في البيئة المدرسية وتعريفهم بلوائح وأنظمة المدرسة.",
-    indicator: "حصر الحالات الصحية والاجتماعية وتفعيل إطار توثيق العلاقة مع الأسرة.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثاني",
-    name: "تعزيز السلوك الإيجابي",
-    ptype: "برنامج وزاري تعزيرى",
-    domain: "السلوكي والقيمي",
-    target_group: "طلبة التعليم العام",
-    goal: "تفعيل الأنشطة والإجراءات المحفزة للسلوك الإيجابي وتفعيل جائزة المدرسة للتميز السلوكي.",
-    indicator: "تفعيل استمارات التكريم على مستوى الفصل والمدرسة ورصد المشكلات السلوكية.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثالث",
-    name: "الاستمرار بتعزيز السلوك الإيجابي ورعاية الحالات الخاصة",
-    ptype: "برنامج وزاري وعلاجي",
-    domain: "الرعاية والاجتماعي",
-    target_group: "الفئات الخاصة (الأيتام، ذوي الحاجة المادية، أبناء السجناء والموهوبين)",
-    goal: "تقديم الخدمات التربوية والنفسية للفئات الخاصة ورفع مستوى التحصيل الدراسي ورعاية متكرري الغياب.",
-    indicator: "اكتمال استمارات تحديث البيانات ومتابعة الخطط العلاجية.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الرابع",
-    name: "برنامج خفض العنف (رفق) واليوم الوطني",
-    ptype: "برنامج وزاري وقائي وعلاجي",
-    domain: "الوقائي والسلوكي",
-    target_group: "طلبة التعليم العام - موجهي الطلبة - أولياء الأمور",
-    goal: "الحد من العنف بين الطلبة في المدارس من خلال أساليب الوقاية والعلاج وإكساب المهارات الشخصية والاجتماعية.",
-    indicator: "إعداد الخطة التنفيذية لبرنامج رفق وتفعيل خط مساندة الطفل وتوثيق الفعاليات.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الخامس",
-    name: "تنمية الدافعية لرفع مستوى التحصيل الدراسي",
-    ptype: "برنامج وزاري أكاديمي",
-    domain: "التعليمي والتحصيلي",
-    target_group: "طلاب وطالبات التعليم العام وأولياء الأمور",
-    goal: "تنمية دافعية الطلبة للتعلم ورفع مستواهم التحصيلي والتهيئة لاختبارات أعمال السنة الفصلية.",
-    indicator: "تنفيذ خطة المدرسة في دليل دور الأسرة في تنمية الدافعية وتحقيق التكامل بين الموجه والمعلم.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع السادس",
-    name: "تعزيز المهارات النفسية والاجتماعية (برنامجي نبيه ودرع)",
-    ptype: "برنامج وزاري نمائي ووقائي",
-    domain: "النفسي والاجتماعي",
-    target_group: "طلبة التعليم العام",
-    goal: "تنمية مهارات الطلبة الانفعالية والاجتماعية في مدارس التعليم العام وحماية الطلاب.",
-    indicator: "تفعيل برامج نبيه ودرع والمجلس الطلابي وتوثيق الشواهد.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع السابع",
-    name: "التوجيه المهني",
-    ptype: "برنامج وزاري مهني",
-    domain: "المهني والتقني",
-    target_group: "طلبة مراحل التعليم العام",
-    goal: "مساعدة الطلبة في اكتشاف ميولهم واستعداداتهم وقدراتهم وتنميتها وتوجيههم للمسارات التعليمية المناسبة.",
-    indicator: "تنظيم زيارات ميدانية وتفعيل دليل التوجيه المهني ونظام المسارات للمرحلة الثانوية.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثامن",
-    name: "استمرار تعزيز المهارات النفسية للطلبة",
-    ptype: "برنامج وزاري وقائي",
-    domain: "النفسي",
-    target_group: "طلبة التعليم العام",
-    goal: "الوقاية النفسية الأولية وتنمية المهارات الانفعالية والاجتماعية المستهدفة.",
-    indicator: "تنفيذ الجلسات الإرشادية واستثمار المجالس الطلابية وأنشطة رعاية النمو السليم.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع التاسع",
-    name: "رعاية ودعم الحالات الخاصة ومتكرري الغياب",
-    ptype: "برنامج وزاري علاجي",
-    domain: "الرعاية والتوجه الفردي",
-    target_group: "طلبة الظروف الخاصة ومتكرري الغياب والتأخر",
-    goal: "تحقيق التوافق النفسي والاجتماعي والتربوي والمهني للطلبة والحد من الغياب المتكرر.",
-    indicator: "تنفيذ جلسات الإرشاد الفردي ودراسة الحالة واستمارة تحديث البيانات.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع العاشر",
-    name: "متابعة تنمية الدافعية لرفع مستوى التحصيل الدراسي",
-    ptype: "برنامج وزاري أكاديمي",
-    domain: "التحصيلي",
-    target_group: "طلبة التعليم العام وأولياء الأمور",
-    goal: "تقديم التدخلات التربوية والخطط المناسبة للرفع من الدافعية وتفعيل مجالس أولياء الأمور.",
-    indicator: "رصد نتائج التحصيل الدراسي وتقديم الدعم الإضافي وتوثيق الشراكة المجتمعية.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الحادي عشر",
-    name: "استمرار الرعاية والدعم للحالات الخاصة وتفعيل جائزة التميز السلوكي",
-    ptype: "برنامج وزاري متكامل",
-    domain: "القيمي والرعائي",
-    target_group: "العاملين في المدارس - طلبة التعليم العام - أولياء الأمور",
-    goal: "تعزيز القيم والمهارات الأساسية وتطبيق قائمة المشكلات السلوكية ومعالجتها.",
-    indicator: "تطبيق استمارات التكريم للتميز السلوكي (نموذج 1 و 2) وإعداد التقارير.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثاني عشر",
-    name: "الانضباط المدرسي والحد من الغياب",
-    ptype: "برنامج وزاري تنظيمي",
-    domain: "الانضباط والسلوك",
-    target_group: "منسوبي المدرسة - طلبة التعليم العام - أولياء الأمور",
-    goal: "تنمية دافعية الطلبة للتعلم وتوعيتهم بما يترتب على الغياب من إجراءات في قواعد السلوك والمواظبة.",
-    indicator: "الرفع بتقرير مفصل لقسم التوجيه الطلابي عن تشخيص واقع غياب الطلبة وطرق الحد منها.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثالث عشر",
-    name: "تنمية الدافعية لرفع مستوى التحصيل الدراسي (متابعة وتحليل)",
-    ptype: "برنامج وزاري تحصيلي",
-    domain: "التعليمي",
-    target_group: "طلاب وطالبات التعليم العام",
-    goal: "متابعة تحليل نتائج الطلبة وتقديم التدخلات التربوية والخطط بناءً على مقياس الدافعية.",
-    indicator: "إعادة تدريب مجموعة من الطلبة على حقيبة تنمية الدافعية وتنفيذ خطة المدرسة.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الرابع عشر",
-    name: "الاستخدام الآمن للإنترنت والألعاب الإلكترونية",
-    ptype: "برنامج وزاري توعوي وقائي",
-    domain: "التقني والوقائي",
-    target_group: "الطلبة وأولياء الأمور",
-    goal: "توعية الطلبة وأولياء الأمور بالاستخدام الآمن للإنترنت والألعاب الإلكترونية والاستفادة من جوانبها الإيجابية والوقاية من المخاطر.",
-    indicator: "تنفيذ برامج توعوية للتحذير من المواقع المشبوهة ومخاطر استغلال الإنترنت.",
-  },
-  {
-    term: "الفصل الدراسي الأول",
-    week: "الأسبوع الخامس عشر",
-    name: "الاستمرار في التوجيه المهني والختامي",
-    ptype: "برنامج وزاري مهني",
-    domain: "المهني",
-    target_group: "طلبة التعليم العام وموجهي الطلبة",
-    goal: "استكمال الخطة التنفيذية للتوجيه المهني وتعريف الطلبة بالمسارات والتخصصات والقدرات والتحصيلي.",
-    indicator: "استكمال متطلبات الخطة الختامية وإعداد تقارير الأداء النهائية.",
-  },
-];
-
-// ==========================================
-// 2. المكون الرئيسي (ProgramsPage)
-// ==========================================
-export default function ProgramsPage({ school }: { school?: { id: string } }) {
-  const [selectedMinistryProg, setSelectedMinistryProg] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+export default function ProgramsPage() {
   const queryClient = useQueryClient();
+  
+  // States
+  const [selectedTerm, setSelectedTerm] = useState<string>("الفصل الدراسي الأول");
+  const [selectedMinistryProg, setSelectedMinistryProg] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterDomain, setFilterDomain] = useState<string>("all");
 
-  // جلب البرامج من قاعدة البيانات
-  const { data: programs = [], refetch } = useQuery({
-    queryKey: ["programs", school?.id],
+  // Fetch School Info
+  const { data: school } = useQuery({
+    queryKey: ["current-school"],
     queryFn: async () => {
-      let query = supabase.from("programs").select("*");
-      if (school?.id) {
-        query = query.eq("school_id", school.id);
-      }
-      const { data, error } = await query;
+      const { data, error } = await supabase.from("schools").select("*").single();
       if (error) throw error;
       return data;
     },
   });
 
-  // دالة الإضافة عبر الـ Mutation مع ضبط الحقول بشكل سليم ومطابق
+  // Fetch Saved Programs
+  const { data: programs = [], isLoading } = useQuery({
+    queryKey: ["school-programs", school?.id],
+    queryFn: async () => {
+      if (!school?.id) return [];
+      const { data, error } = await supabase
+        .from("programs")
+        .select("*")
+        .eq("school_id", school.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!school?.id,
+  });
+
+  // Add Program Mutation
   const addProgramMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const { data, error } = await supabase.from("programs").insert([payload]);
+      const { data, error } = await supabase.from("programs").insert([payload]).select();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast.success("تم إضافة البرنامج بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      queryClient.invalidateQueries({ queryKey: ["school-programs"] });
+      toast.success("تم إضافة البرنامج الإرشادي بنجاح");
       setSelectedMinistryProg("");
       setStartDate("");
       setEndDate("");
-      refetch();
     },
-    onError: (err: Error) => {
-      toast.error(`حدث خطأ أثناء الإضافة: ${err.message}`);
+    onError: (err: any) => {
+      toast.error(`خطأ أثناء الإضافة: ${err.message || "حدث خطأ غير متوقع"}`);
     },
   });
 
+  // Delete Program Mutation
+  const deleteProgramMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("programs").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["school-programs"] });
+      toast.success("تم حذف البرنامج بنجاح");
+    },
+    onError: (err: any) => {
+      toast.error(`خطأ أثناء الحذف: ${err.message}`);
+    },
+  });
+
+  // Handle Add Single Program Action
   const handleAddSingleProgram = useCallback(() => {
     if (!selectedMinistryProg) {
       toast.error("يرجى اختيار برنامج من القائمة الوزارية");
       return;
     }
-    const found = MINISTRY_PROGRAMS.find(
-      (p) => p.name === selectedMinistryProg
-    );
+    const found = MINISTRY_PROGRAMS.find((p) => p.name === selectedMinistryProg);
     if (!found) {
       toast.error("البرنامج المختار غير موجود في القائمة");
       return;
@@ -259,84 +123,210 @@ export default function ProgramsPage({ school }: { school?: { id: string } }) {
     addProgramMutation.mutate(payload);
   }, [school?.id, selectedMinistryProg, startDate, endDate, addProgramMutation]);
 
+  // Filter available ministry programs based on selected term
+  const filteredMinistryList = MINISTRY_PROGRAMS.filter(
+    (p) => p.term === selectedTerm
+  );
+
+  // Filter saved programs for display
+  const filteredPrograms = programs.filter((prog: any) => {
+    const matchesSearch = prog.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          prog.target_group?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDomain = filterDomain === "all" || prog.domain === filterDomain;
+    return matchesSearch && matchesDomain;
+  });
+
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6" dir="rtl">
-      <Card>
-        <CardHeader>
-          <CardTitle>إدارة البرامج الإرشادية الوزارية</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">اختر البرنامج الوزاري</label>
-              <select
-                className="w-full border rounded-md p-2 bg-background"
-                value={selectedMinistryProg}
-                onChange={(e) => setSelectedMinistryProg(e.target.value)}
-              >
-                <option value="">-- اختر البرنامج --</option>
-                {MINISTRY_PROGRAMS.map((prog, idx) => (
-                  <option key={idx} value={prog.name}>
-                    {prog.week}: {prog.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+    <div className="p-6 max-w-7xl mx-auto space-y-8 text-right" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">إدارة البرامج والخطط الإرشادية</h1>
+          <p className="text-sm text-gray-500 mt-1">تفعيل ومتابعة البرامج الوزارية المعتمدة للتوجيه الطلابي</p>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-sm font-medium mb-1">تاريخ البداية</label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">تاريخ النهاية</label>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-            </div>
+      {/* Add Program Section Form */}
+      <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <Plus className="w-5 h-5 text-indigo-600" />
+          إضافة برنامج وزاري جديد للخطة
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Term Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">الفصل الدراسي</label>
+            <select
+              value={selectedTerm}
+              onChange={(e) => {
+                setSelectedTerm(e.target.value);
+                setSelectedMinistryProg("");
+              }}
+              className="w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              {MINISTRY_TERMS.map((term, idx) => (
+                <option key={idx} value={term}>{term}</option>
+              ))}
+            </select>
           </div>
 
-          <Button
-            onClick={handleAddSingleProgram}
-            disabled={addProgramMutation.isPending}
-            className="w-full"
+          {/* Program Selection */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">البرنامج الوزاري المدرج بالأسبوع</label>
+            <select
+              value={selectedMinistryProg}
+              onChange={(e) => setSelectedMinistryProg(e.target.value)}
+              className="w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">-- اختر البرنامج الوزاري --</option>
+              {filteredMinistryList.map((prog, idx) => (
+                <option key={idx} value={prog.name}>
+                  {prog.week}: {prog.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Start Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ البدء (اختياري)</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* End Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الانتهاء (اختياري)</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex items-end">
+            <button
+              onClick={handleAddSingleProgram}
+              disabled={addProgramMutation.isPending}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition text-sm flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              {addProgramMutation.isPending ? "جاري الإضافة..." : "إضافة للخطة التنفيذية"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters and Search for Existing Programs */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+          py-2.5
+          <input
+            type="text"
+            placeholder="بحث في البرامج المضافة..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pr-10 pl-4 py-2 bg-white rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Filter className="w-4 h-4 text-gray-500" />
+          <select
+            value={filterDomain}
+            onChange={(e) => setFilterDomain(e.target.value)}
+            className="rounded-lg border border-gray-300 py-2 px-3 text-sm bg-white focus:ring-2 focus:ring-indigo-500"
           >
-            {addProgramMutation.isPending ? "جاري الحفظ..." : "إضافة البرنامج للخطة"}
-          </Button>
-        </CardContent>
-      </Card>
+            <option value="all">جميع المجالات</option>
+            <option value="المهاري والتربوي">المهاري والتربوي</option>
+            <option value="السلوكي والقيمي">السلوكي والقيمي</option>
+            <option value="الوقائي والسلوكي">الوقائي والسلوكي</option>
+            <option value="التعليمي والتحصيلي">التعليمي والتحصيلي</option>
+            <option value="النفسي والاجتماعي">النفسي والاجتماعي</option>
+            <option value="المهني والتقني">المهني والتقني</option>
+          </select>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>البرامج المضافة مسبقاً ({programs.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {programs.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">لا توجد برامج مضافة حتى الآن.</p>
-            ) : (
-              programs.map((prog: any) => (
-                <div key={prog.id} className="border p-3 rounded-lg flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold">{prog.name}</h4>
-                    <p className="text-xs text-muted-foreground">{prog.program_no} | {prog.target_group}</p>
-                  </div>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                    {prog.exec_status}
-                  </span>
-                </div>
-              ))
-            )}
+      {/* Programs List Grid/Table */}
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800">البرامج الإرشادية المُفعلة للمدرسة</h3>
+          <span className="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-medium">
+            إجمالي البرامج: {filteredPrograms.length}
+          </span>
+        </div>
+
+        {isLoading ? (
+          <div className="p-8 text-center text-gray-500">جاري تحميل البيانات...</div>
+        ] : filteredPrograms.length === 0 ? (
+          <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
+            <FileText className="w-10 h-10 text-gray-300" />
+            <p>لا توجد برامج مضافة حتى الآن بناءً على خيارات البحث أو القائمة الحالية.</p>
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-right">
+              <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr>
+                  <th className="py-3 px-4">اسم البرنامج</th>
+                  <th className="py-3 px-4">الفترة / الأسبوع</th>
+                  <th className="py-3 px-4">المجال</th>
+                  <th className="py-3 px-4">الفئة المستهدفة</th>
+                  <th className="py-3 px-4">الحالة</th>
+                  <th className="py-3 px-4 text-center">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredPrograms.map((prog: any) => (
+                  <tr key={prog.id} className="hover:bg-gray-50 transition">
+                    <td className="py-3 px-4 font-medium text-gray-900">
+                      {prog.name}
+                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{prog.goal}</div>
+                    </td>
+                    <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{prog.program_no}</td>
+                    <td className="py-3 px-4">
+                      <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
+                        {prog.domain || "عام"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-gray-600">{prog.target_group}</td>
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-medium">
+                        <Clock className="w-3 h-3" />
+                        {prog.exec_status || "قيد التنفيذ"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            if (confirm("هل أنت متأكد من حذف هذا البرنامج من الخطة؟")) {
+                              deleteProgramMutation.mutate(prog.id);
+                            }
+                          }}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="حذف البرنامج"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
