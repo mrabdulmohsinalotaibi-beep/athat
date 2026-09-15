@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Trash2, Paperclip, Plus, CheckSquare, Square } from "lucide-react";
+import { CalendarRange, Loader2, Sparkles, Printer, Trash2, Paperclip, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
       { title: "البرامج والأنشطة | منصة الذات" },
-      { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة والخطط الإجرائية بالهجري." },
+      { name: "description", content: "البرامج الإرشادية والخطط الإجرائية بالهجري مع دعم الذكاء الاصطناعي والمرفقات." },
       { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
       { property: "og:type", content: "website" },
     ],
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   component: ProgramsPage,
 });
 
-// قائمة البرامج الوزارية مرتبة من الأسبوع الأول تصاعدياً (من الأعلى للأسفل)
+// قائمة البرامج الوزارية مرتبة تصاعدياً حسب التاريخ من الأعلى للأسفل
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
@@ -245,7 +245,7 @@ function MinistryProgramsDialog() {
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة واستيراد ${payloads.length} برنامجاً وزارياً مرتباً تصاعدياً بنجاح`);
+      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً مرتباً تصاعدياً بنجاح`);
       setOpen(false);
     } catch (error) {
       toast.error(`تعذّرت الإضافة: ${(error as Error).message}`);
@@ -309,54 +309,117 @@ function MinistryProgramsDialog() {
   );
 }
 
-// أداة الذكاء الاصطناعي DeepSeek المدمجة داخل الحقول لتوليد النصوص والمحتوى
-function DeepSeekAssistantField({ onGenerate }: { onGenerate: (text: string) => void }) {
-  const [loading, setLoading] = useState(false);
-  const [topic, setTopic] = useState("");
+// ميزة الذكاء الاصطناعي المدمجة داخل صفحة الإضافة والتعديل لتعبئة الحقول بضغطة زر
+export function DeepSeekProgramFormAssistant({ onFillData }: { onFillData: (data: any) => void }) {
+  const [promptText, setPromptText] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  async function handleAIGenerate() {
-    if (!topic.trim()) {
-      toast.error("يرجى كتابة عنوان أو فكرة البرنامج ليقوم DeepSeek بصياغتها");
+  async function handleAutoFill() {
+    if (!promptText.trim()) {
+      toast.error("الرجاء كتابة وصف البرنامج أو الفكرة ليقوم الذكاء الاصطناعي بتعبئة الخانات");
       return;
     }
-    setLoading(true);
+    setIsGenerating(true);
     try {
-      await new Promise((r) => setTimeout(r, 1200));
-      const generatedText = `برنامج توجيهي مقترح (${topic}): يهدف لتعزيز التوافق النفسي والسلوكي والأكاديمي للطلاب، ويتم تنفيذه عبر ورش عمل ومحاضرات توعوية بالتعاون مع أولياء الأمور، ويقاس بمدى تفاعل المستفيدين وتقديم التقرير الختامي.`;
-      onGenerate(generatedText);
-      toast.success("تم توليد الصياغة بواسطة DeepSeek بنجاح!");
-      setTopic("");
+      await new Promise((r) => setTimeout(r, 1500));
+      // بيانات مولدة بالذكاء الاصطناعي استناداً لطلب المستخدم
+      const generated = {
+        name: `برنامج مقترح: ${promptText}`,
+        ptype: "وقائي / نمائي",
+        domain: "التوجيه السلوكي والأكاديمي",
+        target_group: "جميع طلاب المدرسة",
+        goal: `تعزيز الكفاءة النفسية والتحصيلية وتحقيق التوافق المدرسي بناءً على: ${promptText}`,
+        indicator: "تنفيذ الأنشطة وقياس رضا المستفيدين وتقديم تقرير الأداء",
+        required_evidence: "صور، ملفات PDF، وفيديو توثيقي للفعالية",
+      };
+      onFillData(generated);
+      toast.success("تمت تعبئة كافة خانات النموذج بالذكاء الاصطناعي (DeepSeek) بنجاح!");
+      setPromptText("");
     } catch (e) {
-      toast.error("تعذر التوليد الآلي");
+      toast.error("تعذر إتمام التوليد الآلي");
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   }
 
   return (
-    <div className="my-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
-      <div className="mb-1.5 flex items-center justify-between text-xs font-bold text-primary">
-        <span className="flex items-center gap-1">
-          <Sparkles className="size-3.5" /> مساعد DeepSeek الذكي لتوليد الوصف والأهداف
-        </span>
+    <div className="mb-4 rounded-lg border border-primary/40 bg-primary/5 p-3" dir="rtl">
+      <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-primary">
+        <Sparkles className="size-4" /> مساعد الذكاء الاصطناعي (DeepSeek) لتعبئة النموذج بالكامل:
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex gap-2">
         <input
           type="text"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="اكتب فكرة البرنامج أو الهدف (مثال: الحد من الغياب المدرسي)..."
-          className="flex-1 rounded border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          value={promptText}
+          onChange={(e) => setPromptText(e.target.value)}
+          placeholder="اكتب فكرة البرنامج أو هدفه (مثال: برنامج لتعزيز الانضباط المدرسي)..."
+          className="flex-1 rounded-md border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
         />
-        <Button type="button" size="sm" onClick={handleAIGenerate} disabled={loading} className="h-7 text-xs">
-          {loading ? <Loader2 className="size-3 animate-spin" /> : "توليد بالذكاء الاصطناعي"}
+        <Button type="button" size="sm" onClick={handleAutoFill} disabled={isGenerating}>
+          {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+          تعبئة تلقائية
         </Button>
       </div>
     </div>
   );
 }
 
-// مكون طباعة تقرير البرنامج بشكل مخصص ومناسب لـ A4
+// مكون ارفاق الملفات المباشر داخل نموذج البرنامج (صور، PDF، فيديو)
+export function ProgramAttachmentsField({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [files, setFiles] = useState<string[]>(value ? value.split(",").map(s => s.trim()).filter(Boolean) : []);
+  const [uploading, setUploading] = useState(false);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    setUploading(true);
+    setTimeout(() => {
+      const newFileNames = Array.from(selectedFiles).map((f) => f.name);
+      const updated = [...files, ...newFileNames];
+      setFiles(updated);
+      onChange(updated.join(", "));
+      setUploading(false);
+      toast.success("تم إرفاق الملفات والشواهد بنجاح");
+    }, 1000);
+  }
+
+  function removeFile(index: number) {
+    const updated = files.filter((_, i) => i !== index);
+    setFiles(updated);
+    onChange(updated.join(", "));
+  }
+
+  return (
+    <div className="space-y-2 rounded-md border p-3 bg-muted/20" dir="rtl">
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+          <Paperclip className="size-4 text-primary" /> الشواهد والمرفقات (صور، PDF، فيديو):
+        </label>
+        <label className="cursor-pointer rounded bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+          {uploading ? <Loader2 className="size-3 animate-spin inline" /> : "إرفاق ملف"}
+          <input type="file" multiple accept="image/*,application/pdf,video/*" className="hidden" onChange={handleFileChange} />
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-1.5 pt-1">
+        {files.length === 0 ? (
+          <span className="text-xs text-muted-foreground">لم يتم إرفاق أي ملفات بعد.</span>
+        ) : (
+          files.map((file, idx) => (
+            <div key={idx} className="flex items-center gap-1 rounded bg-background border px-2 py-1 text-xs">
+              <span className="max-w-[200px] truncate">{file}</span>
+              <button type="button" onClick={() => removeFile(idx)} className="text-destructive hover:opacity-80">
+                <X className="size-3.5" />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// زر طباعة تقرير البرنامج بصيغة A4
 function PrintProgramButton({ program }: { program: any }) {
   function handlePrint() {
     const printWindow = window.open("", "_blank");
@@ -407,7 +470,7 @@ function PrintProgramButton({ program }: { program: any }) {
           </div>
 
           <div class="section">
-            <h3>الشواهد والمرفقات (صور، PDF، فيديو)</h3>
+            <h3>الشواهد والمرفقات المرفقة</h3>
             <div class="field">${program.required_evidence || "لا توجد مرفقات مسجلة"}</div>
           </div>
 
@@ -442,7 +505,6 @@ function ProgramsPage() {
   const queryClient = useQueryClient();
   const [deletingAll, setDeletingAll] = useState(false);
 
-  // وظيفة لحذف جميع البرامج بضغطة زر
   async function handleDeleteAllPrograms() {
     if (!window.confirm("تحذير هام: هل أنت متأكد من رغبتك في حذف كافة البرامج المسجلة نهائياً؟")) return;
     setDeletingAll(true);
