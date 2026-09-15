@@ -1,11 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-// قائمة الثيمات المتاحة مع ربط ألوان الـ HEX الخاصة بكل ثيم
+// إعداد اللون الثابت (الكحلي الملكي المطابق للصورة)
 export const THEMES = [
   { id: "royal", name: "الكحلي الملكي", primary: "#1F3A52", hover: "#152838" },
-  { id: "thaat", name: "ذات العنابي", primary: "#800020", hover: "#4A0012" },
-  { id: "sage", name: "الأخضر الهادئ", primary: "#2E5A44", hover: "#14281D" },
-  { id: "amber", name: "العنبري الدافئ", primary: "#C25900", hover: "#5C2B00" },
 ] as const;
 
 export type AppTheme = (typeof THEMES)[number]["id"];
@@ -22,7 +19,7 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // القراءة الابتدائية لمنع الوميض والجعل "الكحلي الملكي" افتراضياً
+  // القراءة الابتدائية لضمان الثبات المباشر وتجنب الوميض
   const [theme, setTheme] = useState<AppTheme>(() => {
     if (typeof window === "undefined") return "royal";
     try {
@@ -35,15 +32,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.dataset["theme"] = theme;
+    root.dataset["theme"] = "royal";
 
-    // استخراج بيانات ألوان الثيم الحالي وتطبيقها مباشرة كمتغيرات CSS
-    const currentThemeData = THEMES.find((t) => t.id === theme) ?? THEMES[0];
-    root.style.setProperty("--theme-primary", currentThemeData.primary);
-    root.style.setProperty("--theme-primary-hover", currentThemeData.hover);
+    // تثبيت ألوان الثيم الكحلي مباشرة على متغيرات CSS
+    root.style.setProperty("--theme-primary", "#1F3A52");
+    root.style.setProperty("--theme-primary-hover", "#152838");
 
     try {
-      localStorage.setItem("app-theme", theme);
+      localStorage.setItem("app-theme", "royal");
     } catch (e) {
       console.warn("Failed to save theme:", e);
     }
