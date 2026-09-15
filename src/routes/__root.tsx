@@ -85,10 +85,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      
+      // --- إعدادات تحويل الموقع إلى تطبيق (PWA) ---
+      { name: "theme-color", content: "#ffffff" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "الذات" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
+      
+      // --- روابط التثبيت والأيقونات للتطبيق ---
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "apple-touch-icon", href: "/IMG_3331.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -123,6 +133,13 @@ function RootComponent() {
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
+
+  // تسجيل الـ Service Worker لتمكين التثبيت تلقائياً
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
