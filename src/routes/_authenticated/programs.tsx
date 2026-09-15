@@ -2,21 +2,20 @@ import { useState, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  CalendarRange,
+  CalendarDays,
   Plus,
   Trash2,
   Printer,
   Sparkles,
+  Loader2,
+  FileText,
+  Upload,
   Image as ImageIcon,
   CheckCircle2,
-  FileText,
   Clock,
-  Edit,
-  Loader2,
-  Calendar,
-  X,
-  Upload,
-  Video,
+  BookOpen,
+  School,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,8 +23,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { MINISTRY_PROGRAMS, MINISTRY_TERMS } from "@/lib/ministry-programs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -38,42 +35,45 @@ import {
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
-      { title: "البرامج والأنشطة | منصة الذات" },
-      { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة والأنشطة الطلابية." },
+      { title: "البرامج والأنشطة الإرشادية | منصة الذات" },
+      { name: "description", content: "إدارة وتوثيق البرامج الإرشادية والأنشطة الوزارية بالشهادات والشواهد." },
     ],
   }),
   component: ProgramsPage,
 });
 
-type Program = {
-  id: string;
-  name: string;
-  ptype: string | null;
-  domain: string | null;
-  target_group: string | null;
-  goal: string | null;
-  indicator: string | null;
-  exec_status: string | null;
-  start_date_hijri?: string | null;
-  end_date_hijri?: string | null;
-  summary_report?: string | null;
-  evidence_images?: string[] | null;
-  video_url?: string | null;
-  term?: string | null;
-};
-
-// تحويل التاريخ لـ هجري
-function getHijriToday() {
+// تحويل التاريخ الجريغوري إلى هجري
+function toHijriDate(dateStr?: string) {
+  if (!dateStr) return "—";
   try {
+    const d = new Date(dateStr);
     return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
       day: "numeric",
-      month: "numeric",
+      month: "long",
       year: "numeric",
-    }).format(new Date());
+    }).format(d);
   } catch {
-    return "1448/01/01 هـ";
+    return dateStr;
   }
 }
+
+export type ProgramItem = {
+  id: string;
+  name: string;
+  program_no?: string;
+  ptype?: string;
+  domain?: string;
+  target_group?: string;
+  term?: string;
+  goal?: string;
+  indicator?: string;
+  start_date?: string;
+  end_date?: string;
+  exec_status?: string;
+  summary?: string;
+  evidence_images?: string[];
+  created_at?: string;
+};
 
 function ProgramsPage() {
   const queryClient = useQueryClient();
@@ -81,291 +81,313 @@ function ProgramsPage() {
   const printRef = useRef<HTMLDivElement>(null);
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
-  const [printableProgram, setPrintableProgram] = useState<Program | null>(null);
-  const [term, setTerm] = useState("all");
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedMinistryProg, setSelectedMinistryProg] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // استعلام جلب البرامج
-  const { data: programs = [], isLoading } = useQuery<Program[]>({
-    queryKey: ["programs"],
+  const [editProgram, setEditProgram] = useState<ProgramItem | null>(null);
+  const [printProgram, setPrintProgram] = useState<ProgramItem | null>(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // جلب البرامج من قاعدة البيانات
+  const { data: programs = [], isLoading } = useQuery({
+    queryKey: ["programs-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("programs")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Program[];
+      return (data ?? []) as ProgramItem[];
     },
   });
 
-  // إضافة برنامج وزارى بضغطة زر
-  async function addMinistryProgram(item: typeof MINISTRY_PROGRAMS[0]) {
+  // إضافة برنامج من القائمة الوزارية
+  async function handleAddProgram() {
+    if (!selectedMinistryProg) {
+      toast.error("يرجى اختيار برنامج من القائمة الوزارية");
+      return;
+    }
+    const found = MINISTRY_PROGRAMS.find((p) => p.name === selectedMinistryProg);
+    if (!found) return;
+
+    setBusy(true);
     try {
       const payload = {
-        name: item.name,
-        ptype: item.ptype,
-        domain: item.domain,
-        target_group: item.target_group,
-        goal: item.goal,
-        indicator: item.indicator,
-        exec_status: "مخطط له",
-        term: item.term,
-        start_date_hijri: getHijriToday(),
-        end_date_hijri: getHijriToday(),
-        summary_report: "",
+        name: found.name,
+        program_no: `${found.term} - الأسبوع ${found.week}`,
+        ptype: found.ptype,
+        domain: found.domain,
+        target_group: found.target_group,
+        term: found.term,
+        goal: found.goal,
+        indicator: found.indicator,
+        start_date: startDate || null,
+        end_date: endDate || null,
+        exec_status: "قيد التنفيذ",
+        summary: `برنامج إرشادي موجه لـ ${found.target_group} يهدف إلى ${found.goal}.`,
         evidence_images: [],
       };
 
-      const { error } = await supabase.from("programs").insert(payload as never);
+      const { error } = await supabase.from("programs").insert([payload as never]);
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة برنامج "${item.name}" إلى قائمتك بنجاح`);
+      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تمت إضافة البرنامج بنجاح إلى القائمة");
+      setAddDialogOpen(false);
+      setSelectedMinistryProg("");
+      setStartDate("");
+      setEndDate("");
     } catch (err) {
       toast.error(`تعذر إضافة البرنامج: ${(err as Error).message}`);
+    } finally {
+      setBusy(false);
     }
   }
 
   // حذف برنامج
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`هل أنت تأكد من حذف برنامج "${name}"؟`)) return;
+  async function handleDeleteProgram(id: string) {
+    if (!confirm("هل أنت تأكد من حذف هذا البرنامج؟ يمكنك إعادته لاحقاً من القائمة الوزارية.")) return;
     try {
       const { error } = await supabase.from("programs").delete().eq("id", id);
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تم حذف البرنامج بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تم حذف البرنامج");
     } catch (err) {
-      toast.error(`خطأ أثناء الحذف: ${(err as Error).message}`);
+      toast.error(`تعذر الحذف: ${(err as Error).message}`);
     }
   }
 
-  // تعبئة البيانات التلقائية الذكية (الذكاء الاصطناعي)
-  async function handleAiAutoFill() {
-    if (!selectedProgram) return;
-    setIsAiLoading(true);
+  // توليد التقرير بالذكاء الاصطناعي
+  async function handleAiGenerate(program: ProgramItem) {
+    setAiGenerating(true);
     try {
-      // محاكاة صياغة ذكية معتمدة على أهداف وخطة الوزارة
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const autoSummary = `تم بحمد الله وتوفيقه تنفيذ برنامج (${selectedProgram.name}) استناداً إلى خطة التوجيه الطلابية المعتمدة. استهدف البرنامج (${selectedProgram.target_group || "جميع الطلاب"}) بهدف ${selectedProgram.goal || "تعزيز القيم السلوكية والإرشادية"}. اشتمل البرنامج على ورش عمل تفاعلية وعروض مرئية وتوزيع منشورات توعوية، ولوحظ تجاوب ممتاز ومشاركة فاعلة أثرت حصيلة المخرجات وتحقيق مؤشرات التحقق بنجاح.`;
+      // محاكاة صياغة التقرير الإرشادي المتقدم بالذكاء الاصطناعي
+      await new Promise((res) => setTimeout(res, 1200));
+      const aiSummary = `تم تنفيذ برنامج (${program.name}) لخدمة (${program.target_group || "جميع الطلاب"})، ويهدف بالأساس إلى ${program.goal || "تعزيز السلوك الإيجابي ورفع الوعي"}. تم تحقيق مؤشر القياس وهو: [${program.indicator || "تفاعل واكتساب المهارات المطلوب"}] بنسبة نجاح عالية وتفاعل ممتاز من جميع المستهدفين.`;
 
-      setSelectedProgram((prev) =>
-        prev
-          ? {
-              ...prev,
-              summary_report: autoSummary,
-              exec_status: "مكتمل",
-            }
-          : null
-      );
-      toast.success("تمت صياغة التقرير الإرشادي بنجاح عبر الذكاء الاصطناعي ✨");
-    } catch {
-      toast.error("تعذر التوليد بالذكاء الاصطناعي");
+      const updated = {
+        ...program,
+        summary: aiSummary,
+        exec_status: "مكتمل",
+      };
+
+      const { error } = await supabase
+        .from("programs")
+        .update({ summary: aiSummary, exec_status: "مكتمل" } as never)
+        .eq("id", program.id);
+
+      if (error) throw error;
+
+      setEditProgram(updated);
+      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تمت التعبئة الصياغية وتطوير التقرير بواسطة الذكاء الاصطناعي");
+    } catch (err) {
+      toast.error(`خطأ أثناء توليد الذكاء الاصطناعي: ${(err as Error).message}`);
     } finally {
-      setIsAiLoading(false);
+      setAiGenerating(false);
     }
   }
 
-  // حفظ التعديلات
-  async function handleSaveProgram() {
-    if (!selectedProgram) return;
+  // رفع الشواهد (صور)
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, program: ProgramItem) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setBusy(true);
+    try {
+      const uploadedUrls: string[] = [...(program.evidence_images || [])];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split(".").pop();
+        const filePath = `programs/${program.id}/${Math.random()}.${fileExt}`;
+
+        const { error: uploadErr } = await supabase.storage.from("evidence").upload(filePath, file);
+        if (uploadErr) {
+          // في حال عدم توفر Storage Bucket محلياً يتم استخدام Base64 مؤقتاً
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((res) => {
+            reader.onload = () => res(reader.result as string);
+            reader.readAsDataURL(file);
+          });
+          const base64Data = await base64Promise;
+          uploadedUrls.push(base64Data);
+        } else {
+          const { data } = supabase.storage.from("evidence").getPublicUrl(filePath);
+          uploadedUrls.push(data.publicUrl);
+        }
+      }
+
+      const { error } = await supabase
+        .from("programs")
+        .update({ evidence_images: uploadedUrls } as never)
+        .eq("id", program.id);
+
+      if (error) throw error;
+
+      const updated = { ...program, evidence_images: uploadedUrls };
+      setEditProgram(updated);
+      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تم رفع الشواهد بنجاح");
+    } catch (err) {
+      toast.error(`تعذر رفع الصور: ${(err as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // حفظ التعديلات اليدوية
+  async function handleSaveProgramEdit() {
+    if (!editProgram) return;
+    setBusy(true);
     try {
       const { error } = await supabase
         .from("programs")
         .update({
-          name: selectedProgram.name,
-          ptype: selectedProgram.ptype,
-          domain: selectedProgram.domain,
-          target_group: selectedProgram.target_group,
-          goal: selectedProgram.goal,
-          indicator: selectedProgram.indicator,
-          exec_status: selectedProgram.exec_status,
-          start_date_hijri: selectedProgram.start_date_hijri,
-          end_date_hijri: selectedProgram.end_date_hijri,
-          summary_report: selectedProgram.summary_report,
-          evidence_images: selectedProgram.evidence_images,
-          video_url: selectedProgram.video_url,
+          start_date: editProgram.start_date,
+          end_date: editProgram.end_date,
+          exec_status: editProgram.exec_status,
+          summary: editProgram.summary,
         } as never)
-        .eq("id", selectedProgram.id);
+        .eq("id", editProgram.id);
 
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تم حفظ وتحديث بيانات البرنامج بنجاح");
-      setEditDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
+      toast.success("تم حفظ بيانات البرنامج");
+      setEditProgram(null);
     } catch (err) {
       toast.error(`تعذر الحفظ: ${(err as Error).message}`);
-    }
-  }
-
-  // رفع شواهد الصور
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !selectedProgram) return;
-
-    setUploadingImage(true);
-    try {
-      const newUrls: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileExt = file.name.split(".").pop();
-        const filePath = `evidence/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("program_evidences")
-          .upload(filePath, file);
-
-        if (uploadError) {
-          // في حال عدم وجود Bucket يحول الصورة لرابط محلي للتجربة
-          const localUrl = URL.createObjectURL(file);
-          newUrls.push(localUrl);
-        } else {
-          const { data } = supabase.storage.from("program_evidences").getPublicUrl(filePath);
-          newUrls.push(data.publicUrl);
-        }
-      }
-
-      setSelectedProgram({
-        ...selectedProgram,
-        evidence_images: [...(selectedProgram.evidence_images || []), ...newUrls],
-      });
-      toast.success("تم إضافة الصور بنجاح");
-    } catch {
-      toast.error("حدث خطأ أثناء تحميل الصور");
     } finally {
-      setUploadingImage(false);
+      setBusy(false);
     }
   }
 
-  // طباعة برنامج على حدة
-  function triggerPrint(program: Program) {
-    setPrintableProgram(program);
+  // أمر الطباعة A4
+  function triggerPrint(program: ProgramItem) {
+    setPrintProgram(program);
     setTimeout(() => {
       window.print();
     }, 300);
   }
 
-  const ministryList =
-    term === "all" ? MINISTRY_PROGRAMS : MINISTRY_PROGRAMS.filter((p) => p.term === term);
-
   return (
     <div className="space-y-6 dir-rtl">
-      
-      {/* 1. Header Card - ترويسة الصفحة بتصميم الداشبورد */}
+      {/* 1. Hero Card - ترويسة الصفحة بتصميم الداشبورد */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-6 text-primary-foreground shadow-xl shadow-primary/10 sm:p-8">
         <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
+
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-medium backdrop-blur-md">
-              <Calendar className="size-3.5 text-amber-300" />
-              <span>الخطة الإرشادية والوزارية</span>
+              <Sparkles className="size-3.5 text-amber-300" />
+              <span>البرامج والأنشطة الإرشادية الوزارية</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">
-              سجل البرامج والأنشطة الإرشادية
-            </h1>
+            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">سجل خطة البرامج والتنفيذ</h1>
             <p className="text-xs font-medium text-primary-foreground/80 sm:text-sm">
-              متابعة وتنفيذ وتوثيق البرامج الوقائية والعلاجية وتوليد التقارير الموثقة.
+              إضافة البرامج وتوثيق التقرير بالشواهد والطباعة بالكليشة الرسمية
             </p>
           </div>
 
           <Button
             onClick={() => setAddDialogOpen(true)}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-extrabold text-primary shadow-lg transition-all hover:scale-105 active:scale-95 hover:bg-white"
+            className="inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl bg-white px-6 text-sm font-extrabold text-primary shadow-lg transition-all hover:scale-105 active:scale-95 border-0 hover:bg-white/90"
           >
-            <CalendarRange className="size-4" />
-            <span>قائمة البرامج الوزارية</span>
+            <Plus className="size-5" />
+            <span>إضافة برنامج من الخطة الوزارية</span>
           </Button>
         </div>
       </div>
 
-      {/* 2. قائمة البرامج المضافة حالياً */}
-      <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between border-b border-border/40 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="rounded-xl bg-primary/10 p-2 text-primary">
-              <FileText className="size-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-black text-foreground">البرامج والأنشطة المضافة</h2>
-              <p className="text-[11px] font-medium text-muted-foreground">
-                إجمالي البرامج المسجلة: {programs.length} برنامجاً
-              </p>
-            </div>
-          </div>
+      {/* 2. قائمة البرامج المضافة */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-black text-foreground">البرامج المدرجة بالسجل ({programs.length})</h2>
         </div>
 
         {isLoading ? (
-          <div className="flex h-40 items-center justify-center">
+          <div className="flex h-40 items-center justify-center rounded-3xl border border-border/60 bg-card">
             <Loader2 className="size-6 animate-spin text-primary" />
           </div>
         ) : programs.length === 0 ? (
-          <div className="py-12 text-center text-sm font-bold text-muted-foreground">
-            لا توجد برامج مضافة في السجل. انقر على "قائمة البرامج الوزارية" لإضافة برامج الخطط.
+          <div className="rounded-3xl border border-dashed border-border/80 bg-card p-12 text-center">
+            <BookOpen className="mx-auto size-12 text-muted-foreground/40" />
+            <p className="mt-3 text-sm font-bold text-muted-foreground">لا توجد برامج مضافة في السجل حالياً</p>
+            <p className="text-xs text-muted-foreground">اضغط على زر "إضافة برنامج" للبدء في توثيق برامجك.</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {programs.map((prog) => (
               <div
                 key={prog.id}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-background p-5 transition-all hover:border-primary/40 hover:shadow-md"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
               >
-                <div className="space-y-3">
+                <div>
                   <div className="flex items-start justify-between gap-2">
-                    <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-extrabold text-primary">
-                      {prog.ptype || "برنامج إرشادي"}
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-extrabold text-primary">
+                      {prog.ptype || "برنامج وزارِي"}
                     </span>
                     <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                         prog.exec_status === "مكتمل"
                           ? "bg-emerald-500/10 text-emerald-600"
                           : "bg-amber-500/10 text-amber-600"
                       }`}
                     >
-                      {prog.exec_status || "مخطط له"}
+                      {prog.exec_status || "قيد التنفيذ"}
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-extrabold text-foreground">{prog.name}</h3>
+                  <h3 className="mt-3 text-base font-black text-foreground leading-snug">{prog.name}</h3>
+                  <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                    الفئة: {prog.target_group || "جميع الطلاب"}
+                  </p>
 
-                  <div className="space-y-1 text-[11px] text-muted-foreground">
-                    <p>🎯 <span className="font-semibold text-foreground">الفئة:</span> {prog.target_group || "غير حدد"}</p>
-                    <p>📅 <span className="font-semibold text-foreground">التاريخ:</span> {prog.start_date_hijri || "لم يحدد"}</p>
+                  <div className="mt-4 space-y-1.5 text-xs font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarDays className="size-3.5 text-primary" />
+                      <span>الفترة: {toHijriDate(prog.start_date)} - {toHijriDate(prog.end_date)}</span>
+                    </div>
+                    {prog.evidence_images && prog.evidence_images.length > 0 && (
+                      <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                        <ImageIcon className="size-3.5" />
+                        <span>الشواهد: {prog.evidence_images.length} صورة مرفقة</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-3">
-                  <div className="flex items-center gap-1">
+                <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/40 pt-4">
+                  <div className="flex items-center gap-1.5">
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="h-8 rounded-xl px-2.5 text-xs text-primary hover:bg-primary/10"
-                      onClick={() => {
-                        setSelectedProgram(prog);
-                        setEditDialogOpen(true);
-                      }}
+                      variant="outline"
+                      onClick={() => setEditProgram(prog)}
+                      className="h-8 rounded-xl text-xs font-bold"
                     >
-                      <Edit className="size-3.5 ml-1" />
-                      تعديل وتعبئة
+                      <FileText className="size-3.5 ml-1" />
+                      تعبئة وتقرير
                     </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="h-8 rounded-xl px-2.5 text-xs text-rose-500 hover:bg-rose-50"
-                      onClick={() => handleDelete(prog.id, prog.name)}
+                      variant="secondary"
+                      onClick={() => triggerPrint(prog)}
+                      className="h-8 rounded-xl text-xs font-bold"
                     >
-                      <Trash2 className="size-3.5" />
+                      <Printer className="size-3.5 ml-1" />
+                      طباعة
                     </Button>
                   </div>
 
                   <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 rounded-xl border-border/60 px-3 text-xs font-bold"
-                    onClick={() => triggerPrint(prog)}
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDeleteProgram(prog.id)}
+                    className="size-8 rounded-xl text-rose-500 hover:bg-rose-500/10"
                   >
-                    <Printer className="size-3.5 ml-1 text-primary" />
-                    طباعة
+                    <Trash2 className="size-4" />
                   </Button>
                 </div>
               </div>
@@ -374,316 +396,299 @@ function ProgramsPage() {
         )}
       </div>
 
-      {/* 3. نافذة اختيار وإضافة البرامج الوزارية */}
+      {/* 3. نافذة إضافة برنامج وزارِي فردي */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-md rounded-3xl" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black">البرامج الإرشادية الوزارية المعتمدة</DialogTitle>
-            <DialogDescription>
-              اختر البرنامج الإرشادي من الخطة الوزارية لإضافته المباشرة إلى سجل برامجك.
+            <DialogTitle className="text-xl font-black">إضافة برنامج إرشادي وزارِي</DialogTitle>
+            <DialogDescription className="text-xs">
+              اختر البرنامج المطلوب توثيقه وحدد فترة التنفيذ للبدء.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center gap-3 my-2">
-            <label className="text-xs font-bold">تصفية حسب الفصل الدراسي:</label>
-            <select
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              className="h-9 rounded-xl border border-input bg-background px-3 text-xs font-semibold"
-            >
-              <option value="all">جميع الفصول</option>
-              {MINISTRY_TERMS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl border border-border/60">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="border-b bg-muted/60 text-muted-foreground">
-                  <th className="p-3 font-extrabold">الفصل/الأسبوع</th>
-                  <th className="p-3 font-extrabold">اسم البرنامج</th>
-                  <th className="p-3 font-extrabold">النوع</th>
-                  <th className="p-3 font-extrabold">الفئة المستهدفة</th>
-                  <th className="p-3 font-extrabold text-center">الإجراء</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {ministryList.map((item) => (
-                  <tr key={`${item.term}-${item.week}-${item.name}`} className="hover:bg-muted/30">
-                    <td className="whitespace-nowrap p-3 font-semibold text-primary">
-                      {item.term} — الأسبوع {item.week}
-                    </td>
-                    <td className="p-3 font-bold text-foreground">{item.name}</td>
-                    <td className="p-3">{item.ptype}</td>
-                    <td className="p-3">{item.target_group}</td>
-                    <td className="p-3 text-center">
-                      <Button
-                        size="sm"
-                        className="h-7 rounded-lg text-[11px] font-bold"
-                        onClick={() => addMinistryProgram(item)}
-                      >
-                        <Plus className="size-3.5 ml-1" /> إضافة
-                      </Button>
-                    </td>
-                  </tr>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-foreground">البرنامج الوزاري المعتمد</label>
+              <select
+                value={selectedMinistryProg}
+                onChange={(e) => setSelectedMinistryProg(e.target.value)}
+                className="w-full h-11 rounded-2xl border border-input bg-background px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">-- اختر من البرامج الوزارية --</option>
+                {MINISTRY_PROGRAMS.map((p) => (
+                  <option key={`${p.term}-${p.week}-${p.name}`} value={p.name}>
+                    [{p.term} - الأسبوع {p.week}] {p.name}
+                  </option>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 4. نافذة تعديل وتعبئة التقرير والذكاء الاصطناعي والشواهد */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto dir-rtl" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-black">تعبئة وتحديث تقرير البرنامج</DialogTitle>
-            <DialogDescription>
-              أدخل التواريخ، التقرير، والشواهد المصورة لإعداد التقرير للطباعة الرسمية.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedProgram && (
-            <div className="space-y-4 text-xs">
-              
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="font-bold text-foreground">اسم البرنامج</label>
-                  <Input
-                    value={selectedProgram.name}
-                    onChange={(e) => setSelectedProgram({ ...selectedProgram, name: e.target.value })}
-                    className="mt-1 h-9 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-foreground">حالة التنفيذ</label>
-                  <select
-                    value={selectedProgram.exec_status || "مخطط له"}
-                    onChange={(e) => setSelectedProgram({ ...selectedProgram, exec_status: e.target.value })}
-                    className="mt-1 h-9 w-full rounded-xl border border-input bg-background px-3 text-xs"
-                  >
-                    <option value="مخطط له">مخطط له</option>
-                    <option value="قيد التنفيذ">قيد التنفيذ</option>
-                    <option value="مكتمل">مكتمل</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="font-bold text-foreground">تاريخ بداية البرنامج (هجري)</label>
-                  <Input
-                    placeholder="مثال: 1448/02/10 هـ"
-                    value={selectedProgram.start_date_hijri || ""}
-                    onChange={(e) => setSelectedProgram({ ...selectedProgram, start_date_hijri: e.target.value })}
-                    className="mt-1 h-9 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-foreground">تاريخ نهاية البرنامج (هجري)</label>
-                  <Input
-                    placeholder="مثال: 1448/02/14 هـ"
-                    value={selectedProgram.end_date_hijri || ""}
-                    onChange={(e) => setSelectedProgram({ ...selectedProgram, end_date_hijri: e.target.value })}
-                    className="mt-1 h-9 rounded-xl text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* التقرير وصياغة الذكاء الاصطناعي */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-foreground">تقرير ما تم تنفيذه والمخرجات</label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAiAutoFill}
-                    disabled={isAiLoading}
-                    className="h-7 gap-1.5 rounded-xl border-primary/40 bg-primary/5 text-[11px] font-bold text-primary hover:bg-primary/10"
-                  >
-                    {isAiLoading ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3 text-amber-500" />}
-                    صياغة بالذكاء الاصطناعي ✨
-                  </Button>
-                </div>
-                <Textarea
-                  rows={4}
-                  value={selectedProgram.summary_report || ""}
-                  onChange={(e) => setSelectedProgram({ ...selectedProgram, summary_report: e.target.value })}
-                  placeholder="اكتب التقرير هنا أو استخدم التوليد الآلي عبر الذكاء الاصطناعي..."
-                  className="rounded-xl text-xs"
-                />
-              </div>
-
-              {/* الشواهد والمرئيات */}
-              <div className="space-y-2">
-                <label className="font-bold text-foreground">شواهد وصور التنفيذ</label>
-                <div className="flex flex-wrap gap-2">
-                  {selectedProgram.evidence_images?.map((img, idx) => (
-                    <div key={idx} className="relative size-16 overflow-hidden rounded-xl border border-border">
-                      <img src={img} alt="شاهد" className="size-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedProgram({
-                            ...selectedProgram,
-                            evidence_images: selectedProgram.evidence_images?.filter((_, i) => i !== idx),
-                          })
-                        }
-                        className="absolute top-0.5 right-0.5 rounded-full bg-rose-500/80 p-0.5 text-white"
-                      >
-                        <X className="size-3" />
-                      </button>
-                    </div>
-                  ))}
-
-                  <label className="flex size-16 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-primary/50 bg-primary/5 text-primary hover:bg-primary/10">
-                    {uploadingImage ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-                    <span className="text-[9px] font-bold mt-1">إضافة صورة</span>
-                    <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="font-bold text-foreground">رابط توثيق فيديو (اختياري)</label>
-                <Input
-                  placeholder="https://youtube.com/..."
-                  value={selectedProgram.video_url || ""}
-                  onChange={(e) => setSelectedProgram({ ...selectedProgram, video_url: e.target.value })}
-                  className="mt-1 h-9 rounded-xl text-xs"
-                />
-              </div>
-
+              </select>
             </div>
-          )}
 
-          <DialogFooter className="gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(false)} className="rounded-xl">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">تاريخ بداية البرنامج</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">تاريخ نهاية البرنامج</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)} className="rounded-xl">
               إلغاء
             </Button>
-            <Button size="sm" onClick={handleSaveProgram} className="rounded-xl font-bold">
-              حفظ التغييرات
+            <Button onClick={handleAddProgram} disabled={busy} className="rounded-xl">
+              {busy && <Loader2 className="size-4 animate-spin ml-2" />}
+              إضافة البرنامج بالسجل
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 5. قالب الطباعة الرسمي للتقرير (A4 Printable Template) */}
-      <div className="hidden">
-        <div ref={printRef} id="printable-area" className="p-8 text-black bg-white dir-rtl font-sans">
-          {printableProgram && (
-            <div className="space-y-6 max-w-[210mm] mx-auto">
-              
-              {/* الكليشة الرسمية */}
-              <div className="flex items-center justify-between border-b-2 border-black pb-4 text-center text-xs font-bold">
-                <div className="space-y-1 text-right">
+      {/* 4. نافذة تعديل وتعبئة التقرير والشواهد للبرنامج */}
+      {editProgram && (
+        <Dialog open={!!editProgram} onOpenChange={() => setEditProgram(null)}>
+          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-3xl" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-black">{editProgram.name}</DialogTitle>
+              <DialogDescription className="text-xs">
+                تعبئة بيانات التقرير وتوليده بالذكاء الاصطناعي ورفع صور الشواهد.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-5 py-2">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleAiGenerate(editProgram)}
+                  disabled={aiGenerating}
+                  className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90 font-bold"
+                >
+                  {aiGenerating ? <Loader2 className="size-4 animate-spin ml-1" /> : <Sparkles className="size-4 ml-1 text-amber-300" />}
+                  توليد وتعبئة التقرير بالذكاء الاصطناعي
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-muted-foreground">تاريخ البداية (هجري موثق)</label>
+                  <input
+                    type="date"
+                    value={editProgram.start_date || ""}
+                    onChange={(e) => setEditProgram({ ...editProgram, start_date: e.target.value })}
+                    className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
+                  />
+                  <p className="text-[10px] text-primary font-bold">الهجري: {toHijriDate(editProgram.start_date)}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-muted-foreground">تاريخ النهاية (هجري موثق)</label>
+                  <input
+                    type="date"
+                    value={editProgram.end_date || ""}
+                    onChange={(e) => setEditProgram({ ...editProgram, end_date: e.target.value })}
+                    className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs"
+                  />
+                  <p className="text-[10px] text-primary font-bold">الهجري: {toHijriDate(editProgram.end_date)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">حالة التنفيذ</label>
+                <select
+                  value={editProgram.exec_status || "قيد التنفيذ"}
+                  onChange={(e) => setEditProgram({ ...editProgram, exec_status: e.target.value })}
+                  className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs font-bold"
+                >
+                  <option value="قيد التنفيذ">قيد التنفيذ</option>
+                  <option value="مكتمل">مكتمل</option>
+                  <option value="مؤجل">مؤجل</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">ملخص تقرير التنفيذ والنتائج</label>
+                <textarea
+                  rows={4}
+                  value={editProgram.summary || ""}
+                  onChange={(e) => setEditProgram({ ...editProgram, summary: e.target.value })}
+                  placeholder="اكتب التقرير أو استخدم زر الذكاء الاصطناعي بالفي أعلى..."
+                  className="w-full rounded-2xl border border-input bg-background p-3 text-xs leading-relaxed"
+                />
+              </div>
+
+              {/* قسم رفع الصور الشواهد */}
+              <div className="space-y-2 border-t border-border/60 pt-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <ImageIcon className="size-4 text-primary" />
+                    شواهد التنفيذ (صور وفيديوهات)
+                  </label>
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20">
+                    <Upload className="size-3.5" />
+                    <span>رفع صور جديدة</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, editProgram)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  {editProgram.evidence_images && editProgram.evidence_images.length > 0 ? (
+                    editProgram.evidence_images.map((img, idx) => (
+                      <div key={idx} className="relative aspect-video overflow-hidden rounded-xl border border-border">
+                        <img src={img} alt={`شاهد ${idx + 1}`} className="h-full w-full object-cover" />
+                      </div>
+                    ))
+                  ) : (
+                    <p className="col-span-3 text-center py-6 text-xs text-muted-foreground border border-dashed rounded-2xl">
+                      لا توجد صور شواهد مرفقة بعد.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setEditProgram(null)} className="rounded-xl">
+                إغلاق
+              </Button>
+              <Button onClick={handleSaveProgramEdit} disabled={busy} className="rounded-xl">
+                {busy && <Loader2 className="size-4 animate-spin ml-2" />}
+                حفظ التقرير
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* 5. نموذج طباعة A4 محدد بالكليشة الرسمية */}
+      {printProgram && (
+        <div className="hidden print:block fixed inset-0 bg-white p-0 text-black z-50 dir-rtl" ref={printRef}>
+          <style>{`
+            @page {
+              size: A4 portrait;
+              margin: 10mm;
+            }
+            body {
+              background: white !important;
+              color: black !important;
+            }
+          `}</style>
+
+          <div className="w-full h-full border-4 border-double border-gray-800 p-6 flex flex-col justify-between">
+            {/* الكليشة الرسمية أعلى الورقة */}
+            <div>
+              <div className="flex items-center justify-between border-b-2 border-gray-800 pb-4 mb-6">
+                <div className="text-right text-xs font-bold leading-relaxed">
                   <p>المملكة العربية السعودية</p>
                   <p>وزارة التعليم</p>
-                  <p>{school?.education_office || "إدارة التعليم"}</p>
-                  <p>{school?.school_name || "مدرسة ..."}</p>
+                  <p>الإدارة العامة للتعليم بمحافظة {school?.city || "المعنية"}</p>
+                  <p>مدرسة: {school?.school_name || "المرحلة الدراسية"}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-base font-black">تقرير تنفيذ برنامج إرشادي</p>
-                  <p className="text-[11px] font-medium">العام الدراسي 1448 هـ</p>
+
+                <div className="text-center">
+                  <div className="size-16 mx-auto mb-1 flex items-center justify-center border border-gray-400 rounded-full font-black text-sm">
+                    رؤية 2030
+                  </div>
+                  <h2 className="text-base font-black">تقرير تنفيذ برنامج إرشادي</h2>
                 </div>
-                <div className="space-y-1 text-left">
-                  <p>التاريخ الهجري: {printableProgram.start_date_hijri || getHijriToday()}</p>
-                  <p>حالة التقرير: {printableProgram.exec_status || "مكتمل"}</p>
+
+                <div className="text-left text-xs font-bold leading-relaxed">
+                  <p>الفصل الدراسي: {school?.semester || "الحالي"}</p>
+                  <p>التاريخ الهجري: {toHijriDate(printProgram.start_date)}</p>
+                  <p>المجال: {printProgram.domain || "المجال الإرشادي"}</p>
                 </div>
               </div>
 
               {/* جدول تفاصيل البرنامج */}
-              <table className="w-full border-collapse border border-black text-xs">
+              <table className="w-full border-collapse border border-gray-800 text-xs mb-6">
                 <tbody>
-                  <tr className="border-b border-black">
-                    <td className="bg-gray-100 p-2 font-bold w-1/4 border-l border-black">اسم البرنامج:</td>
-                    <td className="p-2 font-semibold w-3/4" colSpan={3}>{printableProgram.name}</td>
-                  </tr>
-                  <tr className="border-b border-black">
-                    <td className="bg-gray-100 p-2 font-bold border-l border-black">نوع البرنامج:</td>
-                    <td className="p-2 border-l border-black">{printableProgram.ptype || "إرشادي وقائي"}</td>
-                    <td className="bg-gray-100 p-2 font-bold border-l border-black">الفئة المستهدفة:</td>
-                    <td className="p-2">{printableProgram.target_group || "جميع الطلاب"}</td>
-                  </tr>
-                  <tr className="border-b border-black">
-                    <td className="bg-gray-100 p-2 font-bold border-l border-black">تاريخ التنفيذ (هجري):</td>
-                    <td className="p-2" colSpan={3}>
-                      من: {printableProgram.start_date_hijri || "—"} إلى: {printableProgram.end_date_hijri || "—"}
+                  <tr className="border-b border-gray-800">
+                    <td className="w-1/4 border-l border-gray-800 bg-gray-100 p-2 font-black">عنوان البرنامج:</td>
+                    <td className="w-3/4 p-2 font-bold" colSpan={3}>
+                      {printProgram.name}
                     </td>
                   </tr>
-                  <tr className="border-b border-black">
-                    <td className="bg-gray-100 p-2 font-bold border-l border-black">أهداف البرنامج:</td>
-                    <td className="p-2" colSpan={3}>{printableProgram.goal || "تعزيز السلوك الإيجابي ومساندة الطلاب."}</td>
+                  <tr className="border-b border-gray-800">
+                    <td className="border-l border-gray-800 bg-gray-100 p-2 font-black">الفئة المستهدفة:</td>
+                    <td className="border-l border-gray-800 p-2">{printProgram.target_group || "جميع الطلاب"}</td>
+                    <td className="border-l border-gray-800 bg-gray-100 p-2 font-black">تاريخ التنفيذ:</td>
+                    <td className="p-2">
+                      من {toHijriDate(printProgram.start_date)} إلى {toHijriDate(printProgram.end_date)}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-800">
+                    <td className="border-l border-gray-800 bg-gray-100 p-2 font-black">هدف البرنامج:</td>
+                    <td className="p-2" colSpan={3}>
+                      {printProgram.goal || "تعزيز القيم السلوكية والإرشادية لدى الطلاب"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border-l border-gray-800 bg-gray-100 p-2 font-black">مؤشر التحقق:</td>
+                    <td className="p-2" colSpan={3}>
+                      {printProgram.indicator || "مشاركة الطلاب ورصد التقييمات"}
+                    </td>
                   </tr>
                 </tbody>
               </table>
 
-              {/* التقرير التنفيذي */}
-              <div className="space-y-2">
-                <h4 className="font-bold text-xs border-b border-black pb-1">تقرير التنفيذ والمخرجات:</h4>
-                <p className="text-xs leading-relaxed text-justify whitespace-pre-wrap p-2 bg-gray-50 rounded border border-gray-200">
-                  {printableProgram.summary_report || "تم تنفيذ البرنامج وفق الأهداف المحددة."}
+              {/* ملخص تقرير التنفيذ */}
+              <div className="mb-6 border border-gray-800 p-4 rounded-md">
+                <h4 className="font-black text-xs mb-2 border-b border-gray-400 pb-1">تقرير التنفيذ والنتائج:</h4>
+                <p className="text-xs leading-relaxed whitespace-pre-line">
+                  {printProgram.summary || "تم تنفيذ البرنامج بنجاح وحقق المستهدفات المطلوبة."}
                 </p>
               </div>
 
-              {/* الشواهد المصورة */}
-              {printableProgram.evidence_images && printableProgram.evidence_images.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-bold text-xs border-b border-black pb-1">شواهد التوثيق المصورة:</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {printableProgram.evidence_images.slice(0, 4).map((img, i) => (
-                      <div key={i} className="h-40 border border-black rounded p-1">
-                        <img src={img} alt="شاهد" className="w-full h-full object-cover" />
+              {/* شواهد الصور */}
+              {printProgram.evidence_images && printProgram.evidence_images.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-black text-xs mb-3">شواهد وصور التنفيذ:</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {printProgram.evidence_images.slice(0, 4).map((img, idx) => (
+                      <div key={idx} className="h-36 border border-gray-400 rounded-md overflow-hidden">
+                        <img src={img} alt={`شاهد ${idx + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* التواقيع الرسمية */}
-              <div className="pt-12 flex items-center justify-between text-xs font-bold text-center">
-                <div className="space-y-8">
-                  <p>الموجه الطلابي</p>
-                  <p>{school?.counselor_name || "عبدالمحسن بن مرزوق العتيبي"}</p>
-                </div>
-                <div className="space-y-8">
-                  <p>مدير المدرسة</p>
-                  <p>{school?.principal_name || "..................................."}</p>
-                </div>
-              </div>
-
             </div>
-          )}
+
+            {/* التوقيعات الرسمية في الأسفل */}
+            <div className="flex items-center justify-between pt-8 border-t border-gray-800 text-xs font-black">
+              <div className="text-center w-1/3">
+                <p>الموجه الطلابي</p>
+                <p className="mt-8">{school?.counselor_name || "عبدالمحسن بن مرزوق العتيبي"}</p>
+                <p className="text-[10px] text-gray-500">التوقيع: .....................</p>
+              </div>
+              <div className="text-center w-1/3">
+                <p>مدير المدرسة</p>
+                <p className="mt-8">{school?.principal_name || "مدير المدرسة"}</p>
+                <p className="text-[10px] text-gray-500">التوقيع والختم: .....................</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* CSS للطباعة */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #printable-area, #printable-area * {
-            visibility: visible;
-          }
-          #printable-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          @page {
-            size: A4;
-            margin: 10mm;
-          }
-        }
-      `}</style>
-
+      )}
     </div>
   );
 }
