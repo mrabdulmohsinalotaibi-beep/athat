@@ -1,61 +1,27 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-// إعداد اللون الثابت (الكحلي الملكي المطابق للصورة)
-export const THEMES = [
-  { id: "royal", name: "الكحلي الملكي", primary: "#1F3A52", hover: "#152838" },
-] as const;
+export type SubscriptionPlan = "free" | "pro";
+export type Subscription = { plan: SubscriptionPlan; status: string; cases_limit: number };
 
-export type AppTheme = (typeof THEMES)[number]["id"];
-
-export function isAppTheme(value: unknown): value is AppTheme {
-  return typeof value === "string" && THEMES.some((t) => t.id === value);
-}
-
-type ThemeContextType = {
-  theme: AppTheme;
-  setTheme: (theme: AppTheme) => void;
-};
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  // القراءة الابتدائية لضمان الثبات المباشر وتجنب الوميض
-  const [theme, setTheme] = useState<AppTheme>(() => {
-    if (typeof window === "undefined") return "royal";
-    try {
-      const saved = localStorage.getItem("app-theme");
-      return isAppTheme(saved) ? saved : "royal";
-    } catch {
-      return "royal";
-    }
+export function useSubscription() {
+  return useQuery({
+    queryKey: ["subscription"],
+    queryFn: async (): Promise<Subscription> => {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) return { plan: "free", status: "active", cases_limit: 5 };
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("plan, status, cases_limit")
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return data as Subscription;
+      const fallback: Subscription = { plan: "free", status: "active", cases_limit: 5 };
+      const { error: insertError } = await supabase.from("subscriptions").insert({ user_id: userId } as never);
+      if (insertError && insertError.code !== "23505") throw insertError;
+      return fallback;
+    },
+    staleTime: 60_000,
   });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.dataset["theme"] = "royal";
-
-    // تثبيت ألوان الثيم الكحلي مباشرة على متغيرات CSS
-    root.style.setProperty("--theme-primary", "#1F3A52");
-    root.style.setProperty("--theme-primary-hover", "#152838");
-
-    try {
-      localStorage.setItem("app-theme", "royal");
-    } catch (e) {
-      console.warn("Failed to save theme:", e);
-    }
-  }, [theme]);
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
-  return context;
 }
