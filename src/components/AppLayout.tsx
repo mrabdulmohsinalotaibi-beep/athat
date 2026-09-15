@@ -56,7 +56,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { setTheme } = useTheme();
 
   useEffect(() => {
-    if (isAppTheme(school?.theme)) setTheme(school.theme);
+    if (school?.theme && isAppTheme(school.theme)) setTheme(school.theme);
   }, [school?.theme, setTheme]);
 
   useEffect(() => {
