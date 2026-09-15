@@ -111,7 +111,7 @@ function Dashboard() {
       value: students.length, 
       icon: Users, 
       to: "/students" as const, 
-      gradient: "from-blue-500/20 to-indigo-500/10",
+      gradient: "from-blue-500/10 via-indigo-500/5 to-transparent",
       iconColor: "text-blue-500",
       badge: "طالب" 
     },
@@ -120,7 +120,7 @@ function Dashboard() {
       value: activeCases.length, 
       icon: HeartHandshake, 
       to: "/cases" as const, 
-      gradient: "from-rose-500/20 to-pink-500/10",
+      gradient: "from-rose-500/10 via-pink-500/5 to-transparent",
       iconColor: "text-rose-500",
       badge: "متابعة" 
     },
@@ -129,7 +129,7 @@ function Dashboard() {
       value: todayAbsence.length, 
       icon: CalendarCheck, 
       to: "/attendance" as const, 
-      gradient: "from-amber-500/20 to-orange-500/10",
+      gradient: "from-amber-500/10 via-orange-500/5 to-transparent",
       iconColor: "text-amber-500",
       badge: "اليوم" 
     },
@@ -138,7 +138,7 @@ function Dashboard() {
       value: upcoming.length, 
       icon: CalendarDays, 
       to: "/calendar" as const, 
-      gradient: "from-emerald-500/20 to-teal-500/10",
+      gradient: "from-emerald-500/10 via-teal-500/5 to-transparent",
       iconColor: "text-emerald-500",
       badge: "قريباً" 
     },
@@ -147,7 +147,7 @@ function Dashboard() {
       value: behavior.length, 
       icon: ShieldAlert, 
       to: "/behavior" as const, 
-      gradient: "from-violet-500/20 to-purple-500/10",
+      gradient: "from-violet-500/10 via-purple-500/5 to-transparent",
       iconColor: "text-violet-500",
       badge: "سجل" 
     },
@@ -156,7 +156,7 @@ function Dashboard() {
       value: donePrograms.length, 
       icon: CheckCircle2, 
       to: "/programs" as const, 
-      gradient: "from-cyan-500/20 to-blue-500/10",
+      gradient: "from-cyan-500/10 via-blue-500/5 to-transparent",
       iconColor: "text-cyan-500",
       badge: "مكتمل" 
     },
@@ -195,16 +195,16 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6 dir-rtl">
+    <div className="space-y-6 dir-rtl font-sans">
       
-      {/* 1. Hero Card - تصميم عصري شبابي بتدرج ناعم */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-6 text-primary-foreground shadow-xl shadow-primary/10 sm:p-8">
+      {/* 1. Hero Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/95 to-primary/80 p-6 text-primary-foreground shadow-xl shadow-primary/10 sm:p-8">
         <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-medium backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold backdrop-blur-md">
               <Sparkles className="size-3.5 text-amber-300" />
               <span>مساحة العمل اليومية</span>
             </div>
@@ -226,32 +226,32 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* 2. Quick Action Pills - أزرار سريعة شبابية */}
-      <div className="flex flex-wrap items-center gap-2.5">
+      {/* 2. Quick Actions Banner (منسقة بتصميم احترافي في صف واحد متجاوب) */}
+      <div className="flex flex-wrap items-center justify-start gap-3 py-1">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
             <Link
               key={action.label}
               to={action.to}
-              className="group inline-flex items-center gap-2 rounded-2xl border border-border/60 bg-card px-4 py-2.5 text-xs font-bold text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-md"
+              className="group flex flex-1 sm:flex-none items-center justify-center gap-2.5 rounded-full border border-border/60 bg-card px-4 py-2.5 text-xs font-bold text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-card hover:shadow-md"
             >
-              <div className="rounded-lg bg-primary/10 p-1 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <div className="flex size-7 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                 <Icon className="size-3.5" />
               </div>
-              <span>{action.label}</span>
+              <span className="whitespace-nowrap">{action.label}</span>
             </Link>
           );
         })}
       </div>
 
-      {/* 3. Stat Grid - بطاقات كروت حديثة لمراحل الإحصائيات */}
+      {/* 3. Stat Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map(({ label, value, icon: Icon, to, gradient, iconColor, badge }) => (
           <Link
             key={label}
             to={to}
-            className={`group relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br ${gradient} p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl`}
+            className={`group relative overflow-hidden rounded-3xl border border-border/60 bg-card bg-gradient-to-br ${gradient} p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg`}
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold text-muted-foreground">{label}</span>
@@ -272,7 +272,7 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* 4. KPI Performance Meter - قسم المؤشرات بحلقات قياس برتقالية وعصرية */}
+      {/* 4. KPI Performance Meter */}
       <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between border-b border-border/40 pb-4">
           <div className="flex items-center gap-2.5">
@@ -288,7 +288,7 @@ function Dashboard() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {kpis.map((k) => (
-            <div key={k.key} className="relative overflow-hidden rounded-2xl border border-border/50 bg-background/60 p-4 transition-all hover:border-primary/40">
+            <div key={k.key} className="relative overflow-hidden rounded-2xl border border-border/50 bg-background/50 p-4 transition-all hover:border-primary/40">
               <p className="text-xs font-bold text-muted-foreground">{k.label}</p>
               <div className="mt-2 flex items-baseline gap-1">
                 <span className="text-2xl font-black text-primary">{k.value}</span>
@@ -309,7 +309,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* 5. Visual Data Charts - رسوم بيانية عصرية */}
+      {/* 5. Visual Data Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
           <h2 className="mb-4 text-sm font-black text-foreground">توزيع الحالات حسب المجال</h2>
@@ -352,9 +352,8 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* 6. Notifications & Agenda Cards */}
+      {/* 6. Agenda Cards */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* المتابعات العاجلة */}
         <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -390,7 +389,6 @@ function Dashboard() {
           )}
         </div>
 
-        {/* المواعيد القادمة */}
         <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
