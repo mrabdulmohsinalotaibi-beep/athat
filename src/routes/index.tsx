@@ -15,13 +15,25 @@ export const Route = createFileRoute("/")({
         content:
           "منصة الذات لإدارة سجلات التوجيه الطلابي: الحالات الإرشادية، الخطة التشغيلية، المقابلات، المواظبة والسلوك، الشواهد والتقارير الرسمية.",
       },
-       { property: "og:title", content: "الذات | منصة الموجه الطلابي الشاملة" },
+      { property: "og:title", content: "الذات | منصة الموجه الطلابي الشاملة" },
       {
         property: "og:description",
         content: "سجلات الموجه الطلابي إلكترونياً مع تقارير جاهزة للطباعة الرسمية.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    // ربط أيقونة اللوجو باسم الملف الجديد
+    links: [
+      {
+        rel: "icon",
+        type: "image/png",
+        href: "/IMG_3331.png",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/IMG_3331.png",
+      },
     ],
   }),
   component: Landing,
@@ -52,9 +64,9 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4">
-           <div className="flex min-w-0 items-center gap-2">
-              <img src={platformLogo.url} alt="شعار منصة الذات" className="size-12 object-contain" />
-              <div><p className="text-2xl font-extrabold text-primary">الذات</p><p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p></div>
+          <div className="flex min-w-0 items-center gap-2">
+            <img src={platformLogo.url} alt="شعار منصة الذات" className="size-12 object-contain" />
+            <div><p className="text-2xl font-extrabold text-primary">الذات</p><p className="text-xs text-muted-foreground">منصة الموجه الطلابي</p></div>
           </div>
           <Button asChild>
             <Link to={ctaTo}>{signedIn ? "لوحة التحكم" : "تسجيل الدخول"}</Link>
