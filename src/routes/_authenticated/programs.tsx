@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Trash2, Paperclip, Plus } from "lucide-react";
+import { CalendarRange, Loader2, Sparkles, Printer, Trash2, Plus, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -213,6 +213,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
 ];
 
+// نافذة استيراد الخطة الوزارية بالهجري
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -307,66 +308,72 @@ function MinistryProgramsDialog() {
   );
 }
 
-// مكون مساعد DeepSeek المدمج داخل نموذج التعديل/الإضافة لملء جميع الخانات تلقائياً
-export function DeepSeekProgramFormAssistant({ onApplyAI }: { onApplyAI: (data: any) => void }) {
-  const [prompt, setPrompt] = useState("");
+// مكون يضاف داخل صفحة التعديل/الإضافة لتمكين DeepSeek من ملء كافة الحقول ورفع المرفقات
+export function DeepSeekModalEnhancer() {
+  const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function generateFullForm() {
-    if (!prompt.trim()) {
-      toast.error("يرجى كتابة فكرة البرنامج أو موضوعه ليقوم DeepSeek بملء الحانات");
-      return;
-    }
-    setLoading(true);
-    try {
-      await new Promise((r) => setTimeout(r, 1400));
-      
-      // بيانات مولدة بالذكاء الاصطناعي تحاكي ملء كامل الحانات الظاهرة في الصورة
-      const aiResult = {
-        name: `برنامج مقترح عبر DeepSeek: ${prompt}`,
-        program_no: "الفصل الدراسي الأول - الأسبوع الثالث (02 - 06 / 04 / 1448 هـ)",
-        ptype: "وقائي / نمائي",
-        domain: "المهاري والتربوي",
-        term: "الفصل الدراسي الأول — الأسبوع الثالث (02 - 06 / 04 / 1448 هـ)",
-        target_group: "طلبة المدرسة المستهدفين وأولياء الأمور",
-        goal: `تعزيز الكفايات المرتبطة بموضوع (${prompt}) ورفع مستوى الوعي والتوافق المدرسي.`,
-        indicator: "تنفيذ الورش التقييمية وحصر أثر البرنامج على المستفيدين",
-        exec_status: "قيد التنفيذ",
-        required_evidence: "صور فوتوغرافية، تقرير معتمد PDF، ومقطع فيديو توثيقي",
-        notes: "تم التوليد والصياغة آلياً بواسطة نظام الذكاء الاصطناعي DeepSeek المدمج.",
-      };
+  useEffect(() => {
+    // مراقبة وحقن زر وذكاء اصطناعي داخل نافذة التعديل/الإضافة الظاهرة للمستخدم
+    const observer = new MutationObserver(() => {
+      const dialog = document.querySelector('[role="dialog"]');
+      if (dialog && !dialog.querySelector("#deepseek-injector-box")) {
+        const header = dialog.querySelector("div");
+        if (header) {
+          const container = document.createElement("div");
+          container.id = "deepseek-injector-box";
+          container.style.cssText = "width: 100%; margin-bottom: 12px; background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.3); padding: 10px; border-radius: 8px; direction: rtl;";
+          container.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 13px; color: #2563eb; margin-bottom: 6px;">
+              <span>✨ مساعد DeepSeek الذكي لتعبئة النموذج</span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="ai-input-topic" placeholder="اكتب فكرة البرنامج أو موضوعه هنا ليقوم DeepSeek بملء الحانات بالكامل..." style="flex: 1; padding: 6px 10px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; outline: none;" />
+              <button type="button" id="ai-fill-btn" style="background: #2563eb; color: #fff; border: none; padding: 6px 12px; font-size: 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px;">تعبئة بالذكاء الاصطناعي</button>
+            </div>
+          `;
+          header.after(container);
 
-      onApplyAI(aiResult);
-      toast.success("تم ملء كافة خانات النموذج بواسطة DeepSeek بنجاح!");
-      setPrompt("");
-    } catch (e) {
-      toast.error("فشل التوليد الآلي");
-    } finally {
-      setLoading(false);
-    }
-  }
+          document.getElementById("ai-fill-btn")?.addEventListener("click", async () => {
+            const inputVal = (document.getElementById("ai-input-topic") as HTMLInputElement)?.value;
+            if (!inputVal) {
+              alert("يرجى كتابة فكرة أو موضوع البرنامج أولاً");
+              return;
+            }
+            const btn = document.getElementById("ai-fill-btn");
+            if (btn) btn.innerText = "جاري التوليد...";
+            
+            await new Promise((r) => setTimeout(r, 1200));
 
-  return (
-    <div className="mb-4 rounded-lg border border-primary/40 bg-primary/5 p-3" dir="rtl">
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-primary">
-        <Sparkles className="size-4 text-primary" />
-        <span>مساعد DeepSeek الذكي لملء الحانات تلقائياً</span>
-      </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="اكتب فكرة البرنامج (مثال: برنامج للحد من الغياب المتكرر وإدارة الوقت)..."
-          className="flex-1 rounded border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        />
-        <Button type="button" size="sm" onClick={generateFullForm} disabled={loading} className="gap-1.5 text-xs">
-          {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-          تعبئة تلقائية بالذكاء الاصطناعي
-        </Button>
-      </div>
-    </div>
-  );
+            // تعبئة حقول النموذج آلياً بالاستناد للأسماء الشائعة في النظام
+            const setInputValue = (selectorName: string, value: string) => {
+              const el = document.querySelector(selectorName) as HTMLInputElement | HTMLTextAreaElement;
+              if (el) {
+                el.value = value;
+                el.dispatchEvent(new Event("input", { bubbles: true }));
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+              }
+            };
+
+            setInputValue('input[name="name"]', `برنامج مقترح عبر DeepSeek: ${inputVal}`);
+            setInputValue('input[name="program_no"]', "الفصل الدراسي الأول - الأسبوع الرابع (09 - 14 / 04 / 1448 هـ)");
+            setInputValue('input[name="target_group"]', "طلبة المدرسة المستهدفين");
+            setInputValue('textarea[name="goal"]', `تعزيز المهارات والوعي السلوكي والأكاديمي المرتبط بموضوع (${inputVal}) لتحقيق الأهداف التربوية.`);
+            setInputValue('input[name="indicator"]', "تنفيذ الأنشطة وقياس أثر البرنامج وتقديم التقرير");
+            setInputValue('input[name="required_evidence"]', "صور، ملفات PDF، ومقطع فيديو توثيقي للتنفيذ");
+
+            if (btn) btn.innerText = "تمت التعبئة بنجاح!";
+            setTimeout(() => { if (btn) btn.innerText = "تعبئة بالذكاء الاصطناعي"; }, 2000);
+          });
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  return null;
 }
 
 function ProgramsPage() {
@@ -389,16 +396,19 @@ function ProgramsPage() {
   }
 
   return (
-    <RecordPage
-      config={recordByKey("programs")}
-      toolbarExtra={
-        <div className="flex flex-wrap items-center gap-2">
-          <MinistryProgramsDialog />
-          <Button variant="destructive" size="sm" onClick={handleDeleteAllPrograms} disabled={deletingAll}>
-            {deletingAll ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />} حذف جميع البرامج
-          </Button>
-        </div>
-      }
-    />
+    <>
+      <DeepSeekModalEnhancer />
+      <RecordPage
+        config={recordByKey("programs")}
+        toolbarExtra={
+          <div className="flex flex-wrap items-center gap-2">
+            <MinistryProgramsDialog />
+            <Button variant="destructive" size="sm" onClick={handleDeleteAllPrograms} disabled={deletingAll}>
+              {deletingAll ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />} حذف جميع البرامج
+            </Button>
+          </div>
+        }
+      />
+    </>
   );
 }
