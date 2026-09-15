@@ -1,470 +1,770 @@
-{
-  "meta": {
-    "name": "Guidance Hub",
-    "package": "@ws-7eb7e713de717d6d83a6/ff86189b-6cdb-4a8a-b190-a1c210e48686",
-    "version": "1.8.0",
-    "framework": "react",
-    "css_framework": "tailwind",
-    "starter_template": "custom_design_system_tailwind",
-    "theme_files": [
-      "src/styles.css"
-    ],
-    "source_type": "local",
-    "source_manifest": {
-      "#enrichment": "ab189c43a1b1d6de938a3a657a7ab0e38cb9c5875cfabe176355e96bc366a97d",
-      ".gitignore": "6d9e901a692b46a83707c245fb03bc91",
-      ".lovable/meta.yaml": "954a981e8847ec1692669dbb04ae9ae9",
-      ".lovable/plan.md": "f23b2d121c40b6520a525331b12159bd",
-      ".lovable/plan/إعادة-ضبط-منصة-الذات-والسجلات-والتقارير-2026-09-12.md": "1ef58d25339e894c6194faf22b65136c",
-      ".lovable/plan/تحديث-الهوية-والكليشة-والمساعد-الذكي-2026-09-12.md": "bf76a793c9480edf705033614fa51a9e",
-      ".lovable/plan/تحديث-منصة-ذات-الهوية-النفسية-والاشتراك-التجريبي-2026-09-12.md": "bb40ea627d679cd49e72103c3d76171f",
-      ".lovable/plan/تحديث-هوية-الذات-والتقارير-والتوقيع-الذكي-2026-09-12.md": "4bba7aeabec2005a18da39ab180ee921",
-      ".lovable/plan/تحديثات-استيراد-ذكي-طباعة-رسمية-للسجل-الفردي-مرفقات-وتطوير-ا-2026-09-13.md": "9136ac05bfe18075dfe8ea50fc47ae17",
-      ".lovable/plan/ثيمات-منصة-الذات-والحقوق-والتوافق-مع-الجوال-والتابلت-2026-09-12.md": "6d4aea43159a4ad3749ca9282e7a730a",
-      ".lovable/plan/منصة-ذات-الموجه-الطلابي-2026-09-12.md": "049e17388c3a8c930135e9bb63496777",
-      ".lovable/project.json": "0d13739ea141bcde251eb54ed872cb3e",
-      ".lovable/sources.yaml": "ee6247f6fe77fe1387244cd3c757e6a3",
-      ".prettierignore": "7279a476f196a2da5f7edd18db568dc6",
-      ".prettierrc": "185ef0234746ab738ac1ab6cec5e2bd9",
-      "AGENTS.md": "3da3c4cd15b686e79a248c25735d6aaf",
-      "README.md": "63fa88357ce51367e50fce9bc9d0abe5",
-      "bunfig.toml": "89115995d9de72fdfc894e16b1e75297",
-      "components.json": "30d3d035361ce807021f5c54620962e9",
-      "eslint.config.js": "345bdd57e188e0e4525edcd00e5003f5",
-      "package.json": "c7e89d23a18f7eed7aae221ca4f6c1c6",
-      "public/favicon.png": "49cb8cf0d66e20caf3cdd7e6469f6ed2",
-      "public/favicon.png.asset.json": "4a0f433ae177cd917b968855cdb49846",
-      "public/robots.txt": "f9dff89adf98833e676de2205921996a",
-      "roadmap.md": "28f40ded9a393f452afb59c22774a059",
-      "src/assets/althaat-logo.png.asset.json": "5a209c0c4b54b07b03372472cc0962fc",
-      "src/assets/moe-logo-official.png": "e68c051f1faa25c9d83824843d7d0d9d",
-      "src/assets/moe-logo.png": "8f49fc3c15a0736534cce27e01cb949d",
-      "src/assets/thaat-logo.png.asset.json": "a084207bb7c878fe5d1ed2fa8464a37a",
-      "src/components/AiDraftAssistant.tsx": "1d795798ade92bb656632fc8fc2d867e",
-      "src/components/AppLayout.tsx": "80ec285f640aa10c14079a554879eba5",
-      "src/components/Copyright.tsx": "4816377612e9385f58b8b0988db19c91",
-      "src/components/EvidenceUpload.tsx": "2f3027c36d408dcb64f96651926aeb0e",
-      "src/components/NoorImportDialog.tsx": "89729df4b60dae82bf98506bb1b4b6bb",
-      "src/components/OfficialHeader.tsx": "09ded743912e56fa581fbd12a024a1dd",
-      "src/components/PlanGate.tsx": "4b0c737ac074343ad9267d53b69a5b3c",
-      "src/components/RecordAttachments.tsx": "430d0c51835331bbf160aad8a2cfca91",
-      "src/components/RecordPage.tsx": "1c44ce4593d403f22e331c34958ce9e4",
-      "src/components/RecordPrintDialog.tsx": "d032506ce42ff0b0681d8f483655518a",
-      "src/components/SignaturePad.tsx": "11390e9e3434ddcfc8f8c25f7b773023",
-      "src/components/StudentCombobox.tsx": "0f9b1d1e4f5ba3f9f9b17d78d197f5b4",
-      "src/components/StudentsPage.tsx": "543a34162f46372744719e90cde752a1",
-      "src/components/ThemePicker.tsx": "c7357b89e4115f6255e46183931c0c2f",
-      "src/components/WhatsAppButton.tsx": "e234e3637e2cf2466e85ce2c828bb981",
-      "src/components/ui/accordion.tsx": "55f9dda62b4e3913c9b23e5015a86aef",
-      "src/components/ui/alert-dialog.tsx": "96350e949e9b7b674545430a410ab89c",
-      "src/components/ui/alert.tsx": "f993d7e96b1e25ce50e68ed97e11d2a8",
-      "src/components/ui/aspect-ratio.tsx": "c5c364545e1b25a94e9e752cd67ad048",
-      "src/components/ui/avatar.tsx": "72989cd32f72c4122802540ef32525a5",
-      "src/components/ui/badge.tsx": "81cade001fc4260f9943e18dcd79449b",
-      "src/components/ui/breadcrumb.tsx": "bb9ac254f12662b20d5d50b84308bf3a",
-      "src/components/ui/button.tsx": "7d07d520f486b12bd47373d694ecd2ee",
-      "src/components/ui/calendar.tsx": "d849cc610e2683271f3f1c47d093cf30",
-      "src/components/ui/card.tsx": "d6c48ea36221b9cdc3576d305d12d5d5",
-      "src/components/ui/carousel.tsx": "e324c68ae00cd5aed49317638abd429a",
-      "src/components/ui/checkbox.tsx": "f78aac270ca482c8c2cb907ef6260462",
-      "src/components/ui/collapsible.tsx": "767631bbc344945c236f185f4078d71d",
-      "src/components/ui/command.tsx": "014782599cc838b021ec68b07ad4ea02",
-      "src/components/ui/context-menu.tsx": "3ba8244ea23df34a1dba92f3a1230dad",
-      "src/components/ui/dialog.tsx": "8e04eca381eaa4086bbf2bdcbe56ef6d",
-      "src/components/ui/drawer.tsx": "8be333e8fd8e42576b1b5f72f07f4337",
-      "src/components/ui/dropdown-menu.tsx": "28d6e98d3c7811fc0514bfa69416f087",
-      "src/components/ui/form.tsx": "1b0aa6302b9017ea2a1307c22a1d2983",
-      "src/components/ui/hover-card.tsx": "1442794c5ca2a78d69e4e613b315ed3d",
-      "src/components/ui/input-otp.tsx": "65625f2f1c4d731a760aeed7b54459d1",
-      "src/components/ui/input.tsx": "1d4cc52a4cd8afb3e18e45bda942bb8a",
-      "src/components/ui/label.tsx": "7e35df4ca8edd0835efd97ca7937ef92",
-      "src/components/ui/menubar.tsx": "3c4121a1e78d3f424a7295381a8997d3",
-      "src/components/ui/navigation-menu.tsx": "e85351147a02b29577ff83d188b63c24",
-      "src/components/ui/pagination.tsx": "fac6cdbb4bbf78b273d85cd36d6cbb49",
-      "src/components/ui/popover.tsx": "f18aa1da2144f25ee60795c539c51bcd",
-      "src/components/ui/progress.tsx": "55c462e5c9dd678dcf2c0c510b014ac4",
-      "src/components/ui/radio-group.tsx": "0e1ace237a5da3197e3eb1e6683faba9",
-      "src/components/ui/resizable.tsx": "d9fcb9203c749fcab4e125a99bb12a86",
-      "src/components/ui/scroll-area.tsx": "87b65d3eb26f2b02ff35a7acea585ba5",
-      "src/components/ui/select.tsx": "31ea1bbd6671833b010b2e852c8a55d0",
-      "src/components/ui/separator.tsx": "433d163c4ffa00b59398a0c293198b5e",
-      "src/components/ui/sheet.tsx": "0221fbf97b69611b47fcbc10bb27669a",
-      "src/components/ui/sidebar.tsx": "83c1623eb50ebc370d7b1b84a542e369",
-      "src/components/ui/skeleton.tsx": "41b182e6e2fc3805960d41e767d4a972",
-      "src/components/ui/slider.tsx": "4752f1bfa26426988d325599e01c335b",
-      "src/components/ui/sonner.tsx": "97f59f60be3413196d095fcbf7383216",
-      "src/components/ui/switch.tsx": "82f5d8b0c59bb7ff305caa9f502e79ff",
-      "src/components/ui/table.tsx": "7cc889989d53894b659903c73aded96e",
-      "src/components/ui/tabs.tsx": "56e725558c2ce72c18243bf51717f385",
-      "src/components/ui/textarea.tsx": "c7aad96fb9545210d53135a96c76ed6b",
-      "src/components/ui/toggle-group.tsx": "ac26383acf721d116ca8e3ab5c5355d5",
-      "src/components/ui/toggle.tsx": "ee8c5adac74e7242b85b544db1a8fbad",
-      "src/components/ui/tooltip.tsx": "67d71db5a1ab935695d1def497f5b8a6",
-      "src/hooks/use-mobile.tsx": "c0a0bdd4638c391a1dd06ac82074e60b",
-      "src/index.ts": "47846eb12d749d9f7b7ef90873c03345",
-      "src/integrations/lovable/index.ts": "72ae458c679ac42b6e700dc2a3d9cd7b",
-      "src/integrations/supabase/auth-attacher.ts": "d3df307e4d360485dc153d83d351e439",
-      "src/integrations/supabase/auth-middleware.ts": "533967b1485459ed8eec0156282f0ddd",
-      "src/integrations/supabase/client.server.ts": "23f838ab7633e0a97e695f3c500d91aa",
-      "src/integrations/supabase/client.ts": "8af43e12f1332b440278c7ea7e4cb1e8",
-      "src/integrations/supabase/cron-auth.ts": "6c04781ff98ada5977945fae55d39385",
-      "src/integrations/supabase/previewAuthStorage.ts": "bc45a76c9242c4b85d6d4345625c46e9",
-      "src/integrations/supabase/types.ts": "1c50d796c000e74d8c7c96cc21a4854e",
-      "src/lib/ai.functions.ts": "ce1d937a3f4babce3005ed51fe1fafc6",
-      "src/lib/auth-errors.ts": "b5068a46556582f95b113ef126e08eb8",
-      "src/lib/display.ts": "2e24c977b5f771af0e10ba67d1bc1a91",
-      "src/lib/error-capture.ts": "703ddedf8433b323ce03c2373603e204",
-      "src/lib/error-page.ts": "441f6a9650ace13264c382f308d054e1",
-      "src/lib/kpi.ts": "fbd9e224dc159c1e57314a6058cbf401",
-      "src/lib/lookups.ts": "1d3dbb4ab19a171f148d3b27d10b3899",
-      "src/lib/lovable-error-reporting.ts": "cca1f55c3d08f957152e4501ee32e332",
-      "src/lib/ministry-programs.ts": "cf4ada324142260284eed170b61d0c64",
-      "src/lib/noor.ts": "9915f20634d837544661370b257459a3",
-      "src/lib/pages/Dashboard.tsx": "40e8781d25a8a4c3ccdffac001855d48",
-      "src/lib/pdf.ts": "180d6cc500920c91afcc7596cd32bcfb",
-      "src/lib/records.ts": "0ef72c9ea48196399cc76dfa4c443ea8",
-      "src/lib/school.ts": "ef965542388359422d56ab4444fe7dfa",
-      "src/lib/sheet.ts": "4cb907ae60965d1f33cd3cdffb0e10a5",
-      "src/lib/subscription.ts": "a4d05116c89d99a058a2e1bd6b2e4d64",
-      "src/lib/theme.tsx": "c5f68658fdc6a283bf5400de6ed09659",
-      "src/lib/utils.ts": "d9837f38cc05303254571985e3164050",
-      "src/lib/whatsapp.ts": "8b7591bb36c152a430308b0d984b44d1",
-      "src/routeTree.gen.ts": "a9dff7aec7d33d5959ea94a0d4ddcbec",
-      "src/router.tsx": "8f905e713b0eba7fa8148b7995a708c9",
-      "src/routes/README.md": "b3a2f259b66fd1a11f54b6d5ac83bf57",
-      "src/routes/__root.tsx": "2646c70ced3e38b60491b4382dc9f80d",
-      "src/routes/_authenticated/attendance.tsx": "dcddd26a3e41f7398f3ad1bfb6619ffd",
-      "src/routes/_authenticated/behavior.tsx": "b12f388854e1168007e341e8dfbfa7f9",
-      "src/routes/_authenticated/calendar.tsx": "ed57732e3e4505c404f232e5a462f09d",
-      "src/routes/_authenticated/cases.tsx": "41fc818b4f35213f629608388efd0157",
-      "src/routes/_authenticated/committees.tsx": "4291f4842d89d7b782976f82e072d3c5",
-      "src/routes/_authenticated/dashboard.tsx": "b083a1b7c5ff0e2c764adbcdbe59af36",
-      "src/routes/_authenticated/evidences.tsx": "d04f866d3c1275b700247dfbf3f23f0e",
-      "src/routes/_authenticated/interviews.tsx": "43bc9775924aa34eb3e0857508442696",
-      "src/routes/_authenticated/plan.tsx": "a45089350f3a918797dd8c554db85596",
-      "src/routes/_authenticated/programs.tsx": "cfdeefbfb3ed711dc8df88460178d6d9",
-      "src/routes/_authenticated/referrals.tsx": "bfef78a639d9d83f6f8fd568009964bd",
-      "src/routes/_authenticated/reports.tsx": "4dcc43bcbd090ff401149ec4fbc7fedc",
-      "src/routes/_authenticated/route.tsx": "67c89be3fcaf0360541f5d417a592abf",
-      "src/routes/_authenticated/settings.tsx": "c04d4f1518aeac627ae5512699371bbb",
-      "src/routes/_authenticated/students.tsx": "86718346dee5933df8c495d9f6acf1b3",
-      "src/routes/_authenticated/subscription.tsx": "f7f80cb1870530ab91cf69b4eed58928",
-      "src/routes/auth.tsx": "07c837f146d4ef11cc9f1cc17de386a8",
-      "src/routes/index.tsx": "62815f19e625f15b4f56e54c3c4ee7e5",
-      "src/server.ts": "c7bbc49bb70e318af618d92775ee0f27",
-      "src/start.ts": "d77c1c12904be5077c6955d9b30071af",
-      "src/styles.css": "6658325336bda000af925eba98d7392c",
-      "supabase/config.toml": "ead8ee943c4f2c68388f70f357c6af29",
-      "supabase/migrations/20260912132229_cfbfe116-5e90-423d-a4cc-f9ce0ed7d9d9.sql": "f2ef7f4c39fe8f5a129c6db0261043f7",
-      "supabase/migrations/20260912145809_03a571df-3398-4dce-9d95-c985e050b47e.sql": "92e1ca3357044fad0eeb804a160efc42",
-      "supabase/migrations/20260912155352_c171f0c8-caf9-4cf1-ad1a-07e830a9a73a.sql": "e37a3b9c1bf94c804f62e7d289ff2ec8",
-      "supabase/migrations/20260912172218_303eec86-3a67-4822-a0fa-b2184e4b75a1.sql": "c5612094e66fe7d2cf9389a16a912719",
-      "supabase/migrations/20260912172232_13ba7c69-e861-4b73-8646-aab2a0d2c359.sql": "9ef7ebf34352a6d05979e71358076486",
-      "supabase/migrations/20260912172405_e1e5e582-0b3f-4535-8d19-8a623de19e78.sql": "86d43ee9b7759603fca80de7a5efb528",
-      "supabase/migrations/20260912175404_198f6850-9610-4d6d-9454-bde9238e17f6.sql": "0bdae8c16082881f5d86390a89016a19",
-      "supabase/migrations/20260912193455_fcd06ff5-8cf2-4dae-be73-f4af0f7baf8e.sql": "1ec7be876e59cb9f141b09efd1908067",
-      "supabase/migrations/20260912202558_b229a11d-7d1f-4e60-a4b2-016f21bfd1f4.sql": "2ddbba87b966ebe7a1454f1589d6091c",
-      "supabase/migrations/20260912213612_a105afac-1280-46c9-b187-ee7d4856ab9e.sql": "87a24546bb7d193e3782174b1bbbca88",
-      "supabase/migrations/20260912213623_204bcaac-4792-4c19-a5ad-88fc5edafce8.sql": "a0351947aa5581ac61ef33a7e1d3f828",
-      "tsconfig.json": "e84e5c7fe88e3c5a4d54f55a816d42c1",
-      "vite.config.ts": "d67e8217e5f31b87c276b6357c9aedcf"
-    },
-    "pipeline_version": 8
-  },
-  "tokens": {
-    "color": [
-      {
-        "name": "--color-theme-thaat",
-        "raw": "oklch(0.400774 0.125802 26.4494)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--color-theme-royal",
-        "raw": "oklch(0.36 0.095 255)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--color-theme-sage",
-        "raw": "oklch(0.43 0.09 158)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--color-theme-amber",
-        "raw": "oklch(0.52 0.12 65)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--background",
-        "raw": "oklch(0.97837 0.001065 197.1387)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--foreground",
-        "raw": "oklch(0.2 0.008 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--card",
-        "raw": "oklch(1 0 0)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--card-foreground",
-        "raw": "oklch(0.2 0.008 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--popover",
-        "raw": "oklch(1 0 0)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--popover-foreground",
-        "raw": "oklch(0.2 0.008 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--primary",
-        "raw": "oklch(0.400774 0.125802 26.4494)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--primary-foreground",
-        "raw": "oklch(1 0 0)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--secondary",
-        "raw": "oklch(0.965 0.002 200)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--secondary-foreground",
-        "raw": "oklch(0.28 0.012 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--muted",
-        "raw": "oklch(0.982 0.001 200)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--muted-foreground",
-        "raw": "oklch(0.48 0.008 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--accent",
-        "raw": "oklch(0.935 0.018 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--accent-foreground",
-        "raw": "oklch(0.400774 0.125802 26.4494)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--destructive",
-        "raw": "oklch(0.55 0.2 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--destructive-foreground",
-        "raw": "oklch(0.99 0.01 80)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--border",
-        "raw": "oklch(0.9 0.003 200)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--input",
-        "raw": "oklch(0.84 0.004 200)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--ring",
-        "raw": "oklch(0.400774 0.125802 26.4494)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--chart-1",
-        "raw": "oklch(0.400774 0.125802 26.4494)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--chart-2",
-        "raw": "oklch(0.52 0.12 20)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--chart-3",
-        "raw": "oklch(0.45 0.025 20)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--chart-4",
-        "raw": "oklch(0.67 0.08 55)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--chart-5",
-        "raw": "oklch(0.6 0.03 20)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar",
-        "raw": "oklch(0.985 0.004 75)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar-foreground",
-        "raw": "oklch(0.25 0.015 25)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar-primary",
-        "raw": "oklch(0.400774 0.125802 26.4494)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar-primary-foreground",
-        "raw": "oklch(1 0 0)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar-accent",
-        "raw": "oklch(0.945 0.014 28)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar-accent-foreground",
-        "raw": "oklch(0.36 0.095 26)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar-border",
-        "raw": "oklch(0.89 0.008 50)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--sidebar-ring",
-        "raw": "oklch(0.400774 0.125802 26.4494)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--paper",
-        "raw": "oklch(1 0 0)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--paper-foreground",
-        "raw": "oklch(0.18 0.004 250)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--paper-muted",
-        "raw": "oklch(0.965 0.002 250)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--paper-muted-foreground",
-        "raw": "oklch(0.42 0.006 250)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--paper-border",
-        "raw": "oklch(0.78 0.004 250)",
-        "source": "src/styles.css"
-      }
-    ],
-    "typography": [
-      {
-        "name": "--font-sans",
-        "raw": "\"Cairo Variable\", system-ui, sans-serif",
-        "source": "src/styles.css"
-      }
-    ],
-    "radius": [
-      {
-        "name": "--radius-sm",
-        "raw": "calc(var(--radius) - 4px)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--radius-md",
-        "raw": "calc(var(--radius) - 2px)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--radius-xl",
-        "raw": "calc(var(--radius) + 4px)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--radius-2xl",
-        "raw": "calc(var(--radius) + 8px)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--radius-3xl",
-        "raw": "calc(var(--radius) + 12px)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--radius-4xl",
-        "raw": "calc(var(--radius) + 16px)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--radius",
-        "raw": "0.5rem",
-        "source": "src/styles.css"
-      }
-    ],
-    "shadow": [
-      {
-        "name": "--shadow-soft",
-        "raw": "0 10px 32px -18px oklch(0.2 0.03 20 / 0.28)",
-        "source": "src/styles.css"
-      },
-      {
-        "name": "--shadow-card",
-        "raw": "0 5px 18px -12px oklch(0.2 0.025 20 / 0.18)",
-        "source": "src/styles.css"
-      }
-    ]
-  },
-  "components": [
-    {
-      "name": "AuthService",
-      "file": "src/integrations/lovable/index.ts",
-      "import_path": ""
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  UserPlus, FileSpreadsheet, Printer, MessageSquare,
+  Sparkles, Search, Download, Upload, ShieldCheck, X, AlertCircle, CheckCircle2
+} from 'lucide-react';
+
+// ====================================================================
+// 1. الأنواع (Types)
+// ====================================================================
+type StudentStatus = 'منتظم' | 'متابعة سلوكية' | 'غياب متكرر' | 'متفوق';
+
+interface Student {
+  id: string;
+  name: string;
+  nationalId: string;
+  grade: string;
+  classRoom: string;
+  phone: string;
+  status: StudentStatus;
+  casesCount: number;
+}
+
+type NewStudentForm = Omit<Student, 'id' | 'casesCount'>;
+
+interface ToastMessage {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  text: string;
+}
+
+// ====================================================================
+// 2. أدوات مساعدة (Helpers)
+// ====================================================================
+const generateId = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+};
+
+const sanitizeText = (input: string): string =>
+  input.replace(/[<>"'`]/g, '').trim();
+
+const normalizeArabic = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[\u064B-\u065F]/g, '')
+    .trim();
+
+const isValidSaudiId = (id: string): boolean => /^\d{10}$/.test(id);
+
+const isValidSaudiPhone = (phone: string): boolean =>
+  /^9665\d{8}$/.test(phone);
+
+const buildWhatsAppMessage = (student: Student): string => {
+  const safeName = sanitizeText(student.name);
+  const safeStatus = sanitizeText(student.status);
+  return `السلام عليكم ورحمة الله وبركاته، المكرم ولي أمر الطالب (${safeName}).
+نود إحاطتكم بخطاب متابعة من مكتب التوجيه الطلابي بخصوص الحالة: (${safeStatus}).
+يرجى التواصل معنا في أقرب وقت.`;
+};
+
+// ====================================================================
+// 3. البيانات الأولية (Mock Data)
+// ====================================================================
+const INITIAL_STUDENTS: Student[] = [
+  { id: generateId(), name: 'أحمد محمد العتيبي', nationalId: '1102938475', grade: 'الأول المتوسط', classRoom: '1/1', phone: '966501234567', status: 'منتظم', casesCount: 0 },
+  { id: generateId(), name: 'خالد عبدالله الشهري', nationalId: '1192837465', grade: 'الثاني المتوسط', classRoom: '2/1', phone: '966507654321', status: 'متابعة سلوكية', casesCount: 2 },
+  { id: generateId(), name: 'فيصل القحطاني', nationalId: '1092837411', grade: 'الثالث المتوسط', classRoom: '3/2', phone: '966509988776', status: 'غياب متكرر', casesCount: 4 },
+];
+
+const EMPTY_FORM: NewStudentForm = {
+  name: '',
+  nationalId: '',
+  grade: 'الأول المتوسط',
+  classRoom: '1/1',
+  phone: '',
+  status: 'منتظم',
+};
+
+// ====================================================================
+// 4. مكون Toast بسيط
+// ====================================================================
+const ToastContainer: React.FC<{ toasts: ToastMessage[]; onClose: (id: string) => void }> = ({ toasts, onClose }) => (
+  <div className="fixed top-4 left-4 z-[100] space-y-2 max-w-sm">
+    {toasts.map((t) => (
+      <div
+        key={t.id}
+        role="alert"
+        className={`flex items-start gap-2 p-3 rounded-xl shadow-lg border text-xs font-semibold animate-in fade-in slide-in-from-top-2 ${
+          t.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+          t.type === 'error'   ? 'bg-rose-50 border-rose-200 text-rose-800' :
+                                 'bg-slate-50 border-slate-200 text-slate-800'
+        }`}
+      >
+        {t.type === 'success' ? <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" /> : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
+        <span className="flex-1 leading-relaxed">{t.text}</span>
+        <button onClick={() => onClose(t.id)} aria-label="إغلاق التنبيه">
+          <X className="w-3.5 h-3.5 opacity-60 hover:opacity-100" />
+        </button>
+      </div>
+    ))}
+  </div>
+);
+
+// ====================================================================
+// 5. المكون الرئيسي
+// ====================================================================
+export default function GuidanceHubComplete() {
+  // -----------------------------
+  // الحالات (State)
+  // -----------------------------
+  const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  // النوافذ
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isNoorModalOpen, setIsNoorModalOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  // المساعد الذكي
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  // نموذج الإضافة
+  const [newStudent, setNewStudent] = useState<NewStudentForm>(EMPTY_FORM);
+  const [formError, setFormError] = useState('');
+
+  // التنبيهات
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // -----------------------------
+  // أدوات مساعدة داخلية
+  // -----------------------------
+  const pushToast = useCallback((type: ToastMessage['type'], text: string) => {
+    const id = generateId();
+    setToasts((prev) => [...prev, { id, type, text }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const closeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // -----------------------------
+  // إغلاق المودالات بزر Escape + منع التمرير
+  // -----------------------------
+  const anyModalOpen =
+    isAddModalOpen || isNoorModalOpen || isPrintModalOpen || isAiModalOpen;
+
+  useEffect(() => {
+    if (!anyModalOpen) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setIsAddModalOpen(false);
+      setIsNoorModalOpen(false);
+      setIsPrintModalOpen(false);
+      setIsAiModalOpen(false);
+    };
+
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [anyModalOpen]);
+
+  // -----------------------------
+  // الفلترة (memo + normalize)
+  // -----------------------------
+  const filteredStudents = useMemo(() => {
+    const q = normalizeArabic(searchQuery);
+    if (!q) return students;
+    return students.filter((s) => {
+      return (
+        normalizeArabic(s.name).includes(q) ||
+        s.nationalId.includes(searchQuery.trim()) ||
+        normalizeArabic(s.grade).includes(q)
+      );
+    });
+  }, [students, searchQuery]);
+
+  // -----------------------------
+  // إضافة طالب جديد
+  // -----------------------------
+  const handleAddStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    const trimmedName = sanitizeText(newStudent.name);
+    const trimmedId = newStudent.nationalId.trim();
+    const trimmedPhone = newStudent.phone.trim();
+    const trimmedClass = sanitizeText(newStudent.classRoom);
+
+    if (!trimmedName || trimmedName.length < 3) {
+      setFormError('اسم الطالب يجب أن يكون 3 أحرف على الأقل.');
+      return;
     }
-  ],
-  "assets": [
-    {
-      "file": "src/assets/althaat-logo.png.asset.json",
-      "kind": "logo",
-      "format": "png",
-      "pointer": true
-    },
-    {
-      "file": "src/assets/moe-logo-official.png",
-      "kind": "logo",
-      "format": "png"
-    },
-    {
-      "file": "src/assets/moe-logo.png",
-      "kind": "logo",
-      "format": "png"
-    },
-    {
-      "file": "src/assets/thaat-logo.png.asset.json",
-      "kind": "logo",
-      "format": "png",
-      "pointer": true
+    if (!isValidSaudiId(trimmedId)) {
+      setFormError('السجل المدني يجب أن يكون 10 أرقام.');
+      return;
     }
-  ]
+    if (students.some((s) => s.nationalId === trimmedId)) {
+      setFormError('هذا السجل المدني مسجل مسبقاً في المنصة.');
+      return;
+    }
+    if (trimmedPhone && !isValidSaudiPhone(trimmedPhone)) {
+      setFormError('رقم الجوال يجب أن يبدأ بـ 9665 ويتكون من 12 رقماً.');
+      return;
+    }
+
+    const student: Student = {
+      id: generateId(),
+      name: trimmedName,
+      nationalId: trimmedId,
+      grade: newStudent.grade,
+      classRoom: trimmedClass || '1/1',
+      phone: trimmedPhone,
+      status: newStudent.status,
+      casesCount: 0,
+    };
+
+    setStudents((prev) => [student, ...prev]);
+    setNewStudent(EMPTY_FORM);
+    setIsAddModalOpen(false);
+    pushToast('success', `تم إضافة الطالب "${student.name}" بنجاح.`);
+  };
+
+  // -----------------------------
+  // استيراد من نور (محاكاة)
+  // -----------------------------
+  const handleNoorImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // (ملاحظة: لقراءة ملفات Excel/CSV الحقيقية استخدم مكتبة مثل xlsx أو papaparse)
+    setTimeout(() => {
+      const imported: Student[] = [
+        { id: generateId(), name: 'سلمان الدوسري (استيراد نور)', nationalId: '1188223344', grade: 'الأول المتوسط', classRoom: '1/2', phone: '966551122334', status: 'منتظم', casesCount: 0 },
+        { id: generateId(), name: 'عمر المطيري (استيراد نور)',   nationalId: '1177334455', grade: 'الثاني المتوسط', classRoom: '2/2', phone: '966554433221', status: 'متفوق', casesCount: 0 },
+      ];
+
+      // تجنب تكرار السجل المدني
+      const existingIds = new Set(students.map((s) => s.nationalId));
+      const newOnes = imported.filter((s) => !existingIds.has(s.nationalId));
+
+      if (newOnes.length === 0) {
+        pushToast('info', 'لم يتم استيراد أي طالب جديد (جميعهم مسجلون مسبقاً).');
+      } else {
+        setStudents((prev) => [...newOnes, ...prev]);
+        pushToast('success', `تم استيراد ${newOnes.length} طالب من نظام نور.`);
+      }
+
+      setIsNoorModalOpen(false);
+      e.target.value = '';
+    }, 800);
+  };
+
+  // -----------------------------
+  // إرسال واتساب
+  // -----------------------------
+  const sendWhatsApp = (student: Student) => {
+    if (!student.phone || !isValidSaudiPhone(student.phone)) {
+      pushToast('error', 'رقم جوال ولي الأمر غير صالح أو غير مسجل.');
+      return;
+    }
+    const url = `https://wa.me/${student.phone}?text=${encodeURIComponent(buildWhatsAppMessage(student))}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // -----------------------------
+  // المساعد الذكي (AI)
+  // -----------------------------
+  useEffect(() => {
+    if (!isAiLoading) return;
+    const timer = setTimeout(() => {
+      setAiResponse(
+        `**الخطة التربوية المقترحة بناءً على تحليل الذكاء الاصطناعي:**\n\n` +
+        `1. **التشخيص:** السلوك الناتج يعود لفرط النشاط وتشتت الانتباه أثناء الحصص الأولى.\n` +
+        `2. **التوصيات:**\n` +
+        `   - إشراك الطالب في الأنشطة الصفية القيادية.\n` +
+        `   - عقد جلسة توجيه فردي أسبوعية لمتابعة الأهداف السلوكية.\n` +
+        `   - تفعيل المتابعة اليومية مع ولي الأمر عبر بطاقة المتابعة الميدانية.`
+      );
+      setIsAiLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [isAiLoading]);
+
+  const generateAiRecommendation = () => {
+    if (!aiPrompt.trim()) return;
+    setAiResponse('');
+    setIsAiLoading(true);
+  };
+
+  // -----------------------------
+  // طباعة
+  // -----------------------------
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const today = new Date().toLocaleDateString('ar-SA');
+
+  // ==================================================================
+  // الواجهة (UI)
+  // ==================================================================
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 sm:p-6 lg:p-8" dir="rtl">
+      {/* أنماط الطباعة */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #printable-area, #printable-area * { visibility: visible !important; }
+          #printable-area {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            padding: 24px !important;
+            background: #fff !important;
+          }
+          .print\\:hidden { display: none !important; }
+        }
+      `}</style>
+
+      <ToastContainer toasts={toasts} onClose={closeToast} />
+
+      <div className="max-w-7xl mx-auto space-y-6">
+
+        {/* ===== الترويسة ===== */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="bg-teal-600 text-white p-2 rounded-xl">
+              <ShieldCheck className="w-6 h-6" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">منصة الذات - Guidance Hub</h1>
+              <p className="text-xs text-slate-500 mt-0.5">النظام الشامل للموجه الطلابي والمعالجة التربوية الذكية</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <button
+              onClick={() => { setFormError(''); setNewStudent(EMPTY_FORM); setIsAddModalOpen(true); }}
+              className="flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              إضافة طالب
+            </button>
+
+            <button
+              onClick={() => setIsNoorModalOpen(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              استيراد من نور
+            </button>
+
+            <button
+              onClick={() => setIsAiModalOpen(true)}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              المساعد الذكي
+            </button>
+          </div>
+        </div>
+
+        {/* ===== الجدول ===== */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="relative w-full sm:w-96">
+              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="ابحث باسم الطالب، السجل المدني، أو الصف..."
+                className="w-full pl-4 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-all"
+              />
+            </div>
+            <div className="text-xs font-semibold text-slate-500">
+              إجمالي الطلاب: <span className="text-slate-900 font-bold">{students.length}</span>
+              {searchQuery && (
+                <span className="mr-2 text-slate-400">| النتائج: {filteredStudents.length}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-xs">
+              <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold">
+                <tr>
+                  <th className="p-4">اسم الطالب</th>
+                  <th className="p-4">الهوية / السجل</th>
+                  <th className="p-4">الصف والفصل</th>
+                  <th className="p-4">حالة الطالب</th>
+                  <th className="p-4 text-center">الحالات المسجلة</th>
+                  <th className="p-4 text-center">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-slate-400 text-xs">
+                      لا توجد نتائج مطابقة.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((student) => (
+                    <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-4 font-bold text-slate-900">{student.name}</td>
+                      <td className="p-4 font-mono text-slate-600">{student.nationalId}</td>
+                      <td className="p-4 text-slate-600">{student.grade} - ({student.classRoom})</td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                          student.status === 'منتظم' ? 'bg-emerald-50 text-emerald-700' :
+                          student.status === 'غياب متكرر' ? 'bg-rose-50 text-rose-700' :
+                          student.status === 'متفوق' ? 'bg-sky-50 text-sky-700' :
+                          'bg-amber-50 text-amber-700'
+                        }`}>
+                          {student.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center font-bold text-slate-700">{student.casesCount}</td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => sendWhatsApp(student)}
+                            aria-label={`إرسال إشعار واتساب لولي أمر ${student.name}`}
+                            title="إرسال إشعار عبر WhatsApp"
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => { setSelectedStudent(student); setIsPrintModalOpen(true); }}
+                            aria-label={`طباعة تقرير الطالب ${student.name}`}
+                            title="طباعة التقرير الرسمي"
+                            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ===== MODAL 1: إضافة طالب ===== */}
+        {isAddModalOpen && (
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-modal-title"
+          >
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 id="add-modal-title" className="font-bold text-slate-900 text-sm">إضافة طالب جديد للمنصة</h3>
+                <button onClick={() => setIsAddModalOpen(false)} aria-label="إغلاق">
+                  <X className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddStudent} className="space-y-3 text-xs">
+                {formError && (
+                  <div className="flex items-start gap-2 p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-[11px]">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-slate-600 mb-1">اسم الطالب رباعياً</label>
+                  <input
+                    required
+                    type="text"
+                    value={newStudent.name}
+                    onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                    className="w-full p-2.5 border rounded-lg bg-slate-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 mb-1">رقم الهوية / السجل المدني (10 أرقام)</label>
+                  <input
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={newStudent.nationalId}
+                    onChange={(e) => setNewStudent({ ...newStudent, nationalId: e.target.value.replace(/\D/g, '') })}
+                    className="w-full p-2.5 border rounded-lg bg-slate-50 font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-600 mb-1">الصف الدراسي</label>
+                    <select
+                      value={newStudent.grade}
+                      onChange={(e) => setNewStudent({ ...newStudent, grade: e.target.value })}
+                      className="w-full p-2.5 border rounded-lg bg-slate-50"
+                    >
+                      <option>الأول المتوسط</option>
+                      <option>الثاني المتوسط</option>
+                      <option>الثالث المتوسط</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-600 mb-1">الفصل</label>
+                    <input
+                      type="text"
+                      value={newStudent.classRoom}
+                      onChange={(e) => setNewStudent({ ...newStudent, classRoom: e.target.value })}
+                      className="w-full p-2.5 border rounded-lg bg-slate-50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 mb-1">جوال ولي الأمر (9665xxxxxxxx)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={12}
+                    placeholder="966500000000"
+                    value={newStudent.phone}
+                    onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value.replace(/\D/g, '') })}
+                    className="w-full p-2.5 border rounded-lg bg-slate-50 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 mb-1">الحالة</label>
+                  <select
+                    value={newStudent.status}
+                    onChange={(e) => setNewStudent({ ...newStudent, status: e.target.value as StudentStatus })}
+                    className="w-full p-2.5 border rounded-lg bg-slate-50"
+                  >
+                    <option value="منتظم">منتظم</option>
+                    <option value="متفوق">متفوق</option>
+                    <option value="متابعة سلوكية">متابعة سلوكية</option>
+                    <option value="غياب متكرر">غياب متكرر</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  >
+                    إلغاء
+                  </button>
+                  <button type="submit" className="px-4 py-2 rounded-lg bg-teal-700 text-white font-semibold hover:bg-teal-800">
+                    حفظ الطالب
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ===== MODAL 2: استيراد من نور ===== */}
+        {isNoorModalOpen && (
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="noor-modal-title"
+          >
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 id="noor-modal-title" className="font-bold text-slate-900 text-sm">استيراد القوائم من نظام نور</h3>
+                <button onClick={() => setIsNoorModalOpen(false)} aria-label="إغلاق">
+                  <X className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+
+              <div className="border-2 border-dashed border-teal-200 bg-teal-50/50 rounded-xl p-6 text-center space-y-3">
+                <Upload className="w-8 h-8 text-teal-600 mx-auto" />
+                <div className="text-xs text-slate-600">
+                  <p className="font-bold">اختر ملف Excel أو CSV المصدّر من نظام نور</p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    يحتوي على أسماء الطلاب والسجل المدني وأرقام التواصل
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleNoorImport}
+                  className="hidden"
+                  id="noor-file-input"
+                />
+                <label
+                  htmlFor="noor-file-input"
+                  className="inline-block bg-teal-700 hover:bg-teal-800 text-white text-xs px-4 py-2 rounded-lg cursor-pointer font-semibold"
+                >
+                  تصفح الملفات
+                </label>
+              </div>
+
+              <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                ملاحظة: في هذه النسخة التجريبية، الاستيراد يحاكي البيانات.
+                لقراءة ملفات حقيقية استخدم مكتبة <span className="font-mono">papaparse</span> أو <span className="font-mono">xlsx</span>.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ===== MODAL 3: المساعد الذكي ===== */}
+        {isAiModalOpen && (
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ai-modal-title"
+          >
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <div id="ai-modal-title" className="flex items-center gap-2 text-purple-700 font-bold text-sm">
+                  <Sparkles className="w-4 h-4" />
+                  المساعد الذكي لصياغة التوصيات
+                </div>
+                <button onClick={() => setIsAiModalOpen(false)} aria-label="إغلاق">
+                  <X className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <textarea
+                  rows={3}
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="اكتب وصفاً مختصراً لحالة الطالب (مثال: طالب يشتكي من تشتت انتباه وتراجع بالدرجات...)..."
+                  className="w-full p-3 border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                />
+
+                <button
+                  onClick={generateAiRecommendation}
+                  disabled={isAiLoading || !aiPrompt.trim()}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                >
+                  {isAiLoading ? 'جاري التحليل والصياغة...' : 'توليد الحلول التربوية'}
+                </button>
+
+                {aiResponse && (
+                  <div className="p-4 bg-purple-50/60 border border-purple-100 rounded-xl text-slate-700 text-xs whitespace-pre-line leading-relaxed">
+                    {aiResponse}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== MODAL 4: طباعة التقرير ===== */}
+        {isPrintModalOpen && selectedStudent && (
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="print-modal-title"
+          >
+            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b pb-3 print:hidden">
+                <h3 id="print-modal-title" className="font-bold text-slate-900 text-sm">
+                  معاينة التقرير الرسمي للطباعة
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrint}
+                    className="bg-teal-700 hover:bg-teal-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                  >
+                    <Printer className="w-3.5 h-3.5" /> طباعة
+                  </button>
+                  <button onClick={() => setIsPrintModalOpen(false)} aria-label="إغلاق">
+                    <X className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              <div id="printable-area" className="border p-8 rounded-xl space-y-6 bg-white text-right text-xs">
+                {/* الهيدر الرسمي */}
+                <div className="flex justify-between items-center border-b-2 border-slate-900 pb-4">
+                  <div className="space-y-0.5">
+                    <p className="font-bold text-slate-900">المملكة العربية السعودية</p>
+                    <p className="text-slate-700">وزارة التعليم</p>
+                    <p className="text-slate-600">الإدارة العامة للتعليم بالمحافظة</p>
+                    <p className="text-slate-600">مكتب التوجيه الطلابي</p>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="h-12 w-12 mx-auto rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center">
+                      <ShieldCheck className="w-6 h-6 text-teal-700" />
+                    </div>
+                    <span className="font-bold text-[10px] text-slate-800 block mt-1">
+                      منصة الذات للخدمات التربوية
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5 text-left">
+                    <p><strong>التاريخ:</strong> {today}</p>
+                    <p><strong>الرقم المرجعي:</strong> SR-{selectedStudent.id.slice(0, 8)}</p>
+                    <p><strong>المرفقات:</strong> يوجد</p>
+                  </div>
+                </div>
+
+                {/* التفاصيل */}
+                <div className="space-y-4">
+                  <h2 className="text-center text-sm font-bold underline underline-offset-4 text-slate-900">
+                    سجل حالة طالب توجيهي فردي
+                  </h2>
+
+                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <p><strong>اسم الطالب:</strong> {selectedStudent.name}</p>
+                    <p><strong>السجل المدني:</strong> {selectedStudent.nationalId}</p>
+                    <p><strong>الصف الدراسي:</strong> {selectedStudent.grade}</p>
+                    <p><strong>الحالة العامة:</strong> {selectedStudent.status}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="font-bold text-slate-900">مرئيات وتوصيات الموجه الطلابي:</p>
+                    <p className="p-3 border rounded-lg bg-slate-50 text-slate-700 leading-relaxed">
+                      تم عقد جلسة فردية مع الطالب ومتابعة تحصيله الدراسي مع المعلمين المعنيين،
+                      ويُوصى بانتظام حضور الطالب في برامج التوجيه المعرفي مع إحاطة ولي الأمر دورياً.
+                    </p>
+                  </div>
+                </div>
+
+                {/* التوقيع */}
+                <div className="flex justify-between items-end pt-8">
+                  <div className="text-center space-y-1">
+                    <p className="font-bold text-slate-900">الموجه الطلابي</p>
+                    <p className="text-slate-500 text-[10px]">عبدالله المحمد</p>
+                  </div>
+                  <div className="text-center space-y-1">
+                    <p className="font-bold text-slate-900">مدير المدرسة</p>
+                    <p className="text-slate-500 text-[10px]">توقيع واعتماد رسمي</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
 }
