@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Plus, Sparkles, Printer } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarRange, Loader2, Sparkles, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -23,18 +23,14 @@ export const Route = createFileRoute("/_authenticated/programs")({
       { title: "البرامج والأنشطة | منصة الذات" },
       { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة موزعة على أسابيع الفصول الدراسية." },
       { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
-      {
-        property: "og:description",
-        content: "البرامج الإرشادية الوقائية والإنمائية والعلاجية موزعة على الأسابيع الدراسية.",
-      },
+      { property: "og:description", content: "البرامج الإرشادية الوقائية والإنمائية والعلاجية موزعة على الأسابيع الدراسية." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ProgramsPage,
 });
 
-// خطة برامج مكة 1448هـ مرتبة تصاعدياً من الأسبوع الأول في الأعلى
+// قائمة البرامج مرتبطة تصاعدياً حسب التواريخ الهجرية (من الأعلى للأدنى)
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
@@ -213,7 +209,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
     ptype: "تقييمي",
     domain: "الختامي",
     target_group: "طلبة التعليم العام",
-    goal: "متابعة رفع دافعية ذوي الحالات الخاصة واستكمال توثيق الشواهد بنظام نور",
+    goal: "متابعة رفع دافعية ذوي الحالات الخاصة واستكمال توثيق الشواهد",
     indicator: "رفع تقرير أعمال برامج التوجيه الطلابي للفصل الأول لقسم التوجيه",
   },
 ];
@@ -221,60 +217,55 @@ const MAKKAH_MINISTRY_PROGRAMS = [
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [addingName, setAddingName] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  // دالة لإضافة برنامج واحد على حدة
-  async function addSingleProgram(p: typeof MAKKAH_MINISTRY_PROGRAMS[0]) {
-    setAddingName(p.name);
+  async function seed() {
+    setBusy(true);
     try {
-      const { data: existing } = await supabase
-        .from("programs")
-        .select("name")
-        .eq("name", p.name)
-        .maybeSingle();
+      const { data: existing } = await supabase.from("programs").select("name");
+      const known = new Set((existing ?? []).map((p) => String((p as { name: string | null }).name ?? "").trim()));
+      const payloads = MAKKAH_MINISTRY_PROGRAMS
+        .filter((p) => !known.has(p.name))
+        .map((p) => ({
+          program_no: `${p.term} - ${p.week}`,
+          name: p.name,
+          ptype: p.ptype,
+          domain: p.domain,
+          target_group: p.target_group,
+          term: `${p.term} — ${p.week}`,
+          goal: p.goal,
+          indicator: p.indicator,
+          exec_status: "لم يبدأ",
+          required_evidence: "صور وتقرير تنفيذ البرنامج",
+        }));
 
-      if (existing) {
-        toast.info(`البرنامج "${p.name}" مضاف مسبقاً.`);
-        setAddingName(null);
+      if (!payloads.length) {
+        toast.info("جميع البرامج مضافة مسبقاً.");
         return;
       }
-
-      const payload = {
-        program_no: `${p.term} - ${p.week}`,
-        name: p.name,
-        ptype: p.ptype,
-        domain: p.domain,
-        target_group: p.target_group,
-        term: `${p.term} — ${p.week}`,
-        goal: p.goal,
-        indicator: p.indicator,
-        exec_status: "لم يبدأ",
-        required_evidence: "صور وتقرير تنفيذ البرنامج",
-      };
-
-      const { error } = await supabase.from("programs").insert([payload] as never);
+      const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
-
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة برنامج "${p.name}" بنجاح`);
+      toast.success(`تمت إضافة ${payloads.length} برنامجاً مرتباً تصاعدياً حسب التواريخ الهجرية`);
+      setOpen(false);
     } catch (error) {
-      toast.error(`تعذرت الإضافة: ${(error as Error).message}`);
+      toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
     } finally {
-      setAddingName(null);
+      setBusy(false);
     }
   }
 
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <CalendarRange className="size-4" /> البرامج الوزارية (خطة مكة 1448هـ)
+        <CalendarRange className="size-4" /> خطة البرامج الوزارية (مكة 1448هـ)
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>البرامج الوزارية المعتمدة (مرتبة تصاعدياً بالتاريخ الهجري)</DialogTitle>
+            <DialogTitle>خطة برامج وخدمات التوجيه الطلابي (مرتبة تصاعدياً)</DialogTitle>
             <DialogDescription>
-              استعرض الخطة التدريبية والإرشادية وأضف كل برنامج على حدة حسب الاحتياج.
+              استعراض الخطة الوزارية المعتمدة لمكة المكرمة لعام 1448هـ مرتبة من الأسبوع الأول فصاعداً.
             </DialogDescription>
           </DialogHeader>
 
@@ -286,7 +277,7 @@ function MinistryProgramsDialog() {
                   <th className="p-2 font-bold">البرنامج</th>
                   <th className="p-2 font-bold">النوع</th>
                   <th className="p-2 font-bold">الفئة المستهدفة</th>
-                  <th className="p-2 font-bold text-center">إجراء</th>
+                  <th className="p-2 font-bold">مؤشر التحقق / الهدف</th>
                 </tr>
               </thead>
               <tbody>
@@ -298,32 +289,19 @@ function MinistryProgramsDialog() {
                     <td className="p-2 font-bold">{p.name}</td>
                     <td className="p-2">{p.ptype}</td>
                     <td className="p-2">{p.target_group}</td>
-                    <td className="p-2 text-center">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-primary hover:bg-primary/10"
-                        onClick={() => addSingleProgram(p)}
-                        disabled={addingName === p.name}
-                      >
-                        {addingName === p.name ? (
-                          <Loader2 className="size-3.5 animate-spin" />
-                        ) : (
-                          <>
-                            <Plus className="size-3.5 ml-1" /> إضافة
-                          </>
-                        )}
-                      </Button>
-                    </td>
+                    <td className="p-2 text-muted-foreground">{p.indicator}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
               إغلاق
+            </Button>
+            <Button onClick={seed} disabled={busy}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : null} استيراد الكل ({MAKKAH_MINISTRY_PROGRAMS.length}) إلى السجل
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -332,45 +310,48 @@ function MinistryProgramsDialog() {
   );
 }
 
+// دالة مخصصة لطباعة السجل أو البرنامج بتنسيق A4 احترافي
+function handlePrintA4() {
+  window.print();
+}
+
 function ProgramsPage() {
   return (
     <>
-      {/* تنسيقات الطباعة المتوافقة مع A4 لكافة الأجهزة */}
+      {/* أنماط مخصصة لضبط طباعة A4 وإخفاء الأزرار الجانبية وقت الطباعة */}
       <style>{`
         @media print {
-          body {
-            background: white !important;
-            color: black !important;
-            font-size: 12pt !important;
+          body * {
+            visibility: hidden;
           }
-          header, nav, aside, footer, button, .no-print {
+          .printable-area, .printable-area * {
+            visibility: visible;
+          }
+          .printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
             display: none !important;
-          }
-          .container, main, div {
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-          }
-          @page {
-            size: A4 portrait;
-            margin: 1cm;
           }
         }
       `}</style>
 
-      <RecordPage
-        config={recordByKey("programs")}
-        toolbarExtra={
-          <>
-            <MinistryProgramsDialog />
-            <Button variant="outline" onClick={() => window.print()} className="no-print">
-              <Printer className="size-4 ml-1.5" /> طباعة السجل (A4)
-            </Button>
-          </>
-        }
-      />
+      <div className="printable-area">
+        <RecordPage
+          config={recordByKey("programs")}
+          toolbarExtra={
+            <div className="flex items-center gap-2 no-print">
+              <MinistryProgramsDialog />
+              <Button variant="outline" onClick={handlePrintA4}>
+                <Printer className="size-4" /> طباعة تقرير A4
+              </Button>
+            </div>
+          }
+        />
+      </div>
     </>
   );
 }
