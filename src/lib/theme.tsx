@@ -1,10 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
+// تثبيت الثيم الكحلي الملكي المطابق للصورة
 export const THEMES = [
-  { id: "thaat", name: "ذات العنابي" },
-  { id: "royal", name: "الكحلي الملكي" },
-  { id: "sage", name: "الأخضر الهادئ" },
-  { id: "amber", name: "العنبري الدافئ" },
+  { id: "royal", name: "الكحلي الملكي", primary: "#1F3A52" },
 ] as const;
 
 export type AppTheme = (typeof THEMES)[number]["id"];
@@ -21,20 +19,36 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<AppTheme>("thaat");
+  // استخدام التهيئة الابتدائية لمنع وميض الشاشة عند التحميل
+  const [theme, setTheme] = useState<AppTheme>(() => {
+    if (typeof window === "undefined") return "royal";
+    try {
+      const saved = localStorage.getItem("app-theme");
+      return isAppTheme(saved) ? saved : "royal";
+    } catch {
+      return "royal";
+    }
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem("app-theme");
-    if (isAppTheme(saved)) setTheme(saved);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset["theme"] = theme;
-    localStorage.setItem("app-theme", theme);
+    const root = document.documentElement;
+    root.dataset["theme"] = theme;
+    
+    // تطبيق الألوان كمتغيرات CSS مباشرة فور التحميل
+    root.style.setProperty("--theme-primary", "#1F3A52");
+    root.style.setProperty("--theme-primary-hover", "#152838");
+    
+    try {
+      localStorage.setItem("app-theme", theme);
+    } catch (e) {
+      console.warn("Failed to save theme:", e);
+    }
   }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
   );
 }
 
