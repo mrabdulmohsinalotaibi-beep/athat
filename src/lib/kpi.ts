@@ -4,7 +4,7 @@ export interface KpiInput {
   attendance: { case_type?: string | null; count_days?: number | null }[];
   interviews: { itype?: string | null }[];
   students: { id: string }[];
-  schoolDays?: number; // عدد أيام الدوام الفعلي خلال الفترة
+  schoolDays?: number;
 }
 
 export interface Kpi {
@@ -12,7 +12,7 @@ export interface Kpi {
   label: string;
   value: number;
   hint: string;
-  status?: "success" | "warning" | "info"; // (إضافة اختيارية لتلوين وتوجيه البطاقات في الواجهة)
+  status?: "success" | "warning" | "info";
 }
 
 const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
@@ -77,3 +77,67 @@ export function computeKpis(input: KpiInput): Kpi[] {
 }
 
 export const isPercentKpi = (key: string) => key !== "sessions";
+
+// ==========================================
+// 🤖 دالة تحليل الملفات باستخدام DeepSeek API الحقيقي
+// ==========================================
+
+export interface ParsedImportResult {
+  dataType: "students" | "attendance" | "cases" | "interviews" | "planTasks";
+  mappedData: Record<string, any>[];
+  confidenceScore: number;
+}
+
+/**
+ * ترسل محتوى الملف أو رؤوس الأعمدة إلى DeepSeek لتصنيفها وتوزيعها تلقائياً
+ */
+export async function parseImportedFileWithDeepSeek(fileContentSnippet: string): Promise<ParsedImportResult> {
+  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY; // مفتاح اشتراكك في ديب سيك
+
+  if (!DEEPSEEK_API_KEY) {
+    throw new Error("مفتاح DeepSeek API غير موجود في متغيرات البيئة (Environment Variables).");
+  }
+
+  const systemPrompt = `
+  أنت مساعد ذكي متخصص في تحليل البيانات المدرسية وملفات الإكسيل الخاصة بالتوجيه والإرشاد.
+  مهتك هي قراءة النصوص أو عينة الأعمدة المستوردة، وتحديد نوع البيانات من الأنواع التالية حصراً:
+  ("students", "attendance", "cases", "interviews", "planTasks")
+  ثم إعادة البيانات مطابقة لهياكل النظام بـ JSON نقي حصراً بدون أي نصوص إضافية، بالشكل التالي:
+  {
+    "dataType": "نوع_البيانات",
+    "mappedData": [...],
+    "confidenceScore": 0.95
+  }
+  `;
+
+  try {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat", // أو deepseek-reasoner حسب المتاح في حسابك
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `قم بتحليل وتوزيع هذه البيانات:\n${fileContentSnippet}` },
+        ],
+        response_format: { type: "json_object" }, // لضمان إرجاع النتائج بصيغة JSON نظيفة
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`خطأ في الاتصال بخادم DeepSeek: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const parsedResult: ParsedImportResult = JSON.parse(data.choices[0].message.content);
+
+    return parsedResult;
+  } catch (error) {
+    console.error("فشل التحليل الذكي عبر DeepSeek:", error);
+    throw error;
+  }
+}
