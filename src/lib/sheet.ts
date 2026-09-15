@@ -1,7 +1,12 @@
 import * as XLSX from "xlsx";
 import type { FieldDef } from "./records";
 
-export function exportToExcel(fields: FieldDef[], rows: Record<string, unknown>[], fileName: string) {
+export function exportToExcel(
+  fields: FieldDef[],
+  rows: Record<string, unknown>[],
+  fileName: string
+) {
+  // 1. تحويل البيانات وتجهيز الأعمدة
   const data = rows.map((row) => {
     const out: Record<string, unknown> = {};
     fields.forEach((f) => {
@@ -9,36 +14,87 @@ export function exportToExcel(fields: FieldDef[], rows: Record<string, unknown>[
     });
     return out;
   });
+
   const ws = XLSX.utils.json_to_sheet(data);
+
+  // 2. ضبط اتجاه ورقة العمل من اليمين إلى اليسار (RTL) للغة العربية
+  ws["!dir"] = "rtl";
+
+  // 3. احتساب عرض الأعمدة تلقائياً لمنع التنسيق المشوه
+  if (data.length > 0) {
+    const headers = Object.keys(data[0] || {});
+    ws["!cols"] = headers.map((header) => {
+      const maxLen = data.reduce((max, row) => {
+        const val = String(row[header] ?? "");
+        return Math.max(max, val.length);
+      }, header.length);
+      
+      return { wch: Math.min(Math.max(maxLen + 4, 12), 50) }; // العرض بين 12 و 50 حرف
+    });
+  }
+
+  // 4. إنشاء وتصدير الملف
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "بيانات");
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
+  XLSX.writeFile(wb, `${fileName.trim() || "تصدير_بيانات"}.xlsx`);
 }
 
 /** Reads a workbook file and returns the first sheet rows as objects keyed by header text. */
 export async function readExcel(file: File): Promise<Record<string, unknown>[]> {
-  const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer, { cellDates: true });
-  const sheetName = wb.SheetNames[0];
-  if (!sheetName) return [];
-  const sheet = wb.Sheets[sheetName];
-  if (!sheet) return [];
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
-  return rows;
+  try {
+    if (!file) return [];
+    
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { cellDates: true, cellNF: false, cellText: false });
+    
+    const sheetName = wb.SheetNames[0];
+    if (!sheetName) return [];
+
+    const sheet = wb.Sheets[sheetName];
+    if (!sheet) return [];
+
+    // تحويل الشيت إلى كائنات مع إهمال الصفوف الفارغة
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+      defval: "",
+      blankrows: false,
+    });
+
+    return rows;
+  } catch (error) {
+    console.error("خطأ أثناء قراءة ملف Excel:", error);
+    return [];
+  }
 }
 
 export function sheetHeaders(rows: Record<string, unknown>[]): string[] {
+  if (!rows || rows.length === 0) return [];
   const set = new Set<string>();
   rows.forEach((r) => Object.keys(r).forEach((k) => set.add(k)));
-  return [...set];
+  return Array.from(set);
 }
 
 export function toIsoDate(value: unknown): string | null {
-  if (!value) return null;
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (value === null || value === undefined || value === "") return null;
+
+  // التعامل مع كائنات Date المباشرة
+  if (value instanceof Date) {
+    return !Number.isNaN(value.getTime()) ? value.toISOString().slice(0, 10) : null;
+  }
+
+  // التعامل مع أرقام التواريخ التسلسلية الخاصة بـ Excel (Excel Serial Date)
+  if (typeof value === "number") {
+    const date = new Date(Math.round((value - 25569) * 86400 * 1000));
+    return !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 10) : null;
+  }
+
+  // التعامل مع النصوص
   const text = String(value).trim();
   if (!text) return null;
+
   const parsed = new Date(text);
-  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
   return null;
 }
