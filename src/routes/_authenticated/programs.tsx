@@ -1,256 +1,227 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import {
-  CalendarDays,
-  Plus,
-  Trash2,
-  Printer,
-  Sparkles,
-  Loader2,
-  FileText,
-  Upload,
-  Image as ImageIcon,
-  BookOpen,
-  Video,
-  CheckCircle2,
-  X,
-} from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase"; // تأكد من مسار ملف السوبابيس لديك
 import { toast } from "sonner";
-
-import { supabase } from "@/integrations/supabase/client";
-import { useSchool } from "@/lib/school";
-import { MINISTRY_PROGRAMS, MINISTRY_TERMS } from "@/lib/ministry-programs";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_authenticated/programs")({
-  head: () => ({
-    meta: [
-      { title: "البرامج والأنشطة الإرشادية | منصة الذات" },
-      {
-        name: "description",
-        content:
-          "إدارة وتوثيق البرامج الإرشادية والأنشطة الوزارية بالشهادات والشواهد.",
-      },
-    ],
-  }),
-  component: ProgramsPage,
-});
+// ==========================================
+// 1. ملف الثوابت المدمج (Ministry Programs)
+// ==========================================
+export const MINISTRY_TERMS = [
+  "الفصل الدراسي الأول",
+  "الفصل الدراسي الثاني",
+  "الفصل الدراسي الثالث",
+];
 
-// ============ ثوابت ومساعدة ============
-const HIJRI_FORMATTER = new Intl.DateTimeFormat(
-  "ar-SA-u-ca-islamic-umalqura",
-  { day: "numeric", month: "long", year: "numeric" }
-);
-
-const MAX_IMAGE_SIZE_MB = 5;
-const MAX_VIDEO_SIZE_MB = 50;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
-const STORAGE_BUCKET = "programs-evidence";
-
-function toHijriDate(dateStr?: string) {
-  if (!dateStr) return "—";
-  try {
-    const d = new Date(dateStr);
-    if (Number.isNaN(d.getTime())) return dateStr;
-    return HIJRI_FORMATTER.format(d);
-  } catch {
-    return dateStr;
-  }
-}
-
-function validateFile(file: File, type: "image" | "video"): string | null {
-  const allowed = type === "image" ? ALLOWED_IMAGE_TYPES : ALLOWED_VIDEO_TYPES;
-  const maxMB = type === "image" ? MAX_IMAGE_SIZE_MB : MAX_VIDEO_SIZE_MB;
-  if (!allowed.includes(file.type)) {
-    return `نوع الملف غير مدعوم: ${file.name} (${file.type || "غير معروف"})`;
-  }
-  if (file.size > maxMB * 1024 * 1024) {
-    return `حجم الملف ${file.name} يتجاوز الحد الأقصى (${maxMB}MB)`;
-  }
-  return null;
-}
-
-export type ProgramItem = {
-  id: string;
-  school_id?: string;
+export type MinistryProgramDef = {
+  term: string;
+  week: string;
   name: string;
-  program_no?: string;
-  ptype?: string;
-  domain?: string;
-  target_group?: string;
-  term?: string;
-  goal?: string;
-  indicator?: string;
-  start_date?: string;
-  end_date?: string;
-  exec_status?: string;
-  summary?: string;
-  evidence_images?: string[];
-  evidence_videos?: string[];
-  created_at?: string;
+  ptype: string;
+  domain: string;
+  target_group: string;
+  goal: string;
+  indicator: string;
 };
 
-// ============ المكوّن الرئيسي ============
-function ProgramsPage() {
-  const queryClient = useQueryClient();
-  const { data: school } = useSchool();
+export const MINISTRY_PROGRAMS: MinistryProgramDef[] = [
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الأول",
+    name: "برنامج التهيئة الإرشادية والأسبوع التمهيدي",
+    ptype: "برنامج وزاري نمائي ووقائي",
+    domain: "المهاري والتربوي",
+    target_group: "طلبة المستجدين والمرحلة الدراسية",
+    goal: "التهيئة النفسية والتربوية والاجتماعية لتحقيق تكيف الطلبة في البيئة المدرسية وتعريفهم بلوائح وأنظمة المدرسة.",
+    indicator: "حصر الحالات الصحية والاجتماعية وتفعيل إطار توثيق العلاقة مع الأسرة.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الثاني",
+    name: "تعزيز السلوك الإيجابي",
+    ptype: "برنامج وزاري تعزيرى",
+    domain: "السلوكي والقيمي",
+    target_group: "طلبة التعليم العام",
+    goal: "تفعيل الأنشطة والإجراءات المحفزة للسلوك الإيجابي وتفعيل جائزة المدرسة للتميز السلوكي.",
+    indicator: "تفعيل استمارات التكريم على مستوى الفصل والمدرسة ورصد المشكلات السلوكية.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الثالث",
+    name: "الاستمرار بتعزيز السلوك الإيجابي ورعاية الحالات الخاصة",
+    ptype: "برنامج وزاري وعلاجي",
+    domain: "الرعاية والاجتماعي",
+    target_group: "الفئات الخاصة (الأيتام، ذوي الحاجة المادية، أبناء السجناء والموهوبين)",
+    goal: "تقديم الخدمات التربوية والنفسية للفئات الخاصة ورفع مستوى التحصيل الدراسي ورعاية متكرري الغياب.",
+    indicator: "اكتمال استمارات تحديث البيانات ومتابعة الخطط العلاجية.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الرابع",
+    name: "برنامج خفض العنف (رفق) واليوم الوطني",
+    ptype: "برنامج وزاري وقائي وعلاجي",
+    domain: "الوقائي والسلوكي",
+    target_group: "طلبة التعليم العام - موجهي الطلبة - أولياء الأمور",
+    goal: "الحد من العنف بين الطلبة في المدارس من خلال أساليب الوقاية والعلاج وإكساب المهارات الشخصية والاجتماعية.",
+    indicator: "إعداد الخطة التنفيذية لبرنامج رفق وتفعيل خط مساندة الطفل وتوثيق الفعاليات.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الخامس",
+    name: "تنمية الدافعية لرفع مستوى التحصيل الدراسي",
+    ptype: "برنامج وزاري أكاديمي",
+    domain: "التعليمي والتحصيلي",
+    target_group: "طلاب وطالبات التعليم العام وأولياء الأمور",
+    goal: "تنمية دافعية الطلبة للتعلم ورفع مستواهم التحصيلي والتهيئة لاختبارات أعمال السنة الفصلية.",
+    indicator: "تنفيذ خطة المدرسة في دليل دور الأسرة في تنمية الدافعية وتحقيق التكامل بين الموجه والمعلم.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع السادس",
+    name: "تعزيز المهارات النفسية والاجتماعية (برنامجي نبيه ودرع)",
+    ptype: "برنامج وزاري نمائي ووقائي",
+    domain: "النفسي والاجتماعي",
+    target_group: "طلبة التعليم العام",
+    goal: "تنمية مهارات الطلبة الانفعالية والاجتماعية في مدارس التعليم العام وحماية الطلاب.",
+    indicator: "تفعيل برامج نبيه ودرع والمجلس الطلابي وتوثيق الشواهد.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع السابع",
+    name: "التوجيه المهني",
+    ptype: "برنامج وزاري مهني",
+    domain: "المهني والتقني",
+    target_group: "طلبة مراحل التعليم العام",
+    goal: "مساعدة الطلبة في اكتشاف ميولهم واستعداداتهم وقدراتهم وتنميتها وتوجيههم للمسارات التعليمية المناسبة.",
+    indicator: "تنظيم زيارات ميدانية وتفعيل دليل التوجيه المهني ونظام المسارات للمرحلة الثانوية.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الثامن",
+    name: "استمرار تعزيز المهارات النفسية للطلبة",
+    ptype: "برنامج وزاري وقائي",
+    domain: "النفسي",
+    target_group: "طلبة التعليم العام",
+    goal: "الوقاية النفسية الأولية وتنمية المهارات الانفعالية والاجتماعية المستهدفة.",
+    indicator: "تنفيذ الجلسات الإرشادية واستثمار المجالس الطلابية وأنشطة رعاية النمو السليم.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع التاسع",
+    name: "رعاية ودعم الحالات الخاصة ومتكرري الغياب",
+    ptype: "برنامج وزاري علاجي",
+    domain: "الرعاية والتوجه الفردي",
+    target_group: "طلبة الظروف الخاصة ومتكرري الغياب والتأخر",
+    goal: "تحقيق التوافق النفسي والاجتماعي والتربوي والمهني للطلبة والحد من الغياب المتكرر.",
+    indicator: "تنفيذ جلسات الإرشاد الفردي ودراسة الحالة واستمارة تحديث البيانات.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع العاشر",
+    name: "متابعة تنمية الدافعية لرفع مستوى التحصيل الدراسي",
+    ptype: "برنامج وزاري أكاديمي",
+    domain: "التحصيلي",
+    target_group: "طلبة التعليم العام وأولياء الأمور",
+    goal: "تقديم التدخلات التربوية والخطط المناسبة للرفع من الدافعية وتفعيل مجالس أولياء الأمور.",
+    indicator: "رصد نتائج التحصيل الدراسي وتقديم الدعم الإضافي وتوثيق الشراكة المجتمعية.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الحادي عشر",
+    name: "استمرار الرعاية والدعم للحالات الخاصة وتفعيل جائزة التميز السلوكي",
+    ptype: "برنامج وزاري متكامل",
+    domain: "القيمي والرعائي",
+    target_group: "العاملين في المدارس - طلبة التعليم العام - أولياء الأمور",
+    goal: "تعزيز القيم والمهارات الأساسية وتطبيق قائمة المشكلات السلوكية ومعالجتها.",
+    indicator: "تطبيق استمارات التكريم للتميز السلوكي (نموذج 1 و 2) وإعداد التقارير.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الثاني عشر",
+    name: "الانضباط المدرسي والحد من الغياب",
+    ptype: "برنامج وزاري تنظيمي",
+    domain: "الانضباط والسلوك",
+    target_group: "منسوبي المدرسة - طلبة التعليم العام - أولياء الأمور",
+    goal: "تنمية دافعية الطلبة للتعلم وتوعيتهم بما يترتب على الغياب من إجراءات في قواعد السلوك والمواظبة.",
+    indicator: "الرفع بتقرير مفصل لقسم التوجيه الطلابي عن تشخيص واقع غياب الطلبة وطرق الحد منها.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الثالث عشر",
+    name: "تنمية الدافعية لرفع مستوى التحصيل الدراسي (متابعة وتحليل)",
+    ptype: "برنامج وزاري تحصيلي",
+    domain: "التعليمي",
+    target_group: "طلاب وطالبات التعليم العام",
+    goal: "متابعة تحليل نتائج الطلبة وتقديم التدخلات التربوية والخطط بناءً على مقياس الدافعية.",
+    indicator: "إعادة تدريب مجموعة من الطلبة على حقيبة تنمية الدافعية وتنفيذ خطة المدرسة.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الرابع عشر",
+    name: "الاستخدام الآمن للإنترنت والألعاب الإلكترونية",
+    ptype: "برنامج وزاري توعوي وقائي",
+    domain: "التقني والوقائي",
+    target_group: "الطلبة وأولياء الأمور",
+    goal: "توعية الطلبة وأولياء الأمور بالاستخدام الآمن للإنترنت والألعاب الإلكترونية والاستفادة من جوانبها الإيجابية والوقاية من المخاطر.",
+    indicator: "تنفيذ برامج توعوية للتحذير من المواقع المشبوهة ومخاطر استغلال الإنترنت.",
+  },
+  {
+    term: "الفصل الدراسي الأول",
+    week: "الأسبوع الخامس عشر",
+    name: "الاستمرار في التوجيه المهني والختامي",
+    ptype: "برنامج وزاري مهني",
+    domain: "المهني",
+    target_group: "طلبة التعليم العام وموجهي الطلبة",
+    goal: "استكمال الخطة التنفيذية للتوجيه المهني وتعريف الطلبة بالمسارات والتخصصات والقدرات والتحصيلي.",
+    indicator: "استكمال متطلبات الخطة الختامية وإعداد تقارير الأداء النهائية.",
+  },
+];
 
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedTerm, setSelectedTerm] = useState("all");
+// ==========================================
+// 2. المكون الرئيسي (ProgramsPage)
+// ==========================================
+export default function ProgramsPage({ school }: { school?: { id: string } }) {
   const [selectedMinistryProg, setSelectedMinistryProg] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const queryClient = useQueryClient();
 
-  const [editProgram, setEditProgram] = useState<ProgramItem | null>(null);
-  const [printProgram, setPrintProgram] = useState<ProgramItem | null>(null);
-  const [aiGenerating, setAiGenerating] = useState(false);
-
-  const printRef = useRef<HTMLDivElement>(null);
-
-  // ============ جلب البرامج (فلترة مرنة) ============
-  const { data: programs = [], isLoading } = useQuery({
-    queryKey: ["programs-list", school?.id],
-    enabled: !!school?.id,
+  // جلب البرامج من قاعدة البيانات
+  const { data: programs = [], refetch } = useQuery({
+    queryKey: ["programs", school?.id],
     queryFn: async () => {
-      // نحاول الفلترة بـ school_id، وإن فشل العمود نرجع لكل الصفوف
-      let query = supabase
-        .from("programs")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+      let query = supabase.from("programs").select("*");
+      if (school?.id) {
+        query = query.eq("school_id", school.id);
+      }
       const { data, error } = await query;
       if (error) throw error;
-
-      // فلترة محلية إن كان الحقل موجود
-      const all = (data ?? []) as ProgramItem[];
-      if (school?.id) {
-        const filtered = all.filter(
-          (p) => !p.school_id || p.school_id === school.id
-        );
-        return filtered.length > 0 ? filtered : all;
-      }
-      return all;
+      return data;
     },
   });
 
-  // ============ فلترة قائمة البرامج الوزارية ============
-  const ministryList = useMemo(
-    () =>
-      selectedTerm === "all"
-        ? MINISTRY_PROGRAMS
-        : MINISTRY_PROGRAMS.filter((p) => p.term === selectedTerm),
-    [selectedTerm]
-  );
-
-  // ============ إضافة برنامج ============
+  // دالة الإضافة عبر الـ Mutation مع ضبط الحقول بشكل سليم ومطابق
   const addProgramMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const { data, error } = await supabase
-        .from("programs")
-        .insert([payload])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("INSERT ERROR:", {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        });
-        throw new Error(
-          `${error.message}${error.hint ? ` — ${error.hint}` : ""}`
-        );
-      }
-      if (!data) {
-        throw new Error("لم يتم إدراج السجل — تحقق من سياسات RLS");
-      }
+      const { data, error } = await supabase.from("programs").insert([payload]);
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تمت إضافة البرنامج بنجاح إلى السجل");
-      setAddDialogOpen(false);
+      toast.success("تم إضافة البرنامج بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
       setSelectedMinistryProg("");
       setStartDate("");
       setEndDate("");
+      refetch();
     },
     onError: (err: Error) => {
-      toast.error(`تعذر إضافة البرنامج: ${err.message}`, {
-        duration: 8000,
-      });
+      toast.error(`حدث خطأ أثناء الإضافة: ${err.message}`);
     },
   });
 
-  // ============ حذف برنامج ============
-  const deleteProgramMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("programs").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onMutate: async (id: string) => {
-      await queryClient.cancelQueries({
-        queryKey: ["programs-list", school?.id],
-      });
-      const previous = queryClient.getQueryData<ProgramItem[]>([
-        "programs-list",
-        school?.id,
-      ]);
-      queryClient.setQueryData<ProgramItem[]>(
-        ["programs-list", school?.id],
-        (old) => (old ?? []).filter((p) => p.id !== id)
-      );
-      return { previous };
-    },
-    onError: (err: Error, _id, ctx) => {
-      if (ctx?.previous) {
-        queryClient.setQueryData(["programs-list", school?.id], ctx.previous);
-      }
-      toast.error(`تعذر الحذف: ${err.message}`);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-    },
-    onSuccess: () => {
-      toast.success("تم حذف البرنامج بنجاح");
-    },
-  });
-
-  // ============ حفظ تعديل ============
-  const saveEditMutation = useMutation({
-    mutationFn: async (program: ProgramItem) => {
-      const { error } = await supabase
-        .from("programs")
-        .update({
-          start_date: program.start_date,
-          end_date: program.end_date,
-          exec_status: program.exec_status,
-          summary: program.summary,
-        })
-        .eq("id", program.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تم حفظ تفاصيل البرنامج بنجاح");
-      setEditProgram(null);
-    },
-    onError: (err: Error) => {
-      toast.error(`تعذر الحفظ: ${err.message}`);
-    },
-  });
-
-  // ============ إضافة برنامج واحد ============
   const handleAddSingleProgram = useCallback(() => {
     if (!selectedMinistryProg) {
       toast.error("يرجى اختيار برنامج من القائمة الوزارية");
@@ -264,10 +235,9 @@ function ProgramsPage() {
       return;
     }
 
-    // نبني الحمولة بدون school_id أولاً، ونضيفه إن وُجد
     const payload: Record<string, unknown> = {
       name: found.name,
-      program_no: `${found.term} - الأسبوع ${found.week}`,
+      program_no: `${found.term} - ${found.week}`,
       ptype: found.ptype,
       domain: found.domain,
       target_group: found.target_group,
@@ -277,7 +247,7 @@ function ProgramsPage() {
       start_date: startDate || null,
       end_date: endDate || null,
       exec_status: "قيد التنفيذ",
-      summary: `برنامج إرشادي وزاري موجه لـ ${found.target_group} وفق خطة الوزارة بهدف ${found.goal}.`,
+      summary: `برنامج إرشادي وزاري (${found.name}) موجه لـ ${found.target_group} بهدف: ${found.goal}.`,
       evidence_images: [],
       evidence_videos: [],
     };
@@ -289,654 +259,84 @@ function ProgramsPage() {
     addProgramMutation.mutate(payload);
   }, [school?.id, selectedMinistryProg, startDate, endDate, addProgramMutation]);
 
-  // ============ حذف برنامج ============
-  const handleDeleteProgram = useCallback(
-    (id: string) => {
-      if (
-        !window.confirm("هل أنت متأكد من حذف هذا البرنامج نهائياً من السجل؟")
-      )
-        return;
-      deleteProgramMutation.mutate(id);
-    },
-    [deleteProgramMutation]
-  );
-
-  // ============ توليد مسودة التقرير ============
-  const handleGenerateTemplate = useCallback(
-    async (program: ProgramItem) => {
-      if (aiGenerating) return;
-      setAiGenerating(true);
-      try {
-        const template = [
-          `تم تنفيذ برنامج (${program.name}) المدرج ضمن خطة الأنشطة والبرامج الإرشادية الوزارية المعتمدة،`,
-          `والموجه خصيصاً لفئة (${program.target_group || "جميع الطلاب"}).`,
-          `استهدف البرنامج تحقيق: ${program.goal || "توجيه سلوكي ومهاري"}.`,
-          `وقد أظهر الطلاب تفاعلاً إيجابياً ملحوظاً، وتم قياس الأثر وتحقق مؤشر التحقق المعتمد:`,
-          `[${program.indicator || "رصد التفاعل والنتائج الإيجابية"}] بنسبة نجاح عالية.`,
-          `\n(يمكن تعديل هذا النص يدوياً قبل الحفظ.)`,
-        ].join(" ");
-
-        const next = { ...program, summary: template, exec_status: "مكتمل" };
-
-        const { error } = await supabase
-          .from("programs")
-          .update({ summary: template, exec_status: "مكتمل" })
-          .eq("id", program.id);
-        if (error) throw error;
-
-        setEditProgram(next);
-        queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-        toast.success("تم توليد مسودة التقرير بنجاح");
-      } catch (err) {
-        toast.error(`خطأ أثناء التوليد: ${(err as Error).message}`);
-      } finally {
-        setAiGenerating(false);
-      }
-    },
-    [aiGenerating, queryClient]
-  );
-
-  // ============ رفع الشواهد ============
-  const uploadEvidenceMutation = useMutation({
-    mutationFn: async ({
-      program,
-      type,
-      files,
-    }: {
-      program: ProgramItem;
-      type: "image" | "video";
-      files: File[];
-    }) => {
-      const currentList =
-        type === "image"
-          ? [...(program.evidence_images || [])]
-          : [...(program.evidence_videos || [])];
-
-      const errors: string[] = [];
-      const validFiles: File[] = [];
-      files.forEach((f) => {
-        const err = validateFile(f, type);
-        if (err) errors.push(err);
-        else validFiles.push(f);
-      });
-      if (errors.length > 0) toast.error(errors.join(" • "));
-      if (validFiles.length === 0) return null;
-
-      const folder = `${school?.id ?? "public"}/programs/${program.id}`;
-
-      const results = await Promise.all(
-        validFiles.map(async (file) => {
-          const ext = file.name.split(".").pop() || "";
-          const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-          const { error: upErr } = await supabase.storage
-            .from(STORAGE_BUCKET)
-            .upload(path, file, { cacheControl: "3600", upsert: false });
-          if (upErr) throw upErr;
-          const { data: urlData } = supabase.storage
-            .from(STORAGE_BUCKET)
-            .getPublicUrl(path);
-          return urlData.publicUrl;
-        })
-      );
-
-      const newList = [...currentList, ...results];
-      const updatePayload =
-        type === "image"
-          ? { evidence_images: newList }
-          : { evidence_videos: newList };
-
-      const { error } = await supabase
-        .from("programs")
-        .update(updatePayload)
-        .eq("id", program.id);
-      if (error) throw error;
-
-      return { updatePayload, newList };
-    },
-    onSuccess: (res) => {
-      if (!res) return;
-      setEditProgram((prev) =>
-        prev ? { ...prev, ...res.updatePayload } : null
-      );
-      queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-      toast.success("تم إرفاق الشواهد بنجاح");
-    },
-    onError: (err: Error) => {
-      toast.error(`تعذر رفع الملفات: ${err.message}`);
-    },
-  });
-
-  const handleFileUpload = useCallback(
-    (
-      e: React.ChangeEvent<HTMLInputElement>,
-      program: ProgramItem,
-      type: "image" | "video"
-    ) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      uploadEvidenceMutation.mutate({
-        program,
-        type,
-        files: Array.from(files),
-      });
-      e.target.value = "";
-    },
-    [uploadEvidenceMutation]
-  );
-
-  // ============ إزالة شاهد ============
-  const handleRemoveEvidence = useCallback(
-    async (program: ProgramItem, type: "image" | "video", index: number) => {
-      try {
-        const list =
-          type === "image"
-            ? [...(program.evidence_images || [])]
-            : [...(program.evidence_videos || [])];
-        list.splice(index, 1);
-        const updatePayload =
-          type === "image"
-            ? { evidence_images: list }
-            : { evidence_videos: list };
-        const { error } = await supabase
-          .from("programs")
-          .update(updatePayload)
-          .eq("id", program.id);
-        if (error) throw error;
-        setEditProgram((prev) => (prev ? { ...prev, ...updatePayload } : null));
-        queryClient.invalidateQueries({ queryKey: ["programs-list"] });
-        toast.success("تم حذف الشاهد");
-      } catch (err) {
-        toast.error(`تعذر الحذف: ${(err as Error).message}`);
-      }
-    },
-    [queryClient]
-  );
-
-  // ============ حفظ التعديلات ============
-  const handleSaveProgramEdit = useCallback(() => {
-    if (!editProgram) return;
-    saveEditMutation.mutate(editProgram);
-  }, [editProgram, saveEditMutation]);
-
-  // ============ الطباعة ============
-  useEffect(() => {
-    if (!printProgram) return;
-    const root = printRef.current;
-    if (!root) return;
-
-    let cancelled = false;
-
-    const waitForImages = async () => {
-      const imgs = Array.from(root.querySelectorAll("img"));
-      await Promise.all(
-        imgs.map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise<void>((res) => {
-                img.addEventListener("load", () => res(), { once: true });
-                img.addEventListener("error", () => res(), { once: true });
-              })
-        )
-      );
-    };
-
-    const run = async () => {
-      await waitForImages();
-      if (cancelled) return;
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          if (!cancelled) window.print();
-        })
-      );
-    };
-
-    run();
-
-    const handleAfterPrint = () => setPrintProgram(null);
-    window.addEventListener("afterprint", handleAfterPrint);
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener("afterprint", handleAfterPrint);
-    };
-  }, [printProgram]);
-
-  const triggerPrint = useCallback((program: ProgramItem) => {
-    setPrintProgram(program);
-  }, []);
-
-  const isBusy =
-    addProgramMutation.isPending ||
-    uploadEvidenceMutation.isPending ||
-    saveEditMutation.isPending;
-
-  // ============ العرض ============
   return (
-    <div className="space-y-6 dir-rtl">
-      {/* ترويسة */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-6 text-primary-foreground shadow-xl sm:p-8">
-        <div className="pointer-events-none absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-12 -right-12 size-48 rounded-full bg-black/10 blur-3xl" />
-
-        <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-medium backdrop-blur-md">
-              <Sparkles className="size-3.5 text-amber-300" />
-              <span>منصة التوجيه والإرشاد الطلابي</span>
-            </div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">
-              سجل البرامج والأنشطة الإرشادية
-            </h1>
-            <p className="text-xs font-medium text-primary-foreground/80 sm:text-sm">
-              إدارة خطة البرامج الوزارية، وتوثيق الشواهد والتقارير، والطباعة
-              الرسمية الفردية
-            </p>
-          </div>
-
-          <Button
-            onClick={() => setAddDialogOpen(true)}
-            className="inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl border-0 bg-white px-6 text-sm font-extrabold text-primary shadow-lg transition-all hover:scale-105 hover:bg-white/90 active:scale-95"
-          >
-            <Plus className="size-5" />
-            <span>إضافة برنامج من القائمة الوزارية</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* قائمة البرامج */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black text-foreground">
-            البرامج الإرشادية المدرجة ({programs.length})
-          </h2>
-        </div>
-
-        {isLoading ? (
-          <div className="flex h-40 items-center justify-center rounded-3xl border border-border/60 bg-card">
-            <Loader2 className="size-6 animate-spin text-primary" />
-          </div>
-        ) : programs.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border/80 bg-card p-12 text-center">
-            <BookOpen className="mx-auto size-12 text-muted-foreground/40" />
-            <p className="mt-3 text-sm font-bold text-muted-foreground">
-              لا توجد برامج مضافة في السجل حالياً
-            </p>
-            <p className="text-xs text-muted-foreground">
-              قم بإضافة البرامج واختيار مواقيت تنفيذها حسب خطتكم.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {programs.map((prog) => (
-              <div
-                key={prog.id}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-extrabold text-primary">
-                      {prog.ptype || "برنامج وزاري"}
-                    </span>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                        prog.exec_status === "مكتمل"
-                          ? "bg-emerald-500/10 text-emerald-600"
-                          : "bg-amber-500/10 text-amber-600"
-                      }`}
-                    >
-                      {prog.exec_status || "قيد التنفيذ"}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-3 text-base font-black leading-snug text-foreground">
-                    {prog.name}
-                  </h3>
-                  <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                    الفئة المستهدفة: {prog.target_group || "جميع الطلاب"}
-                  </p>
-
-                  <div className="mt-4 space-y-1.5 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <CalendarDays className="size-3.5 text-primary" />
-                      <span>
-                        فترة التنفيذ: {toHijriDate(prog.start_date)} -{" "}
-                        {toHijriDate(prog.end_date)}
-                      </span>
-                    </div>
-                    {(prog.evidence_images?.length || 0) > 0 ||
-                    (prog.evidence_videos?.length || 0) > 0 ? (
-                      <div className="flex items-center gap-1.5 font-bold text-emerald-600">
-                        <CheckCircle2 className="size-3.5" />
-                        <span>
-                          الشواهد: {prog.evidence_images?.length || 0} صور،{" "}
-                          {prog.evidence_videos?.length || 0} فيديو
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/40 pt-4">
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditProgram(prog)}
-                      className="h-8 rounded-xl text-xs font-bold"
-                    >
-                      <FileText className="ml-1 size-3.5" />
-                      إدارة وتوثيق
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => triggerPrint(prog)}
-                      className="h-8 rounded-xl text-xs font-bold"
-                    >
-                      <Printer className="ml-1 size-3.5" />
-                      طباعة
-                    </Button>
-                  </div>
-
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleDeleteProgram(prog.id)}
-                    className="size-8 rounded-xl text-rose-500 hover:bg-rose-500/10"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* نافذة الإضافة */}
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="max-w-md rounded-3xl" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black">
-              إضافة برنامج من القائمة الوزارية
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              اختر الفصل الدراسي والبرنامج المحدد، ثم حدد تواريخ التنفيذ
-              المناسبة لجدولك.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground">
-                تصفية الفصل الدراسي
-              </label>
+    <div className="p-6 max-w-4xl mx-auto space-y-6" dir="rtl">
+      <Card>
+        <CardHeader>
+          <CardTitle>إدارة البرامج الإرشادية الوزارية</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">اختر البرنامج الوزاري</label>
               <select
-                value={selectedTerm}
-                onChange={(e) => setSelectedTerm(e.target.value)}
-                className="h-11 w-full rounded-2xl border border-input bg-background px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">كل الفصول الدراسية</option>
-                {MINISTRY_TERMS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground">
-                اختر البرنامج الوزاري
-              </label>
-              <select
+                className="w-full border rounded-md p-2 bg-background"
                 value={selectedMinistryProg}
                 onChange={(e) => setSelectedMinistryProg(e.target.value)}
-                className="h-11 w-full rounded-2xl border border-input bg-background px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">-- اختر البرنامج --</option>
-                {ministryList.map((p, idx) => (
-                  <option
-                    key={`${p.term}-${p.week}-${p.name}-${idx}`}
-                    value={p.name}
-                  >
-                    [{p.term} - الأسبوع {p.week}] {p.name}
+                {MINISTRY_PROGRAMS.map((prog, idx) => (
+                  <option key={idx} value={prog.name}>
+                    {prog.week}: {prog.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">
-                  تاريخ بداية التنفيذ
-                </label>
-                <input
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-sm font-medium mb-1">تاريخ البداية</label>
+                <Input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">
-                  تاريخ نهاية التنفيذ
-                </label>
-                <input
+              <div>
+                <label className="block text-sm font-medium mb-1">تاريخ النهاية</label>
+                <Input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs"
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setAddDialogOpen(false)}
-              className="rounded-xl"
-            >
-              إلغاء
-            </Button>
-            <Button
-              onClick={handleAddSingleProgram}
-              disabled={isBusy}
-              className="rounded-xl"
-            >
-              {addProgramMutation.isPending && (
-                <Loader2 className="ml-2 size-4 animate-spin" />
-              )}
-              إضافة البرنامج للسجل
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Button
+            onClick={handleAddSingleProgram}
+            disabled={addProgramMutation.isPending}
+            className="w-full"
+          >
+            {addProgramMutation.isPending ? "جاري الحفظ..." : "إضافة البرنامج للخطة"}
+          </Button>
+        </CardContent>
+      </Card>
 
-      {/* نافذة الإدارة والتوثيق */}
-      <Dialog
-        open={!!editProgram}
-        onOpenChange={(open) => !open && setEditProgram(null)}
-      >
-        <DialogContent
-          className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-3xl"
-          dir="rtl"
-        >
-          {editProgram && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg font-black">
-                  {editProgram.name}
-                </DialogTitle>
-                <DialogDescription className="text-xs">
-                  إدارة محتوى البرنامج، توليد مسودة التقرير، ورفع شواهد الصور
-                  والفيديو.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-5 py-2">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleGenerateTemplate(editProgram)}
-                    disabled={aiGenerating}
-                    className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-bold text-white hover:opacity-90"
-                  >
-                    {aiGenerating ? (
-                      <Loader2 className="ml-1 size-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="ml-1 size-4 text-amber-300" />
-                    )}
-                    توليد مسودة التقرير تلقائياً
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground">
-                      تاريخ البداية
-                    </label>
-                    <input
-                      type="date"
-                      value={editProgram.start_date || ""}
-                      onChange={(e) =>
-                        setEditProgram({
-                          ...editProgram,
-                          start_date: e.target.value,
-                        })
-                      }
-                      className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs"
-                    />
-                    <p className="text-[10px] font-bold text-primary">
-                      الموافق هجرياً: {toHijriDate(editProgram.start_date)}
-                    </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>البرامج المضافة مسبقاً ({programs.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {programs.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">لا توجد برامج مضافة حتى الآن.</p>
+            ) : (
+              programs.map((prog: any) => (
+                <div key={prog.id} className="border p-3 rounded-lg flex justify-between items-center">
+                  <div>
+                    <h4 className="font-bold">{prog.name}</h4>
+                    <p className="text-xs text-muted-foreground">{prog.program_no} | {prog.target_group}</p>
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground">
-                      تاريخ النهاية
-                    </label>
-                    <input
-                      type="date"
-                      value={editProgram.end_date || ""}
-                      onChange={(e) =>
-                        setEditProgram({
-                          ...editProgram,
-                          end_date: e.target.value,
-                        })
-                      }
-                      className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs"
-                    />
-                    <p className="text-[10px] font-bold text-primary">
-                      الموافق هجرياً: {toHijriDate(editProgram.end_date)}
-                    </p>
-                  </div>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                    {prog.exec_status}
+                  </span>
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">
-                    حالة التنفيذ
-                  </label>
-                  <select
-                    value={editProgram.exec_status || "قيد التنفيذ"}
-                    onChange={(e) =>
-                      setEditProgram({
-                        ...editProgram,
-                        exec_status: e.target.value,
-                      })
-                    }
-                    className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs font-bold"
-                  >
-                    <option value="قيد التنفيذ">قيد التنفيذ</option>
-                    <option value="مكتمل">مكتمل</option>
-                    <option value="مؤجل">مؤجل</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">
-                    تقرير التنفيذ وما نفذ
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={editProgram.summary || ""}
-                    onChange={(e) =>
-                      setEditProgram({
-                        ...editProgram,
-                        summary: e.target.value,
-                      })
-                    }
-                    placeholder="اكتب تفاصيل ما نفذ أو استخدم زر التوليد..."
-                    className="w-full rounded-2xl border border-input bg-background p-3 text-xs leading-relaxed"
-                  />
-                </div>
-
-                {/* شواهد الصور */}
-                <div className="space-y-3 border-t border-border/60 pt-4">
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                      <ImageIcon className="size-4 text-primary" />
-                      شواهد الصور (بحد أقصى {MAX_IMAGE_SIZE_MB}MB للصورة)
-                    </label>
-                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20">
-                      <Upload className="size-3.5" />
-                      <span>إضافة صور</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept={ALLOWED_IMAGE_TYPES.join(",")}
-                        onChange={(e) =>
-                          handleFileUpload(e, editProgram, "image")
-                        }
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    {editProgram.evidence_images &&
-                    editProgram.evidence_images.length > 0 ? (
-                      editProgram.evidence_images.map((img, idx) => (
-                        <div
-                          key={idx}
-                          className="group/ev relative aspect-video overflow-hidden rounded-xl border border-border"
-                        >
-                          <img
-                            src={img}
-                            alt={`شاهد ${idx + 1}`}
-                            loading="lazy"
-                            className="h-full w-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleRemoveEvidence(editProgram, "image", idx)
-                            }
-                            className="absolute left-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover/ev:opacity-100"
-                            aria-label="حذف الشاهد"
-                          >
-                            <X className="size-3" />
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="col-span-3 rounded-2xl border border-dashed py-4 text-center text-xs text-muted-foreground">
-                        لم يتم إرفاق صور شواهد بعد.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* شواهد الفيديو */}
-                <div className="space-y-3 border-t border-border/60 pt-4">
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                      <Video className="size-4 text-primary" />
-                      شواهد الفيديو (بحد أقصى {MAX_VIDEO_SIZE_MB}MB للفيديو)
-                    </label>
-                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20">
-                      <Upload className="size-3.5" />
-                      <span>إضافة فيديوهات</span>
-                      <input
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
