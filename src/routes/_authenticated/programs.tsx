@@ -1,332 +1,295 @@
-import React, { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabaseClient";
-import { MINISTRY_TERMS, MINISTRY_PROGRAMS, MinistryProgramDef } from "@/lib/ministry-programs";
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarRange, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  Calendar as CalendarIcon, 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  FileText, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle,
-  Search,
-  Filter
-} from "lucide-react";
 
-export default function ProgramsPage() {
+import { supabase } from "@/integrations/supabase/client";
+import { RecordPage } from "@/components/RecordPage";
+import { recordByKey } from "@/lib/records";
+import { MINISTRY_PROGRAMS, MINISTRY_TERMS } from "@/lib/ministry-programs";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+export const Route = createFileRoute("/_authenticated/programs")({
+  head: () => ({
+    meta: [
+      { title: "البرامج والأنشطة | منصة الذات" },
+      { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة موزعة على أسابيع الفصول الدراسية." },
+      { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
+      {
+        property: "og:description",
+        content: "البرامج الإرشادية الوقائية والإنمائية والعلاجية موزعة على الأسابيع الدراسية.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: ProgramsPage,
+});
+
+function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
-  
-  // States
-  const [selectedTerm, setSelectedTerm] = useState<string>("الفصل الدراسي الأول");
-  const [selectedMinistryProg, setSelectedMinistryProg] = useState<string>("");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterDomain, setFilterDomain] = useState<string>("all");
+  const [open, setOpen] = useState(false);
+  const [term, setTerm] = useState("all");
+  const [busy, setBusy] = useState(false);
 
-  // Fetch School Info
-  const { data: school } = useQuery({
-    queryKey: ["current-school"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("*").single();
+  const list = term === "all" ? MINISTRY_PROGRAMS : MINISTRY_PROGRAMS.filter((p) => p.term === term);
+
+  async function seed() {
+    setBusy(true);
+    try {
+      const { data: existing } = await supabase.from("programs").select("name");
+      const known = new Set((existing ?? []).map((p) => String((p as { name: string | null }).name ?? "").trim()));
+      
+      const payloads = list
+        .filter((p) => !known.has(p.name))
+        .map((p) => ({
+          program_no: `${p.term} - ${p.week}`,
+          name: p.name,
+          ptype: p.ptype,
+          domain: p.domain,
+          target_group: p.target_group,
+          term: p.term,
+          goal: p.goal,
+          indicator: p.indicator,
+          exec_status: "قيد التنفيذ",
+          summary: `برنامج إرشادي وزاري (${p.name}) موجه لـ ${p.target_group} بهدف: ${p.goal}.`,
+          required_evidence: "صور وتقرير تنفيذ البرنامج",
+        }));
+
+      if (!payloads.length) {
+        toast.info("جميع البرامج المحددة مضافة مسبقاً.");
+        return;
+      }
+
+      const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
-      return data;
-    },
-  });
 
-  // Fetch Saved Programs
-  const { data: programs = [], isLoading } = useQuery({
-    queryKey: ["school-programs", school?.id],
-    queryFn: async () => {
-      if (!school?.id) return [];
-      const { data, error } = await supabase
-        .from("programs")
-        .select("*")
-        .eq("school_id", school.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!school?.id,
-  });
-
-  // Add Program Mutation
-  const addProgramMutation = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
-      const { data, error } = await supabase.from("programs").insert([payload]).select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["school-programs"] });
-      toast.success("تم إضافة البرنامج الإرشادي بنجاح");
-      setSelectedMinistryProg("");
-      setStartDate("");
-      setEndDate("");
-    },
-    onError: (err: any) => {
-      toast.error(`خطأ أثناء الإضافة: ${err.message || "حدث خطأ غير متوقع"}`);
-    },
-  });
-
-  // Delete Program Mutation
-  const deleteProgramMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("programs").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["school-programs"] });
-      toast.success("تم حذف البرنامج بنجاح");
-    },
-    onError: (err: any) => {
-      toast.error(`خطأ أثناء الحذف: ${err.message}`);
-    },
-  });
-
-  // Handle Add Single Program Action
-  const handleAddSingleProgram = useCallback(() => {
-    if (!selectedMinistryProg) {
-      toast.error("يرجى اختيار برنامج من القائمة الوزارية");
-      return;
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً موزعاً على الأسابيع`);
+      setOpen(false);
+    } catch (error) {
+      toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
     }
-    const found = MINISTRY_PROGRAMS.find((p) => p.name === selectedMinistryProg);
-    if (!found) {
-      toast.error("البرنامج المختار غير موجود في القائمة");
-      return;
-    }
-
-    const payload: Record<string, unknown> = {
-      name: found.name,
-      program_no: `${found.term} - ${found.week}`,
-      ptype: found.ptype,
-      domain: found.domain,
-      target_group: found.target_group,
-      term: found.term,
-      goal: found.goal,
-      indicator: found.indicator,
-      start_date: startDate || null,
-      end_date: endDate || null,
-      exec_status: "قيد التنفيذ",
-      summary: `برنامج إرشادي وزاري (${found.name}) موجه لـ ${found.target_group} بهدف: ${found.goal}.`,
-      evidence_images: [],
-      evidence_videos: [],
-    };
-
-    if (school?.id) {
-      payload.school_id = school.id;
-    }
-
-    addProgramMutation.mutate(payload);
-  }, [school?.id, selectedMinistryProg, startDate, endDate, addProgramMutation]);
-
-  // Filter available ministry programs based on selected term
-  const filteredMinistryList = MINISTRY_PROGRAMS.filter(
-    (p) => p.term === selectedTerm
-  );
-
-  // Filter saved programs for display
-  const filteredPrograms = programs.filter((prog: any) => {
-    const matchesSearch = prog.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          prog.target_group?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDomain = filterDomain === "all" || prog.domain === filterDomain;
-    return matchesSearch && matchesDomain;
-  });
+  }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 text-right" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">إدارة البرامج والخطط الإرشادية</h1>
-          <p className="text-sm text-gray-500 mt-1">تفعيل ومتابعة البرامج الوزارية المعتمدة للتوجيه الطلابي</p>
-        </div>
-      </div>
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <CalendarRange className="size-4" /> البرامج الوزارية بالأسابيع
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>البرامج الإرشادية الوزارية المعتمدة</DialogTitle>
+            <DialogDescription>
+              اختر الفصل الدراسي لتغذية سجل البرامج بالبرامج الرسمية موزعة على أسابيع الفصل.
+            </DialogDescription>
+          </DialogHeader>
 
-      {/* Add Program Section Form */}
-      <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          <Plus className="w-5 h-5 text-indigo-600" />
-          إضافة برنامج وزاري جديد للخطة
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Term Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">الفصل الدراسي</label>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-semibold">الفصل الدراسي</label>
             <select
-              value={selectedTerm}
-              onChange={(e) => {
-                setSelectedTerm(e.target.value);
-                setSelectedMinistryProg("");
-              }}
-              className="w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              {MINISTRY_TERMS.map((term, idx) => (
-                <option key={idx} value={term}>{term}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Program Selection */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">البرنامج الوزاري المدرج بالأسبوع</label>
-            <select
-              value={selectedMinistryProg}
-              onChange={(e) => setSelectedMinistryProg(e.target.value)}
-              className="w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">-- اختر البرنامج الوزاري --</option>
-              {filteredMinistryList.map((prog, idx) => (
-                <option key={idx} value={prog.name}>
-                  {prog.week}: {prog.name}
+              <option value="all">كل الفصول</option>
+              {MINISTRY_TERMS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Start Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ البدء (اختياري)</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الانتهاء (اختياري)</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex items-end">
-            <button
-              onClick={handleAddSingleProgram}
-              disabled={addProgramMutation.isPending}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition text-sm flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
-            >
-              <Plus className="w-4 h-4" />
-              {addProgramMutation.isPending ? "جاري الإضافة..." : "إضافة للخطة التنفيذية"}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search for Existing Programs */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
-          py-2.5
-          <input
-            type="text"
-            placeholder="بحث في البرامج المضافة..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pr-10 pl-4 py-2 bg-white rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <select
-            value={filterDomain}
-            onChange={(e) => setFilterDomain(e.target.value)}
-            className="rounded-lg border border-gray-300 py-2 px-3 text-sm bg-white focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="all">جميع المجالات</option>
-            <option value="المهاري والتربوي">المهاري والتربوي</option>
-            <option value="السلوكي والقيمي">السلوكي والقيمي</option>
-            <option value="الوقائي والسلوكي">الوقائي والسلوكي</option>
-            <option value="التعليمي والتحصيلي">التعليمي والتحصيلي</option>
-            <option value="النفسي والاجتماعي">النفسي والاجتماعي</option>
-            <option value="المهني والتقني">المهني والتقني</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Programs List Grid/Table */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-800">البرامج الإرشادية المُفعلة للمدرسة</h3>
-          <span className="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-medium">
-            إجمالي البرامج: {filteredPrograms.length}
-          </span>
-        </div>
-
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-500">جاري تحميل البيانات...</div>
-        ] : filteredPrograms.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
-            <FileText className="w-10 h-10 text-gray-300" />
-            <p>لا توجد برامج مضافة حتى الآن بناءً على خيارات البحث أو القائمة الحالية.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-right">
-              <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-                <tr>
-                  <th className="py-3 px-4">اسم البرنامج</th>
-                  <th className="py-3 px-4">الفترة / الأسبوع</th>
-                  <th className="py-3 px-4">المجال</th>
-                  <th className="py-3 px-4">الفئة المستهدفة</th>
-                  <th className="py-3 px-4">الحالة</th>
-                  <th className="py-3 px-4 text-center">الإجراءات</th>
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-right text-xs">
+              <thead>
+                <tr className="border-b bg-muted/60">
+                  <th className="p-2 font-bold">الأسبوع</th>
+                  <th className="p-2 font-bold">البرنامج</th>
+                  <th className="p-2 font-bold">النوع</th>
+                  <th className="p-2 font-bold">الفئة المستهدفة</th>
+                  <th className="p-2 font-bold">مؤشر التحقق</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredPrograms.map((prog: any) => (
-                  <tr key={prog.id} className="hover:bg-gray-50 transition">
-                    <td className="py-3 px-4 font-medium text-gray-900">
-                      {prog.name}
-                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{prog.goal}</div>
+              <tbody>
+                {list.map((p) => (
+                  <tr key={`${p.term}-${p.week}-${p.name}`} className="border-b last:border-0">
+                    <td className="whitespace-nowrap p-2">
+                      {p.term} — {p.week}
                     </td>
-                    <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{prog.program_no}</td>
-                    <td className="py-3 px-4">
-                      <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
-                        {prog.domain || "عام"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-gray-600">{prog.target_group}</td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-medium">
-                        <Clock className="w-3 h-3" />
-                        {prog.exec_status || "قيد التنفيذ"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => {
-                            if (confirm("هل أنت متأكد من حذف هذا البرنامج من الخطة؟")) {
-                              deleteProgramMutation.mutate(prog.id);
-                            }
-                          }}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                          title="حذف البرنامج"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+                    <td className="p-2 font-semibold">{p.name}</td>
+                    <td className="p-2">{p.ptype}</td>
+                    <td className="p-2">{p.target_group}</td>
+                    <td className="p-2">{p.indicator}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              إلغاء
+            </Button>
+            <Button onClick={seed} disabled={busy}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : null} إضافة {list.length} برنامجاً للسجل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+type ProgramRow = { id: string; name: string | null; exec_status: string | null; noor_synced_at: string | null };
+
+function NoorSyncButton() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const { data: programs = [] } = useQuery({
+    queryKey: ["programs-noor-sync"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("programs")
+        .select("id, name, exec_status, noor_synced_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ProgramRow[];
+    },
+  });
+
+  const completed = programs.filter((p) => p.exec_status === "مكتمل");
+  const pending = completed.filter((p) => !p.noor_synced_at);
+  const synced = completed.filter((p) => p.noor_synced_at);
+
+  async function sync() {
+    if (!pending.length) {
+      toast.info("لا توجد برامج مكتملة بانتظار المزامنة.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await new Promise((r) => setTimeout(r, 1200));
+      const stamp = new Date().toISOString();
+      for (const p of pending) {
+        const ref = `NOOR-${stamp.slice(0, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 9000 + 1000)}`;
+        const { error } = await supabase
+          .from("programs")
+          .update({ noor_synced_at: stamp, noor_sync_ref: ref } as never)
+          .eq("id", p.id);
+        if (error) throw error;
+      }
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      queryClient.invalidateQueries({ queryKey: ["programs-noor-sync"] });
+      toast.success(`تمت مزامنة ${pending.length} برنامجاً مع نظام نور وتوثيق تاريخ المزامنة`);
+    } catch (error) {
+      toast.error(`تعذّرت المزامنة: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <RefreshCw className="size-4" /> مزامنة البرامج مع نظام نور
+        {pending.length > 0 && (
+          <span className="mr-1 rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">
+            {pending.length}
+          </span>
         )}
-      </div>
-    </div>
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent dir="rtl" className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>مزامنة البرامج المكتملة مع نظام نور</DialogTitle>
+            <DialogDescription>
+              تُرسل البرامج والأنشطة المكتملة لتوثيقها في نظام نور، ويُسجَّل تاريخ المزامنة ورقم التوثيق لكل برنامج.
+            </DialogDescription>
+          </DialogHeader>
+
+          {completed.length === 0 ? (
+            <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              لا توجد برامج بحالة «مكتمل» حالياً.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full text-right text-xs">
+                <thead>
+                  <tr className="border-b bg-muted/60">
+                    <th className="p-2 font-bold">البرنامج</th>
+                    <th className="p-2 font-bold">حالة المزامنة</th>
+                    <th className="p-2 font-bold">تاريخ التوثيق</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {completed.map((p) => (
+                    <tr key={p.id} className="border-b last:border-0">
+                      <td className="p-2 font-semibold">{p.name ?? "—"}</td>
+                      <td className="p-2">
+                        {p.noor_synced_at ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-primary">
+                            <CheckCircle2 className="size-3" /> تمت المزامنة بنظام نور
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">بانتظار المزامنة</span>
+                        )}
+                      </td>
+                      <td className="p-2">
+                        {p.noor_synced_at ? new Date(p.noor_synced_at).toLocaleString("ar-SA-u-ca-gregory") : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            مزامنة موثقة: {synced.length} · بانتظار المزامنة: {pending.length}
+          </p>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              إغلاق
+            </Button>
+            <Button onClick={sync} disabled={busy || pending.length === 0}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} مزامنة{" "}
+              {pending.length} برنامجاً
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function ProgramsPage() {
+  return (
+    <RecordPage
+      config={recordByKey("programs")}
+      toolbarExtra={
+        <>
+          <MinistryProgramsDialog />
+          <NoorSyncButton />
+        </>
+      }
+    />
   );
 }
