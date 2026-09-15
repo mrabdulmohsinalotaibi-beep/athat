@@ -92,7 +92,7 @@ export interface ParsedImportResult {
  * ترسل محتوى الملف أو رؤوس الأعمدة إلى DeepSeek لتصنيفها وتوزيعها تلقائياً
  */
 export async function parseImportedFileWithDeepSeek(fileContentSnippet: string): Promise<ParsedImportResult> {
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY; // مفتاح اشتراكك في ديب سيك
+  const DEEPSEEK_API_KEY = process.env["DEEPSEEK_API_KEY"]; // مفتاح اشتراكك في ديب سيك
 
   if (!DEEPSEEK_API_KEY) {
     throw new Error("مفتاح DeepSeek API غير موجود في متغيرات البيئة (Environment Variables).");
