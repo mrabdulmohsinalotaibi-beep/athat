@@ -1,6 +1,17 @@
 import { toCanvas } from "html-to-image";
 import { jsPDF } from "jspdf";
 
+/** استخراج اسم المستند تلقائياً من داخل العنصر */
+function getDocumentTitle(element: HTMLElement, defaultName: string = "مستند"): string {
+  const titleElement = element.querySelector<HTMLElement>("[data-pdf-title], h1, h2, .document-title");
+  
+  if (titleElement && titleElement.innerText.trim()) {
+    return titleElement.innerText.trim().replace(/[/\\?%*:|"<>]/g, "-");
+  }
+  
+  return defaultName;
+}
+
 /** Renders a DOM element into a high-quality multi-page A4 PDF with margins (Arabic-safe, rasterised). */
 async function createPdf(element: HTMLElement) {
   const pixelRatio = Math.min(2, Math.max(1.5, window.devicePixelRatio));
@@ -45,7 +56,9 @@ async function createPdf(element: HTMLElement) {
   return pdf;
 }
 
-export async function elementToPdf(element: HTMLElement, fileName: string) {
+/** تحويل العنصر إلى PDF وتنزيله باسم المستند المكتوب داخله */
+export async function elementToPdf(element: HTMLElement, fallbackFileName: string = "تقرير_إرشادي") {
+  const fileName = getDocumentTitle(element, fallbackFileName);
   const pdf = await createPdf(element);
   const url = URL.createObjectURL(pdf.output("blob"));
   const anchor = document.createElement("a");
@@ -57,7 +70,9 @@ export async function elementToPdf(element: HTMLElement, fileName: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
-export async function elementToPdfFile(element: HTMLElement, fileName: string) {
+/** تحويل العنصر إلى ملف File باسم المستند المكتوب داخله */
+export async function elementToPdfFile(element: HTMLElement, fallbackFileName: string = "تقرير_إرشادي") {
+  const fileName = getDocumentTitle(element, fallbackFileName);
   const pdf = await createPdf(element);
   return new File([pdf.output("blob")], `${fileName}.pdf`, { type: "application/pdf" });
 }
