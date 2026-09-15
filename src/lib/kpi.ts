@@ -17,6 +17,9 @@ export interface Kpi {
 
 const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
 
+/**
+ * حساب مؤشرات الأداء الرئيسية (KPIs) لنظام التوجيه الطلابي
+ */
 export function computeKpis(input: KpiInput): Kpi[] {
   const { planTasks, cases, attendance, interviews, students, schoolDays = 20 } = input;
 
@@ -79,7 +82,7 @@ export function computeKpis(input: KpiInput): Kpi[] {
 export const isPercentKpi = (key: string) => key !== "sessions";
 
 // ==========================================
-// 🤖 دالة تحليل الملفات باستخدام DeepSeek API الحقيقي
+// 🤖 دالة تحليل الملفات باستخدام DeepSeek API
 // ==========================================
 
 export interface ParsedImportResult {
@@ -92,22 +95,22 @@ export interface ParsedImportResult {
  * ترسل محتوى الملف أو رؤوس الأعمدة إلى DeepSeek لتصنيفها وتوزيعها تلقائياً
  */
 export async function parseImportedFileWithDeepSeek(fileContentSnippet: string): Promise<ParsedImportResult> {
-  const DEEPSEEK_API_KEY = process.env["DEEPSEEK_API_KEY"]; // مفتاح اشتراكك في ديب سيك
+  const DEEPSEEK_API_KEY = process.env["DEEPSEEK_API_KEY"] || process.env["NEXT_PUBLIC_DEEPSEEK_API_KEY"];
 
   if (!DEEPSEEK_API_KEY) {
-    throw new Error("مفتاح DeepSeek API غير موجود في متغيرات البيئة (Environment Variables).");
+    throw new Error("مفتاح DeepSeek API غير معرف في بيئة التشغيل.");
   }
 
   const systemPrompt = `
-  أنت مساعد ذكي متخصص في تحليل البيانات المدرسية وملفات الإكسيل الخاصة بالتوجيه والإرشاد.
-  مهتك هي قراءة النصوص أو عينة الأعمدة المستوردة، وتحديد نوع البيانات من الأنواع التالية حصراً:
-  ("students", "attendance", "cases", "interviews", "planTasks")
-  ثم إعادة البيانات مطابقة لهياكل النظام بـ JSON نقي حصراً بدون أي نصوص إضافية، بالشكل التالي:
-  {
-    "dataType": "نوع_البيانات",
-    "mappedData": [...],
-    "confidenceScore": 0.95
-  }
+أنت مساعد ذكي متخصص في تحليل البيانات المدرسية وملفات الإكسيل الخاصة بالتوجيه والإرشاد.
+مهمتك هي قراءة النصوص أو عينة الأعمدة المستوردة، وتحديد نوع البيانات من الأنواع التالية حصراً:
+("students", "attendance", "cases", "interviews", "planTasks")
+ثم إعادة البيانات مطابقة لهياكل النظام بـ JSON نقي حصراً بدون أي نصوص إضافية، بالشكل التالي:
+{
+  "dataType": "نوع_البيانات",
+  "mappedData": [...],
+  "confidenceScore": 0.95
+}
   `;
 
   try {
@@ -118,18 +121,19 @@ export async function parseImportedFileWithDeepSeek(fileContentSnippet: string):
         Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "deepseek-chat", // أو deepseek-reasoner حسب المتاح في حسابك
+        model: "deepseek-chat",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `قم بتحليل وتوزيع هذه البيانات:\n${fileContentSnippet}` },
         ],
-        response_format: { type: "json_object" }, // لضمان إرجاع النتائج بصيغة JSON نظيفة
-        stream: false,
+        response_format: { type: "json_object" },
+        temperature: 0.1,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`خطأ في الاتصال بخادم DeepSeek: ${response.statusText}`);
+      const errText = await response.text();
+      throw new Error(`خطأ في الاتصال بخادم DeepSeek (${response.status}): ${errText}`);
     }
 
     const data = await response.json();
