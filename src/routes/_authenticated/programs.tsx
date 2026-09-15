@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Bot, Wand2, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { CalendarRange, Loader2, Sparkles, Printer, ChevronLeft, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -239,7 +239,7 @@ export const MINISTRY_PROGRAMS: MinistryProgram[] = [
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(1); // 1: المقدمة والترحيب, 2: المعاينة التفاعلية, 3: تأكيد الاعتماد
+  const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
 
   async function seed() {
@@ -272,7 +272,7 @@ function MinistryProgramsDialog() {
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة واستبدال ${payloads.length} برنامجاً وزارياً رسمياً بنجاح`);
+      toast.success(`تمت إضافة والاستبدال ${payloads.length} برنامجاً وزارياً رسمياً بنجاح`);
       setOpen(false);
       setStep(1);
     } catch (error) {
@@ -294,7 +294,6 @@ function MinistryProgramsDialog() {
       <Dialog open={open} onOpenChange={(val) => { setOpen(val); if(!val) setStep(1); }}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-xl border border-border/40 bg-background shadow-2xl" dir="rtl">
           
-          {/* مؤشر الخطوات (Step Indicator) */}
           <div className="flex items-center justify-between pb-4 border-b px-2">
             <div className="flex items-center gap-2 text-emerald-700">
               <Sparkles className="size-5" />
@@ -305,7 +304,6 @@ function MinistryProgramsDialog() {
             </div>
           </div>
 
-          {/* محتوى الخطوات المتتالية */}
           <div className="py-2">
             {step === 1 && (
               <div className="space-y-4 py-4 text-center sm:text-right">
@@ -378,7 +376,6 @@ function MinistryProgramsDialog() {
             )}
           </div>
 
-          {/* أزرار التنقل المتتالي (Wizard Navigation) */}
           <DialogFooter className="flex items-center justify-between pt-4 border-t gap-2">
             <div>
               {step > 1 && (
@@ -409,60 +406,53 @@ function MinistryProgramsDialog() {
 }
 
 // ==========================================
-// 3. مكون مساعد الذكاء الاصطناعي
+// 3. زر حذف البرامج (مفرد ومجموع) المخصص
 // ==========================================
-function AIAssistantDialog() {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [analysis, setAnalysis] = useState("");
+function DeleteSelectedProgramsButton() {
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
 
-  const runAIEvaluation = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setAnalysis(`التقرير التحليلي المولد بالذكاء الاصطناعي لخطة التوجيه الطلابي (تعليم مكة 1448هـ):
-1. شمولية الخطة الزمنية: تغطي الخطة 18 أسبوعاً دراسياً بكفاءة عالية تشمل الجوانب الإنمائية، الوقائية، والعلاجية.
-2. التوزيع الهجري الدقيق: ربط الأنشطة والفعاليات بالتواريخ الهجرية يضمن انضباط الموجه الطلابي في مواعيد التنفيذ.
-3. التوصيات المقترحة:
-   - تم إعداد مسودات الشواهد ومؤشرات التحقق تلقائياً لتسهيل الاعتماد في نظام نور.`);
-      setLoading(false);
-    }, 1000);
-  };
+  async function handleDelete() {
+    // نفترض أن مكون RecordPage يتيح اختيار الصفوف عبر الجدول (تحديد مفرد ومجموع)
+    // سنقوم بقراءة العناصر المحددة أو تفعيل الحذف الجماعي من جدول قاعدة البيانات.
+    const selectedCheckboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked');
+    const ids: string[] = [];
+    selectedCheckboxes.forEach((cb) => {
+      if (cb.value && cb.value !== "on" && cb.value !== "all") {
+        ids.push(cb.value);
+      }
+    });
+
+    if (ids.length === 0) {
+      toast.error("الرجاء تحديد برنامج واحد على الأقل من الجدول لحذفه.");
+      return;
+    }
+
+    if (!confirm(`هل أنت متأكد من حذف ${ids.length} برنامجاً محدداً؟`)) return;
+
+    setBusy(true);
+    try {
+      const { error } = await supabase.from("programs").delete().in("id", ids);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast.success(`تم حذف ${ids.length} برنامجاً بنجاح`);
+    } catch (error) {
+      toast.error(`تعذر الحذف: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <>
-      <Button 
-        variant="outline" 
-        onClick={() => { setOpen(true); runAIEvaluation(); }}
-        className="border-primary/40 text-primary hover:bg-primary/5"
-      >
-        <Bot className="size-4 ml-2" /> التحليل بالذكاء الاصطناعي
-      </Button>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-primary">
-              <Wand2 className="size-5" /> مساعد الذكاء الاصطناعي الذكي
-            </DialogTitle>
-            <DialogDescription>تحليل وتعبئة آلية للبرامج الإرشادية لرفع جودة التوثيق المدرسي.</DialogDescription>
-          </DialogHeader>
-
-          <div className="p-4 bg-muted/50 rounded-lg text-xs leading-relaxed whitespace-pre-line border">
-            {loading ? (
-              <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
-                <Loader2 className="size-5 animate-spin text-primary" /> جاري معالجة وتوليد حقول الخطة...
-              </div>
-            ) : (
-              analysis
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button onClick={() => setOpen(false)}>إغلاق</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Button 
+      variant="outline" 
+      onClick={handleDelete}
+      disabled={busy}
+      className="border-destructive/40 text-destructive hover:bg-destructive/10"
+    >
+      {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : <Trash2 className="size-4 ml-2" />} 
+      حذف المحدد (مفرد / مجموع)
+    </Button>
   );
 }
 
@@ -582,7 +572,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
       toolbarExtra={
         <div className="flex flex-wrap items-center gap-2">
           <MinistryProgramsDialog />
-          <AIAssistantDialog />
+          <DeleteSelectedProgramsButton />
           <PrintA4ReportButton />
         </div>
       }
