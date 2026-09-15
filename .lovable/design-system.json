@@ -2,7 +2,7 @@
   "meta": {
     "name": "Guidance Hub",
     "package": "@ws-7eb7e713de717d6d83a6/ff86189b-6cdb-4a8a-b190-a1c210e48686",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "framework": "react",
     "css_framework": "tailwind",
     "starter_template": "custom_design_system_tailwind",
@@ -125,9 +125,9 @@
       "src/lib/school.ts": "9aee3c43e773313cbbbb1254d57a691f",
       "src/lib/sheet.ts": "789067c86d0cbfbaf99ce24d096ad377",
       "src/lib/subscription.ts": "f294bcf5ab5ffca697cd49ce23a7971e",
-      "src/lib/theme.tsx": "1912be4cac4cb75204a3f5d5c7c4f537",
+      "src/lib/theme.tsx": "b5f31525d83cbc0325744dc75b31651b",
       "src/lib/utils.ts": "d9837f38cc05303254571985e3164050",
-      "src/lib/whatsapp.ts": "95523ee62537f0cffaabee4639aeb00e",
+      "src/lib/whatsapp.ts": "8b7591bb36c152a430308b0d984b44d1",
       "src/routeTree.gen.ts": "a9dff7aec7d33d5959ea94a0d4ddcbec",
       "src/router.tsx": "8f905e713b0eba7fa8148b7995a708c9",
       "src/routes/README.md": "b3a2f259b66fd1a11f54b6d5ac83bf57",
@@ -780,7 +780,14 @@
     {
       "name": "ThemeProvider",
       "file": "src/lib/theme",
-      "import_path": ""
+      "import_path": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "any",
+          "required": true
+        }
+      ]
     }
   ],
   "assets": [
