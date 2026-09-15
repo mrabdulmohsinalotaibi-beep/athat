@@ -14,8 +14,12 @@ import {
   Save,
   CheckSquare,
   Square,
+  Printer,
+  FileImage,
+  FileVideo,
+  File as FileIcon,
+  ExternalLink,
   X,
-  Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,37 +46,96 @@ export const Route = createFileRoute("/_authenticated/programs")({
         content:
           "البرامج الإرشادية والخطط الإجرائية المعتمدة بالهجري وفق دليل التوجيه الطلابي بوزارة التعليم.",
       },
-      { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
-      { property: "og:type", content: "website" },
     ],
   }),
   component: ProgramsPage,
 });
 
 /* =========================================================================
-   نموذج البرنامج التربوي (Schema) — مطابق لدليل التوجيه الطلابي
+   أنواع البيانات
    ========================================================================= */
+export type AttachmentMeta = {
+  name: string;
+  url: string;
+  type: string; // image | pdf | video | other
+  size: number;
+  path: string; // storage path
+};
+
 export type ProgramRecord = {
   id?: string;
   program_no?: string | null;
   name?: string | null;
-  ptype?: string | null;          // نوع البرنامج: وقائي / نمائي / علاجي / إرشادي / تقييمي
-  domain?: string | null;         // المجال: المهاري، السلوكي، التحصيلي، النفسي، الاجتماعي، المهني، التقني
-  target_group?: string | null;   // الفئة المستهدفة
-  term?: string | null;           // الفصل + الأسبوع + التاريخ الهجري
-  goal?: string | null;           // الهدف العام
-  indicator?: string | null;      // مؤشر النجاح / الشاهد
-  exec_status?: string | null;    // حالة التنفيذ: لم يبدأ / جارٍ / مكتمل
-  required_evidence?: string | null; // الشواهد المطلوبة
-  attachments?: string | null;    // مرفقات (صور، PDF، فيديو)
+  ptype?: string | null;
+  domain?: string | null;
+  target_group?: string | null;
+  term?: string | null;
+  goal?: string | null;
+  indicator?: string | null;
+  exec_status?: string | null;
+  required_evidence?: string | null;
+  attachments?: string | null; // JSON string of AttachmentMeta[]
   notes?: string | null;
   created_at?: string | null;
 };
 
 /* =========================================================================
-   خطة البرامج الوزارية (مكة المكرمة 1448هـ) — مرتبة تصاعديًا
+   دوال مساعدة للمرفقات
    ========================================================================= */
-const MAKKAH_MINISTRY_PROGRAMS: Omit<ProgramRecord, "id" | "created_at">[] = [
+const STORAGE_BUCKET = "program-evidence";
+
+function parseAttachments(raw?: string | null): AttachmentMeta[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as AttachmentMeta[];
+    return [];
+  } catch {
+    // توافق مع البيانات القديمة (نص عادي)
+    return raw
+      .split(/[,،]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((name) => ({
+        name,
+        url: "",
+        type: "other",
+        size: 0,
+        path: "",
+      }));
+  }
+}
+
+function serializeAttachments(list: AttachmentMeta[]): string {
+  return JSON.stringify(list);
+}
+
+function detectType(file: File): AttachmentMeta["type"] {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type === "application/pdf") return "pdf";
+  return "other";
+}
+
+function formatSize(bytes: number): string {
+  if (!bytes) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  let n = bytes;
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024;
+    i++;
+  }
+  return `${n.toFixed(1)} ${units[i]}`;
+}
+
+/* =========================================================================
+   خطة البرامج الوزارية (مكة المكرمة 1448هـ)
+   ========================================================================= */
+const MAKKAH_MINISTRY_PROGRAMS: Omit<
+  ProgramRecord,
+  "id" | "created_at" | "attachments"
+>[] = [
   { term: "الفصل الدراسي الأول", program_no: "الأسبوع الأول (17 - 21 / 03 / 1448 هـ)", name: "برنامج التهيئة الإرشادية والأسبوع التمهيدي", ptype: "وقائي / نمائي", domain: "المهاري والتربوي", target_group: "طلاب الصف الأول والمستجدين", goal: "التهيئة النفسية والتربوية والاجتماعية لتحقيق تكيف الطلبة في البيئة المدرسية", indicator: "تنفيذ برامج الأسبوع التمهيدي وحصر الحالات", exec_status: "لم يبدأ", required_evidence: "صور، PDF، فيديو" },
   { term: "الفصل الدراسي الأول", program_no: "الأسبوع الثاني (24 - 28 / 03 / 1448 هـ)", name: "تعزيز السلوك الإيجابي", ptype: "وقائي", domain: "السلوكي والمواظبة", target_group: "طلبة التعليم العام", goal: "تفعيل الأنشطة والإجراءات المحفزة للسلوك الإيجابي والتعريف بالقيم المستهدفة", indicator: "تفعيل جائزة المدرسة للتميز السلوكي واستماراته", exec_status: "لم يبدأ", required_evidence: "صور، PDF" },
   { term: "الفصل الدراسي الأول", program_no: "الأسبوع الثالث (02 - 06 / 04 / 1448 هـ)", name: "الاستمرار بتعزيز السلوك الإيجابي ورعاية الحالات الخاصة", ptype: "علاجي / وقائي", domain: "الاجتماعي والنفسي", target_group: "الفئات الخاصة وطلبة التعليم العام", goal: "تقديم الخدمات التربوية والنفسية للفئات الخاصة ورعاية متكرري الغياب", indicator: "تحديث بيانات الطلبة واستمارة الرعاية", exec_status: "لم يبدأ", required_evidence: "استمارات، تقارير" },
@@ -94,7 +157,7 @@ const MAKKAH_MINISTRY_PROGRAMS: Omit<ProgramRecord, "id" | "created_at">[] = [
 ];
 
 /* =========================================================================
-   زر DeepSeek المدمج داخل نافذة البرنامج (تعبئة ذكية تربوية)
+   شريط DeepSeek المدمج
    ========================================================================= */
 function DeepSeekAssistantBar({
   onFill,
@@ -111,7 +174,6 @@ function DeepSeekAssistantBar({
     }
     setLoading(true);
     try {
-      // ربط حقيقي بـ DeepSeek — يستبدل هذا الجزء عند تفعيل الـ endpoint في المنصة
       const res = await fetch("/api/ai/deepseek", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -125,19 +187,16 @@ function DeepSeekAssistantBar({
       if (res && res.ok) {
         ai = (await res.json()) as Partial<ProgramRecord>;
       } else {
-        // Fallback محلي بصياغة تربوية دقيقة
         ai = {
           name: topic,
           ptype: "وقائي / نمائي",
           domain: "المهاري والتربوي والنفسي",
           target_group: "طلبة المدرسة وأولياء الأمور",
           goal: `تفعيل الجانب الإرشادي والوقائي لبرنامج (${topic}) بما يحقق بيئة مدرسية آمنة ومحفزة للتعلم وفق معايير وزارة التعليم بالمملكة العربية السعودية.`,
-          indicator:
-            "تنفيذ الورش الإرشادية، رصد تفاعل المستفيدين، وتقديم تقرير الأثر وفق الاستمارات المعتمدة.",
+          indicator: "تنفيذ الورش الإرشادية، رصد تفاعل المستفيدين، وتقديم تقرير الأثر وفق الاستمارات المعتمدة.",
           term: "الفصل الدراسي الأول - 1448 هـ",
-          required_evidence: "ملفات صور التفعيل، تقرير PDF معتمد، مقطع فيديو توثيقي.",
-          notes:
-            "تمت الصياغة والتعبئة آليًا بواسطة نموذج الذكاء الاصطناعي DeepSeek المدمج.",
+          required_evidence: "صور التفعيل، تقرير PDF معتمد، مقطع فيديو توثيقي.",
+          notes: "تمت الصياغة والتعبئة آليًا بواسطة نموذج DeepSeek المدمج.",
           exec_status: "لم يبدأ",
         };
       }
@@ -145,17 +204,14 @@ function DeepSeekAssistantBar({
       toast.success("تم توليد الحقول بصياغة تربوية دقيقة عبر DeepSeek ✅");
       setTopic("");
     } catch {
-      toast.error("تعذّر التوليد الذكي، حاول مجددًا");
+      toast.error("تعذّر التوليد الذكي");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div
-      className="mb-4 rounded-lg border border-primary/40 bg-primary/5 p-3"
-      dir="rtl"
-    >
+    <div className="mb-4 rounded-lg border border-primary/40 bg-primary/5 p-3" dir="rtl">
       <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-primary">
         <Sparkles className="size-4 animate-pulse text-primary" />
         <span>مساعد DeepSeek الذكي — صياغة تربوية (وزارة التعليم)</span>
@@ -176,11 +232,7 @@ function DeepSeekAssistantBar({
           disabled={loading}
           className="shrink-0 gap-1.5 text-xs"
         >
-          {loading ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Wand2 className="size-3.5" />
-          )}
+          {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
           تعبئة ذكية
         </Button>
       </div>
@@ -189,14 +241,14 @@ function DeepSeekAssistantBar({
 }
 
 /* =========================================================================
-   حقل رفع الملفات (صور، PDF، فيديو) — داخل نافذة البرنامج
+   حقل رفع الملفات — يرفع فعليًا إلى Supabase Storage ويحفظ الروابط
    ========================================================================= */
 function AttachmentsUploadField({
-  value,
+  attachments,
   onChange,
 }: {
-  value: string;
-  onChange: (val: string) => void;
+  attachments: AttachmentMeta[];
+  onChange: (list: AttachmentMeta[]) => void;
 }) {
   const [uploading, setUploading] = useState(false);
 
@@ -204,66 +256,137 @@ function AttachmentsUploadField({
     const files = e.target.files;
     if (!files || files.length === 0) return;
     setUploading(true);
+    const uploaded: AttachmentMeta[] = [];
+
     try {
-      const names: string[] = [];
       for (const file of Array.from(files)) {
-        // رفع فعلي إلى Supabase Storage — bucket: "program-evidence"
-        const path = `programs/${Date.now()}-${file.name}`;
-        const { error } = await supabase.storage
-          .from("program-evidence")
-          .upload(path, file, { upsert: false });
-        if (error) {
-          names.push(file.name); // نُبقي الاسم على الأقل للتوثيق
-        } else {
-          names.push(path);
+        // مسار فريد
+        const ext = file.name.split(".").pop() ?? "";
+        const path = `programs/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+        const { error: upErr } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(path, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type,
+          });
+
+        if (upErr) {
+          console.error("Upload error:", upErr);
+          toast.error(`فشل رفع: ${file.name} — ${upErr.message}`);
+          continue;
         }
+
+        // رابط عام (bucket عام). إن كان خاصًا استخدم createSignedUrl
+        const { data: pub } = supabase.storage
+          .from(STORAGE_BUCKET)
+          .getPublicUrl(path);
+
+        uploaded.push({
+          name: file.name,
+          url: pub.publicUrl,
+          type: detectType(file),
+          size: file.size,
+          path,
+        });
       }
-      const merged = [value, ...names].filter(Boolean).join("، ");
-      onChange(merged);
-      toast.success(`تم إرفاق ${names.length} ملف/ملفات بنجاح`);
-    } catch {
-      toast.error("فشل رفع أحد الملفات");
+
+      if (uploaded.length) {
+        onChange([...attachments, ...uploaded]);
+        toast.success(`تم رفع ${uploaded.length} ملف وحفظ الروابط بنجاح`);
+      }
+    } catch (err) {
+      toast.error(`خطأ غير متوقع: ${(err as Error).message}`);
     } finally {
       setUploading(false);
+      e.target.value = ""; // للسماح بإعادة رفع نفس الملف
     }
   }
 
+  async function handleRemove(idx: number) {
+    const target = attachments[idx];
+    if (!target) return;
+    if (target.path) {
+      await supabase.storage.from(STORAGE_BUCKET).remove([target.path]);
+    }
+    const next = attachments.filter((_, i) => i !== idx);
+    onChange(next);
+  }
+
+  function iconFor(type: string) {
+    if (type === "image") return <FileImage className="size-3.5 text-primary" />;
+    if (type === "video") return <FileVideo className="size-3.5 text-primary" />;
+    if (type === "pdf") return <FileIcon className="size-3.5 text-red-500" />;
+    return <FileIcon className="size-3.5 text-muted-foreground" />;
+  }
+
   return (
-    <div className="rounded-md border bg-muted/10 p-2">
-      <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-        <Paperclip className="size-3.5" />
-        الشواهد والمرفقات (صور، PDF، فيديو تنفيذي)
-      </label>
-      <div className="flex items-center gap-2">
-        <input
-          type="text"
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="أسماء الملفات المرفقة أو المسارات..."
-          className="flex-1 rounded border bg-background px-2 py-1 text-xs"
-        />
-        <label className="inline-flex cursor-pointer items-center justify-center gap-1 rounded bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground hover:bg-secondary/80">
-          {uploading ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Upload className="size-3.5" />
-          )}
-          <span>اختر ملف</span>
+    <div className="rounded-md border bg-muted/10 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <label className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+          <Paperclip className="size-3.5" />
+          الشواهد والمرفقات (صور، PDF، فيديو) — {attachments.length} ملف
+        </label>
+        <label className="inline-flex cursor-pointer items-center justify-center gap-1 rounded bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-secondary/80">
+          {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+          <span>إضافة ملفات</span>
           <input
             type="file"
             multiple
             accept="image/*,application/pdf,video/*"
             className="hidden"
             onChange={handleFileChange}
+            disabled={uploading}
           />
         </label>
       </div>
+
+      {attachments.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">لم يتم إرفاق أي شاهد بعد.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {attachments.map((a, i) => (
+            <li
+              key={`${a.path}-${i}`}
+              className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1.5 text-[11px]"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                {iconFor(a.type)}
+                <span className="truncate font-medium">{a.name}</span>
+                <span className="shrink-0 text-muted-foreground">{formatSize(a.size)}</span>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                {a.url && (
+                  <a
+                    href={a.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded p-1 text-primary hover:bg-primary/10"
+                    title="عرض"
+                  >
+                    <ExternalLink className="size-3.5" />
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(i)}
+                  className="rounded p-1 text-destructive hover:bg-destructive/10"
+                  title="حذف"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
 /* =========================================================================
-   نافذة إضافة / تحرير برنامج (Dialog) — تحتوي DeepSeek + المرفقات
+   نافذة تحرير البرنامج
    ========================================================================= */
 function ProgramEditDialog({
   open,
@@ -292,10 +415,19 @@ function ProgramEditDialog({
   };
 
   const [form, setForm] = useState<ProgramRecord>(emptyForm);
+  const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(initial ? { ...emptyForm, ...initial } : emptyForm);
+    if (open) {
+      if (initial) {
+        setForm({ ...emptyForm, ...initial });
+        setAttachments(parseAttachments(initial.attachments));
+      } else {
+        setForm(emptyForm);
+        setAttachments([]);
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
 
@@ -325,7 +457,7 @@ function ProgramEditDialog({
         indicator: form.indicator ?? null,
         exec_status: form.exec_status ?? "لم يبدأ",
         required_evidence: form.required_evidence ?? null,
-        attachments: form.attachments ?? null,
+        attachments: serializeAttachments(attachments), // ← الحفظ الفعلي
         notes: form.notes ?? null,
       };
 
@@ -354,22 +486,17 @@ function ProgramEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-h-[92vh] max-w-3xl overflow-y-auto"
-        dir="rtl"
-      >
+      <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto" dir="rtl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="size-5 text-primary" />
             {initial?.id ? "تحرير بيانات البرنامج" : "إضافة برنامج إرشادي جديد"}
           </DialogTitle>
           <DialogDescription>
-            عبّئ الحقول يدويًا أو استعن بزر DeepSeek للتعبئة الذكية وفق دليل
-            التوجيه الطلابي بوزارة التعليم.
+            عبّئ الحقول يدويًا أو استعن بزر DeepSeek للتعبئة الذكية، مع إمكانية إرفاق الشواهد.
           </DialogDescription>
         </DialogHeader>
 
-        {/* شريط DeepSeek المدمج */}
         <DeepSeekAssistantBar onFill={handleAIFill} />
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -410,11 +537,7 @@ function ProgramEditDialog({
 
           <div>
             <Label className="text-xs font-bold">المجال</Label>
-            <Input
-              value={form.domain ?? ""}
-              onChange={(e) => set("domain", e.target.value)}
-              placeholder="المهاري، السلوكي، التحصيلي..."
-            />
+            <Input value={form.domain ?? ""} onChange={(e) => set("domain", e.target.value)} />
           </div>
 
           <div>
@@ -422,34 +545,22 @@ function ProgramEditDialog({
             <Input
               value={form.target_group ?? ""}
               onChange={(e) => set("target_group", e.target.value)}
-              placeholder="طلبة التعليم العام، أولياء الأمور..."
             />
           </div>
 
           <div className="md:col-span-2">
             <Label className="text-xs font-bold">الفصل / التاريخ الهجري</Label>
-            <Input
-              value={form.term ?? ""}
-              onChange={(e) => set("term", e.target.value)}
-            />
+            <Input value={form.term ?? ""} onChange={(e) => set("term", e.target.value)} />
           </div>
 
           <div className="md:col-span-2">
             <Label className="text-xs font-bold">الهدف العام</Label>
-            <Textarea
-              rows={3}
-              value={form.goal ?? ""}
-              onChange={(e) => set("goal", e.target.value)}
-            />
+            <Textarea rows={3} value={form.goal ?? ""} onChange={(e) => set("goal", e.target.value)} />
           </div>
 
           <div className="md:col-span-2">
             <Label className="text-xs font-bold">المؤشر / الشاهد</Label>
-            <Textarea
-              rows={2}
-              value={form.indicator ?? ""}
-              onChange={(e) => set("indicator", e.target.value)}
-            />
+            <Textarea rows={2} value={form.indicator ?? ""} onChange={(e) => set("indicator", e.target.value)} />
           </div>
 
           <div>
@@ -474,34 +585,20 @@ function ProgramEditDialog({
             />
           </div>
 
-          {/* رفع الملفات داخل النافذة */}
           <div className="md:col-span-2">
-            <AttachmentsUploadField
-              value={form.attachments ?? ""}
-              onChange={(v) => set("attachments", v)}
-            />
+            <AttachmentsUploadField attachments={attachments} onChange={setAttachments} />
           </div>
 
           <div className="md:col-span-2">
             <Label className="text-xs font-bold">ملاحظات</Label>
-            <Textarea
-              rows={2}
-              value={form.notes ?? ""}
-              onChange={(e) => set("notes", e.target.value)}
-            />
+            <Textarea rows={2} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            إلغاء
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Save className="size-4" />
-            )}
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             حفظ البرنامج
           </Button>
         </DialogFooter>
@@ -511,7 +608,240 @@ function ProgramEditDialog({
 }
 
 /* =========================================================================
-   نافذة استيراد الخطة الوزارية (مكة 1448هـ)
+   نافذة عرض التقرير المفصل + الطباعة
+   ========================================================================= */
+function ProgramReportDialog({
+  open,
+  onOpenChange,
+  program,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  program: ProgramRecord | null;
+}) {
+  const attachments = useMemo(
+    () => parseAttachments(program?.attachments),
+    [program]
+  );
+
+  function handlePrint() {
+    // ننتظر قليلًا حتى يتم الرسم ثم نطبع
+    setTimeout(() => window.print(), 100);
+  }
+
+  if (!program) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-h-[92vh] max-w-4xl overflow-y-auto print:max-h-none print:max-w-none print:shadow-none"
+        dir="rtl"
+      >
+        <DialogHeader className="print:hidden">
+          <DialogTitle className="flex items-center gap-2">
+            <Printer className="size-5 text-primary" /> تقرير البرنامج الإرشادي
+          </DialogTitle>
+          <DialogDescription>
+            عرض التقرير الكامل مع الشواهد وإمكانية الطباعة أو الحفظ PDF.
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* منطقة الطباعة */}
+        <div id="print-report" className="space-y-4 rounded-lg border bg-card p-6 print:border-0 print:p-0">
+          {/* رأس رسمي */}
+          <header className="border-b-2 border-primary/60 pb-3 text-center">
+            <p className="text-[11px] font-semibold text-muted-foreground">
+              المملكة العربية السعودية — وزارة التعليم
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              إدارة التعليم — قسم التوجيه الطلابي
+            </p>
+            <h1 className="mt-2 text-lg font-bold text-primary">
+              تقرير البرنامج الإرشادي
+            </h1>
+            <p className="mt-1 text-xs text-muted-foreground">
+              تاريخ الإصدار: {new Date().toLocaleDateString("ar-SA")}
+            </p>
+          </header>
+
+          {/* بيانات البرنامج */}
+          <section>
+            <h2 className="mb-2 border-r-4 border-primary pr-2 text-sm font-bold">
+              بيانات البرنامج
+            </h2>
+            <table className="w-full border-collapse text-xs">
+              <tbody>
+                <ReportRow label="اسم البرنامج" value={program.name} />
+                <ReportRow label="رقم / أسبوع البرنامج" value={program.program_no} />
+                <ReportRow label="الفصل / التاريخ الهجري" value={program.term} />
+                <ReportRow label="نوع البرنامج" value={program.ptype} />
+                <ReportRow label="المجال" value={program.domain} />
+                <ReportRow label="الفئة المستهدفة" value={program.target_group} />
+                <ReportRow label="حالة التنفيذ" value={program.exec_status} />
+              </tbody>
+            </table>
+          </section>
+
+          {/* المحتوى التربوي */}
+          <section>
+            <h2 className="mb-2 border-r-4 border-primary pr-2 text-sm font-bold">
+              المحتوى التربوي
+            </h2>
+            <div className="space-y-2 text-xs">
+              <ReportBlock title="الهدف العام" value={program.goal} />
+              <ReportBlock title="المؤشر / الشاهد" value={program.indicator} />
+              <ReportBlock title="الشواهد المطلوبة" value={program.required_evidence} />
+              {program.notes && <ReportBlock title="ملاحظات" value={program.notes} />}
+            </div>
+          </section>
+
+          {/* الشواهد والمرفقات */}
+          <section>
+            <h2 className="mb-2 border-r-4 border-primary pr-2 text-sm font-bold">
+              الشواهد والمرفقات ({attachments.length})
+            </h2>
+
+            {attachments.length === 0 ? (
+              <p className="text-xs text-muted-foreground">لا توجد شواهد مرفقة.</p>
+            ) : (
+              <>
+                {/* شبكة الصور */}
+                {attachments.some((a) => a.type === "image") && (
+                  <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {attachments
+                      .filter((a) => a.type === "image")
+                      .map((a, i) => (
+                        <a
+                          key={i}
+                          href={a.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block overflow-hidden rounded border bg-muted"
+                        >
+                          <img
+                            src={a.url}
+                            alt={a.name}
+                            className="h-32 w-full object-cover"
+                            loading="lazy"
+                          />
+                          <p className="truncate p-1 text-[10px]">{a.name}</p>
+                        </a>
+                      ))}
+                  </div>
+                )}
+
+                {/* جدول بقية الملفات */}
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr className="bg-muted/60">
+                      <th className="border p-1.5 text-right">#</th>
+                      <th className="border p-1.5 text-right">اسم الملف</th>
+                      <th className="border p-1.5 text-right">النوع</th>
+                      <th className="border p-1.5 text-right">الحجم</th>
+                      <th className="border p-1.5 text-right print:hidden">الرابط</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attachments.map((a, i) => (
+                      <tr key={i}>
+                        <td className="border p-1.5">{i + 1}</td>
+                        <td className="border p-1.5 font-medium">{a.name}</td>
+                        <td className="border p-1.5">
+                          {a.type === "image"
+                            ? "صورة"
+                            : a.type === "video"
+                            ? "فيديو"
+                            : a.type === "pdf"
+                            ? "PDF"
+                            : "ملف"}
+                        </td>
+                        <td className="border p-1.5">{formatSize(a.size)}</td>
+                        <td className="border p-1.5 print:hidden">
+                          {a.url ? (
+                            <a
+                              href={a.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary underline"
+                            >
+                              فتح
+                            </a>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </section>
+
+          {/* التوقيعات */}
+          <section className="mt-8 grid grid-cols-2 gap-6 text-xs">
+            <div className="text-center">
+              <p className="font-bold">الموجه الطلابي</p>
+              <div className="mt-8 border-t border-dashed pt-1 text-muted-foreground">
+                الاسم / التوقيع
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="font-bold">مدير المدرسة</p>
+              <div className="mt-8 border-t border-dashed pt-1 text-muted-foreground">
+                الاسم / التوقيع
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <DialogFooter className="gap-2 print:hidden">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>إغلاق</Button>
+          <Button onClick={handlePrint}>
+            <Printer className="size-4" /> طباعة / حفظ PDF
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+
+      {/* CSS مخصص للطباعة */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #print-report, #print-report * { visibility: visible !important; }
+          #print-report {
+            position: absolute; inset: 0;
+            width: 100%; padding: 20px;
+            background: white; color: black;
+          }
+          @page { size: A4; margin: 12mm; }
+        }
+      `}</style>
+    </Dialog>
+  );
+}
+
+function ReportRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <tr className="border-b">
+      <th className="w-44 border bg-muted/40 p-2 text-right align-top font-bold">
+        {label}
+      </th>
+      <td className="border p-2 align-top">{value || "—"}</td>
+    </tr>
+  );
+}
+
+function ReportBlock({ title, value }: { title: string; value?: string | null }) {
+  return (
+    <div className="rounded border bg-muted/10 p-2">
+      <p className="mb-1 text-[11px] font-bold text-primary">{title}</p>
+      <p className="whitespace-pre-wrap leading-relaxed">{value || "—"}</p>
+    </div>
+  );
+}
+
+/* =========================================================================
+   نافذة استيراد الخطة الوزارية
    ========================================================================= */
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
@@ -527,16 +857,13 @@ function MinistryProgramsDialog() {
           String((p as { name: string | null }).name ?? "").trim()
         )
       );
-      const payloads = MAKKAH_MINISTRY_PROGRAMS.filter(
-        (p) => !known.has(p.name!)
-      );
+      const payloads = MAKKAH_MINISTRY_PROGRAMS.filter((p) => !known.has(p.name!))
+        .map((p) => ({ ...p, attachments: "[]" }));
       if (!payloads.length) {
         toast.info("جميع البرامج مضافة مسبقًا.");
         return;
       }
-      const { error } = await supabase
-        .from("programs")
-        .insert(payloads as never);
+      const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
       toast.success(`تم استيراد ${payloads.length} برنامجًا وزاريًا بنجاح`);
@@ -554,14 +881,9 @@ function MinistryProgramsDialog() {
         <CalendarRange className="size-4" /> الخطة الوزارية (مكة 1448هـ)
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent
-          className="max-h-[90vh] max-w-5xl overflow-y-auto"
-          dir="rtl"
-        >
+        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>
-              خطة برامج التوجيه الطلابي (مرتبة حسب التاريخ الهجري)
-            </DialogTitle>
+            <DialogTitle>خطة برامج التوجيه الطلابي (مرتبة حسب التاريخ الهجري)</DialogTitle>
             <DialogDescription>
               استعراض واعتماد الخطة الدراسية كاملة موزعة على 18 أسبوعًا.
             </DialogDescription>
@@ -573,16 +895,13 @@ function MinistryProgramsDialog() {
                   <th className="p-2 font-bold">الأسبوع والتاريخ الهجري</th>
                   <th className="p-2 font-bold">البرنامج</th>
                   <th className="p-2 font-bold">النوع</th>
-                  <th className="p-2 font-bold">الفئة المستهدفة</th>
+                  <th className="p-2 font-bold">الفئة</th>
                   <th className="p-2 font-bold">المؤشر</th>
                 </tr>
               </thead>
               <tbody>
                 {MAKKAH_MINISTRY_PROGRAMS.map((p) => (
-                  <tr
-                    key={p.program_no!}
-                    className="border-b last:border-0 hover:bg-muted/20"
-                  >
+                  <tr key={p.program_no!} className="border-b last:border-0 hover:bg-muted/20">
                     <td className="whitespace-nowrap p-2 font-mono text-[11px] font-semibold text-primary">
                       {p.program_no}
                     </td>
@@ -596,15 +915,9 @@ function MinistryProgramsDialog() {
             </table>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              إغلاق
-            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>إغلاق</Button>
             <Button onClick={seed} disabled={busy}>
-              {busy ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Plus className="size-4" />
-              )}
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
               استيراد واعتماد الكل
             </Button>
           </DialogFooter>
@@ -615,12 +928,14 @@ function MinistryProgramsDialog() {
 }
 
 /* =========================================================================
-   الصفحة الرئيسية للبرامج
+   الصفحة الرئيسية
    ========================================================================= */
 function ProgramsPage() {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<ProgramRecord | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reporting, setReporting] = useState<ProgramRecord | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busyDelete, setBusyDelete] = useState(false);
   const [search, setSearch] = useState("");
@@ -670,6 +985,16 @@ function ProgramsPage() {
     if (!window.confirm(`سيتم حذف ${selected.size} برنامجًا. متابعة؟`)) return;
     setBusyDelete(true);
     try {
+      // حذف المرفقات من Storage أولًا
+      const toDelete = programs.filter((p) => p.id && selected.has(p.id));
+      const paths: string[] = [];
+      toDelete.forEach((p) =>
+        parseAttachments(p.attachments).forEach((a) => a.path && paths.push(a.path))
+      );
+      if (paths.length) {
+        await supabase.storage.from(STORAGE_BUCKET).remove(paths);
+      }
+
       const { error } = await supabase
         .from("programs")
         .delete()
@@ -686,14 +1011,17 @@ function ProgramsPage() {
   }
 
   async function handleDeleteAll() {
-    if (
-      !window.confirm(
-        "تحذير: هل أنت متأكد من حذف كافة البرامج المسجلة نهائيًا؟"
-      )
-    )
-      return;
+    if (!window.confirm("تحذير: هل أنت متأكد من حذف كافة البرامج المسجلة نهائيًا؟")) return;
     setBusyDelete(true);
     try {
+      const paths: string[] = [];
+      programs.forEach((p) =>
+        parseAttachments(p.attachments).forEach((a) => a.path && paths.push(a.path))
+      );
+      if (paths.length) {
+        await supabase.storage.from(STORAGE_BUCKET).remove(paths);
+      }
+
       const { error } = await supabase
         .from("programs")
         .delete()
@@ -714,9 +1042,13 @@ function ProgramsPage() {
     setEditOpen(true);
   }
 
+  function openReport(p: ProgramRecord) {
+    setReporting(p);
+    setReportOpen(true);
+  }
+
   return (
     <div className="space-y-4 p-2" dir="rtl">
-      {/* شريط الأدوات العلوي */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-3">
         <div className="flex flex-wrap items-center gap-2">
           <MinistryProgramsDialog />
@@ -743,25 +1075,12 @@ function ProgramsPage() {
               onClick={handleDeleteSelected}
               disabled={busyDelete}
             >
-              {busyDelete ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
+              {busyDelete ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
               حذف المحدد ({selected.size})
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={handleDeleteAll}
-            disabled={busyDelete}
-          >
-            {busyDelete ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Trash2 className="size-4" />
-            )}
+          <Button size="sm" variant="destructive" onClick={handleDeleteAll} disabled={busyDelete}>
+            {busyDelete ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
             حذف الكل
           </Button>
         </div>
@@ -775,7 +1094,6 @@ function ProgramsPage() {
         />
       </div>
 
-      {/* قائمة البرامج */}
       {isLoading ? (
         <div className="flex justify-center p-10">
           <Loader2 className="size-6 animate-spin text-primary" />
@@ -786,119 +1104,123 @@ function ProgramsPage() {
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="relative rounded-lg border bg-card p-3 shadow-sm transition hover:border-primary/60"
-            >
-              <button
-                onClick={() => toggleSelect(p.id)}
-                className="absolute left-2 top-2 text-muted-foreground hover:text-primary"
-                title="تحديد"
+          {filtered.map((p) => {
+            const atts = parseAttachments(p.attachments);
+            return (
+              <div
+                key={p.id}
+                className="relative rounded-lg border bg-card p-3 shadow-sm transition hover:border-primary/60"
               >
-                {selected.has(p.id!) ? (
-                  <CheckSquare className="size-4 text-primary" />
-                ) : (
-                  <Square className="size-4" />
-                )}
-              </button>
-
-              <div className="mb-1 flex items-start gap-2">
-                <FileText className="mt-0.5 size-4 shrink-0 text-primary" />
-                <h3 className="flex-1 pr-1 text-sm font-bold leading-tight">
-                  {p.name}
-                </h3>
-              </div>
-
-              <p className="mb-2 line-clamp-2 text-[11px] text-muted-foreground">
-                {p.goal}
-              </p>
-
-              <div className="mb-2 flex flex-wrap gap-1">
-                {p.ptype && (
-                  <Badge variant="outline" className="text-[10px]">
-                    {p.ptype}
-                  </Badge>
-                )}
-                {p.domain && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    {p.domain}
-                  </Badge>
-                )}
-                <Badge
-                  className="text-[10px]"
-                  variant={
-                    p.exec_status === "مكتمل"
-                      ? "default"
-                      : p.exec_status === "جارٍ التنفيذ"
-                      ? "secondary"
-                      : "outline"
-                  }
+                <button
+                  onClick={() => toggleSelect(p.id)}
+                  className="absolute left-2 top-2 text-muted-foreground hover:text-primary"
+                  title="تحديد"
                 >
-                  {p.exec_status}
-                </Badge>
-              </div>
+                  {selected.has(p.id!) ? (
+                    <CheckSquare className="size-4 text-primary" />
+                  ) : (
+                    <Square className="size-4" />
+                  )}
+                </button>
 
-              <div className="mb-2 text-[10px] text-muted-foreground">
-                <div className="truncate">
-                  <strong>الفئة:</strong> {p.target_group}
+                <div className="mb-1 flex items-start gap-2">
+                  <FileText className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <h3 className="flex-1 pr-1 text-sm font-bold leading-tight">{p.name}</h3>
                 </div>
-                <div className="truncate">
-                  <strong>التاريخ:</strong> {p.term}
-                </div>
-              </div>
 
-              {p.attachments && (
-                <div className="mb-2 flex items-center gap-1 text-[10px] text-primary">
-                  <Paperclip className="size-3" />
-                  <span className="truncate">{p.attachments}</span>
-                </div>
-              )}
+                <p className="mb-2 line-clamp-2 text-[11px] text-muted-foreground">{p.goal}</p>
 
-              <div className="mt-3 flex justify-end gap-2 border-t pt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-[11px]"
-                  onClick={() => openEdit(p)}
-                >
-                  <Pencil className="size-3" /> تحرير
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="h-7 text-[11px]"
-                  onClick={async () => {
-                    if (!window.confirm(`حذف البرنامج: ${p.name}؟`)) return;
-                    const { error } = await supabase
-                      .from("programs")
-                      .delete()
-                      .eq("id", p.id!);
-                    if (error) toast.error(error.message);
-                    else {
-                      queryClient.invalidateQueries({
-                        queryKey: ["programs"],
-                      });
-                      toast.success("تم الحذف");
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {p.ptype && <Badge variant="outline" className="text-[10px]">{p.ptype}</Badge>}
+                  {p.domain && <Badge variant="secondary" className="text-[10px]">{p.domain}</Badge>}
+                  <Badge
+                    className="text-[10px]"
+                    variant={
+                      p.exec_status === "مكتمل"
+                        ? "default"
+                        : p.exec_status === "جارٍ التنفيذ"
+                        ? "secondary"
+                        : "outline"
                     }
-                  }}
-                >
-                  <Trash2 className="size-3" /> حذف
-                </Button>
+                  >
+                    {p.exec_status}
+                  </Badge>
+                </div>
+
+                <div className="mb-2 text-[10px] text-muted-foreground">
+                  <div className="truncate"><strong>الفئة:</strong> {p.target_group}</div>
+                  <div className="truncate"><strong>التاريخ:</strong> {p.term}</div>
+                </div>
+
+                {atts.length > 0 && (
+                  <div className="mb-2 flex items-center gap-1 text-[10px] text-primary">
+                    <Paperclip className="size-3" />
+                    <span>{atts.length} شاهد مرفق</span>
+                  </div>
+                )}
+
+                <div className="mt-3 flex flex-wrap justify-end gap-2 border-t pt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[11px]"
+                    onClick={() => openReport(p)}
+                  >
+                    <Printer className="size-3" /> تقرير وطباعة
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[11px]"
+                    onClick={() => openEdit(p)}
+                  >
+                    <Pencil className="size-3" /> تحرير
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-7 text-[11px]"
+                    onClick={async () => {
+                      if (!window.confirm(`حذف البرنامج: ${p.name}؟`)) return;
+                      try {
+                        const paths = parseAttachments(p.attachments)
+                          .map((a) => a.path)
+                          .filter(Boolean);
+                        if (paths.length) {
+                          await supabase.storage.from(STORAGE_BUCKET).remove(paths);
+                        }
+                        const { error } = await supabase
+                          .from("programs")
+                          .delete()
+                          .eq("id", p.id!);
+                        if (error) throw error;
+                        queryClient.invalidateQueries({ queryKey: ["programs"] });
+                        toast.success("تم الحذف");
+                      } catch (e) {
+                        toast.error((e as Error).message);
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-3" /> حذف
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* نافذة الإضافة / التحرير مع DeepSeek والمرفقات */}
       <ProgramEditDialog
         open={editOpen}
         onOpenChange={setEditOpen}
         initial={editing}
-        onSaved={() =>
-          queryClient.invalidateQueries({ queryKey: ["programs"] })
-        }
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ["programs"] })}
+      />
+
+      <ProgramReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        program={reporting}
       />
     </div>
   );
