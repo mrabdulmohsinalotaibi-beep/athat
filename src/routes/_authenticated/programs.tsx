@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, ChevronLeft, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
+import { 
+  CalendarRange, 
+  Loader2, 
+  Sparkles, 
+  Printer, 
+  ChevronLeft, 
+  ChevronRight, 
+  CheckCircle2, 
+  Trash2,
+  Layers
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -234,15 +244,15 @@ export const MINISTRY_PROGRAMS: MinistryProgram[] = [
 ];
 
 // ==========================================
-// 2. مكون معالج خطة تعليم مكة التفاعلي (Step-by-Step Wizard)
+// 2. معالج خطة مكة التفاعلي (خطوات متتالية)
 // ==========================================
-function MinistryProgramsDialog() {
+function MinistryProgramsWizard() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
 
-  async function seed() {
+  async function handleImport() {
     setBusy(true);
     try {
       const { data: existing } = await supabase.from("programs").select("name");
@@ -264,19 +274,21 @@ function MinistryProgramsDialog() {
         }));
 
       if (!payloads.length) {
-        toast.info("جميع برامج خطة تعليم مكة 1448هـ المعتمدة مضافة مسبقاً.");
+        toast.info("جميع برامج خطة تعليم مكة 1448هـ مضافة مسبقاً في سجلك.");
         setOpen(false);
         setStep(1);
         return;
       }
+
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
+      
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة والاستبدال ${payloads.length} برنامجاً وزارياً رسمياً بنجاح`);
+      toast.success(`تم استيراد ${payloads.length} برنامجاً وزارياً بنجاح!`);
       setOpen(false);
       setStep(1);
     } catch (error) {
-      toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
+      toast.error(`خطأ في الاستيراد: ${(error as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -286,97 +298,97 @@ function MinistryProgramsDialog() {
     <>
       <Button 
         onClick={() => { setStep(1); setOpen(true); }}
-        className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white shadow-sm hover:opacity-95 transition-all"
+        className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-all gap-2"
       >
-        <CalendarRange className="size-4 ml-2" /> خطة تعليم مكة 1448هـ التفاعلية
+        <CalendarRange className="size-4" /> خطة تعليم مكة 1448هـ التفاعلية
       </Button>
       
       <Dialog open={open} onOpenChange={(val) => { setOpen(val); if(!val) setStep(1); }}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-xl border border-border/40 bg-background shadow-2xl" dir="rtl">
+        <DialogContent className="max-w-2xl bg-background border border-border/50 shadow-xl rounded-xl" dir="rtl">
           
-          <div className="flex items-center justify-between pb-4 border-b px-2">
+          <div className="flex items-center justify-between pb-3 border-b">
             <div className="flex items-center gap-2 text-emerald-700">
               <Sparkles className="size-5" />
-              <DialogTitle className="text-lg font-bold">معالج خطة تعليم مكة 1448هـ</DialogTitle>
+              <DialogTitle className="text-base font-bold">معالج خطة التوجيه الطلابي (تعليم مكة)</DialogTitle>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted px-3 py-1 rounded-full">
-              <span>الخطوة {step} من 3</span>
-            </div>
+            <span className="text-xs bg-emerald-50 text-emerald-800 font-semibold px-2.5 py-1 rounded-full border border-emerald-200">
+              الخطوة {step} من 3
+            </span>
           </div>
 
-          <div className="py-2">
+          <div className="py-3">
             {step === 1 && (
-              <div className="space-y-4 py-4 text-center sm:text-right">
-                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-emerald-900 space-y-2">
-                  <h4 className="font-bold text-base">مرحباً بك في معالج خطة التوجيه الطلابي</h4>
-                  <p className="text-xs leading-relaxed text-emerald-800">
-                    تم إعداد وتنسيق خطة برامج وخدمات التوجيه الطلابي للفصل الدراسي الأول لعام 1448هـ المعتمدة من الإدارة العامة للتعليم بمنطقة مكة المكرمة لتتواءم مع نظامك الإلكتروني.
+              <div className="space-y-3 text-right">
+                <div className="p-3.5 bg-emerald-50/70 border border-emerald-200/80 rounded-lg text-emerald-900">
+                  <h4 className="font-bold text-sm mb-1">أهلاً بك في نظام المعالج الذكي</h4>
+                  <p className="text-xs text-emerald-800 leading-relaxed">
+                    يتيح لك هذا المعالج استيراد الخطة التشغيلية الرسمية المعتمدة لبرامج وخدمات التوجيه الطلابي (الفصل الأول 1448هـ) بضغطة زر واحدة ودون إدخال يدوي شاق.
                   </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-right">
-                  <div className="p-3 border rounded-lg bg-card shadow-xs">
-                    <span className="font-bold text-emerald-700 block mb-1">⏱️ 18 أسبوعاً</span>
-                    <span className="text-muted-foreground">تغطية زمنية كاملة ومفصلة لجميع الأسابيع الدراسية.</span>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2.5 border rounded-lg bg-card">
+                    <span className="font-bold text-emerald-700 block">18 أسبوعاً</span>
+                    <span className="text-[11px] text-muted-foreground">خطة فصل كاملة</span>
                   </div>
-                  <div className="p-3 border rounded-lg bg-card shadow-xs">
-                    <span className="font-bold text-emerald-700 block mb-1">📅 تواريخ هجرية</span>
-                    <span className="text-muted-foreground">ربط دقيق للأنشطة بالفترات الزمنية المعتمدة رسمياً.</span>
+                  <div className="p-2.5 border rounded-lg bg-card">
+                    <span className="font-bold text-emerald-700 block">تواريخ هجرية</span>
+                    <span className="text-[11px] text-muted-foreground">مجدولة بدقة</span>
                   </div>
-                  <div className="p-3 border rounded-lg bg-card shadow-xs">
-                    <span className="font-bold text-emerald-700 block mb-1">📋 مؤشرات التحقق</span>
-                    <span className="text-muted-foreground">تحديد الشواهد المطلوبة وأهداف كل برنامج مسبقاً.</span>
+                  <div className="p-2.5 border rounded-lg bg-card">
+                    <span className="font-bold text-emerald-700 block">شواهد جاهزة</span>
+                    <span className="text-[11px] text-muted-foreground">مؤشرات تحقق معتمدة</span>
                   </div>
                 </div>
               </div>
             )}
 
             {step === 2 && (
-              <div className="space-y-3">
+              <div className="space-y-2.5 text-right">
                 <DialogDescription className="text-xs text-muted-foreground">
-                  معاينة سريعة لعينة من البرامج الوزارية المعتمدة التي سيتم إدراجها في سجلك التشغيلي:
+                  معاينة سريعة لعينات البرامج المزمع إضافتها لسجلك:
                 </DialogDescription>
-                <div className="overflow-x-auto rounded-lg border border-border/60 shadow-xs max-h-[45vh]">
-                  <table className="w-full text-right text-xs">
-                    <thead className="sticky top-0 bg-muted/90 text-muted-foreground font-semibold">
-                      <tr className="border-b">
-                        <th className="p-2.5">الأسبوع</th>
-                        <th className="p-2.5">التاريخ الهجري</th>
-                        <th className="p-2.5">اسم البرنامج / الخدمة</th>
-                        <th className="p-2.5">المجال</th>
+                <div className="border rounded-lg overflow-hidden max-h-[38vh] bg-card text-xs">
+                  <table className="w-full text-right">
+                    <thead className="bg-muted/70 text-muted-foreground sticky top-0">
+                      <tr>
+                        <th className="p-2">الأسبوع</th>
+                        <th className="p-2">التاريخ</th>
+                        <th className="p-2">اسم البرنامج</th>
+                        <th className="p-2">المجال</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
-                      {MINISTRY_PROGRAMS.slice(0, 6).map((p, idx) => (
-                        <tr key={idx} className="hover:bg-muted/30">
-                          <td className="p-2.5 font-bold">أسبوع {p.week}</td>
-                          <td className="p-2.5 text-emerald-700 font-semibold">{p.hijri_date}</td>
-                          <td className="p-2.5 font-semibold">{p.name}</td>
-                          <td className="p-2.5 text-muted-foreground">{p.domain}</td>
+                      {MINISTRY_PROGRAMS.slice(0, 5).map((p, i) => (
+                        <tr key={i} className="hover:bg-muted/20">
+                          <td className="p-2 font-bold">أسبوع {p.week}</td>
+                          <td className="p-2 text-emerald-700 font-medium">{p.hijri_date}</td>
+                          <td className="p-2 font-semibold">{p.name}</td>
+                          <td className="p-2 text-muted-foreground">{p.domain}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <p className="text-[11px] text-center text-muted-foreground">... و 12 برنامجاً إضافياً تغطي كافة أسابيع الفصل الدراسي.</p>
+                <p className="text-[11px] text-center text-muted-foreground">+ 13 برنامجاً إضافياً تغطي بقية الأسابيع الدراسية.</p>
               </div>
             )}
 
             {step === 3 && (
-              <div className="space-y-4 py-6 text-center">
-                <div className="size-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="py-6 text-center space-y-3">
+                <div className="size-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
                   <CheckCircle2 className="size-6" />
                 </div>
-                <div className="space-y-1">
-                  <h4 className="font-bold text-base text-foreground">جاهز للاعتماد النهائي</h4>
-                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                    بالضغط على زر "تأكيد واستيراد الخطة" أدناه، سيتم حقن جميع البرامج والأنشطة الإرشادية لتعليم مكة 1448هـ مباشرة في جدول السجلات الخاص بك.
+                <div>
+                  <h4 className="font-bold text-sm">كل شيء جاهز للحقن في السجلات</h4>
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-1">
+                    اضغط أدناه لتأكيد الاستيراد المباشر للبرامج إلى جدول العمل الخاص بك.
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          <DialogFooter className="flex items-center justify-between pt-4 border-t gap-2">
+          <DialogFooter className="flex items-center justify-between pt-3 border-t">
             <div>
               {step > 1 && (
                 <Button variant="outline" size="sm" onClick={() => setStep(step - 1)}>
@@ -393,8 +405,8 @@ function MinistryProgramsDialog() {
                   التالي <ChevronLeft className="size-4 mr-1" />
                 </Button>
               ) : (
-                <Button size="sm" onClick={seed} disabled={busy} className="bg-emerald-700 text-white hover:bg-emerald-800">
-                  {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : null} تأكيد واستيراد الخطة
+                <Button size="sm" onClick={handleImport} disabled={busy} className="bg-emerald-700 text-white hover:bg-emerald-800">
+                  {busy ? <Loader2 className="size-4 animate-spin ml-1" /> : null} تأكيد واستيراد الخطة
                 </Button>
               )}
             </div>
@@ -406,36 +418,36 @@ function MinistryProgramsDialog() {
 }
 
 // ==========================================
-// 3. زر حذف البرامج (مفرد ومجموع) المخصص
+// 3. زر حذف البرامج (مفرد ومجموع) الذكي
 // ==========================================
-function DeleteSelectedProgramsButton() {
+function DeleteProgramsAction() {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
   async function handleDelete() {
-    // نفترض أن مكون RecordPage يتيح اختيار الصفوف عبر الجدول (تحديد مفرد ومجموع)
-    // سنقوم بقراءة العناصر المحددة أو تفعيل الحذف الجماعي من جدول قاعدة البيانات.
-    const selectedCheckboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked');
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked');
     const ids: string[] = [];
-    selectedCheckboxes.forEach((cb) => {
+    
+    checkboxes.forEach((cb) => {
       if (cb.value && cb.value !== "on" && cb.value !== "all") {
         ids.push(cb.value);
       }
     });
 
     if (ids.length === 0) {
-      toast.error("الرجاء تحديد برنامج واحد على الأقل من الجدول لحذفه.");
+      toast.error("الرجاء تحديد برنامج (أو مجموعة برامج) من خانات الاختيار في الجدول أولاً.");
       return;
     }
 
-    if (!confirm(`هل أنت متأكد من حذف ${ids.length} برنامجاً محدداً؟`)) return;
+    if (!confirm(`هل أنت متأكد من حذف ${ids.length} عنصر/عناصر محددة نهائياً؟`)) return;
 
     setBusy(true);
     try {
       const { error } = await supabase.from("programs").delete().in("id", ids);
       if (error) throw error;
+
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تم حذف ${ids.length} برنامجاً بنجاح`);
+      toast.success(`تم حذف ${ids.length} عنصر بنجاح`);
     } catch (error) {
       toast.error(`تعذر الحذف: ${(error as Error).message}`);
     } finally {
@@ -446,18 +458,18 @@ function DeleteSelectedProgramsButton() {
   return (
     <Button 
       variant="outline" 
-      onClick={handleDelete}
+      onClick={handleDelete} 
       disabled={busy}
-      className="border-destructive/40 text-destructive hover:bg-destructive/10"
+      className="border-destructive/40 text-destructive hover:bg-destructive/10 transition-all gap-2"
     >
-      {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : <Trash2 className="size-4 ml-2" />} 
+      {busy ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
       حذف المحدد (مفرد / مجموع)
     </Button>
   );
 }
 
 // ==========================================
-// 4. زر الطباعة الرسمية A4
+// 4. زر الطباعة الرسمية بصيغة A4
 // ==========================================
 function PrintA4ReportButton() {
   const handlePrint = () => {
@@ -472,17 +484,17 @@ function PrintA4ReportButton() {
         <title>خطة برامج وخدمات التوجيه الطلابي - تعليم مكة 1448هـ</title>
         <style>
           @page { size: A4; margin: 12mm; }
-          body { font-family: 'Traditional Arabic', 'Amiri', Arial, sans-serif; color: #000; line-height: 1.3; font-size: 12pt; margin: 0; padding: 0; }
-          .header { text-align: center; border-bottom: 2px solid #065f46; padding-bottom: 8px; margin-bottom: 15px; }
-          .header h3 { margin: 2px 0; font-size: 14pt; color: #065f46; font-weight: bold; }
-          .header h4 { margin: 2px 0; font-size: 12pt; color: #111; font-weight: bold; }
-          .header p { margin: 1px 0; font-size: 10pt; color: #4b5563; }
-          .meta-box { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 10.5pt; background: #f3f4f6; padding: 6px 10px; border-radius: 4px; border: 1px solid #d1d5db; }
-          table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9.5pt; }
-          th, td { border: 1px solid #6b7280; padding: 5px 6px; text-align: right; vertical-align: middle; }
-          th { background-color: #065f46; color: white; font-weight: bold; font-size: 10pt; }
+          body { font-family: 'Traditional Arabic', 'Amiri', Arial, sans-serif; color: #000; line-height: 1.3; font-size: 11pt; margin: 0; padding: 0; }
+          .header { text-align: center; border-bottom: 2px solid #065f46; padding-bottom: 6px; margin-bottom: 12px; }
+          .header h3 { margin: 2px 0; font-size: 13pt; color: #065f46; font-weight: bold; }
+          .header h4 { margin: 2px 0; font-size: 11pt; color: #111; font-weight: bold; }
+          .header p { margin: 1px 0; font-size: 9.5pt; color: #4b5563; }
+          .meta-box { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10pt; background: #f3f4f6; padding: 5px 8px; border-radius: 4px; border: 1px solid #d1d5db; }
+          table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9pt; }
+          th, td { border: 1px solid #6b7280; padding: 4px 5px; text-align: right; vertical-align: middle; }
+          th { background-color: #065f46; color: white; font-weight: bold; font-size: 9.5pt; }
           tr:nth-child(even) { background-color: #f9fafb; }
-          .footer { margin-top: 25px; display: flex; justify-content: space-between; font-size: 10.5pt; page-break-inside: avoid; }
+          .footer { margin-top: 20px; display: flex; justify-content: space-between; font-size: 10pt; page-break-inside: avoid; }
           .signature-box { text-align: center; width: 45%; }
         </style>
       </head>
@@ -545,9 +557,9 @@ function PrintA4ReportButton() {
     <Button 
       variant="outline" 
       onClick={handlePrint}
-      className="border-emerald-700/40 text-emerald-700 hover:bg-emerald-50"
+      className="border-emerald-700/40 text-emerald-700 hover:bg-emerald-50 transition-all gap-2"
     >
-      <Printer className="size-4 ml-2" /> طباعة الخطة A4 (كليشة رسمية)
+      <Printer className="size-4" /> طباعة الخطة A4 (كليشة رسمية)
     </Button>
   );
 }
@@ -571,8 +583,8 @@ export const Route = createFileRoute("/_authenticated/programs")({
       config={recordByKey("programs")}
       toolbarExtra={
         <div className="flex flex-wrap items-center gap-2">
-          <MinistryProgramsDialog />
-          <DeleteSelectedProgramsButton />
+          <MinistryProgramsWizard />
+          <DeleteProgramsAction />
           <PrintA4ReportButton />
         </div>
       }
