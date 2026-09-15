@@ -1,177 +1,108 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, CalendarRange, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>خطة التوجيه الطلابي - 1448هـ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #0077b6; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #666; margin-top: 0; margin-bottom: 30px; }
+        .form-section { background: #eef2f3; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-section input, .form-section select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
+        .form-section button { grid-column: span 2; background: #0077b6; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        .form-section button:hover { background: #005f87; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+        th, td { border: 1px solid #e0e0e0; padding: 12px; text-align: center; font-size: 14px; }
+        th { background-color: #0077b6; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .actions-btn { background: #e63946; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .actions-btn:hover { background: #d62828; }
+    </style>
+</head>
+<body>
 
-import { supabase } from "@/integrations/supabase/client";
-import { RecordPage } from "@/components/RecordPage";
-import { recordByKey } from "@/lib/records";
-import { MINISTRY_PROGRAMS, MINISTRY_TERMS } from "@/lib/ministry-programs";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+<div class="container">
+    <h1>نظام إدارة خطة التوجيه الطلابي</h1>
+    <p class="subtitle">متوسطة علاء بن الحضرمي - الفصل الدراسي الأول 1448هـ</p>
 
-export const Route = createFileRoute("/_authenticated/programs")({
-  head: () => ({
-    meta: [
-      { title: "البرامج والأنشطة | منصة الذات" },
-      { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة وإدارة الأنشطة." },
-      { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
-      {
-        property: "og:description",
-        content: "البرامج الإرشادية الوقائية والإنمائية والعلاجية الموزعة على الأسابيع الدراسية.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: ProgramsPage,
-});
+    <!-- نموذج إضافة برنامج جديد -->
+    <div class="form-section">
+        <input type="text" id="weekName" placeholder="اسم الأسبوع أو الفترة (مثال: الأسبوع الأول)">
+        <input type="text" id="progName" placeholder="اسم البرنامج الأساسي">
+        <input type="text" id="progDetails" placeholder="تفاصيل وأنشطة البرنامج">
+        <select id="isDone">
+            <option value="نعم">تم التنفيذ (نعم)</option>
+            <option value="لا">لم يتم التنفيذ (لا)</option>
+        </select>
+        <button onclick="addProgram()">إضافة البرنامج للخطة</button>
+    </div>
 
-function AddSingleMinistryProgramDialog() {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [selectedProgramName, setSelectedProgramName] = useState("");
-  const [busy, setBusy] = useState(false);
+    <!-- جدول عرض البرامج -->
+    <table id="planTable">
+        <thead>
+            <tr>
+                <th>الفترة / الأسبوع</th>
+                <th>البرنامج الأساسي</th>
+                <th>التفاصيل والإجراءات</th>
+                <th>الحالة</th>
+                <th>إدارة</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- البيانات الافتراضية الأولية -->
+            <tr>
+                <td>الأسبوع الأول</td>
+                <td>التهيئة الإرشادية والأسبوع التمهيدي</td>
+                <td>تهيئة نفسية وتربوية وتحقيق تكيف الطلاب[cite: 2]</td>
+                <td>نعم</td>
+                <td><button class="actions-btn" onclick="deleteRow(this)">حذف</button></td>
+            </tr>
+            <tr>
+                <td>الأسبوع الثاني</td>
+                <td>تعزيز السلوك الإيجابي</td>
+                <td>تفعيل جائزة المدرسة للتميز السلوكي[cite: 2]</td>
+                <td>نعم</td>
+                <td><button class="actions-btn" onclick="deleteRow(this)">حذف</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
-  const selectedProgramObj = MINISTRY_PROGRAMS.find((p) => p.name === selectedProgramName);
+<script>
+    function addProgram() {
+        const week = document.getElementById('weekName').value;
+        const name = document.getElementById('progName').value;
+        const details = document.getElementById('progDetails').value;
+        const done = document.getElementById('isDone').value;
 
-  async function handleAdd() {
-    if (!selectedProgramObj) {
-      toast.error("الرجاء اختيار برنامج وزاري صالح.");
-      return;
+        if(!week || !name) {
+            alert('يرجى تعبئة حقل الأسبوع واسم البرنامج على الأقل.');
+            return;
+        }
+
+        const table = document.getElementById('planTable').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+
+        newRow.innerHTML = `
+            <td>${week}</td>
+            <td>${name}</td>
+            <td>${details}</td>
+            <td>${done}</td>
+            <td><button class="actions-btn" onclick="deleteRow(this)">حذف</button></td>
+        `;
+
+        // تفريغ الحقول بعد الإضافة
+        document.getElementById('weekName').value = '';
+        document.getElementById('progName').value = '';
+        document.getElementById('progDetails').value = '';
     }
 
-    setBusy(true);
-    try {
-      // التحقق مما إذا كان البرنامج مضافاً مسبقاً
-      const { data: existing } = await supabase
-        .from("programs")
-        .select("id")
-        .eq("name", selectedProgramObj.name)
-        .maybeSingle();
-
-      if (existing) {
-        toast.info("هذا البرنامج مضاف مسبقاً في السجل.");
-        setBusy(false);
-        return;
-      }
-
-      const payload = {
-        program_no: `${selectedProgramObj.term} - ${selectedProgramObj.week}`,
-        name: selectedProgramObj.name,
-        ptype: selectedProgramObj.ptype,
-        domain: selectedProgramObj.domain,
-        target_group: selectedProgramObj.target_group,
-        term: selectedProgramObj.term,
-        goal: selectedProgramObj.goal,
-        indicator: selectedProgramObj.indicator,
-        exec_status: "قيد التنفيذ",
-        summary: `برنامج إرشادي وزاري (${selectedProgramObj.name}) موجه لـ ${selectedProgramObj.target_group} بهدف: ${selectedProgramObj.goal}.`,
-        required_evidence: "صور وتقرير تنفيذ البرنامج",
-      };
-
-      const { error } = await supabase.from("programs").insert(payload as never);
-      if (error) throw error;
-
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تمت إضافة البرنامج الوزاري بنجاح إلى السجل");
-      setOpen(false);
-      setSelectedProgramName("");
-    } catch (error) {
-      toast.error(`تعذرت الإضافة: ${(error as Error).message}`);
-    } finally {
-      setBusy(false);
+    function deleteRow(btn) {
+        const row = btn.parentNode.parentNode;
+        row.parentNode.removeChild(row);
     }
-  }
+</script>
 
-  return (
-    <>
-      <Button 
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground shadow-sm transition-all hover:scale-105 active:scale-95"
-      >
-        <Plus className="size-4" /> إضافة برنامج وزاري
-      </Button>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-black">
-              <Sparkles className="size-4 text-primary" />
-              إضافة برنامج وزاري معتمد
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              اختر البرنامج الوزاري المناسب من القائمة المعتمدة لإضافته مباشرة إلى سجل البرامج والأنشطة.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <label className="text-xs font-extrabold text-foreground">اختر البرنامج الوزاري</label>
-              <select
-                value={selectedProgramName}
-                onChange={(e) => setSelectedProgramName(e.target.value)}
-                className="w-full h-10 rounded-xl border border-input bg-background px-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">-- اختر البرنامج من القائمة الوزارية --</option>
-                {MINISTRY_PROGRAMS.map((p, idx) => (
-                  <option key={idx} value={p.name}>
-                    {p.term} ({p.week}) - {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {selectedProgramObj && (
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2.5 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="font-extrabold text-primary">تفاصيل البرنامج المختار:</span>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                    {selectedProgramObj.term} · {selectedProgramObj.week}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-foreground/90">
-                  <div><span className="font-bold text-muted-foreground">نوع البرنامج:</span> {selectedProgramObj.ptype}</div>
-                  <div><span className="font-bold text-muted-foreground">المجال:</span> {selectedProgramObj.domain}</div>
-                  <div className="col-span-2"><span className="font-bold text-muted-foreground">الفئة المستهدفة:</span> {selectedProgramObj.target_group}</div>
-                  <div className="col-span-2"><span className="font-bold text-muted-foreground">الهدف:</span> {selectedProgramObj.goal}</div>
-                  <div className="col-span-2"><span className="font-bold text-muted-foreground">مؤشر التحقق:</span> {selectedProgramObj.indicator}</div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl text-xs font-bold">
-              إلغاء
-            </Button>
-            <Button onClick={handleAdd} disabled={busy || !selectedProgramName} className="rounded-xl text-xs font-extrabold">
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} اعتماد وإضافة للسجل
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
-function ProgramsPage() {
-  return (
-    <RecordPage
-      config={recordByKey("programs")}
-      toolbarExtra={
-        <>
-          <AddSingleMinistryProgramDialog />
-        </>
-      }
-    />
-  );
-}
+</body>
+</html>
