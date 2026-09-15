@@ -1,43 +1,40 @@
-import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-// تعريف اللون الثابت واستخراج الدرجات
-export const APP_THEME = {
-  id: "thaat-navy",
-  name: "ذات الكحلي",
-  colors: {
-    primary: "#1F3A52",       // لون الأزرار والهيدر العلوي
-    primaryHover: "#152838",  // درجة أغمق عند التأشير بالماوس (Hover)
-    bgSoft: "#F8FAFC",        // خلفية الصفحة الكلية
-    cardBg: "#FFFFFF",        // خلفية البطاقات
-  },
-} as const;
+export const THEMES = [
+  { id: "thaat", name: "ذات العنابي" },
+  { id: "royal", name: "الكحلي الملكي" },
+  { id: "sage", name: "الأخضر الهادئ" },
+  { id: "amber", name: "العنبري الدافئ" },
+] as const;
 
-export type AppTheme = typeof APP_THEME.id;
+export type AppTheme = (typeof THEMES)[number]["id"];
+
+export function isAppTheme(value: unknown): value is AppTheme {
+  return typeof value === "string" && THEMES.some((t) => t.id === value);
+}
 
 type ThemeContextType = {
   theme: AppTheme;
-  colors: typeof APP_THEME.colors;
+  setTheme: (theme: AppTheme) => void;
 };
 
-const ThemeContext = createContext<ThemeContextType>({
-  theme: APP_THEME.id,
-  colors: APP_THEME.colors,
-});
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-interface ThemeProviderProps {
-  children: ReactNode;
-}
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<AppTheme>("thaat");
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
-    // تطبيق سمة اللون الثابتة على HTML مباشرة
-    document.documentElement.dataset["theme"] = APP_THEME.id;
+    const saved = localStorage.getItem("app-theme");
+    if (isAppTheme(saved)) setTheme(saved);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.dataset["theme"] = theme;
+    localStorage.setItem("app-theme", theme);
+  }, [theme]);
+
   return (
-    <ThemeContext.Provider value={{ theme: APP_THEME.id, colors: APP_THEME.colors }}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
   );
 }
 
