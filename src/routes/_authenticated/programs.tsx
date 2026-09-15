@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, FileText, Upload, Printer, Trash2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarRange, Loader2, Sparkles, Printer, FileText, Upload, Trash2, Video, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,20 +21,20 @@ export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
       { title: "البرامج والأنشطة | منصة الذات" },
-      { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة والمنظمة بالتواريخ الهجرية." },
+      { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة والمخصصة مع دعم الذكاء الاصطناعي والمرفقات والطباعة المحسنة." },
       { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
-      { property: "og:description", content: "إدارة البرامج الإرشادية مع دعم الذكاء الاصطناعي والطباعة A4." },
+      { property: "og:description", content: "إدارة وتوثيق برامج التوجيه الطلابي بالتواريخ الهجرية." },
       { property: "og:type", content: "website" },
     ],
   }),
   component: ProgramsPage,
 });
 
-// خطة مكة المكرمة للبرامج الوزارية (مرتبة تصاعدياً من الأسبوع الأول فصاعداً)
+// خطة برامج مكة المكرمة 1448هـ مرتبة تصاعدياً من الأسبوع الأول في الأعلى
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الأول (17 - 21 / 03 / 1448 هـ)",
+    week: "الأول (17 - 21 / 03 / 1448 هـ)",
     name: "برنامج التهيئة الإرشادية والأسبوع التمهيدي",
     ptype: "وقائي / نمائي",
     domain: "المهاري والتربوي",
@@ -44,7 +44,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثاني (24 - 28 / 03 / 1448 هـ)",
+    week: "الثاني (24 - 28 / 03 / 1448 هـ)",
     name: "تعزيز السلوك الإيجابي",
     ptype: "وقائي",
     domain: "السلوكي والمواظبة",
@@ -54,7 +54,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثالث (02 - 06 / 04 / 1448 هـ)",
+    week: "الثالث (02 - 06 / 04 / 1448 هـ)",
     name: "الاستمرار بتعزيز السلوك الإيجابي ورعاية الحالات الخاصة",
     ptype: "علاجي / وقائي",
     domain: "الاجتماعي والنفسي",
@@ -64,7 +64,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الرابع (09 - 14 / 04 / 1448 هـ)",
+    week: "الرابع (09 - 14 / 04 / 1448 هـ)",
     name: "تفعيل الأسبوع المكثف لبرنامج رفق (اليوم الوطني)",
     ptype: "وقائي",
     domain: "الحد من العنف",
@@ -74,7 +74,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الخامس (16 - 20 / 04 / 1448 هـ)",
+    week: "الخامس (16 - 20 / 04 / 1448 هـ)",
     name: "تنمية الدافعية لرفع مستوى التحصيل الدراسي",
     ptype: "نمائي",
     domain: "التحصيلي والأكاديمي",
@@ -84,7 +84,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع السادس (23 - 27 / 04 / 1448 هـ)",
+    week: "السادس (23 - 27 / 04 / 1448 هـ)",
     name: "تعزيز المهارات النفسية والاجتماعية (برنامجي نبيه ودرع)",
     ptype: "وقائي",
     domain: "النفسي والاجتماعي",
@@ -94,7 +94,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع السابع (30 / 04 - 04 / 05 / 1448 هـ)",
+    week: "السابع (30 / 04 - 04 / 05 / 1448 هـ)",
     name: "التوجيه المهني",
     ptype: "نمائي",
     domain: "المهني والتعليمي",
@@ -104,7 +104,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثامن (07 - 11 / 05 / 1448 هـ)",
+    week: "الثامن (07 - 11 / 05 / 1448 هـ)",
     name: "استمرار تعزيز المهارات النفسية للطلبة",
     ptype: "وقائي",
     domain: "النفسي",
@@ -114,7 +114,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع التاسع (14 - 18 / 05 / 1448 هـ)",
+    week: "التاسع (14 - 18 / 05 / 1448 هـ)",
     name: "رعاية ودعم الحالات الخاصة ومتكرري الغياب",
     ptype: "علاجي",
     domain: "الاجتماعي والمواظبة",
@@ -124,7 +124,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع العاشر (21 - 25 / 05 / 1448 هـ)",
+    week: "العاشر (21 - 25 / 05 / 1448 هـ)",
     name: "متابعة تنمية الدافعية للتحصيل الدراسي",
     ptype: "نمائي",
     domain: "التحصيلي",
@@ -134,7 +134,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الحادي عشر (28 / 05 - 02 / 06 / 1448 هـ)",
+    week: "الحادي عشر (28 / 05 - 02 / 06 / 1448 هـ)",
     name: "استمرار الرعاية والدعم للحالات الخاصة والانضباط",
     ptype: "علاجي / وقائي",
     domain: "السلوكي والاجتماعي",
@@ -144,7 +144,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثاني عشر (05 - 09 / 06 / 1448 هـ)",
+    week: "الثاني عشر (05 - 09 / 06 / 1448 هـ)",
     name: "الانضباط المدرسي والحد من الغياب",
     ptype: "علاجي / وقائي",
     domain: "المواظبة",
@@ -154,7 +154,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثالث عشر (19 - 23 / 06 / 1448 هـ)",
+    week: "الثالث عشر (19 - 23 / 06 / 1448 هـ)",
     name: "تنمية الدافعية لرفع مستوى التحصيل (بعد إجازة الخريف)",
     ptype: "نمائي",
     domain: "التحصيلي",
@@ -164,7 +164,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الرابع عشر (26 / 06 - 01 / 07 / 1448 هـ)",
+    week: "الرابع عشر (26 / 06 - 01 / 07 / 1448 هـ)",
     name: "الاستخدام الآمن للإنترنت والألعاب الإلكترونية",
     ptype: "وقائي",
     domain: "التقني والأمني",
@@ -174,7 +174,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الخامس عشر (04 - 08 / 07 / 1448 هـ)",
+    week: "الخامس عشر (04 - 08 / 07 / 1448 هـ)",
     name: "الاستمرار في التوجيه المهني والاختبارات",
     ptype: "نمائي",
     domain: "المهني",
@@ -184,7 +184,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع السادس عشر (11 - 15 / 07 / 1448 هـ)",
+    week: "السادس عشر (11 - 15 / 07 / 1448 هـ)",
     name: "متابعة تنمية الدافعية ووضع الخطط العلاجية لمهارات الحد الأدنى",
     ptype: "علاجي",
     domain: "التحصيلي",
@@ -194,7 +194,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع السابع عشر (18 - 22 / 07 / 1448 هـ)",
+    week: "السابع عشر (18 - 22 / 07 / 1448 هـ)",
     name: "التهيئة الإرشادية للاختبارات (الشفهية والعملية)",
     ptype: "إرشادي / وقائي",
     domain: "الاختبارات",
@@ -204,7 +204,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
   {
     term: "الفصل الدراسي الأول",
-    week: "الأسبوع الثامن عشر (25 - 29 / 07 / 1448 هـ)",
+    week: "الثامن عشر (25 - 29 / 07 / 1448 هـ)",
     name: "اختبارات نهاية الفصل الدراسي الأول وتوثيق الشواهد",
     ptype: "تقييمي",
     domain: "الختامي",
@@ -214,7 +214,7 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
 ];
 
-// نافذة إدارة وإضافة الخطة الوزارية المرتبة تصاعدياً
+// نافذة استيراد الخطة الوزارية والاعتماد بررتيب تصاعدي
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -237,20 +237,20 @@ function MinistryProgramsDialog() {
           goal: p.goal,
           indicator: p.indicator,
           exec_status: "لم يبدأ",
-          required_evidence: "صور، تقرير PDF، أو مقطع مرئي",
+          required_evidence: "صور وتقرير تنفيذ البرنامج",
         }));
 
       if (!payloads.length) {
-        toast.info("جميع البرامج مضافة مسبقاً في السجل.");
+        toast.info("جميع البرامج مرتبة ومضافة مسبقاً.");
         return;
       }
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً مرتباً تصاعدياً حسب التواريخ الهجرية.`);
+      toast.success(`تم استيراد واعتماد ${payloads.length} برنامجاً بالتواريخ الهجرية`);
       setOpen(false);
     } catch (error) {
-      toast.error(`خطأ أثناء إضافة البرامج: ${(error as Error).message}`);
+      toast.error(`تعذّر الاستيراد: ${(error as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -258,15 +258,15 @@ function MinistryProgramsDialog() {
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)} className="gap-2">
-        <CalendarRange className="size-4" /> الخطة الوزارية (تاريخ هجري مرتب)
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <CalendarRange className="size-4" /> خطة البرامج الوزارية (1448هـ)
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>خطة برامج التوجيه الطلابي (مرتبة من الأسبوع الأول فصاعداً)</DialogTitle>
+            <DialogTitle>خطة برامج التوجيه الطلابي (مرتبة تصاعدياً من الأسبوع الأول)</DialogTitle>
             <DialogDescription>
-              عرض جدول البرامج الوزارية المعتمدة بالتواريخ الهجرية، واعتماد إضافتها للسجل المدرسي بنقرة واحدة.
+              عرض الخطة الزمنية الرسمية للفصل الدراسي بالتواريخ الهجرية للاستيراد بضغطة زر.
             </DialogDescription>
           </DialogHeader>
 
@@ -274,11 +274,11 @@ function MinistryProgramsDialog() {
             <table className="w-full text-right text-xs">
               <thead>
                 <tr className="border-b bg-muted/60">
-                  <th className="p-2 font-bold">التاريخ والأسبوع الهجري</th>
-                  <th className="p-2 font-bold">اسم البرنامج</th>
-                  <th className="p-2 font-bold">النوع والجانب</th>
+                  <th className="p-2 font-bold">الأسبوع والتاريخ الهجري</th>
+                  <th className="p-2 font-bold">البرنامج</th>
+                  <th className="p-2 font-bold">النوع</th>
                   <th className="p-2 font-bold">الفئة المستهدفة</th>
-                  <th className="p-2 font-bold">الهدف ومؤشر التحقق</th>
+                  <th className="p-2 font-bold">الهدف والمؤشر</th>
                 </tr>
               </thead>
               <tbody>
@@ -288,7 +288,7 @@ function MinistryProgramsDialog() {
                       {p.week}
                     </td>
                     <td className="p-2 font-bold">{p.name}</td>
-                    <td className="p-2">{p.ptype} ({p.domain})</td>
+                    <td className="p-2">{p.ptype}</td>
                     <td className="p-2">{p.target_group}</td>
                     <td className="p-2 text-muted-foreground">{p.indicator}</td>
                   </tr>
@@ -302,7 +302,7 @@ function MinistryProgramsDialog() {
               إغلاق
             </Button>
             <Button onClick={seed} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null} استيراد واعتماد الكل ({MAKKAH_MINISTRY_PROGRAMS.length})
+              {busy ? <Loader2 className="size-4 animate-spin" /> : null} استيراد واعتماد الكل في السجل
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -311,171 +311,15 @@ function MinistryProgramsDialog() {
   );
 }
 
-// مكون فرعي يدمج مساعد الذكاء الاصطناعي (DeepSeek) وأداة إرفاق الملفات (صور، PDF، فيديو) داخل نموذج التعديل/التفاصيل
-export function ProgramDeepSeekEnhancer({ formValues, setFormValues }: { formValues: any; setFormValues: any }) {
-  const [loadingAi, setLoadingAi] = useState(false);
-  const [uploading, setUploading] = useState(false);
-
-  // استدعاء محرك الذكاء الاصطناعي DeepSeek المدمج لتحسين أهداف البرنامج أو كتابة آليات تنفيذه
-  async function handleAiAssist(field: string) {
-    setLoadingAi(true);
-    try {
-      await new Promise((r) => setTimeout(r, 1200));
-      const currentName = formValues?.name || "برنامج إرشادي";
-      let enhancedText = "";
-
-      if (field === "goal") {
-        enhancedText = `تحقيق التوافق الشامل والنمو النفسي والاجتماعي للطلاب المستهدفين من خلال تنفيذ أحدث الاستراتيجيات الإرشادية لبرنامج (${currentName})، وقياس الأثر بدقة وفق معايير التوجيه الطلابي.`;
-      } else if (field === "indicator") {
-        enhancedText = `إعداد تقرير توثيقي معتمد، حصر نسب الاستفادة، ومتابعة الحالات التي تتطلب تدخلاً علاجياً إضافياً بنسبة نجاح مستهدفة لا تقل عن 90%.`;
-      } else {
-        enhancedText = `عقد لقاءات توعوية، توزيع حقائب إرشادية، تنفيذ جلسات فردية وجماعية، وتفعيل الشراكة المجتمعية مع أولياء الأمور.`;
-      }
-
-      setFormValues((prev: any) => ({ ...prev, [field]: enhancedText }));
-      toast.success("تم توليد الصياغة الاحترافية بواسطة DeepSeek بنجاح!");
-    } catch (e) {
-      toast.error("تعذر الاتصال بخدمة الذكاء الاصطناعي.");
-    } finally {
-      setLoadingAi(false);
-    }
-  }
-
-  // معالجة إرفاق الملفات والشواهد (صور، PDF، فيديو)
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random().toString(36.substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `program_evidences/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage.from("records-attachments").upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage.from("records-attachments").getPublicUrl(filePath);
-      const fileUrl = publicUrlData.publicUrl;
-
-      const existingEvidence = formValues?.required_evidence || "";
-      const updatedEvidence = existingEvidence ? `${existingEvidence}\n[ملف مرفق: ${file.name}](${fileUrl})` : `[ملف مرفق: ${file.name}](${fileUrl})`;
-
-      setFormValues((prev: any) => ({ ...prev, required_evidence: updatedEvidence }));
-      toast.success("تم رفع وإرفاق الملف بنجاح وربطه بالتقرير!");
-    } catch (error: any) {
-      toast.error(`فشل رفع الملف: ${error.message}`);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return (
-    <div className="my-4 space-y-4 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm" dir="rtl">
-      <div className="flex items-center justify-between border-b pb-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="size-5 text-primary" />
-          <h4 className="text-sm font-bold text-primary">مساعد الذكاء الاصطناعي (DeepSeek) والمرفقات</h4>
-        </div>
-        <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">نشط</span>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 justify-start gap-1.5 text-xs"
-          onClick={() => handleAiAssist("goal")}
-          disabled={loadingAi}
-        >
-          <Sparkles className="size-3.5 text-primary" /> صياغة الهدف بالذكاء الاصطناعي
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 justify-start gap-1.5 text-xs"
-          onClick={() => handleAiAssist("indicator")}
-          disabled={loadingAi}
-        >
-          <Sparkles className="size-3.5 text-primary" /> اقتراح مؤشرات تحقق دقيقة
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 justify-start gap-1.5 text-xs"
-          disabled={uploading}
-          onClick={() => document.getElementById("program-file-upload")?.click()}
-        >
-          {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5 text-primary" />}
-          إرفاق (صورة، PDF، فيديو)
-        </Button>
-        <input
-          id="program-file-upload"
-          type="file"
-          className="hidden"
-          accept="image/*,application/pdf,video/*"
-          onChange={handleFileUpload}
-        />
-      </div>
-
-      {formValues?.required_evidence && (
-        <div className="rounded border bg-background p-2 text-xs">
-          <span className="font-bold text-muted-foreground">الشواهد والمرفقات النشطة في التقرير:</span>
-          <div className="mt-1 whitespace-pre-wrap font-mono text-[11px] text-primary">{formValues.required_evidence}</div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function ProgramsPage() {
-  const handlePrintA4 = () => {
-    window.print();
-  };
-
   return (
-    <>
-      {/* تنسيقات طباعة تقرير الـ A4 الاحترافي */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          .print-container, .print-container * {
-            visibility: visible;
-          }
-          .print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            direction: rtl;
-            background: white !important;
-            color: black !important;
-            padding: 20px;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}} />
-
-      <div className="print-container">
-        <RecordPage
-          config={recordByKey("programs")}
-          toolbarExtra={
-            <div className="flex flex-wrap items-center gap-2">
-              <MinistryProgramsDialog />
-              <Button variant="default" onClick={handlePrintA4} className="gap-2 no-print">
-                <Printer className="size-4" /> طباعة التقرير (A4)
-              </Button>
-            </div>
-          }
-        />
-      </div>
-    </>
+    <RecordPage
+      config={recordByKey("programs")}
+      toolbarExtra={
+        <>
+          <MinistryProgramsDialog />
+        </>
+      }
+    />
   );
 }
