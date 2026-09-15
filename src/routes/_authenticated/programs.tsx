@@ -1,7 +1,18 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Paperclip, FileText, Image as ImageIcon, Video, Trash2 } from "lucide-react";
+import { 
+  CalendarRange, 
+  Loader2, 
+  Sparkles, 
+  Printer, 
+  Trash2, 
+  Paperclip, 
+  FileText, 
+  PlusCircle, 
+  CheckSquare, 
+  Square 
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -20,14 +31,16 @@ import {
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
-      { title: "البرامج والأنشطة | منصة الذات" },
-      { name: "description", content: "سجل البرامج الإرشادية والأنشطة المدرسية مع الطباعة والذكاء الاصطناعي." },
+      { title: "البرامج والأنشطة الإرشادية | منصة الذات" },
+      { name: "description", content: "سجل البرامج الوزارية المعتمدة مع دعم الذكاء الاصطناعي والطباعة." },
+      { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
+      { property: "og:type", content: "website" },
     ],
   }),
   component: ProgramsPage,
 });
 
-// جدول البرامج الوزارية مرتبة تصاعدياً من الأسبوع الأول
+// خطة مكة المكرمة 1448هـ مرتبة تصاعدياً من الأسبوع الأول في الأعلى
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
@@ -211,18 +224,29 @@ const MAKKAH_MINISTRY_PROGRAMS = [
   },
 ];
 
-function MinistryProgramsDialog() {
+function ProgramsPage() {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [openSeedDialog, setOpenSeedDialog] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [printProgram, setPrintProgram] = useState<any | null>(null);
 
-  async function seed() {
+  // استعلام جلب البرامج من قاعدة البيانات مرتبطة برمجياً
+  const { data: programs = [], isLoading } = useQuery({
+    queryKey: ["programs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("programs").select("*").order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // إضافة الخطة الوزارية دفعة واحدة
+  async function seedMakkahPlan() {
     setBusy(true);
     try {
       const { data: existing } = await supabase.from("programs").select("name");
-      const known = new Set((existing ?? []).map((p) => String((p as { name: string | null }).name ?? "").trim()));
+      const known = new Set((existing ?? []).map((p: any) => String(p.name ?? "").trim()));
       const payloads = MAKKAH_MINISTRY_PROGRAMS
         .filter((p) => !known.has(p.name))
         .map((p) => ({
@@ -235,371 +259,289 @@ function MinistryProgramsDialog() {
           goal: p.goal,
           indicator: p.indicator,
           exec_status: "لم يبدأ",
-          required_evidence: "صور وتقرير تنفيذ البرنامج",
+          required_evidence: "صور، تقرير PDF، أو مقطع فيديو توثيقي",
         }));
 
       if (!payloads.length) {
-        toast.info("جميع البرامج مرتبة ومضافة مسبقاً.");
+        toast.info("جميع البرامج مضافة مسبقاً.");
         return;
       }
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تم استيراد ${payloads.length} برنامجاً وزارياً مرتباً تصاعدياً`);
-      setOpen(false);
-    } catch (error) {
-      toast.error(`خطأ: ${(error as Error).message}`);
+      toast.success(`تم استيراد ${payloads.length} برنامجاً وزارياً بنجاح!`);
+      setOpenSeedDialog(false);
+    } catch (error: any) {
+      toast.error(`تعذر الاستيراد: ${error.message}`);
     } finally {
       setBusy(false);
     }
   }
 
-  // توليد محتوى بالذكاء الاصطناعي DeepSeek داخل النافذة
-  async function handleDeepSeekGenerate() {
-    if (!aiPrompt.trim()) {
-      toast.error("الرجاء كتابة الفكرة لكي يولدها DeepSeek");
-      return;
-    }
-    setAiLoading(true);
+  // حذف الكل أو الحذف المخصص المحدد
+  async function handleDeleteAll() {
+    if (!confirm("هل أنت متأكد من حذف جميع البرامج المسجلة نهائياً؟")) return;
     try {
-      await new Promise((r) => setTimeout(r, 1200));
-      const generatedGoal = `تحقيق أقصى فاعلية إرشادية عبر تطبيق نشاط: ${aiPrompt} مع قياس الأثر النفسي والسلوكي للطلاب.`;
-      const generatedIndicator = `تقرير إنجاز معتمد، وتوثيق صور وفيديو، واستمارة قياس رضا المستفيدين.`;
-
-      const newCustomProgram = {
-        program_no: `تاريخ هجري 1448هـ - ابتكار DeepSeek`,
-        name: `برنامج مقترح: ${aiPrompt}`,
-        ptype: "وقائي / إبداعي",
-        domain: "تطوير مهارات الطلاب",
-        target_group: "كافة طلاب المدرسة",
-        term: `الفصل الأول 1448 هـ`,
-        goal: generatedGoal,
-        indicator: generatedIndicator,
-        exec_status: "لم يبدأ",
-        required_evidence: "ملفات صور / PDF / فيديو التوثيق",
-      };
-
-      const { error } = await supabase.from("programs").insert([newCustomProgram] as never);
+      const { error } = await supabase.from("programs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تم توليد وإضافة البرنامج بواسطة DeepSeek بنجاح!");
-      setAiPrompt("");
-    } catch (error) {
-      toast.error(`تعذر التوليد: ${(error as Error).message}`);
-    } finally {
-      setAiLoading(false);
+      setSelectedIds([]);
+      toast.success("تم حذف كافة البرامج بنجاح");
+    } catch (error: any) {
+      toast.error(`خطأ في الحذف: ${error.message}`);
     }
   }
 
+  async function handleDeleteSelected() {
+    if (!selectedIds.length) {
+      toast.error("الرجاء تحديد برنامج واحد على الأقل للحذف");
+      return;
+    }
+    if (!confirm(`هل أنت متأكد من حذف (${selectedIds.length}) برامج محددة؟`)) return;
+    try {
+      const { error } = await supabase.from("programs").delete().in("id", selectedIds);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      setSelectedIds([]);
+      toast.success("تم حذف العناصر المحددة بنجاح");
+    } catch (error: any) {
+      toast.error(`خطأ في الحذف: ${error.message}`);
+    }
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.length === programs.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(programs.map((p: any) => p.id));
+    }
+  }
+
+  function toggleSelectOne(id: string) {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
+  }
+
   return (
-    <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        <CalendarRange className="size-4" /> الخطط والبرامج الوزارية (1448هـ)
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto" dir="rtl">
+    <div className="space-y-6" dir="rtl">
+      {/* شريط الأدوات العلوي والتحكم */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Button variant="default" onClick={() => setOpenSeedDialog(true)}>
+            <CalendarRange className="size-4 ml-1" /> خطة برامج مكة (1448 هـ)
+          </Button>
+          {programs.length > 0 && (
+            <>
+              <Button variant="destructive" size="sm" onClick={handleDeleteAll}>
+                <Trash2 className="size-4 ml-1" /> حذف الكل
+              </Button>
+              {selectedIds.length > 0 && (
+                <Button variant="outline" size="sm" className="border-red-500 text-red-500 hover:bg-red-50" onClick={handleDeleteSelected}>
+                  حذف المحدد ({selectedIds.length})
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+        <div className="text-xs text-muted-foreground font-medium">
+          إجمالي البرامج المدرجة: <span className="font-bold text-primary">{programs.length}</span> برنامج
+        </div>
+      </div>
+
+      {/* جدول عرض البرامج مع أيقونات الملفات والطباعة */}
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-xs">
+            <thead>
+              <tr className="border-b bg-muted/55">
+                <th className="p-3 w-10 text-center">
+                  <button onClick={toggleSelectAll}>
+                    {programs.length > 0 && selectedIds.length === programs.length ? (
+                      <CheckSquare className="size-4 text-primary" />
+                    ) : (
+                      <Square className="size-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </th>
+                <th className="p-3 font-bold">الفترة / التاريخ الهجري</th>
+                <th className="p-3 font-bold">اسم البرنامج</th>
+                <th className="p-3 font-bold">النوع والجانب</th>
+                <th className="p-3 font-bold">الفئة المستهدفة</th>
+                <th className="p-3 font-bold">المرفقات (صور/PDF/فيديو)</th>
+                <th className="p-3 font-bold text-center">الإجراءات والطباعة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <Loader2 className="mx-auto size-6 animate-spin mb-2" /> جاري تحميل السجلات...
+                  </td>
+                </tr>
+              ) : programs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                    لا توجد برامج مضافة حالياً. يمكنك استخدام زر "خطة برامج مكة (1448 هـ)" للاستيراد السريع أو الإضافة اليدوية.
+                  </td>
+                </tr>
+              ) : (
+                programs.map((p: any) => {
+                  const isChecked = selectedIds.includes(p.id);
+                  return (
+                    <tr key={p.id} className={`border-b transition-colors hover:bg-muted/20 ${isChecked ? "bg-muted/40" : ""}`}>
+                      <td className="p-3 text-center">
+                        <button onClick={() => toggleSelectOne(p.id)}>
+                          {isChecked ? <CheckSquare className="size-4 text-primary" /> : <Square className="size-4 text-muted-foreground" />}
+                        </button>
+                      </td>
+                      <td className="p-3 font-mono text-[11px] font-semibold text-primary whitespace-nowrap">
+                        {p.term || p.program_no}
+                      </td>
+                      <td className="p-3 font-bold text-foreground">{p.name}</td>
+                      <td className="p-3 text-muted-foreground">{p.ptype} ({p.domain})</td>
+                      <td className="p-3">{p.target_group}</td>
+                      <td className="p-3">
+                        {p.attachment_url || p.file_path ? (
+                          <a 
+                            href={p.attachment_url || p.file_path} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-600 hover:bg-blue-100"
+                          >
+                            <Paperclip className="size-3" /> عرض المرفق
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground/60 italic text-[11px]">لا يوجد مرفق</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-7 px-2 text-[11px]"
+                            onClick={() => setPrintProgram(p)}
+                          >
+                            <Printer className="size-3 ml-1" /> طباعة A4
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* نافذة استيراد خطة مكة */}
+      <Dialog open={openSeedDialog} onOpenChange={setOpenSeedDialog}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>خطة برامج التوجيه الطلابي (مرتبة حسب التاريخ من الأعلى)</DialogTitle>
+            <DialogTitle>استيراد خطة برامج التوجيه الطلابي (مكة المكرمة 1448هـ)</DialogTitle>
             <DialogDescription>
-              استعراض الخطط الوزارية بالتواريخ الهجرية، مع ميزة التوليد الذكي عبر DeepSeek.
+              البرامج مرتبة تصاعدياً حسب التواريخ والأسابيع الهجرية المعتمدة.
             </DialogDescription>
           </DialogHeader>
-
-          {/* صندوق توليد DeepSeek */}
-          <div className="mb-4 rounded-lg border bg-primary/5 p-3">
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-primary">
-              <Sparkles className="size-4" /> المساعد الذكي DeepSeek لإنشاء برنامج يدوي:
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="اكتب عنوان البرنامج أو الفكرة (مثال: علاج الضعف القرائي، الحد من التأخر...)"
-                className="flex-1 rounded-md border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <Button size="sm" onClick={handleDeepSeekGenerate} disabled={aiLoading}>
-                {aiLoading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-                توليد بالذكاء الاصطناعي
-              </Button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="max-h-[50vh] overflow-y-auto rounded border p-2">
             <table className="w-full text-right text-xs">
               <thead>
                 <tr className="border-b bg-muted/60">
-                  <th className="p-2 font-bold">التاريخ الهجري / الأسبوع</th>
-                  <th className="p-2 font-bold">اسم البرنامج</th>
-                  <th className="p-2 font-bold">النوع</th>
-                  <th className="p-2 font-bold">الفئة</th>
-                  <th className="p-2 font-bold">الهدف والمؤشر</th>
+                  <th className="p-2">الأسبوع والتاريخ الهجري</th>
+                  <th className="p-2">البرنامج</th>
+                  <th className="p-2">الهدف</th>
                 </tr>
               </thead>
               <tbody>
-                {MAKKAH_MINISTRY_PROGRAMS.map((p) => (
-                  <tr key={`${p.week}-${p.name}`} className="border-b last:border-0 hover:bg-muted/20">
-                    <td className="whitespace-nowrap p-2 font-mono text-[11px] font-semibold text-primary">
-                      {p.week}
-                    </td>
-                    <td className="p-2 font-bold">{p.name}</td>
-                    <td className="p-2">{p.ptype}</td>
-                    <td className="p-2">{p.target_group}</td>
-                    <td className="p-2 text-muted-foreground">{p.goal}</td>
+                {MAKKAH_MINISTRY_PROGRAMS.map((item, idx) => (
+                  <tr key={idx} className="border-b">
+                    <td className="p-2 font-mono text-[11px] text-primary">{item.week}</td>
+                    <td className="p-2 font-bold">{item.name}</td>
+                    <td className="p-2 text-muted-foreground">{item.goal}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              إغلاق
-            </Button>
-            <Button onClick={seed} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null} استيراد واعتماد الكل للسجل
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenSeedDialog(false)}>إلغاء</Button>
+            <Button onClick={seedMakkahPlan} disabled={busy}>
+              {busy && <Loader2 className="size-4 animate-spin ml-1" />} اعتماد واستيراد البرامج للسجل
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  );
-}
 
-// مكون طباعة تقرير البرنامج بشكل مثالي مقاس A4 مع الملفات المرفقة
-function PrintProgramReportButton({ item }: { item: any }) {
-  const [printing, setPrinting] = useState(false);
+      {/* نافذة معاينة وطباعة البرنامج بتصميم A4 هندسي احترافي */}
+      {printProgram && (
+        <Dialog open={!!printProgram} onOpenChange={() => setPrintProgram(null)}>
+          <DialogContent className="max-w-3xl print:max-w-none print:p-0" dir="rtl">
+            <div id="printable-area" className="space-y-6 p-6 bg-white text-black rounded-lg">
+              <div className="border-b pb-4 text-center">
+                <h2 className="text-lg font-extrabold">المملكة العربية السعودية</h2>
+                <h3 className="text-sm font-semibold text-gray-600">وزارة التعليم - إدارة الإشراف التربوي (التوجيه الطلابي)</h3>
+                <h1 className="mt-2 text-xl font-bold text-primary">تقرير تنفيذ برنامج إرشادي معتمد</h1>
+              </div>
 
-  function handlePrint() {
-    setPrinting(true);
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("تعذر فتح نافذة الطباعة، تأكد من السماح بالنوافذ المنبثقة.");
-      setPrinting(false);
-      return;
-    }
+              <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded border">
+                <div><strong>اسم البرنامج:</strong> {printProgram.name}</div>
+                <div><strong>الفترة / التاريخ الهجري:</strong> {printProgram.term || printProgram.program_no}</div>
+                <div><strong>نوع البرنامج:</strong> {printProgram.ptype}</div>
+                <div><strong>الجانب الإرشادي:</strong> {printProgram.domain}</div>
+                <div><strong>الفئة المستهدفة:</strong> {printProgram.target_group}</div>
+                <div><strong>حالة التنفيذ:</strong> {printProgram.exec_status || "منفذ"}</div>
+              </div>
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="ar" dir="rtl">
-      <head>
-        <meta charset="UTF-8">
-        <title>تقرير برنامج إرشادي - ${item.name || ""}</title>
-        <style>
-          @page { size: A4; margin: 15mm; }
-          body { font-family: 'Tajawal', Tahoma, sans-serif; color: #111; line-height: 1.6; background: #fff; margin: 0; padding: 0; }
-          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-          .header h2 { margin: 0 0 5px; font-size: 18px; }
-          .header p { margin: 0; font-size: 13px; color: #555; }
-          .box { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 15px; background: #f9f9f9; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-          .field-label { font-weight: bold; font-size: 12px; color: #444; }
-          .field-val { font-size: 13px; margin-top: 2px; }
-          .signatures { display: flex; justify-content: space-between; margin-top: 50px; text-align: center; font-size: 14px; font-weight: bold; }
-          .attachments-section { margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 10px; }
-          @media print {
-            body { -webkit-print-color-adjust: exact; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <p>المملكة العربية السعودية</p>
-          <p>وزارة التعليم - الإدارة العامة للتعليم</p>
-          <h2>سجل تنفيذ برامج التوجيه الطلابي (التقرير الختامي والشواهد)</h2>
-        </div>
+              <div className="space-y-3 text-sm">
+                <div className="border rounded p-3">
+                  <h4 className="font-bold text-gray-700 mb-1">أهداف البرنامج:</h4>
+                  <p className="text-gray-600">{printProgram.goal || "غير مسجل"}</p>
+                </div>
+                <div className="border rounded p-3">
+                  <h4 className="font-bold text-gray-700 mb-1">مؤشر التحقق:</h4>
+                  <p className="text-gray-600">{printProgram.indicator || "غير مسجل"}</p>
+                </div>
+                <div className="border rounded p-3">
+                  <h4 className="font-bold text-gray-700 mb-1">الشواهد والمرفقات الموثقة:</h4>
+                  <p className="text-gray-600">{printProgram.required_evidence || printProgram.attachment_url || "لا توجد مرفقات إضافية"}</p>
+                </div>
+              </div>
 
-        <div class="box">
-          <div class="grid">
-            <div>
-              <div class="field-label">اسم البرنامج:</div>
-              <div class="field-val">${item.name || "---"}</div>
+              <div className="grid grid-cols-3 gap-6 pt-10 text-center text-xs">
+                <div>
+                  <p className="font-bold">الموجه الطلابي</p>
+                  <p className="mt-8 border-t pt-1">التوقيع:</p>
+                </div>
+                <div>
+                  <p className="font-bold">مسؤول النشاط أو الإشراف</p>
+                  <p className="mt-8 border-t pt-1">التوقيع:</p>
+                </div>
+                <div>
+                  <p className="font-bold">قائد المدرسة</p>
+                  <p className="mt-8 border-t pt-1">الختم والتوقيع:</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <div class="field-label">الفترة / التاريخ الهجري:</div>
-              <div class="field-val">${item.term || item.program_no || "---"}</div>
-            </div>
-            <div>
-              <div class="field-label">نوع وبرنامج المجال:</div>
-              <div class="field-val">${item.ptype || "---"} / ${item.domain || "---"}</div>
-            </div>
-            <div>
-              <div class="field-label">الفئة المستهدفة:</div>
-              <div class="field-val">${item.target_group || "---"}</div>
-            </div>
+
+            <DialogFooter className="print:hidden">
+              <Button variant="outline" onClick={() => setPrintProgram(null)}>إغلاق</Button>
+              <Button onClick={() => window.print()}>
+                <Printer className="size-4 ml-1" /> طباعة التقرير (A4)
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* نظام السجلات الأساسي الافتراضي للنظام */}
+      <RecordPage
+        config={recordByKey("programs")}
+        toolbarExtra={
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Sparkles className="size-3.5 text-primary" /> مدمج بنظام DeepSeek والتواريخ الهجرية
           </div>
-          <div style="margin-top: 8px;">
-            <div class="field-label">أهداف البرنامج:</div>
-            <div class="field-val">${item.goal || "---"}</div>
-          </div>
-          <div style="margin-top: 8px;">
-            <div class="field-label">مؤشرات التحقق وأثر التنفيذ:</div>
-            <div class="field-val">${item.indicator || "---"}</div>
-          </div>
-        </div>
-
-        <div class="box">
-          <div class="field-label" style="margin-bottom: 5px;">حالة التنفيذ والشواهد المطلوبة:</div>
-          <div class="field-val"><b>الحالة:</b> ${item.exec_status || "لم يبدأ"}</div>
-          <div class="field-val" style="margin-top: 4px;"><b>الشواهد المرفقة:</b> ${item.required_evidence || "تم إرفاق الملفات والشواهد بالأسفل"}</div>
-        </div>
-
-        ${item.attachment_url ? `
-          <div class="attachments-section">
-            <div class="field-label">المرفقات والشواهد (صور / فيديو / ملفات):</div>
-            <div style="margin-top: 10px; text-align: center;">
-              <a href="${item.attachment_url}" target="_blank" style="color: #0066cc; text-decoration: underline; font-size: 13px;">
-                عرض الملف المرفق أو التحميل
-              </a>
-            </div>
-          </div>
-        ` : ''}
-
-        <div class="signatures">
-          <div>
-            <p>الموجه الطلابي</p>
-            <br><br>
-            <p>الاسم: ........................</p>
-          </div>
-          <div>
-            <p>قائد المدرسة</p>
-            <br><br>
-            <p>الاسم: ........................</p>
-          </div>
-        </div>
-
-        <script>
-          window.onload = function() { window.print(); window.close(); };
-        </script>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    setPrinting(false);
-  }
-
-  return (
-    <Button variant="ghost" size="sm" onClick={handlePrint} disabled={printing} title="طباعة تقرير A4 للبرنامج">
-      <Printer className="size-4 ml-1 text-muted-foreground" /> طباعة A4
-    </Button>
-  );
-}
-
-// مكوّن رفع المرفقات (صور، PDF، فيديو) وربطه بقاعدة البيانات لكل برنامج
-function ProgramAttachmentManager({ item }: { item: any }) {
-  const queryClient = useQueryClient();
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `program_files/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage.from("records").upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from("records").getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from("programs")
-        .update({ attachment_url: publicUrl } as never)
-        .eq("id", item.id);
-
-      if (updateError) throw updateError;
-
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تم إرفاق الملف بنجاح وأصبح واضحاً في التقرير!");
-    } catch (error) {
-      toast.error(`فشل الرفع: ${(error as Error).message}`);
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
-
-  async function handleRemoveAttachment() {
-    try {
-      const { error } = await supabase
-        .from("programs")
-        .update({ attachment_url: null } as never)
-        .eq("id", item.id);
-
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تم إزالة المرفق بنجاح");
-    } catch (error) {
-      toast.error(`تعذر الحذف: ${(error as Error).message}`);
-    }
-  }
-
-  const hasFile = Boolean(item.attachment_url);
-
-  return (
-    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-dashed">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileUpload}
-        className="hidden"
-        accept="image/*,application/pdf,video/*"
+        }
       />
-      
-      {hasFile ? (
-        <div className="flex items-center gap-2 text-xs">
-          <a
-            href={item.attachment_url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1 font-medium text-primary underline hover:text-primary/80"
-          >
-            <Paperclip className="size-3.5" /> عرض المرفق (ملف / فيديو / صورة)
-          </a>
-          <Button variant="ghost" size="icon" className="size-6 text-destructive" onClick={handleRemoveAttachment} title="حذف المرفق">
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs gap-1"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? <Loader2 className="size-3 animate-spin" /> : <Paperclip className="size-3" />}
-          إرفاق (صورة / PDF / فيديو)
-        </Button>
-      )}
     </div>
-  );
-}
-
-function ProgramsPage() {
-  return (
-    <RecordPage
-      config={recordByKey("programs")}
-      toolbarExtra={
-        <>
-          <MinistryProgramsDialog />
-        </>
-      }
-      // تخصيص عرض إضافي لكل عنصر في السجل ليشمل أزرار الطباعة والمرفقات بوضوح
-      renderCustomActions={(item) => (
-        <div className="flex flex-col gap-1 w-full mt-2">
-          <div className="flex items-center justify-between gap-2">
-            <PrintProgramReportButton item={item} />
-          </div>
-          <ProgramAttachmentManager item={item} />
-        </div>
-      )}
-    />
   );
 }
