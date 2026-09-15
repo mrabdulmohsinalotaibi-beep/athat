@@ -1,143 +1,71 @@
-export interface KpiInput {
-  planTasks: { exec_status?: string | null }[];
-  cases: { case_status?: string | null; last_followup?: string | null; followup_at?: string | null }[];
-  attendance: { case_type?: string | null; count_days?: number | null }[];
-  interviews: { itype?: string | null }[];
-  students: { id: string }[];
-  schoolDays?: number;
+import React from "react";
+import { computeKpis, KpiInput, isPercentKpi } from "./kpiUtils"; // استدعاء دالة الحسابات
+
+interface KpiDashboardProps {
+  data: KpiInput;
 }
 
-export interface Kpi {
-  key: string;
-  label: string;
-  value: number;
-  hint: string;
-  status?: "success" | "warning" | "info";
-}
+export const CompactKpiDashboard: React.FC<KpiDashboardProps> = ({ data }) => {
+  const kpis = computeKpis(data);
 
-const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
+  // ألوان شارات الحالة لحجم أصغر
+  const statusStyles = {
+    success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    warning: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    info: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  };
 
-export function computeKpis(input: KpiInput): Kpi[] {
-  const { planTasks, cases, attendance, interviews, students, schoolDays = 20 } = input;
+  return (
+    <div className="w-full bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-800 dir-rtl">
+      {/* شبكة مدمجة: 5 أعمدة للشاشات الكبيرة، وتلتف تلقائياً للشاشات الصغيرة */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+        {kpis.map((kpi) => {
+          const isPct = isPercentKpi(kpi.key);
+          const statusClass = statusStyles[kpi.status || "info"];
 
-  const planDone = planTasks.filter((t) => t.exec_status === "مكتمل").length;
-  const followed = cases.filter((c) => c.last_followup || c.case_status === "مغلقة").length;
+          return (
+            <div
+              key={kpi.key}
+              className={`p-2.5 rounded-lg border transition-all duration-150 flex flex-col justify-between ${statusClass}`}
+            >
+              {/* العنوان والرمز */}
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-xs font-semibold truncate leading-tight opacity-90">
+                  {kpi.label}
+                </span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full border bg-white/50 dark:bg-black/20 font-medium">
+                  {kpi.key}
+                </span>
+              </div>
 
-  const absences = attendance
-    .filter((a) => a.case_type === "غياب" || a.case_type === "هروب")
-    .reduce((sum, a) => sum + (Number(a.count_days) || 1), 0);
+              {/* القيمة والشريط المدمج */}
+              <div className="my-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold tracking-tight">
+                    {kpi.value}
+                  </span>
+                  {isPct && <span className="text-xs font-semibold">%</span>}
+                </div>
 
-  const totalPossibleDays = students.length * schoolDays;
-  const attendanceRate = totalPossibleDays ? Math.max(0, 100 - Math.round((absences / totalPossibleDays) * 100)) : 0;
+                {/* شريط تقدم مصغر للمؤشرات المئوية */}
+                {isPct && (
+                  <div className="w-full bg-black/10 dark:bg-white/10 h-1 rounded-full mt-1 overflow-hidden">
+                    <div
+                      className="h-full bg-current rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, kpi.value)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
 
-  const sessions = interviews.length;
-  const guardianContacts = interviews.filter((i) => i.itype === "ولي أمر").length;
-
-  const planPct = pct(planDone, planTasks.length);
-  const casesPct = pct(followed, cases.length);
-  const guardianPct = pct(guardianContacts, sessions || 1);
-
-  return [
-    {
-      key: "plan",
-      label: "نسبة إنجاز الخطة التشغيلية",
-      value: planPct,
-      hint: `${planDone} من ${planTasks.length} مهمة`,
-      status: planPct >= 80 ? "success" : planPct >= 50 ? "warning" : "info",
-    },
-    {
-      key: "cases",
-      label: "نسبة حصر ومتابعة الحالات",
-      value: casesPct,
-      hint: `${followed} من ${cases.length} حالة`,
-      status: casesPct >= 80 ? "success" : "warning",
-    },
-    {
-      key: "attendance",
-      label: "متوسط الانضباط والمواظبة",
-      value: attendanceRate,
-      hint: `${absences} حالة غياب/هروب مرصودة`,
-      status: attendanceRate >= 90 ? "success" : attendanceRate >= 75 ? "warning" : "info",
-    },
-    {
-      key: "sessions",
-      label: "الجلسات والاستشارات المنفذة",
-      value: sessions,
-      hint: "إجمالي المقابلات والجلسات",
-      status: sessions > 0 ? "success" : "info",
-    },
-    {
-      key: "guardians",
-      label: "نسبة الشراكة مع أولياء الأمور",
-      value: guardianPct,
-      hint: `${guardianContacts} لقاء مع أولياء الأمور`,
-      status: guardianPct >= 50 ? "success" : "warning",
-    },
-  ];
-}
-
-export const isPercentKpi = (key: string) => key !== "sessions";
-
-// ==========================================
-// 🤖 دالة تحليل الملفات باستخدام DeepSeek API الحقيقي
-// ==========================================
-
-export interface ParsedImportResult {
-  dataType: "students" | "attendance" | "cases" | "interviews" | "planTasks";
-  mappedData: Record<string, any>[];
-  confidenceScore: number;
-}
-
-/**
- * ترسل محتوى الملف أو رؤوس الأعمدة إلى DeepSeek لتصنيفها وتوزيعها تلقائياً
- */
-export async function parseImportedFileWithDeepSeek(fileContentSnippet: string): Promise<ParsedImportResult> {
-  const DEEPSEEK_API_KEY = process.env["DEEPSEEK_API_KEY"]; // مفتاح اشتراكك في ديب سيك
-
-  if (!DEEPSEEK_API_KEY) {
-    throw new Error("مفتاح DeepSeek API غير موجود في متغيرات البيئة (Environment Variables).");
-  }
-
-  const systemPrompt = `
-  أنت مساعد ذكي متخصص في تحليل البيانات المدرسية وملفات الإكسيل الخاصة بالتوجيه والإرشاد.
-  مهتك هي قراءة النصوص أو عينة الأعمدة المستوردة، وتحديد نوع البيانات من الأنواع التالية حصراً:
-  ("students", "attendance", "cases", "interviews", "planTasks")
-  ثم إعادة البيانات مطابقة لهياكل النظام بـ JSON نقي حصراً بدون أي نصوص إضافية، بالشكل التالي:
-  {
-    "dataType": "نوع_البيانات",
-    "mappedData": [...],
-    "confidenceScore": 0.95
-  }
-  `;
-
-  try {
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat", // أو deepseek-reasoner حسب المتاح في حسابك
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `قم بتحليل وتوزيع هذه البيانات:\n${fileContentSnippet}` },
-        ],
-        response_format: { type: "json_object" }, // لضمان إرجاع النتائج بصيغة JSON نظيفة
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`خطأ في الاتصال بخادم DeepSeek: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const parsedResult: ParsedImportResult = JSON.parse(data.choices[0].message.content);
-
-    return parsedResult;
-  } catch (error) {
-    console.error("فشل التحليل الذكي عبر DeepSeek:", error);
-    throw error;
-  }
-}
+              {/* التلميح الفرعي بحجم مصغر جداً */}
+              <p className="text-[10px] opacity-75 truncate mt-0.5">
+                {kpi.hint}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
