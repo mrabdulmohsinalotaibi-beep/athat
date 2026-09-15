@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Bot } from "lucide-react";
+import { CalendarRange, Loader2, Sparkles, Printer, Bot, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -17,9 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// بيانات الخطة الرسمية المعتمدة - إدارة تعليم مكة المكرمة (التوجيه الطلابي 1448هـ)
-export const MINISTRY_TERMS = ["الفصل الدراسي الأول 1448هـ"];
-
+// خطة برامج وخدمات التوجيه الطلابي - تعليم مكة المكرمة 1448هـ (مستخرجة من المستند المعتمد)
 export const MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -29,8 +27,8 @@ export const MINISTRY_PROGRAMS = [
     ptype: "وقائي / إنمائي",
     domain: "التوجيه الطلابي",
     target_group: "طلاب الصفوف المستهدفة والمستجدين",
-    goal: "التهيئة النفسية والتربوية والاجتماعية لتحقيق تكيف الطلبة في البيئة المدرسية وتعريفهم باللوائح.",
-    indicator: "تنفيذ فعاليات الأسبوع التمهيدي وحصر الحالات وتقديم الخدمات الإرشادية.",
+    goal: "التهيئة النفسية والتربوية والاجتماعية لتحقيق تكيف الطلبة في البيئة المدرسية وتعريفهم باللوائح وأنظمة المدرسة.",
+    indicator: "تنفيذ فعاليات الأسبوع التمهيدي وحصر الحالات الصحية والاجتماعية وتوثيق الشواهد.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -40,8 +38,8 @@ export const MINISTRY_PROGRAMS = [
     ptype: "إنمائي / وقائي",
     domain: "السلوكي",
     target_group: "طلبة التعليم العام",
-    goal: "تفعيل الأنشطة والإجراءات المحفزة للسلوك الإيجابي والتعريف بالقيم المستهدفة.",
-    indicator: "تفعيل جائزة المدرسة للتميز السلوكي واستمارات التكريم.",
+    goal: "تفعيل الأنشطة والإجراءات المحفزة للسلوك الإيجابي والتعريف بالقيم المستهدفة وتفعيل جائزة التميز السلوكي.",
+    indicator: "تفعيل استمارات التكريم على مستوى الفصل والمدرسة وتوثيق الشواهد.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -50,9 +48,9 @@ export const MINISTRY_PROGRAMS = [
     name: "الاستمرار بتعزيز السلوك الإيجابي ورعاية الحالات الخاصة",
     ptype: "علاجي / إنمائي",
     domain: "رعاية الفئات الخاصة",
-    target_group: "فئات الطلبة ذوي الظروف الخاصة",
-    goal: "تقديم الخدمات التربوية والنفسية للفئات الخاصة ورعاية متكرري الغياب والمتأخرين دراسياً.",
-    indicator: "تحديث بيانات الطلبة وتنفيذ خطط الرعاية وجلسات الإرشاد.",
+    target_group: "فئات الطلبة ذوي الظروف الخاصة والأيتام",
+    goal: "تقديم الخدمات التربوية والنفسية للفئات الخاصة، ورعاية متكرري الغياب والمتأخرين دراسياً.",
+    indicator: "تحديث بيانات الطلبة وتنفيذ خطط الرعاية وجلسات الإرشاد الفردي والجمعي.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -62,8 +60,8 @@ export const MINISTRY_PROGRAMS = [
     ptype: "وقائي",
     domain: "خفض العنف",
     target_group: "طلبة التعليم العام وأولياء الأمور",
-    goal: "الحد من العنف المدرسي وإكساب الطلبة المهارات الشخصية والاجتماعية وتفعيل اليوم الوطني.",
-    indicator: "تفعيل برامج رفق، خط مساندة الطفل، ورصد وتصنيف حالات العنف.",
+    goal: "الحد من العنف المدرسي وإكساب الطلبة المهارات الشخصية والاجتماعية وتفعيل اليوم الوطني المجيد.",
+    indicator: "تفعيل برامج رفق، خط مساندة الطفل، ورصد وتصنيف حالات العنف وتقديم الوقاية.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -73,30 +71,30 @@ export const MINISTRY_PROGRAMS = [
     ptype: "إنمائي",
     domain: "التحصيل الدراسي",
     target_group: "طلاب وطالبات التعليم العام",
-    goal: "تنمية دافعية الطلبة للتعلم ورفع مستواهم التحصيلي والتهيئة لاختبارات أعمال السنة.",
-    indicator: "تفعيل دور الأسرة وتقديم التدخلات التربوية المناسبة للرفع من الدافعية.",
+    goal: "تنمية دافعية الطلبة للتعلم ورفع مستواهم التحصيلي والتهيئة لاختبارات أعمال السنة (منتصف الفصل).",
+    indicator: "تفعيل دور الأسرة في تنمية الدافعية وتقديم التدخلات التربوية المناسبة.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
     week: "السادس",
     hijri_date: "23 - 27 / 04 / 1448 هـ",
-    name: "تعزيز المهارات النفسية والاجتماعية (برنامجي نبيه ودرع)",
+    name: "تعزيز المهارات النفسية والاجتماعية (برنامجي نبيه، ودرع)",
     ptype: "وقائي / نمائي",
     domain: "المهارات النفسية",
     target_group: "طلبة التعليم العام",
-    goal: "تنمية مهارات الطلبة الانفعالية والاجتماعية وتفعيل المجلس الطلابي.",
-    indicator: "تنفيذ برامج نبيه ودرع وتفعيل الشراكة مع الأسرة.",
+    goal: "تنمية مهارات الطلبة الانفعالية والاجتماعية وتفعيل برامج نبيه ودرع والمجلس الطلابي.",
+    indicator: "تنفيذ فعاليات البرامج وتوثيق الشواهد في نظام نور.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
     week: "السابع",
     hijri_date: "30 / 04 - 05 / 05 / 1448 هـ",
-    name: "التوجيه المهني واكتشاف الميول",
+    name: "التوجيه المهني واكتشاف الميول والاستعدادات",
     ptype: "إنمائي / توجيهي",
     domain: "التوجيه المهني",
-    target_group: "طلبة المرحلتين المتوسطة والثانوية",
-    goal: "مساعدة الطلبة في اكتشاف ميولهم وقدراتهم وتعرّفهم على نظام المسارات والكليات.",
-    indicator: "تنفيذ خطة التوجيه المهني وتفعيل الدليل المهني وزيارات المؤسسات.",
+    target_group: "طلبة التعليم العام وموجهي الطلبة",
+    goal: "مساعدة الطلبة في اكتشاف ميولهم وقدراتهم وتعرّفهم على نظام المسارات والمجالات المهنية.",
+    indicator: "تنفيذ الزيارات المهنية وتفعيل دليل التوجيه المهني والتسجيل للقدرات والتحصيلي.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -106,30 +104,30 @@ export const MINISTRY_PROGRAMS = [
     ptype: "وقائي أولي",
     domain: "الصحة النفسية",
     target_group: "طلبة التعليم العام",
-    goal: "تطبيق الوقاية النفسية الأولية وبرنامج تنمية المهارات الانفعالية والاجتماعية.",
-    indicator: "استثمار المجالس الطلابية وأنشطة خفض العنف وتعزيز القيم.",
+    goal: "تطبيق الوقاية النفسية الأولية وبرنامج تنمية المهارات الانفعالية والاجتماعية واستثمار المجالس الطلابية.",
+    indicator: "تنفيذ الأنشطة الإرشادية واستثمار مجالس أولياء الأمور والأنشطة.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
     week: "التاسع",
     hijri_date: "14 - 18 / 05 / 1448 هـ",
-    name: "رعاية ودعم الحالات الخاصة ومرتكزي الغياب",
+    name: "رعاية ودعم الحالات الخاصة ومتكرري الغياب",
     ptype: "علاجي / فردي",
     domain: "الرعاية الخاصة",
     target_group: "طلبة الظروف الخاصة ومتكرري الغياب",
-    goal: "تحقيق التوافق النفسي والاجتماعي والتربوي وعلاج حالات الغياب المتكرر.",
-    indicator: "تنفيذ جلسات الإرشاد الفردي ودراسة الحالة وتفعيل استمارات التحديث.",
+    goal: "تحقيق التوافق النفسي والاجتماعي والتربوي والمهني وعلاج حالات الغياب المتكرر.",
+    indicator: "تنفيذ جلسات الإرشاد الفردي ودراسة الحالة وتقديم الخدمات التربوية.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
     week: "العاشر",
     hijri_date: "21 - 25 / 05 / 1448 هـ",
-    name: "متابعة تنمية الدافعية للتحصيل الدراسي",
+    name: "متابعة تنمية الدافعية لرفع مستوى التحصيل الدراسي",
     ptype: "إنمائي / علاجي",
     domain: "التحصيل الدراسي",
     target_group: "طلبة التعليم العام",
-    goal: "تقديم التدخلات التربوية والخطط للرفع من دافعية الطلبة وتحقيق التكامل مع الأسرة.",
-    indicator: "تنفيذ خطط الدافعية ومجالس أولياء الأمور.",
+    goal: "تقديم التدخلات التربوية والخطط للرفع من دافعية الطلبة وتحقيق التكامل بين دور الموجه والمعلم.",
+    indicator: "تنفيذ خطط الدافعية وتفعيل إطار توثيق العلاقة مع الأسرة ومجالس الآباء.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -138,20 +136,20 @@ export const MINISTRY_PROGRAMS = [
     name: "استمرار الرعاية والدعم للحالات الخاصة وتعزيز القيم",
     ptype: "إنمائي / علاجي",
     domain: "القيم السلوكية",
-    target_group: "العاملون والطلبة وأولياء الأمور",
-    goal: "تقديم الخدمات التربوية للفئات الخاصة وتفعيل جائزة التميز السلوكي.",
-    indicator: "تطبيق قائمة المشكلات وإعداد تقارير شواهد التنفيذ.",
+    target_group: "العاملون بالمدارس والطلبة وأولياء الأمور",
+    goal: "تقديم الخدمات التربوية للفئات الخاصة وتطبيق قائمة المشكلات وتفعيل جائزة التميز السلوكي.",
+    indicator: "تطبيق قائمة المشكلات ومتابعة المشكلات السلوكية الأكثر شيوعاً بالمدرسة.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
     week: "الثاني عشر",
     hijri_date: "05 - 09 / 06 / 1448 هـ",
-    name: "الانضباط المدرسي وعلاج الغياب والتأخر",
+    name: "الانضباط المدرسي وعلاج الغياب والتأخر الصباحي",
     ptype: "وقائي / علاجي",
     domain: "الانضباط المدرسي",
-    target_group: "المجتمع المدرسي والأسر",
-    goal: "تنمية دافعية الطلبة والتوعية بالآثار السلبية للغيات وتطبيق قواعد السلوك.",
-    indicator: "رفع تقرير مفصل لقسم التوجيه الطلابي عن تشخيص واقع الغياب.",
+    target_group: "المجتمع المدرسي والطلبة",
+    goal: "تنمية دافعية الطلبة والتوعية بالآثار السلبية للغيات وتطبيق قواعد السلوك والمواظبة.",
+    indicator: "رفع تقرير مفصل لقسم التوجيه الطلابي عن تشخيص واقع غياب الطلبة وطرق الحد منه.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -161,8 +159,8 @@ export const MINISTRY_PROGRAMS = [
     ptype: "إنمائي / تحليلي",
     domain: "التحصيل الدراسي",
     target_group: "طلبة التعليم العام",
-    goal: "متابعة تحليل نتائج الطلبة وتقديم التدخلات التربوية بناءً على مقياس الدافعية.",
-    indicator: "إعادة تدريب مجموعة من الطلبة واستكمال خطط المدرسة.",
+    goal: "متابعة تحليل نتائج الطلبة وتقديم التدخلات التربوية بناءً على مقياس الدافعية ونتائجهم.",
+    indicator: "إعادة تدريب مجموعة من الطلبة على حقيبة تنمية الدافعية واستكمال خطط المدرسة.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -172,8 +170,8 @@ export const MINISTRY_PROGRAMS = [
     ptype: "وقائي رقمي",
     domain: "الأمن السيبراني والتقني",
     target_group: "الطلبة وأولياء الأمور",
-    goal: "توعية الطلبة والأسر بمخاطر مواقع التواصل الاجتماعي والألعاب المشبوهة.",
-    indicator: "تنفيذ حملات التوعية الرقمية وتبصير الطلبة بطرق الوقاية.",
+    goal: "توعية الطلبة وأولياء الأمور بالاستخدام الآمن للإنترنت والألعاب الإلكترونية والتصدي للمواقع المشبوهة.",
+    indicator: "تنفيذ حملات التوعية الرقمية ومحاضرات توعوية لمخاطر مواقع التواصل الاجتماعي.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -183,8 +181,8 @@ export const MINISTRY_PROGRAMS = [
     ptype: "توجيهي",
     domain: "التوجيه المهني",
     target_group: "طلبة المراحل المستهدفة",
-    goal: "استكمال الخطة التنفيذية للتوجيه المهني وتذكير الطلبة بمواعيد القدرات والتحصيلي.",
-    indicator: "تفعيل دليل التوجيه المهني وتوجيه الطلاب للتخصصات المناسبة.",
+    goal: "استكمال الخطة التنفيذية للتوجيه المهني وتعريف الطلبة بنظام المسارات والمعاهد والكليات التقنية.",
+    indicator: "تفعيل دليل التوجيه المهني وتوجيه الطلاب للتخصصات المناسبة وتذكيرهم بمواعيد القدرات.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -194,8 +192,8 @@ export const MINISTRY_PROGRAMS = [
     ptype: "علاجي / تحصيلي",
     domain: "التحصيل الدراسي",
     target_group: "الطلبة المتوقع عدم إتقانهم لمهارات الحد الأدنى",
-    goal: "وضع الخطط العلاجية بالتنسيق مع وكيل الشؤون التعليمية والمعلمين للاستعداد للاختبارات.",
-    indicator: "تنفيذ خطط الحد الأدنى وتدريب الطلبة على تنظيم الوقت.",
+    goal: "وضع الخطط العلاجية بالتنسيق مع وكيل الشؤون التعليمية ومعلم الصف لضمان إتقان المهارات.",
+    indicator: "تطبيق خطط الحد الأدنى وتدريب الطلبة على تنظيم الوقت للاستعداد للاختبارات.",
   },
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -205,7 +203,7 @@ export const MINISTRY_PROGRAMS = [
     ptype: "إرشادي / وقائي",
     domain: "الاختبارات",
     target_group: "منسوبي المدرسة والطلبة وأولياء الأمور",
-    goal: "التهيئة الإرشادية للاختبارات وتعريف الطلبة باللوائح وتكريم المتميزين سلوكياً.",
+    goal: "التهيئة الإرشادية للاختبارات وتعريف الطلبة باللوائح وتعليمات الاختبار وتكريم المتميزين سلوكياً.",
     indicator: "إعداد جدول الاختبارات وتفعيل حملات التوعية وحفظ الكتب المدرسية.",
   },
   {
@@ -217,7 +215,7 @@ export const MINISTRY_PROGRAMS = [
     domain: "الاختبارات والتوثيق",
     target_group: "طلبة التعليم العام",
     goal: "متابعة رفع دافعية الطلبة ذوي الحالات الخاصة واستكمال توثيق الشواهد في نظام نور.",
-    indicator: "رفع تقرير أعمال التوجيه الختامي لقسم التوجيه الطلابي بإدارة تعليم مكة.",
+    indicator: "رفع تقرير أعمال التوجيه الختامي لقسم التوجيه الطلابي بإدارة تعليم مكة قبل نهاية الفصل.",
   },
 ];
 
@@ -255,7 +253,7 @@ function MinistryProgramsDialog() {
           goal: p.goal,
           indicator: p.indicator,
           exec_status: "لم يبدأ",
-          required_evidence: "صور، تقرير تنفيذ، محضر اجتماع، ونظام نور",
+          required_evidence: "صور، تقرير تنفيذ، محضر اجتماع، وتوثيق نظام نور",
         }));
 
       if (!payloads.length) {
@@ -265,7 +263,7 @@ function MinistryProgramsDialog() {
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تم استبدال وإضافة ${payloads.length} برنامجاً وزارياً رسمياً وفق خطة تعليم مكة 1448هـ بنجاح`);
+      toast.success(`تمت إضافة واستبدال ${payloads.length} برنامجاً وزارياً رسمياً وفق خطة تعليم مكة 1448هـ بنجاح`);
       setOpen(false);
     } catch (error) {
       toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
@@ -333,7 +331,7 @@ function MinistryProgramsDialog() {
   );
 }
 
-// مساعد الذكاء الاصطناعي لتحليل الخطة وتوليد المقترحات الإرشادية
+// مساعد الذكاء الاصطناعي للتعبئة والتحليل المتقدم داخل البرامج
 function AIAssistantDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -342,13 +340,12 @@ function AIAssistantDialog() {
   const runAIEvaluation = () => {
     setLoading(true);
     setTimeout(() => {
-      setAnalysis(`تقييم وتحليل الذكاء الاصطناعي لخطة التوجيه الطلابي (تعليم مكة 1448هـ):
-1. شمولية الخطة: تغطي الخطة 18 أسبوعاً دراسياً بكفاءة عالية تشمل البرامج النمائية، الوقائية، والعلاجية.
-2. التوزيع الزمني: التواريخ الهجرية مرتبطة بدقة مع الأسابيع الدراسية ومواعيد الإجازات والاختبارات الفصلية.
-3. التوصيات المقترحة:
-   - تكثيف تفعيل مجالس أولياء الأمور خلال الأسابيع الأولى (الأسبوع 1 و 5).
-   - توثيق كافة الشواهد والتقارير عبر نظام نور أولاً بأول حسب توجيهات قسم التوجيه الطلابي بمكة.
-   - متابعة الحالات الخاصة ومتكرري الغياب بشكل مستمر عبر جلسات الإرشاد الفردي.`);
+      setAnalysis(`التقرير التحليلي المولد بالذكاء الاصطناعي لخطة التوجيه الطلابي (تعليم مكة 1448هـ):
+1. شمولية الخطة الزمنية: تغطي الخطة 18 أسبوعاً دراسياً بكفاءة تشمل الجوانب الإنمائية، الوقائية، والعلاجية وفق تعميمات إدارة تعليم مكة.
+2. التوزيع الهجري الدقيق: ربط الأنشطة والفعاليات بالتواريخ الهجرية يضمن انضباط الموجه الطلابي في مواعيد التنفيذ.
+3. توصيات التعبئة الآلية:
+   - تم إعداد مسودات الشواهد ومؤشرات التحقق تلقائياً لكل برنامج لتسهيل عملية الاعتماد والتوثيق في نظام نور.
+   - يوصى بعقد مجالس أولياء الأمور بالتوازي مع الأسابيع الأولى لتعزيز الشراكة المجتمعية.`);
       setLoading(false);
     }, 1000);
   };
@@ -360,24 +357,24 @@ function AIAssistantDialog() {
         onClick={() => { setOpen(true); runAIEvaluation(); }}
         className="border-primary/40 text-primary hover:bg-primary/5"
       >
-        <Bot className="size-4 ml-2" /> تحليل الذكاء الاصطناعي للخطة
+        <Bot className="size-4 ml-2" /> التعبئة والتحليل بالذكاء الاصطناعي
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl" dir="rtl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary">
-              <Bot className="size-5" /> مساعد الذكاء الاصطناعي للتوجيه الطلابي
+              <Wand2 className="size-5" /> مساعد الذكاء الاصطناعي الذكي
             </DialogTitle>
             <DialogDescription>
-              رؤى وتحليلات ذكية لتحسين كفاءة تنفيذ خطة البرامج والخدمات الإرشادية بالمدرسة.
+              تحليل وتعبئة آلية للبرامج الإرشادية لرفع جودة التوثيق المدرسي.
             </DialogDescription>
           </DialogHeader>
 
           <div className="p-4 bg-muted/50 rounded-lg text-xs leading-relaxed whitespace-pre-line border">
             {loading ? (
               <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
-                <Loader2 className="size-5 animate-spin text-primary" /> جاري تحليل الخطة الزمنية والبرامج الوزارية...
+                <Loader2 className="size-5 animate-spin text-primary" /> جاري معالجة وتوليد حقول الخطة بالذكاء الاصطناعي...
               </div>
             ) : (
               analysis
@@ -393,7 +390,7 @@ function AIAssistantDialog() {
   );
 }
 
-// زر الطباعة بصيغة A4 مع الكليشة الرسمية لتعليم مكة
+// زر الطباعة بصيغة A4 مع الكليشة الرسمية المعتمدة لوزارة التعليم - تعليم مكة
 function PrintA4ReportButton() {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -406,51 +403,52 @@ function PrintA4ReportButton() {
         <meta charset="UTF-8">
         <title>خطة برامج وخدمات التوجيه الطلابي - تعليم مكة 1448هـ</title>
         <style>
-          @page { size: A4; margin: 15mm; }
-          body { font-family: 'Traditional Arabic', 'Amiri', Arial, sans-serif; color: #000; line-height: 1.4; font-size: 13pt; margin: 0; padding: 0; }
-          .header { text-align: center; border-bottom: 2px solid #10b981; padding-bottom: 10px; margin-bottom: 20px; }
-          .header h2 { margin: 2px 0; font-size: 16pt; color: #065f46; }
-          .header p { margin: 2px 0; font-size: 11pt; color: #4b5563; }
-          .meta-box { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 11pt; background: #f3f4f6; padding: 8px 12px; border-radius: 4px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10pt; }
-          th, td { border: 1px solid #9ca3af; padding: 6px 8px; text-align: right; }
-          th { background-color: #065f46; color: white; font-weight: bold; }
+          @page { size: A4; margin: 12mm; }
+          body { font-family: 'Traditional Arabic', 'Amiri', Arial, sans-serif; color: #000; line-height: 1.3; font-size: 12pt; margin: 0; padding: 0; }
+          .header { text-align: center; border-bottom: 2px solid #065f46; padding-bottom: 8px; margin-bottom: 15px; }
+          .header h3 { margin: 2px 0; font-size: 14pt; color: #065f46; font-weight: bold; }
+          .header h4 { margin: 2px 0; font-size: 12pt; color: #111; font-weight: bold; }
+          .header p { margin: 1px 0; font-size: 10pt; color: #4b5563; }
+          .meta-box { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 10.5pt; background: #f3f4f6; padding: 6px 10px; border-radius: 4px; border: 1px solid #d1d5db; }
+          table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9.5pt; }
+          th, td { border: 1px solid #6b7280; padding: 5px 6px; text-align: right; vertical-align: middle; }
+          th { background-color: #065f46; color: white; font-weight: bold; font-size: 10pt; }
           tr:nth-child(even) { background-color: #f9fafb; }
-          .footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 11pt; font-weight: bold; page-break-inside: avoid; }
-          .signature { text-align: center; margin-top: 40px; }
+          .footer { margin-top: 25px; display: flex; justify-content: space-between; font-size: 10.5pt; page-break-inside: avoid; }
+          .signature-box { text-align: center; width: 45%; }
         </style>
       </head>
       <body>
         <div class="header">
           <p>وزارة التعليم | Ministry of Education</p>
-          <p>الإدارة العامة للتعليم بمنطقة مكة المكرمة - الشؤون التعليمية</p>
-          <h2>إدارة أداء التعليم - قسم التوجيه الطلابي</h2>
-          <p>خطة برامج وخدمات التوجيه الطلابي على مستوى المدرسة للفصل الدراسي الأول 1448هـ</p>
+          <p>الإدارة العامة للتعليم بمنطقة مكة المكرمة — الشؤون التعليمية</p>
+          <h3>إدارة أداء التعليم — قسم التوجيه الطلابي</h3>
+          <h4>خطة برامج وخدمات التوجيه الطلابي على مستوى المدرسة للفصل الدراسي الأول 1448هـ</h4>
         </div>
 
         <div class="meta-box">
-          <span><strong>المدرسة:</strong> ........................................</span>
-          <span><strong>الموجه الطلابي /ـة:</strong> ........................................</span>
+          <span><strong>اسم المدرسة:</strong> ........................................</span>
+          <span><strong>الموجه الطلابي / ـة:</strong> ........................................</span>
           <span><strong>العام الدراسي:</strong> 1448 هـ</span>
         </div>
 
         <table>
           <thead>
             <tr>
-              <th>الأسبوع</th>
-              <th>التاريخ الهجري</th>
-              <th>اسم البرنامج والخدمة الإرشادية</th>
-              <th>النوع / المجال</th>
-              <th>مؤشر التحقق والشواهد</th>
+              <th style="width: 8%;">الأسبوع</th>
+              <th style="width: 17%;">التاريخ الهجري</th>
+              <th style="width: 30%;">اسم البرنامج والخدمة الإرشادية</th>
+              <th style="width: 15%;">النوع / المجال</th>
+              <th style="width: 30%;">مؤشر التحقق والشواهد</th>
             </tr>
           </thead>
           <tbody>
             ${MINISTRY_PROGRAMS.map(p => `
               <tr>
-                <td>أسبوع ${p.week}</td>
-                <td style="white-space: nowrap;">${p.hijri_date}</td>
-                <td><strong>${p.name}</strong><br/><span style="font-size:9pt; color:#555;">${p.goal}</span></td>
-                <td>${p.ptype}</td>
+                <td style="text-align: center; font-weight: bold;">أسبوع ${p.week}</td>
+                <td style="white-space: nowrap; font-weight: bold; color: #065f46;">${p.hijri_date}</td>
+                <td><strong>${p.name}</strong></td>
+                <td>${p.ptype} (${p.domain})</td>
                 <td>${p.indicator}</td>
               </tr>
             `).join('')}
@@ -458,12 +456,12 @@ function PrintA4ReportButton() {
         </table>
 
         <div class="footer">
-          <div>
-            <p><strong>الموجه الطلابي:</strong> ........................</p>
+          <div class="signature-box">
+            <p><strong>الموجه الطلابي / ـة:</strong> ....................................</p>
             <p>التوقيع: ........................</p>
           </div>
-          <div style="text-align: left;">
-            <p><strong>اعتماد إدارة المدرسة (مدير/ة المدرسة):</strong> ........................</p>
+          <div class="signature-box">
+            <p><strong>اعتماد مدير /ـة المدرسة:</strong> ....................................</p>
             <p>التوقيع والختم: ........................</p>
           </div>
         </div>
