@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Loader2, Sparkles, Printer, Trash2, Paperclip, Plus, X } from "lucide-react";
+import { CalendarRange, Loader2, Sparkles, Printer, Trash2, Paperclip, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
       { title: "البرامج والأنشطة | منصة الذات" },
-      { name: "description", content: "البرامج الإرشادية والخطط الإجرائية بالهجري مع دعم الذكاء الاصطناعي والمرفقات." },
+      { name: "description", content: "البرامج الإرشادية الوزارية المعتمدة والخطط الإجرائية بالهجري." },
       { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
       { property: "og:type", content: "website" },
     ],
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
   component: ProgramsPage,
 });
 
-// قائمة البرامج الوزارية مرتبة تصاعدياً حسب التاريخ من الأعلى للأسفل
+// قائمة البرامج الوزارية مرتبة من الأسبوع الأول تصاعدياً حسب خطة مكة 1448هـ[cite: 1]
 const MAKKAH_MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول",
@@ -245,7 +245,7 @@ function MinistryProgramsDialog() {
       const { error } = await supabase.from("programs").insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً مرتباً تصاعدياً بنجاح`);
+      toast.success(`تم استيراد ${payloads.length} برنامجاً وزارياً مرتباً تصاعدياً بنجاح`);
       setOpen(false);
     } catch (error) {
       toast.error(`تعذّرت الإضافة: ${(error as Error).message}`);
@@ -309,202 +309,11 @@ function MinistryProgramsDialog() {
   );
 }
 
-// ميزة الذكاء الاصطناعي المدمجة داخل صفحة الإضافة والتعديل لتعبئة الحقول بضغطة زر
-export function DeepSeekProgramFormAssistant({ onFillData }: { onFillData: (data: any) => void }) {
-  const [promptText, setPromptText] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  async function handleAutoFill() {
-    if (!promptText.trim()) {
-      toast.error("الرجاء كتابة وصف البرنامج أو الفكرة ليقوم الذكاء الاصطناعي بتعبئة الخانات");
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      await new Promise((r) => setTimeout(r, 1500));
-      // بيانات مولدة بالذكاء الاصطناعي استناداً لطلب المستخدم
-      const generated = {
-        name: `برنامج مقترح: ${promptText}`,
-        ptype: "وقائي / نمائي",
-        domain: "التوجيه السلوكي والأكاديمي",
-        target_group: "جميع طلاب المدرسة",
-        goal: `تعزيز الكفاءة النفسية والتحصيلية وتحقيق التوافق المدرسي بناءً على: ${promptText}`,
-        indicator: "تنفيذ الأنشطة وقياس رضا المستفيدين وتقديم تقرير الأداء",
-        required_evidence: "صور، ملفات PDF، وفيديو توثيقي للفعالية",
-      };
-      onFillData(generated);
-      toast.success("تمت تعبئة كافة خانات النموذج بالذكاء الاصطناعي (DeepSeek) بنجاح!");
-      setPromptText("");
-    } catch (e) {
-      toast.error("تعذر إتمام التوليد الآلي");
-    } finally {
-      setIsGenerating(false);
-    }
-  }
-
-  return (
-    <div className="mb-4 rounded-lg border border-primary/40 bg-primary/5 p-3" dir="rtl">
-      <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-primary">
-        <Sparkles className="size-4" /> مساعد الذكاء الاصطناعي (DeepSeek) لتعبئة النموذج بالكامل:
-      </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={promptText}
-          onChange={(e) => setPromptText(e.target.value)}
-          placeholder="اكتب فكرة البرنامج أو هدفه (مثال: برنامج لتعزيز الانضباط المدرسي)..."
-          className="flex-1 rounded-md border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        />
-        <Button type="button" size="sm" onClick={handleAutoFill} disabled={isGenerating}>
-          {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-          تعبئة تلقائية
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// مكون ارفاق الملفات المباشر داخل نموذج البرنامج (صور، PDF، فيديو)
-export function ProgramAttachmentsField({ value, onChange }: { value: string; onChange: (val: string) => void }) {
-  const [files, setFiles] = useState<string[]>(value ? value.split(",").map(s => s.trim()).filter(Boolean) : []);
-  const [uploading, setUploading] = useState(false);
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles || selectedFiles.length === 0) return;
-
-    setUploading(true);
-    setTimeout(() => {
-      const newFileNames = Array.from(selectedFiles).map((f) => f.name);
-      const updated = [...files, ...newFileNames];
-      setFiles(updated);
-      onChange(updated.join(", "));
-      setUploading(false);
-      toast.success("تم إرفاق الملفات والشواهد بنجاح");
-    }, 1000);
-  }
-
-  function removeFile(index: number) {
-    const updated = files.filter((_, i) => i !== index);
-    setFiles(updated);
-    onChange(updated.join(", "));
-  }
-
-  return (
-    <div className="space-y-2 rounded-md border p-3 bg-muted/20" dir="rtl">
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-          <Paperclip className="size-4 text-primary" /> الشواهد والمرفقات (صور، PDF، فيديو):
-        </label>
-        <label className="cursor-pointer rounded bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90">
-          {uploading ? <Loader2 className="size-3 animate-spin inline" /> : "إرفاق ملف"}
-          <input type="file" multiple accept="image/*,application/pdf,video/*" className="hidden" onChange={handleFileChange} />
-        </label>
-      </div>
-      <div className="flex flex-wrap gap-1.5 pt-1">
-        {files.length === 0 ? (
-          <span className="text-xs text-muted-foreground">لم يتم إرفاق أي ملفات بعد.</span>
-        ) : (
-          files.map((file, idx) => (
-            <div key={idx} className="flex items-center gap-1 rounded bg-background border px-2 py-1 text-xs">
-              <span className="max-w-[200px] truncate">{file}</span>
-              <button type="button" onClick={() => removeFile(idx)} className="text-destructive hover:opacity-80">
-                <X className="size-3.5" />
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-// زر طباعة تقرير البرنامج بصيغة A4
-function PrintProgramButton({ program }: { program: any }) {
-  function handlePrint() {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-
-    printWindow.document.write(`
-      <html dir="rtl" lang="ar">
-        <head>
-          <title>تقرير البرنامج الإرشادي - ${program.name || ""}</title>
-          <style>
-            @page { size: A4; margin: 20mm; }
-            body { font-family: 'Tahoma', Arial, sans-serif; color: #111; line-height: 1.6; margin: 0; padding: 0; }
-            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-            .header h2 { margin: 0 0 5px 0; font-size: 18px; }
-            .header p { margin: 0; font-size: 12px; color: #555; }
-            .section { margin-bottom: 15px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa; }
-            .section h3 { margin-top: 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color: #2563eb; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; }
-            .field { margin-bottom: 8px; }
-            .field span { font-weight: bold; color: #444; }
-            .footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 13px; text-align: center; }
-            .signature { margin-top: 30px; border-top: 1px dashed #771111; width: 200px; display: inline-block; padding-top: 5px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h2>المملكة العربية السعودية - وزارة التعليم</h2>
-            <p>إدارة التعليم بمنطقة مكة المكرمة | التوجيه الطلابي</p>
-            <h2 style="margin-top: 10px; color: #1e3a8a;">تقرير تنفيذ برنامج إرشادي</h2>
-          </div>
-
-          <div class="section">
-            <h3>بيانات البرنامج الأساسية</h3>
-            <div class="grid">
-              <div class="field"><span>اسم البرنامج:</span> ${program.name || "-"}</div>
-              <div class="field"><span>الفصل والأسبوع (هجري):</span> ${program.term || program.program_no || "-"}</div>
-              <div class="field"><span>نوع البرنامج:</span> ${program.ptype || "-"}</div>
-              <div class="field"><span>المجال:</span> ${program.domain || "-"}</div>
-              <div class="field"><span>الفئة المستهدفة:</span> ${program.target_group || "-"}</div>
-              <div class="field"><span>حالة التنفيذ:</span> ${program.exec_status || "-"}</div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>الأهداف ومؤشرات التحقق</h3>
-            <div class="field"><span>الهدف العام:</span> ${program.goal || "-"}</div>
-            <div class="field" style="margin-top: 8px;"><span>مؤشر التحقق:</span> ${program.indicator || "-"}</div>
-          </div>
-
-          <div class="section">
-            <h3>الشواهد والمرفقات المرفقة</h3>
-            <div class="field">${program.required_evidence || "لا توجد مرفقات مسجلة"}</div>
-          </div>
-
-          <div class="footer">
-            <div>
-              <p>الموجّه الطلابي:</p>
-              <div class="signature">التوقيع والختم</div>
-            </div>
-            <div>
-              <p>قائد/ة المدرسة:</p>
-              <div class="signature">التوقيع والختم</div>
-            </div>
-          </div>
-
-          <script>
-            window.onload = function() { window.print(); window.close(); }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  }
-
-  return (
-    <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
-      <Printer className="size-4" /> طباعة تقرير A4
-    </Button>
-  );
-}
-
 function ProgramsPage() {
   const queryClient = useQueryClient();
   const [deletingAll, setDeletingAll] = useState(false);
 
+  // وظيفة لحذف جميع البرامج بضغطة زر
   async function handleDeleteAllPrograms() {
     if (!window.confirm("تحذير هام: هل أنت متأكد من رغبتك في حذف كافة البرامج المسجلة نهائياً؟")) return;
     setDeletingAll(true);
