@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { CalendarRange, Loader2, Sparkles, Printer, Bot, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// خطة برامج وخدمات التوجيه الطلابي - تعليم مكة المكرمة 1448هـ (مستخرجة من المستند المعتمد)
+// خطة برامج وخدمات التوجيه الطلابي - تعليم مكة المكرمة 1448هـ
 export const MINISTRY_PROGRAMS = [
   {
     term: "الفصل الدراسي الأول 1448هـ",
@@ -219,17 +219,6 @@ export const MINISTRY_PROGRAMS = [
   },
 ];
 
-export const Route = createFileRoute("/_authenticated/programs")({
-  head: () => ({
-    meta: [
-      { title: "خطة برامج وخدمات التوجيه الطلابي 1448هـ | إدارة تعليم مكة" },
-      { name: "description", content: "الخطة الزمنية الرسمية المعتمدة لبرامج وخدمات التوجيه الطلابي للفصل الدراسي الأول 1448هـ." },
-    ],
-  }),
-  component: ProgramsPage,
-});
-
-// مكون إدارة وتصدير الخطة الوزارية الرسمية
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -331,7 +320,6 @@ function MinistryProgramsDialog() {
   );
 }
 
-// مساعد الذكاء الاصطناعي للتعبئة والتحليل المتقدم داخل البرامج
 function AIAssistantDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -390,7 +378,6 @@ function AIAssistantDialog() {
   );
 }
 
-// زر الطباعة بصيغة A4 مع الكليشة الرسمية المعتمدة لوزارة التعليم - تعليم مكة
 function PrintA4ReportButton() {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -488,8 +475,18 @@ function PrintA4ReportButton() {
   );
 }
 
-function ProgramsPage() {
-  return (
+export const Route = createFileRoute("/_authenticated/programs")({
+  head: () => ({
+    meta: [
+      { title: "البرامج والأنشطة | منصة الذات" },
+      { name: "description", content: "خطة برامج وخدمات التوجيه الطلابي للفصل الدراسي الأول 1448هـ - إدارة تعليم مكة." },
+      { property: "og:title", content: "البرامج والأنشطة | منصة الذات" },
+      { property: "og:description", content: "خطة برامج وخدمات التوجيه الطلابي للفصل الدراسي الأول 1448هـ - إدارة تعليم مكة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: () => (
     <RecordPage
       config={recordByKey("programs")}
       toolbarExtra={
@@ -500,5 +497,5 @@ function ProgramsPage() {
         </div>
       }
     />
-  );
-}
+  ),
+});
