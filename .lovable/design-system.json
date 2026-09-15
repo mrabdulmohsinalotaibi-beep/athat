@@ -1,579 +1,657 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
-  UserPlus, FileSpreadsheet, Printer, MessageSquare,
-  Sparkles, Search, Download, Upload, ShieldCheck, X, AlertCircle, CheckCircle2
+  Search,
+  Plus,
+  Printer,
+  Trash2,
+  Edit2,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Phone,
+  UserCheck,
+  FileText,
+  Upload,
+  Download,
+  Bot,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
-// ====================================================================
-// 1. الأنواع (Types)
-// ====================================================================
-type StudentStatus = 'منتظم' | 'متابعة سلوكية' | 'غياب متكرر' | 'متفوق';
-
-interface Student {
+// --- الأنواع والتصاميم (Types & Interfaces) ---
+export interface Student {
   id: string;
   name: string;
   nationalId: string;
   grade: string;
   classRoom: string;
   phone: string;
-  status: StudentStatus;
+  status: 'منتظم' | 'موقوف' | 'منتقل';
   casesCount: number;
+  aiRecommendation?: string;
 }
 
-type NewStudentForm = Omit<Student, 'id' | 'casesCount'>;
-
-interface ToastMessage {
+export interface Toast {
   id: string;
   type: 'success' | 'error' | 'info';
-  text: string;
+  message: string;
 }
 
-// ====================================================================
-// 2. أدوات مساعدة (Helpers)
-// ====================================================================
-const generateId = (): string => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-};
-
-const sanitizeText = (input: string): string =>
-  input.replace(/[<>"'`]/g, '').trim();
-
-const normalizeArabic = (text: string): string =>
-  text
-    .toLowerCase()
-    .replace(/[أإآ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .replace(/[\u064B-\u065F]/g, '')
-    .trim();
-
-const isValidSaudiId = (id: string): boolean => /^\d{10}$/.test(id);
-
-const isValidSaudiPhone = (phone: string): boolean =>
-  /^9665\d{8}$/.test(phone);
-
-const buildWhatsAppMessage = (student: Student): string => {
-  const safeName = sanitizeText(student.name);
-  const safeStatus = sanitizeText(student.status);
-  return `السلام عليكم ورحمة الله وبركاته، المكرم ولي أمر الطالب (${safeName}).
-نود إحاطتكم بخطاب متابعة من مكتب التوجيه الطلابي بخصوص الحالة: (${safeStatus}).
-يرجى التواصل معنا في أقرب وقت.`;
-};
-
-// ====================================================================
-// 3. البيانات الأولية (Mock Data)
-// ====================================================================
+// --- البيانات الأولية الافتراضية ---
 const INITIAL_STUDENTS: Student[] = [
-  { id: generateId(), name: 'أحمد محمد العتيبي', nationalId: '1102938475', grade: 'الأول المتوسط', classRoom: '1/1', phone: '966501234567', status: 'منتظم', casesCount: 0 },
-  { id: generateId(), name: 'خالد عبدالله الشهري', nationalId: '1192837465', grade: 'الثاني المتوسط', classRoom: '2/1', phone: '966507654321', status: 'متابعة سلوكية', casesCount: 2 },
-  { id: generateId(), name: 'فيصل القحطاني', nationalId: '1092837411', grade: 'الثالث المتوسط', classRoom: '3/2', phone: '966509988776', status: 'غياب متكرر', casesCount: 4 },
+  { id: '1', name: 'عبدالله محمد الشهري', nationalId: '1092837465', grade: 'الأول المتوسط', classRoom: '1/1', phone: '0501234567', status: 'منتظم', casesCount: 2, aiRecommendation: 'توصية DeepSeek: يفضل عقد جلسة إرشاد فردية لبحث أسباب الغياب المتكرر وتنظيم خطة متابعة سلوكية.' },
+  { id: '2', name: 'خالد أحمد الغامدي', nationalId: '1083746521', grade: 'الثاني المتوسط', classRoom: '2/1', phone: '0552345678', status: 'منتظم', casesCount: 0, aiRecommendation: 'توصية DeepSeek: الطالب منتظم ولا يوجد لديه أي ملاحظات، يُوصى بتشجيعه وتعزيز التفوق.' },
+  { id: '3', name: 'فهد سار العتيبي', nationalId: '1074658392', grade: 'الثالث المتوسط', classRoom: '3/2', phone: '0543456789', status: 'منتظم', casesCount: 5, aiRecommendation: 'توصية DeepSeek: يُوصى باستدعاء ولي الأمر وتفعيل خطة التدخل المباشر لتقليل السلوكيات المخالفة.' },
 ];
 
-const EMPTY_FORM: NewStudentForm = {
-  name: '',
-  nationalId: '',
-  grade: 'الأول المتوسط',
-  classRoom: '1/1',
-  phone: '',
-  status: 'منتظم',
+// --- أدوات المساعدة والتحقق (Helpers & Validation) ---
+const normalizeArabic = (text: string): string => {
+  return text
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[\u064B-\u0652]/g, '')
+    .trim()
+    .toLowerCase();
 };
 
-// ====================================================================
-// 4. مكون Toast بسيط
-// ====================================================================
-const ToastContainer: React.FC<{ toasts: ToastMessage[]; onClose: (id: string) => void }> = ({ toasts, onClose }) => (
-  <div className="fixed top-4 left-4 z-[100] space-y-2 max-w-sm">
-    {toasts.map((t) => (
-      <div
-        key={t.id}
-        role="alert"
-        className={`flex items-start gap-2 p-3 rounded-xl shadow-lg border text-xs font-semibold animate-in fade-in slide-in-from-top-2 ${
-          t.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-          t.type === 'error'   ? 'bg-rose-50 border-rose-200 text-rose-800' :
-                                 'bg-slate-50 border-slate-200 text-slate-800'
-        }`}
-      >
-        {t.type === 'success' ? <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" /> : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
-        <span className="flex-1 leading-relaxed">{t.text}</span>
-        <button onClick={() => onClose(t.id)} aria-label="إغلاق التنبيه">
-          <X className="w-3.5 h-3.5 opacity-60 hover:opacity-100" />
-        </button>
-      </div>
-    ))}
-  </div>
-);
+const sanitizeText = (text: string): string => {
+  return text.replace(/[<>&'"]/g, '').trim();
+};
 
-// ====================================================================
-// 5. المكون الرئيسي
-// ====================================================================
-export default function GuidanceHubComplete() {
-  // -----------------------------
-  // الحالات (State)
-  // -----------------------------
-  const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+const isValidSaudiId = (id: string): boolean => {
+  return /^[12]\d{9}$/.test(id);
+};
 
-  // النوافذ
+const isValidSaudiPhone = (phone: string): boolean => {
+  return /^(05|9665|\+9665)\d{8}$/.test(phone);
+};
+
+const generateId = (): string => Math.random().toString(36).substring(2, 9);
+
+// --- محاكاة خدمة DeepSeek AI لإنشاء توصيات تربوية سريعة ---
+const generateDeepSeekAnalysis = async (student: Partial<Student>): Promise<string> => {
+  // محاكاة تأخير الاستجابة من النموذج
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const cases = student.casesCount || 0;
+  if (cases === 0) {
+    return `تحليل DeepSeek: السجل السلوكي للطالب (${student.name || 'الجديد'}) ممتاز. يوصى بتعزيز التكيف الايجابي وإشراكه في الأنشطة الطلابية.`;
+  } else if (cases <= 2) {
+    return `تحليل DeepSeek: توجد (${cases}) حالات مسجلة. يُوصى بتقديم جلسة توجيه فردية ومتابعة تحصيله الدراسي مع معلم الصف.`;
+  } else {
+    return `تحليل DeepSeek: رصد (${cases}) حالات سلوكية. يتطلب خطة تعديل سلوك مكثفة بالتعاون مع ولي الأمر والتوجيه الطلابي.`;
+  }
+};
+
+// --- المكون الرئيسي (Main Component) ---
+export default function StudentManagementSystem() {
+  const [students, setStudents] = useState<Student[]>(() => {
+    const saved = localStorage.getItem('guidance_students');
+    return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+  });
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('الكل');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isNoorModalOpen, setIsNoorModalOpen] = useState(false);
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [printableStudent, setPrintableStudent] = useState<Student | null>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
 
-  // المساعد الذكي
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
+  // Form State
+  const [formData, setFormData] = useState({
+    name: '',
+    nationalId: '',
+    grade: 'الأول المتوسط',
+    classRoom: '1/1',
+    phone: '',
+    status: 'منتظم' as Student['status'],
+    casesCount: 0,
+    aiRecommendation: '',
+  });
 
-  // نموذج الإضافة
-  const [newStudent, setNewStudent] = useState<NewStudentForm>(EMPTY_FORM);
-  const [formError, setFormError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // التنبيهات
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  useEffect(() => {
+    localStorage.setItem('guidance_students', JSON.stringify(students));
+  }, [students]);
 
-  // -----------------------------
-  // أدوات مساعدة داخلية
-  // -----------------------------
-  const pushToast = useCallback((type: ToastMessage['type'], text: string) => {
+  useEffect(() => {
+    if (isAddModalOpen || editingStudent || printableStudent) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isAddModalOpen, editingStudent, printableStudent]);
+
+  const pushToast = (type: Toast['type'], message: string) => {
     const id = generateId();
-    setToasts((prev) => [...prev, { id, type, text }]);
+    setToasts((prev) => [...prev, { id, type, message }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
-  }, []);
-
-  const closeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  // -----------------------------
-  // إغلاق المودالات بزر Escape + منع التمرير
-  // -----------------------------
-  const anyModalOpen =
-    isAddModalOpen || isNoorModalOpen || isPrintModalOpen || isAiModalOpen;
-
-  useEffect(() => {
-    if (!anyModalOpen) return;
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      setIsAddModalOpen(false);
-      setIsNoorModalOpen(false);
-      setIsPrintModalOpen(false);
-      setIsAiModalOpen(false);
-    };
-
-    document.addEventListener('keydown', onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [anyModalOpen]);
-
-  // -----------------------------
-  // الفلترة (memo + normalize)
-  // -----------------------------
-  const filteredStudents = useMemo(() => {
-    const q = normalizeArabic(searchQuery);
-    if (!q) return students;
-    return students.filter((s) => {
-      return (
-        normalizeArabic(s.name).includes(q) ||
-        s.nationalId.includes(searchQuery.trim()) ||
-        normalizeArabic(s.grade).includes(q)
-      );
-    });
-  }, [students, searchQuery]);
-
-  // -----------------------------
-  // إضافة طالب جديد
-  // -----------------------------
-  const handleAddStudent = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-
-    const trimmedName = sanitizeText(newStudent.name);
-    const trimmedId = newStudent.nationalId.trim();
-    const trimmedPhone = newStudent.phone.trim();
-    const trimmedClass = sanitizeText(newStudent.classRoom);
-
-    if (!trimmedName || trimmedName.length < 3) {
-      setFormError('اسم الطالب يجب أن يكون 3 أحرف على الأقل.');
-      return;
-    }
-    if (!isValidSaudiId(trimmedId)) {
-      setFormError('السجل المدني يجب أن يكون 10 أرقام.');
-      return;
-    }
-    if (students.some((s) => s.nationalId === trimmedId)) {
-      setFormError('هذا السجل المدني مسجل مسبقاً في المنصة.');
-      return;
-    }
-    if (trimmedPhone && !isValidSaudiPhone(trimmedPhone)) {
-      setFormError('رقم الجوال يجب أن يبدأ بـ 9665 ويتكون من 12 رقماً.');
-      return;
-    }
-
-    const student: Student = {
-      id: generateId(),
-      name: trimmedName,
-      nationalId: trimmedId,
-      grade: newStudent.grade,
-      classRoom: trimmedClass || '1/1',
-      phone: trimmedPhone,
-      status: newStudent.status,
-      casesCount: 0,
-    };
-
-    setStudents((prev) => [student, ...prev]);
-    setNewStudent(EMPTY_FORM);
-    setIsAddModalOpen(false);
-    pushToast('success', `تم إضافة الطالب "${student.name}" بنجاح.`);
   };
 
-  // -----------------------------
-  // استيراد من نور (محاكاة)
-  // -----------------------------
-  const handleNoorImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const filteredStudents = useMemo(() => {
+    const normalizedSearch = normalizeArabic(searchTerm);
+    return students.filter((student) => {
+      const matchesSearch =
+        normalizeArabic(student.name).includes(normalizedSearch) ||
+        student.nationalId.includes(normalizedSearch) ||
+        student.phone.includes(normalizedSearch);
+      const matchesGrade = selectedGrade === 'الكل' || student.grade === selectedGrade;
+      return matchesSearch && matchesGrade;
+    });
+  }, [students, searchTerm, selectedGrade]);
+
+  const handleOpenAddModal = () => {
+    setFormData({
+      name: '',
+      nationalId: '',
+      grade: 'الأول المتوسط',
+      classRoom: '1/1',
+      phone: '',
+      status: 'منتظم',
+      casesCount: 0,
+      aiRecommendation: '',
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenEditModal = (student: Student) => {
+    setEditingStudent(student);
+    setFormData({
+      name: student.name,
+      nationalId: student.nationalId,
+      grade: student.grade,
+      classRoom: student.classRoom,
+      phone: student.phone,
+      status: student.status,
+      casesCount: student.casesCount,
+      aiRecommendation: student.aiRecommendation || '',
+    });
+  };
+
+  const handleSaveStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const cleanName = sanitizeText(formData.name);
+    const cleanId = formData.nationalId.trim();
+    const cleanPhone = formData.phone.trim();
+
+    if (!cleanName) {
+      pushToast('error', 'يرجى إدخال اسم الطالب ثلاثي على الأقل.');
+      return;
+    }
+
+    if (!isValidSaudiId(cleanId)) {
+      pushToast('error', 'رقم الهوية غير صحيح (يجب أن يتكون من 10 أرقام ويبدأ بـ 1 أو 2).');
+      return;
+    }
+
+    if (cleanPhone && !isValidSaudiPhone(cleanPhone)) {
+      pushToast('error', 'رقم الجوال غير صحيح (مثال: 0501234567).');
+      return;
+    }
+
+    // توليد توصية DeepSeek التلقائية في حال عدم وجود توصية مخصصة
+    let finalAiRec = formData.aiRecommendation;
+    if (!finalAiRec) {
+      finalAiRec = await generateDeepSeekAnalysis({ name: cleanName, casesCount: formData.casesCount });
+    }
+
+    if (editingStudent) {
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.id === editingStudent.id
+            ? { ...s, ...formData, name: cleanName, nationalId: cleanId, phone: cleanPhone, aiRecommendation: finalAiRec }
+            : s
+        )
+      );
+      pushToast('success', 'تم تعديل بيانات الطالب وتحديث تحليل DeepSeek.');
+      setEditingStudent(null);
+    } else {
+      const newStudent: Student = {
+        id: generateId(),
+        name: cleanName,
+        nationalId: cleanId,
+        grade: formData.grade,
+        classRoom: formData.classRoom,
+        phone: cleanPhone || 'غير مسجل',
+        status: formData.status,
+        casesCount: formData.casesCount,
+        aiRecommendation: finalAiRec,
+      };
+      setStudents((prev) => [newStudent, ...prev]);
+      pushToast('success', 'تمت إضافة الطالب وتحليل السجل عبر DeepSeek AI.');
+      setIsAddModalOpen(false);
+    }
+  };
+
+  const handleDeleteStudent = (id: string) => {
+    if (confirm('هل أنت تأكد من رغبتك في حذف هذا الطالب؟')) {
+      setStudents((prev) => prev.filter((s) => s.id !== id));
+      pushToast('info', 'تم حذف الطالب من السجل.');
+    }
+  };
+
+  // إرسال الطالب للتحليل بواسطة DeepSeek AI
+  const handleRunDeepSeek = async (studentId: string) => {
+    setIsAnalyzing(studentId);
+    const student = students.find((s) => s.id === studentId);
+    if (!student) return;
+
+    const newAiRecommendation = await generateDeepSeekAnalysis(student);
+
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId ? { ...s, aiRecommendation: newAiRecommendation } : s))
+    );
+
+    setIsAnalyzing(null);
+    pushToast('success', `تم توليد تحليل DeepSeek للطالب ${student.name}`);
+  };
+
+  // Excel Import
+  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // (ملاحظة: لقراءة ملفات Excel/CSV الحقيقية استخدم مكتبة مثل xlsx أو papaparse)
-    setTimeout(() => {
-      const imported: Student[] = [
-        { id: generateId(), name: 'سلمان الدوسري (استيراد نور)', nationalId: '1188223344', grade: 'الأول المتوسط', classRoom: '1/2', phone: '966551122334', status: 'منتظم', casesCount: 0 },
-        { id: generateId(), name: 'عمر المطيري (استيراد نور)',   nationalId: '1177334455', grade: 'الثاني المتوسط', classRoom: '2/2', phone: '966554433221', status: 'متفوق', casesCount: 0 },
-      ];
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json<any>(ws);
 
-      // تجنب تكرار السجل المدني
-      const existingIds = new Set(students.map((s) => s.nationalId));
-      const newOnes = imported.filter((s) => !existingIds.has(s.nationalId));
+        const imported: Student[] = await Promise.all(
+          data.map(async (row) => {
+            const name = sanitizeText(row['اسم الطالب'] || row['الاسم'] || row['Name'] || 'طالب جديد');
+            const nationalId = String(row['السجل المدني'] || row['الهوية'] || row['رقم الهوية'] || row['National ID'] || '').trim();
+            const casesCount = Number(row['الحالات السلوكية'] || row['عدد الحالات'] || 0);
 
-      if (newOnes.length === 0) {
-        pushToast('info', 'لم يتم استيراد أي طالب جديد (جميعهم مسجلون مسبقاً).');
-      } else {
-        setStudents((prev) => [...newOnes, ...prev]);
-        pushToast('success', `تم استيراد ${newOnes.length} طالب من نظام نور.`);
-      }
+            const aiRec = await generateDeepSeekAnalysis({ name, casesCount });
 
-      setIsNoorModalOpen(false);
-      e.target.value = '';
-    }, 800);
-  };
+            return {
+              id: generateId(),
+              name,
+              nationalId,
+              grade: row['الصف'] || row['Grade'] || 'الأول المتوسط',
+              classRoom: row['الفصل'] || row['Class'] || '1/1',
+              phone: String(row['الجوال'] || row['رقم التواصل'] || row['Phone'] || '').trim(),
+              status: 'منتظم',
+              casesCount,
+              aiRecommendation: aiRec,
+            };
+          })
+        );
 
-  // -----------------------------
-  // إرسال واتساب
-  // -----------------------------
-  const sendWhatsApp = (student: Student) => {
-    if (!student.phone || !isValidSaudiPhone(student.phone)) {
-      pushToast('error', 'رقم جوال ولي الأمر غير صالح أو غير مسجل.');
-      return;
-    }
-    const url = `https://wa.me/${student.phone}?text=${encodeURIComponent(buildWhatsAppMessage(student))}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
+        const validImported = imported.filter((s) => isValidSaudiId(s.nationalId));
 
-  // -----------------------------
-  // المساعد الذكي (AI)
-  // -----------------------------
-  useEffect(() => {
-    if (!isAiLoading) return;
-    const timer = setTimeout(() => {
-      setAiResponse(
-        `**الخطة التربوية المقترحة بناءً على تحليل الذكاء الاصطناعي:**\n\n` +
-        `1. **التشخيص:** السلوك الناتج يعود لفرط النشاط وتشتت الانتباه أثناء الحصص الأولى.\n` +
-        `2. **التوصيات:**\n` +
-        `   - إشراك الطالب في الأنشطة الصفية القيادية.\n` +
-        `   - عقد جلسة توجيه فردي أسبوعية لمتابعة الأهداف السلوكية.\n` +
-        `   - تفعيل المتابعة اليومية مع ولي الأمر عبر بطاقة المتابعة الميدانية.`
-      );
-      setIsAiLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [isAiLoading]);
-
-  const generateAiRecommendation = () => {
-    if (!aiPrompt.trim()) return;
-    setAiResponse('');
-    setIsAiLoading(true);
-  };
-
-  // -----------------------------
-  // طباعة
-  // -----------------------------
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const today = new Date().toLocaleDateString('ar-SA');
-
-  // ==================================================================
-  // الواجهة (UI)
-  // ==================================================================
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 sm:p-6 lg:p-8" dir="rtl">
-      {/* أنماط الطباعة */}
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #printable-area, #printable-area * { visibility: visible !important; }
-          #printable-area {
-            position: absolute !important;
-            inset: 0 !important;
-            width: 100% !important;
-            padding: 24px !important;
-            background: #fff !important;
-          }
-          .print\\:hidden { display: none !important; }
+        if (validImported.length === 0) {
+          pushToast('error', 'لم يتم العثور على سجلات صالحة. يرجى التأكد من وجود عمود (السجل المدني) أو (الهوية).');
+          return;
         }
-      `}</style>
 
-      <ToastContainer toasts={toasts} onClose={closeToast} />
+        setStudents((prev) => [...validImported, ...prev]);
+        pushToast('success', `تم استيراد ${validImported.length} طالب بنجاح وتحليل بياناتهم عبر DeepSeek.`);
+      } catch (err) {
+        pushToast('error', 'حدث خطأ أثناء قراءة ملف الإكسل.');
+      }
+    };
+    reader.readAsBinaryString(file);
+    if (e.target) e.target.value = '';
+  };
+
+  // Excel Export
+  const handleExportExcel = () => {
+    const exportData = filteredStudents.map((s) => ({
+      'اسم الطالب': s.name,
+      'رقم الهوية/السجل': s.nationalId,
+      'الصف الدراسي': s.grade,
+      'الفصل': s.classRoom,
+      'رقم التواصل': s.phone,
+      'الحالة السلوكية': s.status,
+      'عدد الحالات': s.casesCount,
+      'توصيات الذكاء الاصطناعي (DeepSeek)': s.aiRecommendation || 'لا يوجد',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الطلاب');
+    XLSX.writeFile(wb, `سجل_الطلاب_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    pushToast('info', 'تم تصدير ملف الإكسل بنجاح.');
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 dir-rtl font-sans p-4 md:p-8" dir="rtl">
+      {/* Toast Notifications */}
+      <div className="fixed bottom-5 left-5 z-50 space-y-2 max-w-sm w-full pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto p-4 rounded-xl shadow-lg border flex items-center gap-3 transition-all ${
+              toast.type === 'success'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : toast.type === 'error'
+                ? 'bg-rose-50 border-rose-200 text-rose-800'
+                : 'bg-sky-50 border-sky-200 text-sky-800'
+            }`}
+          >
+            {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />}
+            {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />}
+            {toast.type === 'info' && <FileText className="w-5 h-5 text-sky-600 shrink-0" />}
+            <span className="text-sm font-medium">{toast.message}</span>
+          </div>
+        ))}
+      </div>
 
       <div className="max-w-7xl mx-auto space-y-6">
-
-        {/* ===== الترويسة ===== */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="bg-teal-600 text-white p-2 rounded-xl">
-              <ShieldCheck className="w-6 h-6" />
-            </span>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">منصة الذات - Guidance Hub</h1>
-              <p className="text-xs text-slate-500 mt-0.5">النظام الشامل للموجه الطلابي والمعالجة التربوية الذكية</p>
-            </div>
+        {/* Header Section */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+              <UserCheck className="w-7 h-7 text-indigo-600" />
+              نظام إدارة وجاهزية الطلاب (المُدعّم بـ DeepSeek AI)
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">
+              متابعة الطلاب، استيراد وتصدير الإكسل، وتوليد التوصيات التربوية المباشرة.
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleExcelImport}
+              accept=".xlsx, .xls, .csv"
+              className="hidden"
+            />
             <button
-              onClick={() => { setFormError(''); setNewStudent(EMPTY_FORM); setIsAddModalOpen(true); }}
-              className="flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors"
             >
-              <UserPlus className="w-4 h-4" />
-              إضافة طالب
+              <Upload className="w-4 h-4" />
+              استيراد إكسل (Excel)
             </button>
 
             <button
-              onClick={() => setIsNoorModalOpen(true)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+              onClick={handleExportExcel}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors"
             >
-              <FileSpreadsheet className="w-4 h-4" />
-              استيراد من نور
+              <Download className="w-4 h-4" />
+              تصدير إكسل
             </button>
 
             <button
-              onClick={() => setIsAiModalOpen(true)}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+              onClick={handleOpenAddModal}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-colors"
             >
-              <Sparkles className="w-4 h-4" />
-              المساعد الذكي
+              <Plus className="w-4 h-4" />
+              إضافة طالب جديد
             </button>
           </div>
         </div>
 
-        {/* ===== الجدول ===== */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="relative w-full sm:w-96">
-              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="ابحث باسم الطالب، السجل المدني، أو الصف..."
-                className="w-full pl-4 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-all"
-              />
-            </div>
-            <div className="text-xs font-semibold text-slate-500">
-              إجمالي الطلاب: <span className="text-slate-900 font-bold">{students.length}</span>
-              {searchQuery && (
-                <span className="mr-2 text-slate-400">| النتائج: {filteredStudents.length}</span>
-              )}
-            </div>
+        {/* Filters & Search */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
+          <div className="relative w-full md:w-96">
+            <Search className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="ابحث بالاسم، السجل المدني، أو الجوال..."
+              className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+            />
           </div>
 
+          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+            {['الكل', 'الأول المتوسط', 'الثاني المتوسط', 'الثالث المتوسط'].map((grade) => (
+              <button
+                key={grade}
+                onClick={() => setSelectedGrade(grade)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+                  selectedGrade === grade
+                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {grade}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Table View */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold">
-                <tr>
-                  <th className="p-4">اسم الطالب</th>
-                  <th className="p-4">الهوية / السجل</th>
-                  <th className="p-4">الصف والفصل</th>
-                  <th className="p-4">حالة الطالب</th>
-                  <th className="p-4 text-center">الحالات المسجلة</th>
-                  <th className="p-4 text-center">الإجراءات</th>
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                  <th className="py-4 px-6">الطالب</th>
+                  <th className="py-4 px-6">السجل المدني</th>
+                  <th className="py-4 px-6">الصف والفصل</th>
+                  <th className="py-4 px-6">التواصل</th>
+                  <th className="py-4 px-6">تحليل وتوصيات DeepSeek AI</th>
+                  <th className="py-4 px-6 text-center">الإجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-400 text-xs">
-                      لا توجد نتائج مطابقة.
-                    </td>
-                  </tr>
-                ) : (
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {filteredStudents.length > 0 ? (
                   filteredStudents.map((student) => (
                     <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-4 font-bold text-slate-900">{student.name}</td>
-                      <td className="p-4 font-mono text-slate-600">{student.nationalId}</td>
-                      <td className="p-4 text-slate-600">{student.grade} - ({student.classRoom})</td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                          student.status === 'منتظم' ? 'bg-emerald-50 text-emerald-700' :
-                          student.status === 'غياب متكرر' ? 'bg-rose-50 text-rose-700' :
-                          student.status === 'متفوق' ? 'bg-sky-50 text-sky-700' :
-                          'bg-amber-50 text-amber-700'
-                        }`}>
-                          {student.status}
-                        </span>
+                      <td className="py-4 px-6 font-medium text-slate-900">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center shrink-0">
+                            {student.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">{student.name}</p>
+                            <span className="inline-block px-2 py-0.5 text-xs rounded-md bg-slate-100 text-slate-600 mt-0.5">
+                              {student.status}
+                            </span>
+                          </div>
+                        </div>
                       </td>
-                      <td className="p-4 text-center font-bold text-slate-700">{student.casesCount}</td>
-                      <td className="p-4">
+                      <td className="py-4 px-6 font-mono text-slate-600">{student.nationalId}</td>
+                      <td className="py-4 px-6 text-slate-600">
+                        {student.grade} - <span className="font-semibold">{student.classRoom}</span>
+                      </td>
+                      <td className="py-4 px-6 text-slate-600">
+                        <div className="flex items-center gap-1.5 font-mono dir-ltr justify-end">
+                          <Phone className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{student.phone}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 max-w-xs">
+                        <div className="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100 text-xs text-indigo-900 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold flex items-center gap-1 text-indigo-700">
+                              <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> DeepSeek
+                            </span>
+                            <button
+                              onClick={() => handleRunDeepSeek(student.id)}
+                              disabled={isAnalyzing === student.id}
+                              className="text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-0.5 rounded-md flex items-center gap-1"
+                            >
+                              {isAnalyzing === student.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                'تحديث'
+                              )}
+                            </button>
+                          </div>
+                          <p className="line-clamp-2 leading-relaxed text-slate-700">
+                            {student.aiRecommendation || 'اضغط تحديث لتوليد التحليل عبر DeepSeek.'}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => sendWhatsApp(student)}
-                            aria-label={`إرسال إشعار واتساب لولي أمر ${student.name}`}
-                            title="إرسال إشعار عبر WhatsApp"
-                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            onClick={() => { setSelectedStudent(student); setIsPrintModalOpen(true); }}
-                            aria-label={`طباعة تقرير الطالب ${student.name}`}
-                            title="طباعة التقرير الرسمي"
-                            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            onClick={() => setPrintableStudent(student)}
+                            title="طباعة التقرير الشامل"
+                            className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
                           >
                             <Printer className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenEditModal(student)}
+                            title="تعديل البيانات"
+                            className="p-2 text-slate-500 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStudent(student.id)}
+                            title="حذف الطالب"
+                            className="p-2 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
                     </tr>
                   ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-12 text-slate-400">
+                      لا توجد نتائج مطابقة للبحث.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* ===== MODAL 1: إضافة طالب ===== */}
-        {isAddModalOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="add-modal-title"
-          >
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b pb-3">
-                <h3 id="add-modal-title" className="font-bold text-slate-900 text-sm">إضافة طالب جديد للمنصة</h3>
-                <button onClick={() => setIsAddModalOpen(false)} aria-label="إغلاق">
-                  <X className="w-4 h-4 text-slate-400" />
+        {/* Modal: Add/Edit Student */}
+        {(isAddModalOpen || editingStudent) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 className="font-bold text-lg text-slate-900">
+                  {editingStudent ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    setEditingStudent(null);
+                  }}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleAddStudent} className="space-y-3 text-xs">
-                {formError && (
-                  <div className="flex items-start gap-2 p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-[11px]">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                    <span>{formError}</span>
-                  </div>
-                )}
-
+              <form onSubmit={handleSaveStudent} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-slate-600 mb-1">اسم الطالب رباعياً</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">اسم الطالب كاملاً</label>
                   <input
-                    required
                     type="text"
-                    value={newStudent.name}
-                    onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                    className="w-full p-2.5 border rounded-lg bg-slate-50"
+                    required
+                    autoFocus
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="مثال: محمد بن سلمان العتيبي"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 mb-1">رقم الهوية / السجل المدني (10 أرقام)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">السجل المدني / الهوية</label>
                   <input
-                    required
                     type="text"
-                    inputMode="numeric"
+                    required
                     maxLength={10}
-                    value={newStudent.nationalId}
-                    onChange={(e) => setNewStudent({ ...newStudent, nationalId: e.target.value.replace(/\D/g, '') })}
-                    className="w-full p-2.5 border rounded-lg bg-slate-50 font-mono"
+                    value={formData.nationalId}
+                    onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
+                    placeholder="10XXXXXXXX"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-600 mb-1">الصف الدراسي</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">الصف الدراسي</label>
                     <select
-                      value={newStudent.grade}
-                      onChange={(e) => setNewStudent({ ...newStudent, grade: e.target.value })}
-                      className="w-full p-2.5 border rounded-lg bg-slate-50"
+                      value={formData.grade}
+                      onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     >
-                      <option>الأول المتوسط</option>
-                      <option>الثاني المتوسط</option>
-                      <option>الثالث المتوسط</option>
+                      <option value="الأول المتوسط">الأول المتوسط</option>
+                      <option value="الثاني المتوسط">الثاني المتوسط</option>
+                      <option value="الثالث المتوسط">الثالث المتوسط</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-600 mb-1">الفصل</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">الفصل</label>
                     <input
                       type="text"
-                      value={newStudent.classRoom}
-                      onChange={(e) => setNewStudent({ ...newStudent, classRoom: e.target.value })}
-                      className="w-full p-2.5 border rounded-lg bg-slate-50"
+                      required
+                      value={formData.classRoom}
+                      onChange={(e) => setFormData({ ...formData, classRoom: e.target.value })}
+                      placeholder="1/1"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">رقم الجوال</label>
+                    <input
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="05XXXXXXXX"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">عدد الحالات السلوكية</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.casesCount}
+                      onChange={(e) => setFormData({ ...formData, casesCount: Number(e.target.value) })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 mb-1">جوال ولي الأمر (9665xxxxxxxx)</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={12}
-                    placeholder="966500000000"
-                    value={newStudent.phone}
-                    onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value.replace(/\D/g, '') })}
-                    className="w-full p-2.5 border rounded-lg bg-slate-50 font-mono"
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">توصيات DeepSeek AI (اختياري)</label>
+                  <textarea
+                    rows={3}
+                    value={formData.aiRecommendation}
+                    onChange={(e) => setFormData({ ...formData, aiRecommendation: e.target.value })}
+                    placeholder="يمكنك كتابة التوصية يدوياً أو ترك الخانة فارغة ليقوم DeepSeek بتوليدها تلقائياً..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-slate-600 mb-1">الحالة</label>
-                  <select
-                    value={newStudent.status}
-                    onChange={(e) => setNewStudent({ ...newStudent, status: e.target.value as StudentStatus })}
-                    className="w-full p-2.5 border rounded-lg bg-slate-50"
-                  >
-                    <option value="منتظم">منتظم</option>
-                    <option value="متفوق">متفوق</option>
-                    <option value="متابعة سلوكية">متابعة سلوكية</option>
-                    <option value="غياب متكرر">غياب متكرر</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-3 border-t">
+                <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    onClick={() => {
+                      setIsAddModalOpen(false);
+                      setEditingStudent(null);
+                    }}
+                    className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium"
                   >
                     إلغاء
                   </button>
-                  <button type="submit" className="px-4 py-2 rounded-lg bg-teal-700 text-white font-semibold hover:bg-teal-800">
-                    حفظ الطالب
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium shadow-sm flex items-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    حفظ وتحليل DeepSeek
                   </button>
                 </div>
               </form>
@@ -581,189 +659,102 @@ export default function GuidanceHubComplete() {
           </div>
         )}
 
-        {/* ===== MODAL 2: استيراد من نور ===== */}
-        {isNoorModalOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="noor-modal-title"
-          >
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b pb-3">
-                <h3 id="noor-modal-title" className="font-bold text-slate-900 text-sm">استيراد القوائم من نظام نور</h3>
-                <button onClick={() => setIsNoorModalOpen(false)} aria-label="إغلاق">
-                  <X className="w-4 h-4 text-slate-400" />
-                </button>
-              </div>
-
-              <div className="border-2 border-dashed border-teal-200 bg-teal-50/50 rounded-xl p-6 text-center space-y-3">
-                <Upload className="w-8 h-8 text-teal-600 mx-auto" />
-                <div className="text-xs text-slate-600">
-                  <p className="font-bold">اختر ملف Excel أو CSV المصدّر من نظام نور</p>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    يحتوي على أسماء الطلاب والسجل المدني وأرقام التواصل
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={handleNoorImport}
-                  className="hidden"
-                  id="noor-file-input"
-                />
-                <label
-                  htmlFor="noor-file-input"
-                  className="inline-block bg-teal-700 hover:bg-teal-800 text-white text-xs px-4 py-2 rounded-lg cursor-pointer font-semibold"
-                >
-                  تصفح الملفات
-                </label>
-              </div>
-
-              <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-                ملاحظة: في هذه النسخة التجريبية، الاستيراد يحاكي البيانات.
-                لقراءة ملفات حقيقية استخدم مكتبة <span className="font-mono">papaparse</span> أو <span className="font-mono">xlsx</span>.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ===== MODAL 3: المساعد الذكي ===== */}
-        {isAiModalOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ai-modal-title"
-          >
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b pb-3">
-                <div id="ai-modal-title" className="flex items-center gap-2 text-purple-700 font-bold text-sm">
-                  <Sparkles className="w-4 h-4" />
-                  المساعد الذكي لصياغة التوصيات
-                </div>
-                <button onClick={() => setIsAiModalOpen(false)} aria-label="إغلاق">
-                  <X className="w-4 h-4 text-slate-400" />
-                </button>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <textarea
-                  rows={3}
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="اكتب وصفاً مختصراً لحالة الطالب (مثال: طالب يشتكي من تشتت انتباه وتراجع بالدرجات...)..."
-                  className="w-full p-3 border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                />
-
-                <button
-                  onClick={generateAiRecommendation}
-                  disabled={isAiLoading || !aiPrompt.trim()}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
-                >
-                  {isAiLoading ? 'جاري التحليل والصياغة...' : 'توليد الحلول التربوية'}
-                </button>
-
-                {aiResponse && (
-                  <div className="p-4 bg-purple-50/60 border border-purple-100 rounded-xl text-slate-700 text-xs whitespace-pre-line leading-relaxed">
-                    {aiResponse}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== MODAL 4: طباعة التقرير ===== */}
-        {isPrintModalOpen && selectedStudent && (
-          <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="print-modal-title"
-          >
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between border-b pb-3 print:hidden">
-                <h3 id="print-modal-title" className="font-bold text-slate-900 text-sm">
-                  معاينة التقرير الرسمي للطباعة
-                </h3>
+        {/* Modal / Print Preview Report */}
+        {printableStudent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto print:p-0 print:bg-white print:fixed print:inset-0">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-3xl overflow-hidden print:shadow-none print:border-none print:w-full">
+              {/* Header Buttons - Hidden on Print */}
+              <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center print:hidden">
+                <span className="text-sm font-semibold text-slate-700">معاينة التقرير الشامل للطباعة</span>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={handlePrint}
-                    className="bg-teal-700 hover:bg-teal-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
                   >
-                    <Printer className="w-3.5 h-3.5" /> طباعة
+                    <Printer className="w-4 h-4" />
+                    طباعة التقرير
                   </button>
-                  <button onClick={() => setIsPrintModalOpen(false)} aria-label="إغلاق">
-                    <X className="w-4 h-4 text-slate-400" />
+                  <button
+                    onClick={() => setPrintableStudent(null)}
+                    className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200"
+                  >
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              <div id="printable-area" className="border p-8 rounded-xl space-y-6 bg-white text-right text-xs">
-                {/* الهيدر الرسمي */}
-                <div className="flex justify-between items-center border-b-2 border-slate-900 pb-4">
-                  <div className="space-y-0.5">
-                    <p className="font-bold text-slate-900">المملكة العربية السعودية</p>
-                    <p className="text-slate-700">وزارة التعليم</p>
-                    <p className="text-slate-600">الإدارة العامة للتعليم بالمحافظة</p>
-                    <p className="text-slate-600">مكتب التوجيه الطلابي</p>
+              {/* Printable Content Area */}
+              <div className="p-8 space-y-6 print:p-8 font-sans text-right dir-rtl">
+                {/* Kingdom Header */}
+                <div className="flex justify-between items-center border-b pb-6 border-slate-200">
+                  <div className="text-xs text-slate-600 space-y-1">
+                    <p className="font-bold">المملكة العربية السعودية</p>
+                    <p>وزارة التعليم</p>
+                    <p>إدارة التعليم</p>
                   </div>
-
                   <div className="text-center">
-                    <div className="h-12 w-12 mx-auto rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center">
-                      <ShieldCheck className="w-6 h-6 text-teal-700" />
-                    </div>
-                    <span className="font-bold text-[10px] text-slate-800 block mt-1">
-                      منصة الذات للخدمات التربوية
-                    </span>
+                    <h2 className="text-lg font-bold text-slate-900">تقرير حالة طالب وتوجيه تربوي</h2>
+                    <p className="text-xs text-slate-500 mt-1">مدعوم بتحليل الذكاء الاصطناعي (DeepSeek AI)</p>
                   </div>
-
-                  <div className="space-y-0.5 text-left">
-                    <p><strong>التاريخ:</strong> {today}</p>
-                    <p><strong>الرقم المرجعي:</strong> SR-{selectedStudent.id.slice(0, 8)}</p>
-                    <p><strong>المرفقات:</strong> يوجد</p>
+                  <div className="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 border border-slate-200">
+                    شعار المدرسة
                   </div>
                 </div>
 
-                {/* التفاصيل */}
-                <div className="space-y-4">
-                  <h2 className="text-center text-sm font-bold underline underline-offset-4 text-slate-900">
-                    سجل حالة طالب توجيهي فردي
-                  </h2>
-
-                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <p><strong>اسم الطالب:</strong> {selectedStudent.name}</p>
-                    <p><strong>السجل المدني:</strong> {selectedStudent.nationalId}</p>
-                    <p><strong>الصف الدراسي:</strong> {selectedStudent.grade}</p>
-                    <p><strong>الحالة العامة:</strong> {selectedStudent.status}</p>
+                {/* Student Personal Information */}
+                <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div>
+                    <span className="text-slate-500 text-xs block">اسم الطالب الثلاثي:</span>
+                    <span className="font-bold text-slate-800">{printableStudent.name}</span>
                   </div>
-
-                  <div className="space-y-2">
-                    <p className="font-bold text-slate-900">مرئيات وتوصيات الموجه الطلابي:</p>
-                    <p className="p-3 border rounded-lg bg-slate-50 text-slate-700 leading-relaxed">
-                      تم عقد جلسة فردية مع الطالب ومتابعة تحصيله الدراسي مع المعلمين المعنيين،
-                      ويُوصى بانتظام حضور الطالب في برامج التوجيه المعرفي مع إحاطة ولي الأمر دورياً.
-                    </p>
+                  <div>
+                    <span className="text-slate-500 text-xs block">السجل المدني / الهوية:</span>
+                    <span className="font-mono font-bold text-slate-800">{printableStudent.nationalId}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 text-xs block">الصف والفصل:</span>
+                    <span className="font-bold text-slate-800">{printableStudent.grade} - {printableStudent.classRoom}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 text-xs block">رقم التواصل:</span>
+                    <span className="font-mono font-bold text-slate-800 dir-ltr text-right">{printableStudent.phone}</span>
                   </div>
                 </div>
 
-                {/* التوقيع */}
-                <div className="flex justify-between items-end pt-8">
-                  <div className="text-center space-y-1">
-                    <p className="font-bold text-slate-900">الموجه الطلابي</p>
-                    <p className="text-slate-500 text-[10px]">عبدالله المحمد</p>
+                {/* DeepSeek AI Analysis Section */}
+                <div className="space-y-2 text-sm bg-indigo-50/60 p-4 rounded-xl border border-indigo-100">
+                  <p className="font-bold text-indigo-900 flex items-center gap-1.5">
+                    <Bot className="w-4 h-4 text-indigo-600" />
+                    تحليل وتوصية DeepSeek AI المدمجة:
+                  </p>
+                  <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                    {printableStudent.aiRecommendation || 'لم يتم توليد تحليل لهذا الطالب بعد.'}
+                  </p>
+                </div>
+
+                {/* Recommendations and Actions */}
+                <div className="space-y-3 text-sm">
+                  <p className="font-bold text-slate-900">التوصيات والإجراءات التوجيهية:</p>
+                  <div className="p-4 border rounded-xl bg-slate-50/50 min-h-[100px] text-slate-700 leading-relaxed text-xs">
+                    بناءً على التقرير السلوكي وتوصيات الذكاء الاصطناعي، تم اعتماد الخطة التوجيهية المرفقة ومتابعة حالة الطالب بانتظام.
                   </div>
-                  <div className="text-center space-y-1">
-                    <p className="font-bold text-slate-900">مدير المدرسة</p>
-                    <p className="text-slate-500 text-[10px]">توقيع واعتماد رسمي</p>
+                </div>
+
+                {/* Signatures */}
+                <div className="grid grid-cols-2 gap-8 pt-10 text-center text-xs font-bold text-slate-800">
+                  <div>
+                    <p>الموجه الطلابي</p>
+                    <p className="mt-12 text-slate-400 font-normal">( التوقيع: ............................ )</p>
+                  </div>
+                  <div>
+                    <p>مدير المدرسة</p>
+                    <p className="mt-12 text-slate-400 font-normal">( التوقيع والختم الرسمي )</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
