@@ -2,7 +2,7 @@
   "meta": {
     "name": "Guidance Hub",
     "package": "@ws-7eb7e713de717d6d83a6/ff86189b-6cdb-4a8a-b190-a1c210e48686",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "framework": "react",
     "css_framework": "tailwind",
     "starter_template": "custom_design_system_tailwind",
@@ -11,7 +11,7 @@
     ],
     "source_type": "local",
     "source_manifest": {
-      "#enrichment": "16567b11adb48665830163a93c5d0483cec50c1806024999c6abacb5a0573f58",
+      "#enrichment": "ab189c43a1b1d6de938a3a657a7ab0e38cb9c5875cfabe176355e96bc366a97d",
       ".gitignore": "6d9e901a692b46a83707c245fb03bc91",
       ".lovable/meta.yaml": "954a981e8847ec1692669dbb04ae9ae9",
       ".lovable/plan.md": "f23b2d121c40b6520a525331b12159bd",
@@ -41,7 +41,7 @@
       "src/assets/moe-logo.png": "8f49fc3c15a0736534cce27e01cb949d",
       "src/assets/thaat-logo.png.asset.json": "a084207bb7c878fe5d1ed2fa8464a37a",
       "src/components/AiDraftAssistant.tsx": "1d795798ade92bb656632fc8fc2d867e",
-      "src/components/AppLayout.tsx": "5f9459bcbc1a2a21b60b8f002f0efc23",
+      "src/components/AppLayout.tsx": "80ec285f640aa10c14079a554879eba5",
       "src/components/Copyright.tsx": "4816377612e9385f58b8b0988db19c91",
       "src/components/EvidenceUpload.tsx": "2f3027c36d408dcb64f96651926aeb0e",
       "src/components/NoorImportDialog.tsx": "89729df4b60dae82bf98506bb1b4b6bb",
@@ -102,9 +102,9 @@
       "src/components/ui/tooltip.tsx": "67d71db5a1ab935695d1def497f5b8a6",
       "src/hooks/use-mobile.tsx": "c0a0bdd4638c391a1dd06ac82074e60b",
       "src/index.ts": "47846eb12d749d9f7b7ef90873c03345",
-      "src/integrations/lovable/index.ts": "e9cf6e6968dd0392b2222ee0745ecece",
-      "src/integrations/supabase/auth-attacher.ts": "dad043cda134d909e52de0346c16625e",
-      "src/integrations/supabase/auth-middleware.ts": "eabaf8c8ba32205717921ce5f255185e",
+      "src/integrations/lovable/index.ts": "72ae458c679ac42b6e700dc2a3d9cd7b",
+      "src/integrations/supabase/auth-attacher.ts": "d3df307e4d360485dc153d83d351e439",
+      "src/integrations/supabase/auth-middleware.ts": "533967b1485459ed8eec0156282f0ddd",
       "src/integrations/supabase/client.server.ts": "23f838ab7633e0a97e695f3c500d91aa",
       "src/integrations/supabase/client.ts": "8af43e12f1332b440278c7ea7e4cb1e8",
       "src/integrations/supabase/cron-auth.ts": "6c04781ff98ada5977945fae55d39385",
@@ -112,20 +112,21 @@
       "src/integrations/supabase/types.ts": "1c50d796c000e74d8c7c96cc21a4854e",
       "src/lib/ai.functions.ts": "ce1d937a3f4babce3005ed51fe1fafc6",
       "src/lib/auth-errors.ts": "b5068a46556582f95b113ef126e08eb8",
-      "src/lib/display.ts": "a6945d8d86279c4256664c4c6df322bd",
-      "src/lib/error-capture.ts": "50040d9c14f0f07088f87ae80485c8d4",
-      "src/lib/error-page.ts": "a6d8d86a245053776d65bf6db1f612bd",
-      "src/lib/kpi.ts": "f1a97ccb291a46c915bbfa407da7c696",
-      "src/lib/lookups.ts": "881054f9f7610d7e3204cd7caad1a405",
-      "src/lib/lovable-error-reporting.ts": "0367e03b7d71917510e4dc1cdae172ec",
-      "src/lib/ministry-programs.ts": "435b5efaef3bf093665b6f89aa571963",
-      "src/lib/noor.ts": "f685a29f5b79d722545b0660810fb080",
-      "src/lib/pdf.ts": "9102d4e85b0f056f8c270d4ad7bf0c16",
-      "src/lib/records.ts": "6a1197c11162a155bd560e36cbc72598",
-      "src/lib/school.ts": "9aee3c43e773313cbbbb1254d57a691f",
-      "src/lib/sheet.ts": "789067c86d0cbfbaf99ce24d096ad377",
-      "src/lib/subscription.ts": "f294bcf5ab5ffca697cd49ce23a7971e",
-      "src/lib/theme.tsx": "b5f31525d83cbc0325744dc75b31651b",
+      "src/lib/display.ts": "2e24c977b5f771af0e10ba67d1bc1a91",
+      "src/lib/error-capture.ts": "703ddedf8433b323ce03c2373603e204",
+      "src/lib/error-page.ts": "441f6a9650ace13264c382f308d054e1",
+      "src/lib/kpi.ts": "fbd9e224dc159c1e57314a6058cbf401",
+      "src/lib/lookups.ts": "1d3dbb4ab19a171f148d3b27d10b3899",
+      "src/lib/lovable-error-reporting.ts": "cca1f55c3d08f957152e4501ee32e332",
+      "src/lib/ministry-programs.ts": "cf4ada324142260284eed170b61d0c64",
+      "src/lib/noor.ts": "9915f20634d837544661370b257459a3",
+      "src/lib/pages/Dashboard.tsx": "40e8781d25a8a4c3ccdffac001855d48",
+      "src/lib/pdf.ts": "180d6cc500920c91afcc7596cd32bcfb",
+      "src/lib/records.ts": "0ef72c9ea48196399cc76dfa4c443ea8",
+      "src/lib/school.ts": "ef965542388359422d56ab4444fe7dfa",
+      "src/lib/sheet.ts": "4cb907ae60965d1f33cd3cdffb0e10a5",
+      "src/lib/subscription.ts": "a4d05116c89d99a058a2e1bd6b2e4d64",
+      "src/lib/theme.tsx": "c5f68658fdc6a283bf5400de6ed09659",
       "src/lib/utils.ts": "d9837f38cc05303254571985e3164050",
       "src/lib/whatsapp.ts": "8b7591bb36c152a430308b0d984b44d1",
       "src/routeTree.gen.ts": "a9dff7aec7d33d5959ea94a0d4ddcbec",
@@ -437,357 +438,9 @@
   },
   "components": [
     {
-      "name": "AiDraftAssistant",
-      "file": "src/components/AiDraftAssistant",
+      "name": "AuthService",
+      "file": "src/integrations/lovable/index.ts",
       "import_path": ""
-    },
-    {
-      "name": "AppLayout",
-      "file": "src/components/AppLayout",
-      "import_path": ""
-    },
-    {
-      "name": "Copyright",
-      "file": "src/components/Copyright",
-      "import_path": ""
-    },
-    {
-      "name": "EvidenceUploadDialog",
-      "file": "src/components/EvidenceUpload",
-      "import_path": ""
-    },
-    {
-      "name": "EvidenceGallery",
-      "file": "src/components/EvidenceUpload",
-      "import_path": ""
-    },
-    {
-      "name": "NoorImportDialog",
-      "file": "src/components/NoorImportDialog",
-      "import_path": ""
-    },
-    {
-      "name": "OfficialHeader",
-      "file": "src/components/OfficialHeader",
-      "import_path": ""
-    },
-    {
-      "name": "OfficialFooter",
-      "file": "src/components/OfficialHeader",
-      "import_path": ""
-    },
-    {
-      "name": "PlanGate",
-      "file": "src/components/PlanGate",
-      "import_path": ""
-    },
-    {
-      "name": "RecordAttachmentsDialog",
-      "file": "src/components/RecordAttachments",
-      "import_path": ""
-    },
-    {
-      "name": "RecordPage",
-      "file": "src/components/RecordPage",
-      "import_path": ""
-    },
-    {
-      "name": "RecordPrintDialog",
-      "file": "src/components/RecordPrintDialog",
-      "import_path": ""
-    },
-    {
-      "name": "SignaturePad",
-      "file": "src/components/SignaturePad",
-      "import_path": ""
-    },
-    {
-      "name": "StudentCombobox",
-      "file": "src/components/StudentCombobox",
-      "import_path": ""
-    },
-    {
-      "name": "StudentsPage",
-      "file": "src/components/StudentsPage",
-      "import_path": ""
-    },
-    {
-      "name": "ThemePicker",
-      "file": "src/components/ThemePicker",
-      "import_path": ""
-    },
-    {
-      "name": "WhatsAppButton",
-      "file": "src/components/WhatsAppButton",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialog",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogPortal",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogOverlay",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogTrigger",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogContent",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogHeader",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogFooter",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogTitle",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogDescription",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogAction",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "AlertDialogCancel",
-      "file": "src/components/ui/alert-dialog",
-      "import_path": ""
-    },
-    {
-      "name": "Button",
-      "file": "src/components/ui/button",
-      "import_path": "",
-      "props": [
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "default",
-            "destructive",
-            "outline",
-            "secondary",
-            "ghost",
-            "link"
-          ],
-          "default": "default"
-        },
-        {
-          "name": "size",
-          "type": "enum",
-          "values": [
-            "default",
-            "sm",
-            "lg",
-            "icon"
-          ],
-          "default": "default"
-        },
-        {
-          "name": "asChild",
-          "type": "boolean",
-          "default": "false"
-        }
-      ]
-    },
-    {
-      "name": "Dialog",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogPortal",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogOverlay",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogTrigger",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogClose",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogContent",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogHeader",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogFooter",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogTitle",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DialogDescription",
-      "file": "src/components/ui/dialog",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenu",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuTrigger",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuContent",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuItem",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuCheckboxItem",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuRadioItem",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuLabel",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuSeparator",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuShortcut",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuGroup",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuPortal",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuSub",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuSubContent",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuSubTrigger",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "DropdownMenuRadioGroup",
-      "file": "src/components/ui/dropdown-menu",
-      "import_path": ""
-    },
-    {
-      "name": "Input",
-      "file": "src/components/ui/input",
-      "import_path": ""
-    },
-    {
-      "name": "Label",
-      "file": "src/components/ui/label",
-      "import_path": ""
-    },
-    {
-      "name": "Popover",
-      "file": "src/components/ui/popover",
-      "import_path": ""
-    },
-    {
-      "name": "PopoverTrigger",
-      "file": "src/components/ui/popover",
-      "import_path": ""
-    },
-    {
-      "name": "PopoverContent",
-      "file": "src/components/ui/popover",
-      "import_path": ""
-    },
-    {
-      "name": "PopoverAnchor",
-      "file": "src/components/ui/popover",
-      "import_path": ""
-    },
-    {
-      "name": "Textarea",
-      "file": "src/components/ui/textarea",
-      "import_path": ""
-    },
-    {
-      "name": "Constants",
-      "file": "src/integrations/supabase/types",
-      "import_path": ""
-    },
-    {
-      "name": "ThemeProvider",
-      "file": "src/lib/theme",
-      "import_path": "",
-      "props": [
-        {
-          "name": "children",
-          "type": "any",
-          "required": true
-        }
-      ]
     }
   ],
   "assets": [
