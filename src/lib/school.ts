@@ -24,8 +24,14 @@ export function useSchool() {
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
-      if (error) throw error;
+
+      if (error) {
+        console.error("خطأ في جلب إعدادات المدرسة:", error.message);
+        throw error;
+      }
+      
       return data as SchoolSettings | null;
     },
+    staleTime: 1000 * 60 * 30, // احتفاظ بالبيانات في الكاش لمدة 30 دقيقة بدون إعادة طلب
   });
 }
