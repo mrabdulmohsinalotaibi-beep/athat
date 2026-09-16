@@ -42,8 +42,8 @@ export function getCategoryMeta(category: string): LookupCategoryMeta | undefine
 
 /** دمج الخيارات وتصفياتها مع ترتيبها أبجدياً */
 export function mergeLookupOptions(
-  defaults: string[] | undefined = [],
-  custom: string[] = []
+  defaults: readonly string[] | undefined = [],
+  custom: readonly string[] = []
 ): string[] {
   const cleanList = [...defaults, ...custom]
     .map((value) => String(value ?? "").trim())
