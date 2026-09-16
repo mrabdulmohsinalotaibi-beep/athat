@@ -52,9 +52,11 @@ type ProgramRow = {
   term: string | null;
   ptype: string | null;
   domain: string | null;
+  evidence_url?: string | null; // دعم حقل الشواهد والمرفقات (صورة أو رابط)
+  required_evidence?: string | null;
 };
 
-// 1. مكون الحوار لإضافة البرامج الوزارية
+// 1. مكون الحوار لإضافة البرامج الوزارية مع خيارات متقدمة وتصفية
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -125,6 +127,7 @@ function MinistryProgramsDialog() {
             </DialogDescription>
           </DialogHeader>
 
+          {/* شريط الفلاتر داخل النافذة */}
           <div className="flex flex-wrap items-center gap-4 my-3 bg-muted/40 p-3 rounded-lg border">
             <div className="flex items-center gap-2">
               <label className="text-xs font-semibold">الفصل:</label>
@@ -211,7 +214,7 @@ function MinistryProgramsDialog() {
   );
 }
 
-// 2. مكون مزامنة نظام نور
+// 2. مكون مزامنة نظام نور المحسّن
 function NoorSyncButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -356,7 +359,7 @@ function NoorSyncButton() {
   );
 }
 
-// 3. مكون حذف كافة السجلات
+// 3. مكون حذف كافة السجلات مع تأكيد مزدوج
 function ClearProgramsButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -413,7 +416,7 @@ function ClearProgramsButton() {
   );
 }
 
-// المكون الرئيسي مع تنسيق الطباعة المحدث لتضمين الشواهد والمرفقات
+// المكون الرئيسي للصفحة مع تضمين الشواهد والمرفقات في طباعة A4
 function ProgramsPage() {
   const handlePrint = () => {
     window.print();
@@ -421,26 +424,34 @@ function ProgramsPage() {
 
   return (
     <>
-      {/* تنسيقات الطباعة المحدثة لتشمل جدول السجلات الشامل مع المرفقات والشواهد */}
+      {/* تنسيقات طباعة A4 متقدمة تضمن ظهور الجداول والمرفقات/الشواهد كصور منسقة ومتوسطة */}
       <style>{`
         @media print {
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
           body {
             background: white !important;
             color: black !important;
+            font-family: Tajawal, sans-serif !important;
           }
-          /* إخفاء عناصر التحكم والأزرار الجانبية عند الطباعة */
+          /* إخفاء الأزرار والعناصر التفاعلية والقوائم */
           nav, header, aside, .print\\:hidden, button {
             display: none !important;
           }
-          /* ضمان إظهار محتوى جداول المكونات بالكامل */
           .print\\:block {
             display: block !important;
           }
-          /* إظهار أعمدة الشواهد والمرفقات وتوسيع الجداول لتناسب الورقة */
+          /* تحسين جداول العرض لتناسب صفحة A4 */
           table {
             width: 100% !important;
             border-collapse: collapse !important;
-            table-layout: auto !important;
+            page-break-inside: auto;
+          }
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
           }
           th, td {
             border: 1px solid #94a3b8 !important;
@@ -448,18 +459,25 @@ function ProgramsPage() {
             font-size: 10px !important;
             color: #0f172a !important;
             text-align: right !important;
-            word-break: break-word !important;
           }
           th {
             background-color: #e2e8f0 !important;
             font-weight: bold !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
           }
-          /* تخصيص مظهر خانات الشواهد والمرفقات عند الطباعة لضمان ظهور الروابط أو الأسماء */
-          td:nth-last-child(1), td:nth-last-child(2) {
-            max-width: 150px;
-            font-size: 9px !important;
+          /* تخصيص وتنسيق المرفقات والشواهد كصور متوسطة المدى داخل الطباعة */
+          .record-evidence-container, img[alt*="evidence"], img[alt*="شاهد"], .evidence-preview {
+            display: block !important;
+            max-width: 180px !important;
+            max-height: 130px !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain;
+            margin: 4px auto !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 2px !important;
+            background: #f8fafc !important;
+            page-break-inside: avoid;
           }
         }
       `}</style>
@@ -471,7 +489,7 @@ function ProgramsPage() {
             <MinistryProgramsDialog />
             <NoorSyncButton />
             <Button variant="outline" onClick={handlePrint} className="gap-2">
-              <Printer className="size-4" /> طباعة السجل
+              <Printer className="size-4" /> طباعة السجل والشواهد (A4)
             </Button>
             <ClearProgramsButton />
           </div>
