@@ -10,13 +10,13 @@ import { recordByKey } from "@/lib/records";
 import { MINISTRY_PROGRAMS, MINISTRY_TERMS } from "@/lib/ministry-programs";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-import { createFileRoute } from "@tanstack/react-router";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
