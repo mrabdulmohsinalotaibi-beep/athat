@@ -105,6 +105,82 @@ const DEFAULT_SECTIONS: ReportSections = {
   signatures: true,
 };
 
+// ===== إعدادات DeepSeek =====
+const DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
+const DEEPSEEK_MODEL = "deepseek-chat";
+
+const DEEPSEEK_SYSTEM_PROMPT = `
+أنت مساعد متخصص في إعداد التقارير التربوية والإرشادية الرسمية في المدارس السعودية.
+
+اكتب تقريراً رسمياً باللغة العربية الفصحى.
+
+التزم بالبيانات المرسلة فقط.
+لا تخترع أرقاماً أو أسماء أو نتائج غير موجودة.
+إذا كانت معلومة غير متوفرة، استخدم عبارة "غير متوفر في البيانات".
+
+أعد الإجابة بصيغة JSON فقط، بدون أي نص إضافي، وبدون علامات markdown أو backticks، بالشكل التالي حرفياً:
+{
+  "summary": "نص الملخص التنفيذي",
+  "analysis": "نص التحليل المهني وتحليل الإحصاءات",
+  "recommendations": "نص أبرز النتائج والتوصيات والإجراء المقترح للفترة القادمة"
+}
+`.trim();
+
+type DeepSeekReportResult = {
+  summary: string;
+  analysis: string;
+  recommendations: string;
+};
+
+async function callDeepSeek(payload: Record<string, unknown>): Promise<DeepSeekReportResult> {
+  const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY as string | undefined;
+
+  if (!apiKey) {
+    throw new Error("مفتاح DeepSeek غير موجود. تأكد من ضبط VITE_DEEPSEEK_API_KEY.");
+  }
+
+  const response = await fetch(DEEPSEEK_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: DEEPSEEK_MODEL,
+      messages: [
+        { role: "system", content: DEEPSEEK_SYSTEM_PROMPT },
+        { role: "user", content: JSON.stringify(payload) },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.4,
+      max_tokens: 2000,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(`DeepSeek error (${response.status}): ${errorText}`);
+  }
+
+  const data = await response.json();
+  const rawContent: string = data?.choices?.[0]?.message?.content ?? "{}";
+  const cleaned = rawContent.replace(/```json|```/g, "").trim();
+
+  let parsed: Partial<DeepSeekReportResult>;
+
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error("تعذر تحليل استجابة DeepSeek (JSON غير صالح).");
+  }
+
+  return {
+    summary: parsed.summary ?? "",
+    analysis: parsed.analysis ?? "",
+    recommendations: parsed.recommendations ?? "",
+  };
+}
+
 function useSectionRows(keys: string[], from: string, to: string) {
   return useQuery({
     queryKey: ["reports-detailed", keys.join(","), from, to],
@@ -434,71 +510,28 @@ function ReportsPage() {
     try {
       const data = getRowsForAi();
 
-      const response = await fetch("/api/ai/report", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const result = await callDeepSeek({
+        reportType,
+        title: reportTitle,
+        period,
+        school,
+        customIntro,
+        statistics: {
+          totalRecords,
+          programs: programsRows.length,
+          beneficiaries,
+          programStatus,
+          domains,
+          targetGroups,
         },
-        body: JSON.stringify({
-          reportType,
-          title: reportTitle,
-          period,
-          school,
-          customIntro,
-          statistics: {
-            totalRecords,
-            programs: programsRows.length,
-            beneficiaries,
-            programStatus,
-            domains,
-            targetGroups,
-          },
-          records: data,
-          instructions: `
-أنت مساعد متخصص في إعداد التقارير التربوية والإرشادية الرسمية في المدارس السعودية.
-
-اكتب تقريراً رسمياً باللغة العربية الفصحى.
-
-التزم بالبيانات المرسلة فقط.
-لا تخترع أرقاماً أو أسماء أو نتائج غير موجودة.
-إذا كانت معلومة غير متوفرة، استخدم عبارة "غير متوفر في البيانات".
-
-أريد صياغة مناسبة لتقرير رسمي يقدم لإدارة التعليم.
-
-أخرج النص في الأقسام التالية:
-1. الملخص التنفيذي
-2. أبرز الأعمال المنفذة
-3. تحليل الإحصاءات
-4. أبرز النتائج
-5. الملاحظات
-6. التوصيات
-7. الإجراء المقترح للفترة القادمة
-
-اجعل الأسلوب مهنيًا وتربويًا، واضحًا ومختصرًا.
-          `,
-        }),
+        records: data,
       });
 
-      if (!response.ok) {
-        throw new Error("تعذر الاتصال بخدمة الذكاء الاصطناعي");
-      }
+      setSummary(result.summary);
+      setAnalysis(result.analysis);
+      setRecommendations(result.recommendations);
 
-      const result = await response.json();
-
-      setSummary(result.summary ?? "");
-      setAnalysis(
-        result.analysis ??
-          result.narrative ??
-          "",
-      );
-      setRecommendations(
-        result.recommendations ??
-          "",
-      );
-
-      toast.success(
-        "تم إنشاء التقرير بالذكاء الاصطناعي",
-      );
+      toast.success("تم إنشاء التقرير بالذكاء الاصطناعي (DeepSeek)");
     } catch (error) {
       console.error(error);
 
