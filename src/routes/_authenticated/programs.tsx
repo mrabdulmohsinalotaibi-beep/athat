@@ -9,8 +9,7 @@ import {
   Trash2, 
   Printer, 
   CheckCheck, 
-  Clock,
-  Image as ImageIcon 
+  Clock 
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -53,10 +52,15 @@ type ProgramRow = {
   term: string | null;
   ptype: string | null;
   domain: string | null;
+  target_group?: string | null;
+  goal?: string | null;
+  indicator?: string | null;
+  required_evidence?: string | null;
+  notes?: string | null;
   attachments?: string[] | string | null;
 };
 
-// 1. مكون الحوار لإضافة البرامج الوزارية مع خيارات متقدمة وتصفية
+// 1. مكون حوار إضافة البرامج الوزارية
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -127,7 +131,6 @@ function MinistryProgramsDialog() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* شريط الفلاتر داخل النافذة */}
           <div className="flex flex-wrap items-center gap-4 my-3 bg-muted/40 p-3 rounded-lg border">
             <div className="flex items-center gap-2">
               <label className="text-xs font-semibold">الفصل:</label>
@@ -214,7 +217,7 @@ function MinistryProgramsDialog() {
   );
 }
 
-// 2. مكون مزامنة نظام نور المحسّن
+// 2. مكون مزامنة نظام نور
 function NoorSyncButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -359,7 +362,7 @@ function NoorSyncButton() {
   );
 }
 
-// 3. مكون حذف كافة السجلات مع تأكيد مزدوج
+// 3. مكون حذف كافة السجلات
 function ClearProgramsButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -404,7 +407,7 @@ function ClearProgramsButton() {
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
-              تراجع
+               تراجع
             </Button>
             <Button variant="destructive" onClick={handleDeleteAll} disabled={busy} className="gap-2">
               {busy && <Loader2 className="size-4 animate-spin" />} نعم، احذف الكل
@@ -416,20 +419,16 @@ function ClearProgramsButton() {
   );
 }
 
-// المكون الرئيسي للصفحة مع دعم تضمين الشواهد والصور في الطباعة
+// المكون الرئيسي مع تخصيص طباعة العنصر الفردي بصفحة مستقلة وشواهد مستقلة
 function ProgramsPage() {
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <>
-      {/* تنسيقات طباعة A4 محسنة مع تضمين الشواهد والصور بشكل متوسط ومنسق داخل كل برنامج */}
+      {/* تخصيص الطباعة لتعمل كصفحة تقرير رئيسية وصفحة شواهد مستقلة */}
       <style>{`
         @media print {
           @page {
             size: A4 portrait;
-            margin: 10mm;
+            margin: 15mm;
           }
           body {
             background: white !important;
@@ -438,71 +437,189 @@ function ProgramsPage() {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          /* إخفاء عناصر التحكم والواجهات غير المرغوب في طباعتها */
+          /* إخفاء عناصر النظام والقوائم والأزرار غير المرغوب طباعتها */
           nav, header, aside, .print\\:hidden, button {
             display: none !important;
           }
-          .print\\:block {
+          /* حاوية تقرير البرنامج الفردي المخصص للطباعة */
+          .print-single-program-sheet {
             display: block !important;
+            width: 100% !important;
+            page-break-after: always;
           }
-          /* هيكل الجدول والبيانات */
-          table {
+          .print-header-box {
+            text-align: center;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+          }
+          .print-header-box h1 {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 4px;
+          }
+          .print-header-box p {
+            font-size: 11px;
+            color: #475569;
+          }
+          .print-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            table-layout: fixed;
+            margin-bottom: 20px;
           }
-          th, td {
+          .print-table th, .print-table td {
             border: 1px solid #94a3b8 !important;
-            padding: 6px 8px !important;
-            font-size: 10px !important;
+            padding: 8px 10px !important;
+            font-size: 11px !important;
             color: #0f172a !important;
             text-align: right !important;
-            vertical-align: top;
-            word-break: break-word;
+            vertical-align: middle;
           }
-          th {
-            background-color: #e2e8f0 !important;
-            font-weight: bold !important;
+          .print-table th {
+            background-color: #f1f5f9 !important;
+            width: 30%;
           }
-          /* تنسيق حاوية الشواهد والمرفقات داخل الجدول عند الطباعة لتكون صوراً متوسطة ومنسقة بجانب بعضها */
-          .print-attachments-container {
+          /* صفحة الشواهد المستقلة */
+          .print-evidence-page {
+            page-break-before: always;
+            display: block !important;
+            width: 100% !important;
+          }
+          .print-evidence-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #0f172a;
+            border-bottom: 2px dashed #cbd5e1;
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+          }
+          .print-evidence-grid {
             display: flex !important;
             flex-wrap: wrap !important;
-            gap: 6px !important;
-            margin-top: 6px !important;
-            padding-top: 4px !important;
-            border-top: 1px dashed #cbd5e1 !important;
+            gap: 15px !important;
+            justify-content: center !important;
           }
-          .print-attachment-thumb {
-            width: 75px !important;
-            height: 75px !important;
+          .print-evidence-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 8px;
+            background: #f8fafc;
+            text-align: center;
+            width: 45% !important;
+            box-sizing: border-box;
+            page-break-inside: avoid;
+          }
+          .print-evidence-img {
+            width: 100% !important;
+            height: 200px !important;
             object-fit: cover !important;
-            border-radius: 4px !important;
-            border: 1px solid #cbd5e1 !important;
-            background-color: #f8fafc !important;
+            border-radius: 6px !important;
+            border: 1px solid #e2e8f0;
           }
-          .print-attachment-label {
-            font-size: 8px !important;
-            color: #475569 !important;
-            display: block !important;
-            margin-bottom: 2px !important;
-            font-weight: bold;
-          }
+        }
+        /* إخفاء صفحات الطباعة الخاصة بالبرنامج الفردي عن العرض العادي على الشاشة */
+        .print-single-program-sheet {
+          display: none;
         }
       `}</style>
 
       <RecordPage
         config={recordByKey("programs")}
-        toolbarExtra={
-          <div className="flex flex-wrap items-center gap-2 print:hidden">
-            <MinistryProgramsDialog />
-            <NoorSyncButton />
-            <Button variant="outline" onClick={handlePrint} className="gap-2">
-              <Printer className="size-4" /> طباعة السجل بالشواهد (A4)
-            </Button>
-            <ClearProgramsButton />
-          </div>
-        }
+        renderCustomPrint={(item: ProgramRow) => {
+          // استخراج الصور أو المرفقات وتوحيدها كمعرّفات أو روابط صحيحة
+          let imgs: string[] = [];
+          if (item.attachments) {
+            if (Array.isArray(item.attachments)) {
+              imgs = item.attachments;
+            } else if (typeof item.attachments === "string") {
+              try {
+                const parsed = JSON.parse(item.attachments);
+                imgs = Array.isArray(parsed) ? parsed : [item.attachments];
+              } catch {
+                imgs = [item.attachments];
+              }
+            }
+          }
+
+          return (
+            <div className="print-single-program-sheet" dir="rtl">
+              {/* الصفحة الأولى: تفاصيل وتقرير البرنامج */}
+              <div>
+                <div className="print-header-box">
+                  <h1>سجل توثيق البرامج والأنشطة الإرشادية</h1>
+                  <p>التوجيه والإرشاد الطلابي — إدارة التعليم</p>
+                </div>
+
+                <table className="print-table">
+                  <tbody>
+                    <tr>
+                      <th>اسم البرنامج / النشاط</th>
+                      <td><strong>{item.name || "—"}</strong></td>
+                    </tr>
+                    <tr>
+                      <th>الفصل أو الأسبوع الدراسي</th>
+                      <td>{item.term || "—"}</td>
+                    </tr>
+                    <tr>
+                      <th>نوع البرنامج والمجال</th>
+                      <td>{item.ptype || "—"} ({item.domain || "—"})</td>
+                    </tr>
+                    <tr>
+                      <th>الفئة المستهدفة</th>
+                      <td>{item.target_group || "جميع الطلاب"}</td>
+                    </tr>
+                    <tr>
+                      <th>أهداف البرنامج</th>
+                      <td>{item.goal || "—"}</td>
+                    </tr>
+                    <tr>
+                      <th>مؤشر التحقق</th>
+                      <td>{item.indicator || "—"}</td>
+                    </tr>
+                    <tr>
+                      <th>حالة التنفيذ</th>
+                      <td><strong>{item.exec_status || "لم يبدأ"}</strong></td>
+                    </tr>
+                    <tr>
+                      <th>ملاحظات وتوصيات</th>
+                      <td>{item.notes || "لا توجد ملاحظات"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* الصفحة الثانية: صفحة الشواهد والمرفقات المستقلة */}
+              <div className="print-evidence-page">
+                <div className="print-evidence-title">
+                  📌 الشواهد والمرفقات المرئية للبرنامج: {item.name}
+                </div>
+
+                {imgs.length === 0 ? (
+                  <p style={{ textAlign: "center", color: "#64748b", fontSize: "11px", marginTop: "40px" }}>
+                    لم يتم إرفاق شواهد أو صور لهذا البرنامج.
+                  </p>
+                ) : (
+                  <div className="print-evidence-grid">
+                    {imgs.map((url, idx) => (
+                      <div key={idx} className="print-evidence-card">
+                        <img 
+                          src={url} 
+                          alt={`شاهد ${idx + 1}`} 
+                          className="print-evidence-img" 
+                        />
+                        <div style={{ fontSize: "10px", color: "#475569", marginTop: "6px", fontWeight: "bold" }}>
+                          شاهد رقم ({idx + 1})
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }}
       />
     </>
   );
