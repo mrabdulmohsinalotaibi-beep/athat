@@ -5,9 +5,9 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { recordByKey } from "@/lib/records";
-import { downloadNoorTemplate } from "@/lib/noor";
+import { downloadStudentsTemplate } from "@/lib/students-import";
 import { RecordPage } from "@/components/RecordPage";
-import { NoorImportDialog } from "@/components/NoorImportDialog";
+import { StudentsImportDialog } from "@/components/StudentsImportDialog";
 import { StudentProfileDialog } from "@/components/StudentProfileDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -126,10 +126,10 @@ export function StudentsPage() {
         toolbarExtra={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="size-4" /> استيراد من نور
+              <Upload className="size-4" /> استيراد من Excel
             </Button>
-            <Button variant="outline" onClick={downloadNoorTemplate}>
-              <FileSpreadsheet className="size-4" /> تحميل نموذج استيراد نور
+            <Button variant="outline" onClick={downloadStudentsTemplate}>
+              <FileSpreadsheet className="size-4" /> تحميل نموذج Excel
             </Button>
             <AlertDialog onOpenChange={(open) => !open && setConfirmText("")}>
               <AlertDialogTrigger asChild>
@@ -190,7 +190,7 @@ export function StudentsPage() {
           </>
         }
       />
-      <NoorImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <StudentsImportDialog open={importOpen} onOpenChange={setImportOpen} />
       <StudentProfileDialog
         open={profileStudent !== null}
         onOpenChange={(open) => !open && setProfileStudent(null)}
