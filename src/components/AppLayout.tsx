@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState, type ReactNode, type LucideIcon } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Users,
