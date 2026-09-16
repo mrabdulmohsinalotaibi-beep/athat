@@ -40,8 +40,6 @@ function MinistryProgramsDialog() {
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("all");
   const [busy, setBusy] = useState(false);
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const list = term === "all" ? MINISTRY_PROGRAMS : MINISTRY_PROGRAMS.filter((p) => p.term === term);
 
@@ -86,65 +84,34 @@ function MinistryProgramsDialog() {
     }
   }
 
-  // دالة حذف جميع البرامج من قاعدة البيانات
-  async function deleteAllPrograms() {
-    setDeleting(true);
-    try {
-      // استخدام شرط غير فارغ أو حذف الكل (تأكد من سياسات RLS في جدول programs للسماح بالحذف)
-      const { error } = await supabase.from("programs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      if (error) throw error;
-
-      await queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تم حذف جميع البرامج المضافة بنجاح.");
-      setConfirmDeleteOpen(false);
-      setOpen(false);
-    } catch (error) {
-      toast.error(`تعذّر الحذف: ${(error as Error).message}`);
-    } finally {
-      setDeleting(false);
-    }
-  }
-
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
         <CalendarRange className="size-4 ml-2" /> البرامج الوزارية بالأسابيع
       </Button>
-
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle>البرامج الإرشادية الوزارية المعتمدة</DialogTitle>
             <DialogDescription>
-              اختر الفصل الدراسي لتغذية سجل البرامج بالبرامج الرسمية أو إدارة السجل بالكامل.
+              اختر الفصل الدراسي لتغذية سجل البرامج بالبرامج الرسمية موزعة على أسابيع الفصل.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 my-2">
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-semibold">الفصل الدراسي</label>
-              <select
-                value={term}
-                onChange={(e) => setTerm(e.target.value)}
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="all">كل الفصول</option>
-                {MINISTRY_TERMS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* زر حذف البرامج بالكامل */}
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={() => setConfirmDeleteOpen(true)}
+          <div className="flex items-center gap-3 my-2">
+            <label className="text-xs font-semibold">الفصل الدراسي</label>
+            <select
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <Trash2 className="size-4 ml-1.5" /> حذف كافة البرامج
-            </Button>
+              <option value="all">كل الفصول</option>
+              {MINISTRY_TERMS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="overflow-x-auto rounded-lg border">
@@ -180,28 +147,6 @@ function MinistryProgramsDialog() {
             </Button>
             <Button onClick={seed} disabled={busy}>
               {busy && <Loader2 className="size-4 animate-spin ml-2" />} إضافة {list.length} برنامجاً للسجل
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* نافذة تأكيد الحذف الكامل */}
-      <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <DialogContent dir="rtl" className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2">
-              <Trash2 className="size-5" /> تحذير: حذف كافة البرامج
-            </DialogTitle>
-            <DialogDescription className="pt-2">
-              هل أنت متأكد من رغبتك في حذف **جميع** البرامج المضافة من جدول السجل نهائياً؟ لا يمكن التراجع عن هذا الإجراء بعد تنفيذه.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0 mt-4">
-            <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)}>
-              تراجع
-            </Button>
-            <Button variant="destructive" onClick={deleteAllPrograms} disabled={deleting}>
-              {deleting && <Loader2 className="size-4 animate-spin ml-2" />} نعم، احذف الكل
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -342,6 +287,63 @@ function NoorSyncButton() {
   );
 }
 
+function ClearProgramsButton() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function handleDeleteAll() {
+    setBusy(true);
+    try {
+      // حذف كافة السجلات من جدول programs
+      const { error } = await supabase.from("programs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["programs"] }),
+        queryClient.invalidateQueries({ queryKey: ["programs-noor-sync"] }),
+      ]);
+
+      toast.success("تم حذف جميع البرامج من السجل بنجاح.");
+      setOpen(false);
+    } catch (error) {
+      toast.error(`تعذّر حذف البرامج: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <Button variant="destructive" onClick={() => setOpen(true)}>
+        <Trash2 className="size-4 ml-2" /> حذف كافة البرامج
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="size-5" /> هل أنت متأكد من حذف السجل بالكامل؟
+            </DialogTitle>
+            <DialogDescription className="py-2">
+              سيتم حذف جميع البرامج والأنشطة المسجلة في النظام نهائياً ولا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+              إلغاء
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAll} disabled={busy}>
+              {busy && <Loader2 className="size-4 animate-spin ml-2" />} نعم، حذف الكل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function ProgramsPage() {
   return (
     <RecordPage
@@ -350,6 +352,7 @@ function ProgramsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <MinistryProgramsDialog />
           <NoorSyncButton />
+          <ClearProgramsButton />
         </div>
       }
     />
