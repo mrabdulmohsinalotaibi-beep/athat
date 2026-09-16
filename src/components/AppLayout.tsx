@@ -46,10 +46,13 @@ function MinistryProgramsDialog() {
   async function seed() {
     setBusy(true);
     try {
-      const { data: existing } = await supabase.from("programs").select("name");
+      const { data: existing, error: fetchError } = await supabase.from("programs").select("name");
+      if (fetchError) throw fetchError;
+
       const known = new Set((existing ?? []).map((p) => String((p as { name: string | null }).name ?? "").trim()));
+      
       const payloads = list
-        .filter((p) => !known.has(p.name))
+        .filter((p) => !known.has(p.name.trim()))
         .map((p) => ({
           program_no: `${p.term} - الأسبوع ${p.week}`,
           name: p.name,
@@ -67,10 +70,12 @@ function MinistryProgramsDialog() {
         toast.info("جميع البرامج المحددة مضافة مسبقاً.");
         return;
       }
-      const { error } = await supabase.from("programs").insert(payloads as never);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً موزعاً على الأسابيع`);
+
+      const { error: insertError } = await supabase.from("programs").insert(payloads as never);
+      if (insertError) throw insertError;
+
+      await queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً موزعاً على الأسابيع بنجاح.`);
       setOpen(false);
     } catch (error) {
       toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
@@ -82,7 +87,7 @@ function MinistryProgramsDialog() {
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <CalendarRange className="size-4" /> البرامج الوزارية بالأسابيع
+        <CalendarRange className="size-4 ml-2" /> البرامج الوزارية بالأسابيع
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto" dir="rtl">
@@ -93,12 +98,12 @@ function MinistryProgramsDialog() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 my-2">
             <label className="text-xs font-semibold">الفصل الدراسي</label>
             <select
               value={term}
               onChange={(e) => setTerm(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <option value="all">كل الفصول</option>
               {MINISTRY_TERMS.map((t) => (
@@ -122,26 +127,26 @@ function MinistryProgramsDialog() {
               </thead>
               <tbody>
                 {list.map((p) => (
-                  <tr key={`${p.term}-${p.week}-${p.name}`} className="border-b last:border-0">
-                    <td className="whitespace-nowrap p-2">
+                  <tr key={`${p.term}-${p.week}-${p.name}`} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="whitespace-nowrap p-2 font-medium">
                       {p.term} — {p.week}
                     </td>
                     <td className="p-2 font-semibold">{p.name}</td>
                     <td className="p-2">{p.ptype}</td>
                     <td className="p-2">{p.target_group}</td>
-                    <td className="p-2">{p.indicator}</td>
+                    <td className="p-2 text-muted-foreground">{p.indicator}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setOpen(false)}>
               إلغاء
             </Button>
             <Button onClick={seed} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null} إضافة {list.length} برنامجاً للسجل
+              {busy && <Loader2 className="size-4 animate-spin ml-2" />} إضافة {list.length} برنامجاً للسجل
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -180,8 +185,9 @@ function NoorSyncButton() {
     }
     setBusy(true);
     try {
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 1000));
       const stamp = new Date().toISOString();
+      
       for (const p of pending) {
         const ref = `NOOR-${stamp.slice(0, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 9000 + 1000)}`;
         const { error } = await supabase
@@ -190,9 +196,13 @@ function NoorSyncButton() {
           .eq("id", p.id);
         if (error) throw error;
       }
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["programs-noor-sync"] });
-      toast.success(`تمت مزامنة ${pending.length} برنامجاً مع نظام نور وتوثيق تاريخ المزامنة`);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["programs"] }),
+        queryClient.invalidateQueries({ queryKey: ["programs-noor-sync"] }),
+      ]);
+
+      toast.success(`تمت مزامنة ${pending.length} برنامجاً مع نظام نور وتوثيق تاريخ المزامنة بنجاح.`);
     } catch (error) {
       toast.error(`تعذّرت المزامنة: ${(error as Error).message}`);
     } finally {
@@ -203,9 +213,9 @@ function NoorSyncButton() {
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <RefreshCw className="size-4" /> مزامنة البرامج مع نظام نور
+        <RefreshCw className="size-4 ml-2" /> مزامنة البرامج مع نظام نور
         {pending.length > 0 && (
-          <span className="mr-1 rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">
+          <span className="mr-2 rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground font-bold">
             {pending.length}
           </span>
         )}
@@ -222,7 +232,7 @@ function NoorSyncButton() {
 
           {completed.length === 0 ? (
             <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-              لا توجد برامج بحالة «مكتمل» حالياً.
+              لا توجد برامج بحالة «مكتمل» حالياً. قم بتغيير حالة تنفيذ بعض البرامج إلى مكتمل أولاً.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border">
@@ -236,19 +246,19 @@ function NoorSyncButton() {
                 </thead>
                 <tbody>
                   {completed.map((p) => (
-                    <tr key={p.id} className="border-b last:border-0">
+                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="p-2 font-semibold">{p.name ?? "—"}</td>
                       <td className="p-2">
                         {p.noor_synced_at ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-primary">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-600 font-medium">
                             <CheckCircle2 className="size-3" /> تمت المزامنة بنظام نور
                           </span>
                         ) : (
-                          <span className="text-muted-foreground">بانتظار المزامنة</span>
+                          <span className="text-muted-foreground font-medium">بانتظار المزامنة</span>
                         )}
                       </td>
-                      <td className="p-2">
-                        {p.noor_synced_at ? new Date(p.noor_synced_at).toLocaleString("ar-SA-u-ca-gregory") : "—"}
+                      <td className="p-2 text-muted-foreground">
+                        {p.noor_synced_at ? new Date(p.noor_synced_at).toLocaleString("ar-SA") : "—"}
                       </td>
                     </tr>
                   ))}
@@ -257,17 +267,18 @@ function NoorSyncButton() {
             </div>
           )}
 
-          <p className="text-xs text-muted-foreground">
-            مزامنة موثقة: {synced.length} · بانتظار المزامنة: {pending.length}
-          </p>
+          <div className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-md flex justify-between items-center">
+            <span>مزامنة موثقة: <strong className="text-foreground">{synced.length}</strong></span>
+            <span>بانتظار المزامنة: <strong className="text-foreground">{pending.length}</strong></span>
+          </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setOpen(false)}>
               إغلاق
             </Button>
             <Button onClick={sync} disabled={busy || pending.length === 0}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} مزامنة{" "}
-              {pending.length} برنامجاً
+              {busy ? <Loader2 className="size-4 animate-spin ml-2" /> : <RefreshCw className="size-4 ml-2" />} 
+              مزامنة {pending.length} برنامجاً
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -281,10 +292,10 @@ function ProgramsPage() {
     <RecordPage
       config={recordByKey("programs")}
       toolbarExtra={
-        <>
+        <div className="flex flex-wrap items-center gap-2">
           <MinistryProgramsDialog />
           <NoorSyncButton />
-        </>
+        </div>
       }
     />
   );
