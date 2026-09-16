@@ -9,10 +9,7 @@ import {
   Trash2, 
   Printer, 
   CheckCheck, 
-  Clock,
-  Upload,
-  X,
-  Image as ImageIcon
+  Clock 
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -61,11 +58,11 @@ type ProgramRow = {
   exec_date?: string | null;
   beneficiaries_count?: number | null;
   notes?: string | null;
-  required_evidence?: string | null;
+  evidence_box?: string | null;
   attachments?: string[] | string | null;
 };
 
-// 1. مكون إضافة برنامج وزاري عبر قائمة منسدلة ذكية
+// 1. مكون إضافة برنامج وزاري عبر قائمة منسدلة ذكية بالبرنامج والأسبوع والتاريخ
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -104,7 +101,7 @@ function MinistryProgramsDialog() {
         indicator: p.indicator,
         exec_status: "لم يبدأ",
         required_evidence: "صور وتقرير تنفيذ البرنامج",
-        attachments: []
+        evidence_box: "إرفاق صور توثيق تنفيذ البرنامج هنا...",
       };
 
       const { error: insertError } = await supabase.from("programs").insert(payload as never);
@@ -155,7 +152,9 @@ function MinistryProgramsDialog() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              إلغاء
+            </Button>
             <Button onClick={seedSingleProgram} disabled={busy || !selectedKey} className="gap-2">
               {busy && <Loader2 className="size-4 animate-spin" />} إضافة البرنامج للسجل
             </Button>
@@ -297,7 +296,7 @@ function NoorSyncButton() {
           )}
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>إغلاق</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}> إغلاق </Button>
             <Button onClick={sync} disabled={busy || pending.length === 0} className="gap-2">
               {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} 
               مزامنة العناصر المعلقة ({pending.length})
@@ -364,7 +363,7 @@ function ClearProgramsButton() {
   );
 }
 
-// المكون الرئيسي مع مربع مخصص للشواهد ودعم الطباعة المتقدمة
+// المكون الرئيسي مع تخصيص المربعات والطباعة وصفحة الشواهد المستقلة
 function ProgramsPage() {
   const handlePrintAll = () => {
     window.print();
@@ -372,6 +371,7 @@ function ProgramsPage() {
 
   return (
     <>
+      {/* تنسيقات طباعة A4: تقرير تفصيلي لكل برنامج يتبعه صفحة مستقلة ومنسقة للصور والشواهد */}
       <style>{`
         @media print {
           @page {
