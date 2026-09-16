@@ -195,7 +195,7 @@ function NoorSyncButton() {
         const { error } = await supabase
           .from("programs")
           .update({ noor_synced_at: stamp, noor_sync_ref: ref } as never)
-          .eq("id:id", p.id); // تصحيح الاستعلام
+          .eq("id", p.id);
         if (error) throw error;
       }
 
