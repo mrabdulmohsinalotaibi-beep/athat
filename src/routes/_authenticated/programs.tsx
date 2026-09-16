@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { CalendarRange, CheckCircle2, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -40,17 +40,17 @@ function MinistryProgramsDialog() {
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("all");
   const [busy, setBusy] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const list = term === "all" ? MINISTRY_PROGRAMS : MINISTRY_PROGRAMS.filter((p) => p.term === term);
 
   async function seed() {
     setBusy(true);
     try {
-      // 1. جلب البيانات مع التحقق من الأخطاء
       const { data: existing, error: fetchError } = await supabase.from("programs").select("name");
       if (fetchError) throw fetchError;
 
-      // 2. استخدام .trim() لتوحيد مقارنة الأسماء وتجنب التكرار بسبب الفراغات
       const known = new Set((existing ?? []).map((p) => String((p as { name: string | null }).name ?? "").trim()));
       
       const payloads = list
@@ -86,34 +86,65 @@ function MinistryProgramsDialog() {
     }
   }
 
+  // دالة حذف جميع البرامج من قاعدة البيانات
+  async function deleteAllPrograms() {
+    setDeleting(true);
+    try {
+      // استخدام شرط غير فارغ أو حذف الكل (تأكد من سياسات RLS في جدول programs للسماح بالحذف)
+      const { error } = await supabase.from("programs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast.success("تم حذف جميع البرامج المضافة بنجاح.");
+      setConfirmDeleteOpen(false);
+      setOpen(false);
+    } catch (error) {
+      toast.error(`تعذّر الحذف: ${(error as Error).message}`);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
         <CalendarRange className="size-4 ml-2" /> البرامج الوزارية بالأسابيع
       </Button>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle>البرامج الإرشادية الوزارية المعتمدة</DialogTitle>
             <DialogDescription>
-              اختر الفصل الدراسي لتغذية سجل البرامج بالبرامج الرسمية موزعة على أسابيع الفصل.
+              اختر الفصل الدراسي لتغذية سجل البرامج بالبرامج الرسمية أو إدارة السجل بالكامل.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center gap-3 my-2">
-            <label className="text-xs font-semibold">الفصل الدراسي</label>
-            <select
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          <div className="flex flex-wrap items-center justify-between gap-3 my-2">
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-semibold">الفصل الدراسي</label>
+              <select
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="all">كل الفصول</option>
+                {MINISTRY_TERMS.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* زر حذف البرامج بالكامل */}
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => setConfirmDeleteOpen(true)}
             >
-              <option value="all">كل الفصول</option>
-              {MINISTRY_TERMS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              <Trash2 className="size-4 ml-1.5" /> حذف كافة البرامج
+            </Button>
           </div>
 
           <div className="overflow-x-auto rounded-lg border">
@@ -149,6 +180,28 @@ function MinistryProgramsDialog() {
             </Button>
             <Button onClick={seed} disabled={busy}>
               {busy && <Loader2 className="size-4 animate-spin ml-2" />} إضافة {list.length} برنامجاً للسجل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة تأكيد الحذف الكامل */}
+      <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="size-5" /> تحذير: حذف كافة البرامج
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              هل أنت متأكد من رغبتك في حذف **جميع** البرامج المضافة من جدول السجل نهائياً؟ لا يمكن التراجع عن هذا الإجراء بعد تنفيذه.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
+            <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)}>
+              تراجع
+            </Button>
+            <Button variant="destructive" onClick={deleteAllPrograms} disabled={deleting}>
+              {deleting && <Loader2 className="size-4 animate-spin ml-2" />} نعم، احذف الكل
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -199,7 +252,6 @@ function NoorSyncButton() {
         if (error) throw error;
       }
 
-      // تحديث الكاش بشكل متزامن وصحيح
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["programs"] }),
         queryClient.invalidateQueries({ queryKey: ["programs-noor-sync"] }),
