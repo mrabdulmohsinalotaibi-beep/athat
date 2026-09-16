@@ -280,5 +280,8 @@ export const RECORDS: RecordConfig[] = [
   },
 ];
 
-export const recordByKey = (key: string): RecordConfig | undefined => 
-  RECORDS.find((r) => r.key === key);
+export const recordByKey = (key: string): RecordConfig => {
+  const found = RECORDS.find((r) => r.key === key);
+  if (!found) throw new Error(`Unknown record key: ${key}`);
+  return found;
+};
