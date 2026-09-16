@@ -10,7 +10,9 @@ import {
   Printer, 
   CheckCheck, 
   Clock,
-  FileText
+  Upload,
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,17 +61,17 @@ type ProgramRow = {
   exec_date?: string | null;
   beneficiaries_count?: number | null;
   notes?: string | null;
+  required_evidence?: string | null;
   attachments?: string[] | string | null;
 };
 
-// 1. مكون إضافة برنامج وزاري عبر قائمة منسدلة ذكية بالبرنامج والأسبوع والتاريخ
+// 1. مكون إضافة برنامج وزاري عبر قائمة منسدلة ذكية
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // دمج البرامج مع مفتاح فريد يعرض الاسم والأسبوع والفصل
   const optionsList = useMemo(() => {
     return MINISTRY_PROGRAMS.map((p, idx) => ({
       id: `${p.term}-${p.week}-${idx}`,
@@ -102,6 +104,7 @@ function MinistryProgramsDialog() {
         indicator: p.indicator,
         exec_status: "لم يبدأ",
         required_evidence: "صور وتقرير تنفيذ البرنامج",
+        attachments: []
       };
 
       const { error: insertError } = await supabase.from("programs").insert(payload as never);
@@ -152,9 +155,7 @@ function MinistryProgramsDialog() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              إلغاء
-            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
             <Button onClick={seedSingleProgram} disabled={busy || !selectedKey} className="gap-2">
               {busy && <Loader2 className="size-4 animate-spin" />} إضافة البرنامج للسجل
             </Button>
@@ -296,7 +297,7 @@ function NoorSyncButton() {
           )}
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}> إغلاق </Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>إغلاق</Button>
             <Button onClick={sync} disabled={busy || pending.length === 0} className="gap-2">
               {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} 
               مزامنة العناصر المعلقة ({pending.length})
@@ -363,7 +364,7 @@ function ClearProgramsButton() {
   );
 }
 
-// المكون الرئيسي مع تنسيق الطباعة المتقدم وصفحة الشواهد المستقلة لكل برنامج
+// المكون الرئيسي مع مربع مخصص للشواهد ودعم الطباعة المتقدمة
 function ProgramsPage() {
   const handlePrintAll = () => {
     window.print();
@@ -371,7 +372,6 @@ function ProgramsPage() {
 
   return (
     <>
-      {/* تنسيقات طباعة A4: تقرير تفصيلي لكل برنامج يتبعه صفحة مستقلة ومنسقة بالكامل خاصة بالشواهد والمرفقات */}
       <style>{`
         @media print {
           @page {
@@ -385,7 +385,6 @@ function ProgramsPage() {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          /* إخفاء عناصر النظام والتحكم وأزرار التصفح */
           nav, header, aside, .print\\:hidden, button {
             display: none !important;
           }
@@ -393,7 +392,6 @@ function ProgramsPage() {
             display: block !important;
           }
           
-          /* تخصيص مظهر صفحة تفاصيل السجل والجدول عند الطباعة */
           .record-detail-container, .print-page-layout {
             page-break-after: always;
             break-after: page;
@@ -403,7 +401,6 @@ function ProgramsPage() {
             justify-content: flex-start;
           }
 
-          /* تصميم صفحة الشواهد المستقلة المنفصلة */
           .print-evidence-page {
             page-break-before: always;
             break-before: page;
@@ -434,7 +431,6 @@ function ProgramsPage() {
             margin: 5px 0 0 0;
           }
 
-          /* شبكة عرض الصور والشواهد بشكل متوسط ومنسق */
           .print-evidence-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
