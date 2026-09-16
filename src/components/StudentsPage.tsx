@@ -190,7 +190,7 @@ export function StudentsPage() {
           </>
         }
       />
-      <NoorImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <StudentsImportDialog open={importOpen} onOpenChange={setImportOpen} />
       <StudentProfileDialog
         open={profileStudent !== null}
         onOpenChange={(open) => !open && setProfileStudent(null)}
