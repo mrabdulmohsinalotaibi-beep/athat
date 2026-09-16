@@ -126,10 +126,10 @@ export function StudentsPage() {
         toolbarExtra={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="size-4" /> استيراد من نور
+              <Upload className="size-4" /> استيراد من Excel
             </Button>
-            <Button variant="outline" onClick={downloadNoorTemplate}>
-              <FileSpreadsheet className="size-4" /> تحميل نموذج استيراد نور
+            <Button variant="outline" onClick={downloadStudentsTemplate}>
+              <FileSpreadsheet className="size-4" /> تحميل نموذج Excel
             </Button>
             <AlertDialog onOpenChange={(open) => !open && setConfirmText("")}>
               <AlertDialogTrigger asChild>
