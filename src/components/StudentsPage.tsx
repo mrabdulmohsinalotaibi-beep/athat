@@ -5,9 +5,9 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { recordByKey } from "@/lib/records";
-import { downloadNoorTemplate } from "@/lib/noor";
+import { downloadStudentsTemplate } from "@/lib/students-import";
 import { RecordPage } from "@/components/RecordPage";
-import { NoorImportDialog } from "@/components/NoorImportDialog";
+import { StudentsImportDialog } from "@/components/StudentsImportDialog";
 import { StudentProfileDialog } from "@/components/StudentProfileDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
