@@ -90,7 +90,7 @@ function MinistryProgramsDialog() {
         <CalendarRange className="size-4 ml-2" /> البرامج الوزارية بالأسابيع
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto" dir="rtl">
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto print:hidden" dir="rtl">
           <DialogHeader>
             <DialogTitle>البرامج الإرشادية الوزارية المعتمدة</DialogTitle>
             <DialogDescription>
@@ -222,7 +222,7 @@ function NoorSyncButton() {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent dir="rtl" className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogContent dir="rtl" className="max-h-[85vh] max-w-2xl overflow-y-auto print:hidden">
           <DialogHeader>
             <DialogTitle>مزامنة البرامج المكتملة مع نظام نور</DialogTitle>
             <DialogDescription>
@@ -295,7 +295,6 @@ function ClearProgramsButton() {
   async function handleDeleteAll() {
     setBusy(true);
     try {
-      // حذف كافة السجلات من جدول programs
       const { error } = await supabase.from("programs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       if (error) throw error;
 
@@ -307,7 +306,7 @@ function ClearProgramsButton() {
       toast.success("تم حذف جميع البرامج من السجل بنجاح.");
       setOpen(false);
     } catch (error) {
-      toast.error(`تعذّر حذف البرامج: ${(error as Error).message}`);
+      toast.error(`تعذّرت إزالة البرامج: ${(error as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -320,7 +319,7 @@ function ClearProgramsButton() {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent dir="rtl" className="max-w-md">
+        <DialogContent dir="rtl" className="max-w-md print:hidden">
           <DialogHeader>
             <DialogTitle className="text-destructive flex items-center gap-2">
               <Trash2 className="size-5" /> هل أنت متأكد من حذف السجل بالكامل؟
@@ -349,7 +348,7 @@ function ProgramsPage() {
     <RecordPage
       config={recordByKey("programs")}
       toolbarExtra={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
           <MinistryProgramsDialog />
           <NoorSyncButton />
           <ClearProgramsButton />
