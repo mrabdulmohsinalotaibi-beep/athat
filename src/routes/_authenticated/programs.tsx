@@ -7,9 +7,7 @@ import {
   Loader2, 
   RefreshCw, 
   Trash2, 
-  FileSpreadsheet, 
   Printer, 
-  Filter, 
   CheckCheck, 
   Clock 
 } from "lucide-react";
@@ -56,12 +54,12 @@ type ProgramRow = {
   domain: string | null;
 };
 
-// 1. مكون الحوار لإضافة البرامج الوزارية مع خيارات متقدمة وتصفية
+// 1. مكون الحوار لإضافة البرامج الوزارية
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("all");
-  const [ptypeFilter,setPtypeFilter] = useState("all");
+  const [ptypeFilter, setPtypeFilter] = useState("all");
   const [busy, setBusy] = useState(false);
 
   const list = useMemo(() => {
@@ -127,7 +125,6 @@ function MinistryProgramsDialog() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* شريط الفلاتر داخل النافذة */}
           <div className="flex flex-wrap items-center gap-4 my-3 bg-muted/40 p-3 rounded-lg border">
             <div className="flex items-center gap-2">
               <label className="text-xs font-semibold">الفصل:</label>
@@ -214,7 +211,7 @@ function MinistryProgramsDialog() {
   );
 }
 
-// 2. مكون مزامنة نظام نور المحسّن مع مؤشرات إحصائية تفصيلية
+// 2. مكون مزامنة نظام نور
 function NoorSyncButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -290,7 +287,6 @@ function NoorSyncButton() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* لوحة المؤشرات السريعة */}
           <div className="grid grid-cols-2 gap-3 my-2">
             <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-center justify-between">
               <div>
@@ -360,7 +356,7 @@ function NoorSyncButton() {
   );
 }
 
-// 3. مكون حذف كافة السجلات مع تأكيد مزدوج للحماية
+// 3. مكون حذف كافة السجلات
 function ClearProgramsButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -417,7 +413,7 @@ function ClearProgramsButton() {
   );
 }
 
-// المكون الرئيسي للصفحة مع خدمات التصدير والطباعة المتقدمة
+// المكون الرئيسي مع تنسيق الطباعة المحدث لتضمين الشواهد والمرفقات
 function ProgramsPage() {
   const handlePrint = () => {
     window.print();
@@ -425,33 +421,45 @@ function ProgramsPage() {
 
   return (
     <>
-      {/* تنسيقات الطباعة الشاملة والاحترافية */}
+      {/* تنسيقات الطباعة المحدثة لتشمل جدول السجلات الشامل مع المرفقات والشواهد */}
       <style>{`
         @media print {
           body {
             background: white !important;
             color: black !important;
           }
-          nav, header, aside, .print\\:hidden {
+          /* إخفاء عناصر التحكم والأزرار الجانبية عند الطباعة */
+          nav, header, aside, .print\\:hidden, button {
             display: none !important;
           }
+          /* ضمان إظهار محتوى جداول المكونات بالكامل */
           .print\\:block {
             display: block !important;
           }
+          /* إظهار أعمدة الشواهد والمرفقات وتوسيع الجداول لتناسب الورقة */
           table {
             width: 100% !important;
             border-collapse: collapse !important;
+            table-layout: auto !important;
           }
           th, td {
-            border: 1px solid #cbd5e1 !important;
-            padding: 8px !important;
-            font-size: 11px !important;
+            border: 1px solid #94a3b8 !important;
+            padding: 6px 8px !important;
+            font-size: 10px !important;
             color: #0f172a !important;
             text-align: right !important;
+            word-break: break-word !important;
           }
           th {
-            background-color: #f1f5f9 !important;
+            background-color: #e2e8f0 !important;
             font-weight: bold !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          /* تخصيص مظهر خانات الشواهد والمرفقات عند الطباعة لضمان ظهور الروابط أو الأسماء */
+          td:nth-last-child(1), td:nth-last-child(2) {
+            max-width: 150px;
+            font-size: 9px !important;
           }
         }
       `}</style>
