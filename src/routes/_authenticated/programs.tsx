@@ -35,13 +35,6 @@ export const Route = createFileRoute("/_authenticated/programs")({
   component: ProgramsPage,
 });
 
-function ProgramsPage() {
-  return (
-    <div>
-      {/* محتوى الصفحة هنا */}
-    </div>
-  );
-}
 
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
