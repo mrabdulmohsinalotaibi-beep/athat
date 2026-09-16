@@ -1,14 +1,17 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileSpreadsheet, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { readExcel, sheetHeaders } from "@/lib/sheet";
-import { NOOR_FIELDS, autoMap, cleanId, cleanPhone } from "@/lib/noor";
+import { NOOR_FIELDS, aiAutoMapWithDeepSeek, autoMap, cleanId, cleanPhone } from "@/lib/noor";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const DEEPSEEK_KEY_STORAGE = "deepseek_api_key";
 
 type SheetRow = Record<string, unknown>;
 type RowError = { row: number; name: string; reason: string };
@@ -22,6 +25,16 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ inserted: number; errors: RowError[] } | null>(null);
+  const [apiKey, setApiKey] = useState(() =>
+    typeof window !== "undefined" ? window.localStorage.getItem(DEEPSEEK_KEY_STORAGE) ?? "" : "",
+  );
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+
+  function saveApiKey(value: string) {
+    setApiKey(value);
+    if (typeof window !== "undefined") window.localStorage.setItem(DEEPSEEK_KEY_STORAGE, value);
+  }
 
   function reset() {
     setFileName("");
@@ -29,12 +42,15 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
     setHeaders([]);
     setMapping({});
     setResult(null);
+    setPickedFile(null);
     if (fileRef.current) fileRef.current.value = "";
   }
 
   async function pickFile(file: File) {
     try {
-      const parsed = await readExcel(file);
+      setPickedFile(file);
+      // إذا كان هناك مفتاح DeepSeek محفوظ، يتم تصحيح البيانات آلياً بالذكاء الاصطناعي أثناء القراءة
+      const parsed = await readExcel(file, apiKey || undefined);
       if (!parsed.length) {
         toast.error("الملف لا يحتوي على بيانات.");
         return;
@@ -45,8 +61,48 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
       setHeaders(hdrs);
       setMapping(autoMap(hdrs));
       setResult(null);
+      if (apiKey) toast.success("تم تنظيف بيانات الملف تلقائياً بواسطة DeepSeek AI");
     } catch (error) {
       toast.error(`تعذّرت قراءة الملف: ${(error as Error).message}`);
+    }
+  }
+
+  async function runAiMapping() {
+    if (!apiKey) {
+      toast.error("أدخل مفتاح DeepSeek API أولاً");
+      return;
+    }
+    if (!headers.length) return;
+    setAiBusy(true);
+    try {
+      const aiMap = await aiAutoMapWithDeepSeek(headers, rows.slice(0, 3), apiKey);
+      setMapping((current) => ({ ...current, ...aiMap }));
+      toast.success("تم تعيين الأعمدة تلقائياً بواسطة DeepSeek AI");
+    } catch (error) {
+      toast.error(`تعذّرت المطابقة الآلية: ${(error as Error).message}`);
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  async function reCleanWithAi() {
+    if (!apiKey) {
+      toast.error("أدخل مفتاح DeepSeek API أولاً");
+      return;
+    }
+    if (!pickedFile) return;
+    setAiBusy(true);
+    try {
+      const parsed = await readExcel(pickedFile, apiKey);
+      const hdrs = sheetHeaders(parsed);
+      setRows(parsed);
+      setHeaders(hdrs);
+      setMapping((current) => ({ ...autoMap(hdrs), ...current }));
+      toast.success("تم إعادة تنظيف البيانات بواسطة DeepSeek AI");
+    } catch (error) {
+      toast.error(`تعذّر التنظيف الآلي: ${(error as Error).message}`);
+    } finally {
+      setAiBusy(false);
     }
   }
 
@@ -158,6 +214,26 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
           }}
         />
 
+        <div className="rounded-lg border border-dashed p-3">
+          <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold">
+            <Sparkles className="size-3.5 text-primary" /> مفتاح DeepSeek AI (اختياري)
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              type="password"
+              value={apiKey}
+              onChange={(e) => saveApiKey(e.target.value)}
+              placeholder="ألصق مفتاح DeepSeek API هنا لتفعيل التنظيف والمطابقة الآلية"
+              className="h-9 text-xs"
+              dir="ltr"
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            عند إدخال المفتاح يقوم DeepSeek AI بتصحيح الأسماء وتوحيد التواريخ والأرقام تلقائياً عند رفع الملف، ويمكنه
+            أيضاً مطابقة أعمدة غير مرتبة مع خانات الموقع.
+          </p>
+        </div>
+
         {!rows.length && !result && (
           <div className="rounded-xl border border-dashed p-8 text-center">
             <FileSpreadsheet className="mx-auto size-10 text-muted-foreground" />
@@ -177,7 +253,29 @@ export function NoorImportDialog({ open, onOpenChange }: { open: boolean; onOpen
             </p>
 
             <div>
-              <h3 className="mb-2 text-sm font-bold">1) تعيين الأعمدة</h3>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-bold">1) تعيين الأعمدة</h3>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={aiBusy || !apiKey}
+                    onClick={runAiMapping}
+                  >
+                    <Sparkles className="size-3.5" /> {aiBusy ? "جارٍ المطابقة..." : "مطابقة الأعمدة بالذكاء الاصطناعي"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={aiBusy || !apiKey || !pickedFile}
+                    onClick={reCleanWithAi}
+                  >
+                    <Sparkles className="size-3.5" /> {aiBusy ? "جارٍ التنظيف..." : "إعادة تنظيف البيانات"}
+                  </Button>
+                </div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {NOOR_FIELDS.map((f) => (
                   <div key={f.name}>

@@ -34,16 +34,7 @@ import {
 type Row = Record<string, unknown> & { id: string };
 
 const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports", "referrals"]);
-const LINKED_TYPE: Record<string, string> = { 
-  cases: "حالة", 
-  programs: "برنامج", 
-  interviews: "مقابلة", 
-  attendance: "مواظبة", 
-  behavior: "سلوك", 
-  referrals: "إحالة", 
-  committees: "اجتماع", 
-  plan: "مهمة" 
-};
+const LINKED_TYPE: Record<string, string> = { cases: "حالة", programs: "برنامج", interviews: "مقابلة", attendance: "مواظبة", behavior: "سلوك", referrals: "إحالة", committees: "اجتماع", plan: "مهمة" };
 
 export function RecordPage({
   config,
@@ -51,48 +42,65 @@ export function RecordPage({
   toolbarExtra,
   filters,
   extraFilter,
+  rowAction,
 }: {
   config: RecordConfig;
   hideImport?: boolean;
   toolbarExtra?: ReactNode;
   filters?: ReactNode;
   extraFilter?: (row: Record<string, unknown>) => boolean;
+  rowAction?: { icon: ReactNode; title: string; onClick: (row: Row) => void };
 }) {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
-  
-  // States
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 20;
-  
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
-  
+  const [auto, setAuto] = useState<Record<string, string>>({});
+  const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
   const [printFor, setPrintFor] = useState<Row | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
-
   const smartMap = useServerFn(mapImportColumns);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const listFields = useMemo(() => config.fields.filter((f) => f.list).slice(0, 7), [config.fields]);
+  const listFields = config.fields.filter((f) => f.list).slice(0, 7);
 
-  // Queries
   const { data: lookups = [] } = useQuery({
     queryKey: ["lookups"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lookups")
-        .select("id, category, value, sort_order")
-        .order("sort_order", { ascending: true });
+      const { data, error } = await supabase.from("lookups").select("id, category, value, sort_order").order("sort_order", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
   });
+
+  const optionsFor = (field: (typeof config.fields)[number]) => mergeLookupOptions(
+    field.options,
+    lookups.filter((item) => item.category === field.lookupCategory).map((item) => item.value ?? ""),
+  );
+
+  async function addOption(category: string, label: string) {
+    const value = window.prompt(`أدخل خياراً جديداً في ${label}`)?.trim();
+    if (!value) return;
+    const exists = lookups.some((item) => item.category === category && item.value?.trim() === value);
+    if (exists) {
+      toast.info("هذا الخيار موجود بالفعل");
+      return;
+    }
+    const { error } = await supabase.from("lookups").insert({ category, value } as never);
+    if (error) {
+      toast.error(`تعذّرت إضافة الخيار: ${error.message}`);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["lookups"] });
+    setAuto((current) => ({ ...current, [config.fields.find((field) => field.lookupCategory === category)?.name ?? ""]: value }));
+    toast.success("تمت إضافة الخيار للقائمة");
+  }
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: [config.table],
@@ -106,50 +114,13 @@ export function RecordPage({
     },
   });
 
-  const { data: studentOptions = [] } = useStudentOptions();
-
-  // Helper Functions
-  const optionsFor = (field: (typeof config.fields)[number]) => 
-    mergeLookupOptions(
-      field.options,
-      lookups.filter((item) => item.category === field.lookupCategory).map((item) => item.value ?? ""),
-    );
-
-  async function addOption(category: string, label: string) {
-    const value = window.prompt(`أدخل خياراً جديداً في ${label}`)?.trim();
-    if (!value) return;
-    
-    const exists = lookups.some((item) => item.category === category && item.value?.trim() === value);
-    if (exists) {
-      toast.info("هذا الخيار موجود بالفعل");
-      return;
-    }
-    
-    const { error } = await supabase.from("lookups").insert({ category, value } as never);
-    if (error) {
-      toast.error(`تعذّرت إضافة الخيار: ${error.message}`);
-      return;
-    }
-    
-    await queryClient.invalidateQueries({ queryKey: ["lookups"] });
-    const targetField = config.fields.find((field) => field.lookupCategory === category);
-    if (targetField) {
-      setFormValues((current) => ({ ...current, [targetField.name]: value }));
-    }
-    toast.success("تمت إضافة الخيار للقائمة");
-  }
-
-  // Filter & Pagination Logic
   const filtered = useMemo(() => {
     const term = search.trim();
     let out = rows;
-    
     if (term) {
       out = out.filter((row) => config.fields.some((f) => String(row[f.name] ?? "").includes(term)));
     }
-    if (extraFilter) {
-      out = out.filter((row) => extraFilter(row));
-    }
+    if (extraFilter) out = out.filter((row) => extraFilter(row));
     if (sort) {
       const dir = sort.dir === "asc" ? 1 : -1;
       out = [...out].sort((a, b) => {
@@ -166,7 +137,7 @@ export function RecordPage({
   const currentPage = Math.min(page, pageCount);
   const paged = useMemo(
     () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-    [filtered, currentPage, pageSize],
+    [filtered, currentPage],
   );
 
   function toggleSort(key: string) {
@@ -176,7 +147,6 @@ export function RecordPage({
     );
   }
 
-  // Mutations
   const save = useMutation({
     mutationFn: async (values: Partial<Row>) => {
       const payload: Record<string, unknown> = {};
@@ -185,7 +155,6 @@ export function RecordPage({
         if (f.type === "number") payload[f.name] = raw === "" || raw == null ? null : Number(raw);
         else payload[f.name] = raw === "" ? null : (raw ?? null);
       });
-
       if (values.id) {
         const { error } = await supabase.from(config.table as never).update(payload as never).eq("id", values.id);
         if (error) throw error;
@@ -211,10 +180,8 @@ export function RecordPage({
       queryClient.invalidateQueries({ queryKey: [config.table] });
       toast.success("تم حذف السجل");
     },
-    onError: (error: Error) => toast.error(`تعذّر الحذف: ${error.message}`),
   });
 
-  // Import / Export Handlers
   async function handleImport(file: File) {
     setImporting(true);
     try {
@@ -287,7 +254,6 @@ export function RecordPage({
 
   return (
     <div className="space-y-4">
-      {/* Top Toolbar */}
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">{config.title}</h1>
@@ -296,7 +262,7 @@ export function RecordPage({
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
-              setFormValues({});
+              setAuto({});
               setEditing({});
             }}
           >
@@ -336,7 +302,6 @@ export function RecordPage({
 
       {filters && <div className="no-print flex flex-wrap items-end gap-3">{filters}</div>}
 
-      {/* Search Input */}
       <div className="no-print relative max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -361,7 +326,6 @@ export function RecordPage({
         )}
       </div>
 
-      {/* Data Table */}
       <div ref={printRef} className="print-area rounded-xl border bg-card p-4 shadow-sm">
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
@@ -406,11 +370,31 @@ export function RecordPage({
                 <tr key={row.id} className="border-b last:border-0 hover:bg-muted/40">
                   {listFields.map((f) => (
                     <td key={f.name} className="p-3 align-top">
-                      {displayRecordValue(row[f.name])}
+                      {rowAction && config.key === "students" && f.name === "full_name" ? (
+                        <button
+                          type="button"
+                          className="font-semibold text-primary hover:underline"
+                          onClick={() => rowAction.onClick(row)}
+                        >
+                          {displayRecordValue(row[f.name])}
+                        </button>
+                      ) : (
+                        displayRecordValue(row[f.name])
+                      )}
                     </td>
                   ))}
                   <td className="no-print p-2">
                     <div className="flex gap-1">
+                      {rowAction && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={rowAction.title}
+                          onClick={() => rowAction.onClick(row)}
+                        >
+                          {rowAction.icon}
+                        </Button>
+                      )}
                       {(() => {
                         const phone =
                           row["guardian_phone"] ??
@@ -422,7 +406,7 @@ export function RecordPage({
                         if (!phone) return null;
                         return (
                           <WhatsAppButton
-                            phone={String(phone)}
+                            phone={phone}
                             guardian={String(row["guardian_name"] ?? "")}
                             student={String(row["student_name"] ?? row["full_name"] ?? "")}
                           />
@@ -432,7 +416,7 @@ export function RecordPage({
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setFormValues({});
+                          setAuto({});
                           setEditing(row);
                         }}
                       >
@@ -449,7 +433,7 @@ export function RecordPage({
                             .forEach((field) => {
                               copy[field.name] = String(row[field.name] ?? "");
                             });
-                          setFormValues(copy);
+                          setAuto(copy);
                           setEditing({});
                         }}
                       >
@@ -517,7 +501,6 @@ export function RecordPage({
         </div>
       </div>
 
-      {/* Dialog Form for Add / Edit */}
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" dir="rtl">
           <DialogHeader>
@@ -531,11 +514,9 @@ export function RecordPage({
               const data = new FormData(e.currentTarget);
               const values: Partial<Row> = {};
               if (editing?.id) values.id = editing.id as string;
-              
               config.fields.filter((field) => !field.generated).forEach((f) => {
                 values[f.name] = data.get(f.name) as string;
               });
-              
               save.mutate(values);
             }}
           >
@@ -543,22 +524,15 @@ export function RecordPage({
               <AiDraftAssistant
                 recordKey={config.key as "cases" | "interviews" | "behavior" | "reports" | "referrals"}
                 context={Object.fromEntries(
-                  config.fields.map((field) => [
-                    field.name, 
-                    formValues[field.name] ?? String(editing?.[field.name] ?? "")
-                  ]),
+                  config.fields.map((field) => [field.name, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
                 )}
-                availableOptions={Object.fromEntries(
-                  config.fields.filter((field) => field.type === "select").map((field) => [field.name, optionsFor(field)])
-                )}
+                availableOptions={Object.fromEntries(config.fields.filter((field) => field.type === "select").map((field) => [field.name, optionsFor(field)]))}
                 onDraft={(draft) => {
                   const generated: Record<string, string> = {};
                   if (config.key === "cases") {
                     generated["summary"] = `${draft.summary}\n\nوصف المشكلة:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف الإرشادية:\n${draft.goals}`;
                     const interventionField = config.fields.find((field) => field.name === "intervention_plan");
-                    if (interventionField && optionsFor(interventionField).includes(draft.interventionPlan)) {
-                      generated["intervention_plan"] = draft.interventionPlan;
-                    }
+                    if (interventionField && optionsFor(interventionField).includes(draft.interventionPlan)) generated["intervention_plan"] = draft.interventionPlan;
                     generated["next_action"] = draft.nextAction;
                     generated["notes"] = `الإجراءات:\n${draft.actions}\n\nالتوصيات:\n${draft.recommendations}\n\n${draft.notes}`;
                   } else if (config.key === "interviews") {
@@ -583,122 +557,107 @@ export function RecordPage({
                     generated["summary"] = draft.summary;
                     generated["notes"] = `وصف الموضوع:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف:\n${draft.goals}\n\nالإجراءات:\n${draft.actions}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
                   }
-                  
                   Object.entries(draft.suggestedSelections).forEach(([fieldName, value]) => {
                     const field = config.fields.find((item) => item.name === fieldName);
-                    if (field?.type === "select" && value && optionsFor(field).includes(value)) {
-                      generated[fieldName] = value;
-                    }
+                    if (field?.type === "select" && value && optionsFor(field).includes(value)) generated[fieldName] = value;
                   });
-                  
-                  setFormValues((current) => ({ ...current, ...generated }));
+                  setAuto((current) => ({ ...current, ...generated }));
                 }}
               />
             )}
-
             {config.fields.filter((field) => !field.generated).map((f) => {
-              const current = formValues[f.name] ?? String(editing?.[f.name] ?? "");
-              
+              const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
               return (
-                <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
-                  <Label htmlFor={f.name} className="mb-1.5 block text-xs">
-                    {f.label}
-                  </Label>
-                  
-                  {f.student ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <StudentCombobox
-                          value={current}
-                          onType={(name) => setFormValues((a) => ({ ...a, student_name: name }))}
-                          onSelect={(s: StudentOption) =>
-                            setFormValues((a) => ({
-                              ...a,
-                              student_name: s.full_name,
-                              student_no: s.student_no || s.national_id,
-                              guardian_name: s.guardian_name,
-                              grade: s.grade,
-                              classroom: s.classroom,
-                              participant: a["participant"] || s.guardian_name,
-                            }))
-                          }
-                          onClear={() => setFormValues((a) => ({ ...a, student_name: "" }))}
+              <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
+                <Label htmlFor={f.name} className="mb-1.5 block text-xs">
+                  {f.label}
+                </Label>
+                {f.student ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <StudentCombobox
+                        value={current}
+                        onType={(name) => setAuto((a) => ({ ...a, student_name: name }))}
+                        onSelect={(s: StudentOption) =>
+                          setAuto((a) => ({
+                            ...a,
+                            student_name: s.full_name,
+                            student_no: s.student_no || s.national_id,
+                            guardian_name: s.guardian_name,
+                            grade: s.grade,
+                            classroom: s.classroom,
+                            participant: a["participant"] || s.guardian_name,
+                          }))
+                        }
+                        onClear={() => setAuto((a) => ({ ...a, student_name: "" }))}
+                      />
+                    </div>
+                    {(() => {
+                      const match = studentOptions.find((s) => s.full_name === current);
+                      if (!match?.guardian_phone) return null;
+                      return (
+                        <WhatsAppButton
+                          phone={match.guardian_phone}
+                          guardian={match.guardian_name}
+                          student={match.full_name}
                         />
-                      </div>
-                      {(() => {
-                        const match = studentOptions.find((s) => s.full_name === current);
-                        if (!match?.guardian_phone) return null;
-                        return (
-                          <WhatsAppButton
-                            phone={match.guardian_phone}
-                            guardian={match.guardian_name}
-                            student={match.full_name}
-                          />
-                        );
-                      })()}
-                      <input type="hidden" name={f.name} value={current} readOnly />
-                    </div>
-                  ) : f.type === "textarea" ? (
-                    <Textarea
+                      );
+                    })()}
+                    <input type="hidden" name={f.name} value={current} readOnly />
+                  </div>
+                ) : f.type === "textarea" ? (
+                  <Textarea
+                    key={current}
+                    id={f.name}
+                    name={f.name}
+                    defaultValue={current}
+                    rows={4}
+                  />
+                ) : f.type === "select" ? (
+                  <div className="flex gap-2">
+                    <select
                       key={current}
                       id={f.name}
                       name={f.name}
                       defaultValue={current}
-                      rows={4}
-                    />
-                  ) : f.type === "select" ? (
-                    <div className="flex gap-2">
-                      <select
-                        key={current}
-                        id={f.name}
-                        name={f.name}
-                        defaultValue={current}
-                        className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                      className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="">—</option>
+                      {optionsFor(f).map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    {current && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        title={`مسح اختيار ${f.label}`}
+                        aria-label={`مسح اختيار ${f.label}`}
+                        onClick={() => setAuto((a) => ({ ...a, [f.name]: "" }))}
                       >
-                        <option value="">—</option>
-                        {optionsFor(f).map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                      {current && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          title={`مسح اختيار ${f.label}`}
-                          aria-label={`مسح اختيار ${f.label}`}
-                          onClick={() => setFormValues((a) => ({ ...a, [f.name]: "" }))}
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      )}
-                      {f.lookupCategory && (
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="icon" 
-                          title={`إضافة خيار إلى ${f.label}`} 
-                          aria-label={`إضافة خيار إلى ${f.label}`} 
-                          onClick={() => addOption(f.lookupCategory ?? "", f.label)}
-                        >
-                          <Plus className="size-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <Input
-                      key={current}
-                      id={f.name}
-                      name={f.name}
-                      type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
-                      defaultValue={current}
-                    />
-                  )}
-                </div>
+                        <X className="size-4" />
+                      </Button>
+                    )}
+                    {f.lookupCategory && (
+                      <Button type="button" variant="outline" size="icon" title={`إضافة خيار إلى ${f.label}`} aria-label={`إضافة خيار إلى ${f.label}`} onClick={() => addOption(f.lookupCategory ?? "", f.label)}>
+                        <Plus className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <Input
+                    key={current}
+                    id={f.name}
+                    name={f.name}
+                    type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+                    defaultValue={current}
+                  />
+                )}
+              </div>
               );
             })}
           </form>
-
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => setEditing(null)}>
               إلغاء
@@ -709,7 +668,6 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       <RecordAttachmentsDialog
         open={attachFor !== null}
         onOpenChange={(open) => !open && setAttachFor(null)}

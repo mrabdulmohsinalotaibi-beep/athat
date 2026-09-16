@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileSpreadsheet, Trash2, Upload } from "lucide-react";
+import { FileSpreadsheet, FolderOpen, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { recordByKey } from "@/lib/records";
 import { downloadNoorTemplate } from "@/lib/noor";
 import { RecordPage } from "@/components/RecordPage";
 import { NoorImportDialog } from "@/components/NoorImportDialog";
+import { StudentProfileDialog } from "@/components/StudentProfileDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ export function StudentsPage() {
   const config = recordByKey("students");
   const queryClient = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
+  const [profileStudent, setProfileStudent] = useState<StudentRow | null>(null);
   const [confirmText, setConfirmText] = useState("");
   const [grade, setGrade] = useState("");
   const [classroom, setClassroom] = useState("");
@@ -116,6 +118,11 @@ export function StudentsPage() {
         config={config}
         hideImport
         extraFilter={extraFilter}
+        rowAction={{
+          icon: <FolderOpen className="size-4" />,
+          title: "فتح ملف الطالب",
+          onClick: (row) => setProfileStudent(row as StudentRow),
+        }}
         toolbarExtra={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
@@ -184,6 +191,11 @@ export function StudentsPage() {
         }
       />
       <NoorImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <StudentProfileDialog
+        open={profileStudent !== null}
+        onOpenChange={(open) => !open && setProfileStudent(null)}
+        student={profileStudent as (Record<string, unknown> & { id: string }) | null}
+      />
     </>
   );
 }
