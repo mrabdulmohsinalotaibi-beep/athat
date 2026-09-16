@@ -17,15 +17,11 @@ export function arabicAuthError(message: string): string {
     return "تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مجدداً.";
   if (m.includes("weak password")) return "كلمة المرور ضعيفة، اختر كلمة أقوى.";
 
-  // حالات الروابط والصلاحيات:
+  // الإضافات الجديدة المقترحة لتغطية حالات الروابط والصلاحيات:
   if (m.includes("expired") || m.includes("token has expired"))
     return "انتهت صلاحية الرابط أو رمز التحقق، يرجى طلب رابط جديد.";
   if (m.includes("same password") || m.includes("different from the old password"))
     return "كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية.";
-
-  // إضافة فحص جلسة العمل (JWT / Refresh Token):
-  if (m.includes("jwt expired") || m.includes("refresh_token_not_found"))
-    return "انتهت جلسة العمل الخاصة بك، يرجى تسجيل الدخول مجدداً.";
 
   return "تعذّر إتمام العملية. " + message;
 }
