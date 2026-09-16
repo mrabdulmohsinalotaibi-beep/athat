@@ -345,15 +345,40 @@ function ClearProgramsButton() {
 
 function ProgramsPage() {
   return (
-    <RecordPage
-      config={recordByKey("programs")}
-      toolbarExtra={
-        <div className="flex flex-wrap items-center gap-2 print:hidden">
-          <MinistryProgramsDialog />
-          <NoorSyncButton />
-          <ClearProgramsButton />
-        </div>
-      }
-    />
+    <>
+      {/* ستايل مخصص للطباعة لمنع طباعة تفاصيل العنصر الفردي وضبط اتجاه الجدول */}
+      <style>{`
+        @media print {
+          body {
+            background: white !important;
+          }
+          /* إخفاء شريط التنقل والأزرار الجانبية أو أي عنصر غير مرغوب */
+          nav, header, aside, .print\\:hidden {
+            display: none !important;
+          }
+          /* جعل الجدول يظهر بعرض الصفحة بالكامل عند الطباعة */
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+          }
+          th, td {
+            border: 1px solid #ddd !important;
+            padding: 6px !important;
+            font-size: 10px !important;
+            color: black !important;
+          }
+        }
+      `}</style>
+      <RecordPage
+        config={recordByKey("programs")}
+        toolbarExtra={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <MinistryProgramsDialog />
+            <NoorSyncButton />
+            <ClearProgramsButton />
+          </div>
+        }
+      />
+    </>
   );
 }
