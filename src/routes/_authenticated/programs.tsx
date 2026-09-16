@@ -9,7 +9,8 @@ import {
   Trash2, 
   Printer, 
   CheckCheck, 
-  Clock 
+  Clock,
+  FileText
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -52,66 +53,66 @@ type ProgramRow = {
   term: string | null;
   ptype: string | null;
   domain: string | null;
-  target_group?: string | null;
   goal?: string | null;
   indicator?: string | null;
-  required_evidence?: string | null;
+  target_group?: string | null;
+  exec_date?: string | null;
+  beneficiaries_count?: number | null;
   notes?: string | null;
   attachments?: string[] | string | null;
 };
 
-// 1. مكون حوار إضافة البرامج الوزارية
+// 1. مكون إضافة برنامج وزاري عبر قائمة منسدلة ذكية بالبرنامج والأسبوع والتاريخ
 function MinistryProgramsDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [term, setTerm] = useState("all");
-  const [ptypeFilter, setPtypeFilter] = useState("all");
+  const [selectedKey, setSelectedKey] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const list = useMemo(() => {
-    return MINISTRY_PROGRAMS.filter((p) => {
-      const matchTerm = term === "all" || p.term === term;
-      const matchType = ptypeFilter === "all" || p.ptype === ptypeFilter;
-      return matchTerm && matchType;
-    });
-  }, [term, ptypeFilter]);
+  // دمج البرامج مع مفتاح فريد يعرض الاسم والأسبوع والفصل
+  const optionsList = useMemo(() => {
+    return MINISTRY_PROGRAMS.map((p, idx) => ({
+      id: `${p.term}-${p.week}-${idx}`,
+      label: `${p.term} (أسبوع ${p.week}) — ${p.name} [${p.ptype}]`,
+      program: p
+    }));
+  }, []);
 
-  async function seed() {
+  async function seedSingleProgram() {
+    if (!selectedKey) {
+      toast.error("الرجاء اختيار برنامج من القائمة أولاً.");
+      return;
+    }
+
+    const found = optionsList.find(o => o.id === selectedKey);
+    if (!found) return;
+
+    const p = found.program;
     setBusy(true);
+
     try {
-      const { data: existing, error: fetchError } = await supabase.from("programs").select("name");
-      if (fetchError) throw fetchError;
+      const payload = {
+        program_no: `${p.term} - الأسبوع ${p.week}`,
+        name: p.name,
+        ptype: p.ptype,
+        domain: p.domain,
+        target_group: p.target_group,
+        term: `${p.term} — الأسبوع ${p.week}`,
+        goal: p.goal,
+        indicator: p.indicator,
+        exec_status: "لم يبدأ",
+        required_evidence: "صور وتقرير تنفيذ البرنامج",
+      };
 
-      const known = new Set((existing ?? []).map((p) => String((p as { name: string | null }).name ?? "").trim()));
-      
-      const payloads = list
-        .filter((p) => !known.has(p.name.trim()))
-        .map((p) => ({
-          program_no: `${p.term} - الأسبوع ${p.week}`,
-          name: p.name,
-          ptype: p.ptype,
-          domain: p.domain,
-          target_group: p.target_group,
-          term: `${p.term} — الأسبوع ${p.week}`,
-          goal: p.goal,
-          indicator: p.indicator,
-          exec_status: "لم يبدأ",
-          required_evidence: "صور وتقرير تنفيذ البرنامج",
-        }));
-
-      if (!payloads.length) {
-        toast.info("جميع البرامج المحددة مطابقة ومضافة مسبقاً.");
-        return;
-      }
-
-      const { error: insertError } = await supabase.from("programs").insert(payloads as never);
+      const { error: insertError } = await supabase.from("programs").insert(payload as never);
       if (insertError) throw insertError;
 
       await queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success(`تمت إضافة ${payloads.length} برنامجاً وزارياً بنجاح.`);
+      toast.success(`تمت إضافة البرنامج "${p.name}" بكافة بياناته بنجاح.`);
       setOpen(false);
+      setSelectedKey("");
     } catch (error) {
-      toast.error(`تعذّرت التغذية: ${(error as Error).message}`);
+      toast.error(`تعذّرت الإضافة: ${(error as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -120,95 +121,42 @@ function MinistryProgramsDialog() {
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)} className="gap-2">
-        <CalendarRange className="size-4" /> البرامج الوزارية بالأسابيع
+        <CalendarRange className="size-4" /> إضافة برنامج وزاري معتمد
       </Button>
+
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto print:hidden" dir="rtl">
+        <DialogContent className="max-w-xl print:hidden" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">البرامج الإرشادية الوزارية المعتمدة</DialogTitle>
+            <DialogTitle className="text-lg font-bold">اختيار برنامج وزاري من القائمة المعتمدة</DialogTitle>
             <DialogDescription>
-              استعراض وتغذية سجل البرامج بالأنشطة الرسمية موزعة بدقة على الفصول والأسابيع الدراسية.
+              اختر البرنامج المناسب من القائمة أدناه ليتم جلب وتعبئة كافة بياناته وتفاصيله بشكل فوري.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-wrap items-center gap-4 my-3 bg-muted/40 p-3 rounded-lg border">
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold">الفصل:</label>
+          <div className="space-y-4 my-3">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold">اختر البرنامج (الفصل، الأسبوع، الاسم):</label>
               <select
-                value={term}
-                onChange={(e) => setTerm(e.target.value)}
-                className="h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none"
+                value={selectedKey}
+                onChange={(e) => setSelectedKey(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="all">كل الفصول</option>
-                {MINISTRY_TERMS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                <option value="">-- اختر البرنامج الوزاري --</option>
+                {optionsList.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
                 ))}
               </select>
             </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold">نوع البرنامج:</label>
-              <select
-                value={ptypeFilter}
-                onChange={(e) => setPtypeFilter(e.target.value)}
-                className="h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none"
-              >
-                <option value="all">جميع الأنواع</option>
-                <option value="وقائي">وقائي</option>
-                <option value="إنمائي">إنمائي</option>
-                <option value="علاجي">علاجي</option>
-              </select>
-            </div>
-
-            <div className="mr-auto text-xs text-muted-foreground">
-              المحدد للعرض: <span className="font-bold text-foreground">{list.length}</span> برنامج
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-lg border max-h-[45vh]">
-            <table className="w-full text-right text-xs">
-              <thead className="sticky top-0 bg-muted/95 z-10">
-                <tr className="border-b">
-                  <th className="p-2.5 font-bold">الأسبوع</th>
-                  <th className="p-2.5 font-bold">اسم البرنامج</th>
-                  <th className="p-2.5 font-bold">النوع</th>
-                  <th className="p-2.5 font-bold">المجال</th>
-                  <th className="p-2.5 font-bold">مؤشر التحقق</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center p-6 text-muted-foreground">لا توجد برامج مطابقة لخيارات الفلترة الحالية.</td>
-                  </tr>
-                ) : (
-                  list.map((p, idx) => (
-                    <tr key={`${p.term}-${p.week}-${idx}`} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="whitespace-nowrap p-2 font-medium">{p.term} — أسبوع {p.week}</td>
-                      <td className="p-2 font-semibold">{p.name}</td>
-                      <td className="p-2">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                          p.ptype === 'وقائي' ? 'bg-blue-500/10 text-blue-600' :
-                          p.ptype === 'علاجي' ? 'bg-rose-500/10 text-rose-600' : 'bg-emerald-500/10 text-emerald-600'
-                        }`}>
-                          {p.ptype}
-                        </span>
-                      </td>
-                      <td className="p-2 text-muted-foreground">{p.domain}</td>
-                      <td className="p-2 text-muted-foreground">{p.indicator}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
               إلغاء
             </Button>
-            <Button onClick={seed} disabled={busy || list.length === 0} className="gap-2">
-              {busy && <Loader2 className="size-4 animate-spin" />} إضافة {list.length} برنامجاً للسجل
+            <Button onClick={seedSingleProgram} disabled={busy || !selectedKey} className="gap-2">
+              {busy && <Loader2 className="size-4 animate-spin" />} إضافة البرنامج للسجل
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -217,7 +165,7 @@ function MinistryProgramsDialog() {
   );
 }
 
-// 2. مكون مزامنة نظام نور
+// 2. زر مزامنة نظام نور
 function NoorSyncButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -312,7 +260,7 @@ function NoorSyncButton() {
 
           {completed.length === 0 ? (
             <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground my-2">
-              لا توجد برامج بحالة «مكتمل» حالياً. قم بتحديث حالة تنفيذ بعض البرامج أولاً.
+              لا توجد برامج بحالة «مكتمل» حالياً.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border max-h-[40vh] my-2">
@@ -348,9 +296,7 @@ function NoorSyncButton() {
           )}
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              إغلاق
-            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)}> إغلاق </Button>
             <Button onClick={sync} disabled={busy || pending.length === 0} className="gap-2">
               {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} 
               مزامنة العناصر المعلقة ({pending.length})
@@ -362,7 +308,7 @@ function NoorSyncButton() {
   );
 }
 
-// 3. مكون حذف كافة السجلات
+// 3. زر حذف السجلات
 function ClearProgramsButton() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -401,14 +347,12 @@ function ClearProgramsButton() {
               <Trash2 className="size-5" /> تحذير: حذف السجل بالكامل
             </DialogTitle>
             <DialogDescription className="py-2 text-foreground/80">
-              سيتم إزالة كافة الأنشطة والبرامج المسجلة في قاعدة البيانات نهائياً. لا يمكن التراجع عن هذا الإجراء بعد تأكيده.
+              سيتم إزالة كافة الأنشطة والبرامج المسجلة في قاعدة البيانات نهائياً.
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
-               تراجع
-            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>تراجع</Button>
             <Button variant="destructive" onClick={handleDeleteAll} disabled={busy} className="gap-2">
               {busy && <Loader2 className="size-4 animate-spin" />} نعم، احذف الكل
             </Button>
@@ -419,11 +363,15 @@ function ClearProgramsButton() {
   );
 }
 
-// المكون الرئيسي مع تخصيص طباعة العنصر الفردي بصفحة مستقلة وشواهد مستقلة
+// المكون الرئيسي مع تنسيق الطباعة المتقدم وصفحة الشواهد المستقلة لكل برنامج
 function ProgramsPage() {
+  const handlePrintAll = () => {
+    window.print();
+  };
+
   return (
     <>
-      {/* تخصيص الطباعة لتعمل كصفحة تقرير رئيسية وصفحة شواهد مستقلة */}
+      {/* تنسيقات طباعة A4: تقرير تفصيلي لكل برنامج يتبعه صفحة مستقلة ومنسقة بالكامل خاصة بالشواهد والمرفقات */}
       <style>{`
         @media print {
           @page {
@@ -433,193 +381,96 @@ function ProgramsPage() {
           body {
             background: white !important;
             color: #000 !important;
-            font-family: Tajawal, sans-serif, Arial !important;
+            font-family: Tajawal, Arial, sans-serif !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          /* إخفاء عناصر النظام والقوائم والأزرار غير المرغوب طباعتها */
+          /* إخفاء عناصر النظام والتحكم وأزرار التصفح */
           nav, header, aside, .print\\:hidden, button {
             display: none !important;
           }
-          /* حاوية تقرير البرنامج الفردي المخصص للطباعة */
-          .print-single-program-sheet {
+          .print\\:block {
             display: block !important;
-            width: 100% !important;
+          }
+          
+          /* تخصيص مظهر صفحة تفاصيل السجل والجدول عند الطباعة */
+          .record-detail-container, .print-page-layout {
             page-break-after: always;
+            break-after: page;
+            min-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
           }
-          .print-header-box {
-            text-align: center;
+
+          /* تصميم صفحة الشواهد المستقلة المنفصلة */
+          .print-evidence-page {
+            page-break-before: always;
+            break-before: page;
+            page-break-after: always;
+            break-after: page;
+            min-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 20px;
+          }
+
+          .print-evidence-header {
             border-bottom: 2px solid #0f172a;
-            padding-bottom: 12px;
+            padding-bottom: 10px;
             margin-bottom: 20px;
+            text-align: center;
           }
-          .print-header-box h1 {
+          .print-evidence-header h3 {
             font-size: 16px;
             font-weight: bold;
             color: #0f172a;
-            margin-bottom: 4px;
+            margin: 0;
           }
-          .print-header-box p {
+          .print-evidence-header p {
             font-size: 11px;
             color: #475569;
+            margin: 5px 0 0 0;
           }
-          .print-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin-bottom: 20px;
-          }
-          .print-table th, .print-table td {
-            border: 1px solid #94a3b8 !important;
-            padding: 8px 10px !important;
-            font-size: 11px !important;
-            color: #0f172a !important;
-            text-align: right !important;
-            vertical-align: middle;
-          }
-          .print-table th {
-            background-color: #f1f5f9 !important;
-            width: 30%;
-          }
-          /* صفحة الشواهد المستقلة */
-          .print-evidence-page {
-            page-break-before: always;
-            display: block !important;
-            width: 100% !important;
-          }
-          .print-evidence-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #0f172a;
-            border-bottom: 2px dashed #cbd5e1;
-            padding-bottom: 6px;
-            margin-bottom: 15px;
-            text-align: center;
-          }
+
+          /* شبكة عرض الصور والشواهد بشكل متوسط ومنسق */
           .print-evidence-grid {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 15px !important;
-            justify-content: center !important;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
           }
           .print-evidence-card {
             border: 1px solid #cbd5e1;
             border-radius: 8px;
-            padding: 8px;
+            padding: 10px;
             background: #f8fafc;
             text-align: center;
-            width: 45% !important;
-            box-sizing: border-box;
-            page-break-inside: avoid;
           }
-          .print-evidence-img {
-            width: 100% !important;
-            height: 200px !important;
-            object-fit: cover !important;
-            border-radius: 6px !important;
+          .print-evidence-image {
+            width: 100%;
+            height: 220px;
+            object-fit: contain;
+            border-radius: 4px;
             border: 1px solid #e2e8f0;
+            background: #ffffff;
           }
-        }
-        /* إخفاء صفحات الطباعة الخاصة بالبرنامج الفردي عن العرض العادي على الشاشة */
-        .print-single-program-sheet {
-          display: none;
         }
       `}</style>
 
       <RecordPage
         config={recordByKey("programs")}
-        renderCustomPrint={(item: ProgramRow) => {
-          // استخراج الصور أو المرفقات وتوحيدها كمعرّفات أو روابط صحيحة
-          let imgs: string[] = [];
-          if (item.attachments) {
-            if (Array.isArray(item.attachments)) {
-              imgs = item.attachments;
-            } else if (typeof item.attachments === "string") {
-              try {
-                const parsed = JSON.parse(item.attachments);
-                imgs = Array.isArray(parsed) ? parsed : [item.attachments];
-              } catch {
-                imgs = [item.attachments];
-              }
-            }
-          }
-
-          return (
-            <div className="print-single-program-sheet" dir="rtl">
-              {/* الصفحة الأولى: تفاصيل وتقرير البرنامج */}
-              <div>
-                <div className="print-header-box">
-                  <h1>سجل توثيق البرامج والأنشطة الإرشادية</h1>
-                  <p>التوجيه والإرشاد الطلابي — إدارة التعليم</p>
-                </div>
-
-                <table className="print-table">
-                  <tbody>
-                    <tr>
-                      <th>اسم البرنامج / النشاط</th>
-                      <td><strong>{item.name || "—"}</strong></td>
-                    </tr>
-                    <tr>
-                      <th>الفصل أو الأسبوع الدراسي</th>
-                      <td>{item.term || "—"}</td>
-                    </tr>
-                    <tr>
-                      <th>نوع البرنامج والمجال</th>
-                      <td>{item.ptype || "—"} ({item.domain || "—"})</td>
-                    </tr>
-                    <tr>
-                      <th>الفئة المستهدفة</th>
-                      <td>{item.target_group || "جميع الطلاب"}</td>
-                    </tr>
-                    <tr>
-                      <th>أهداف البرنامج</th>
-                      <td>{item.goal || "—"}</td>
-                    </tr>
-                    <tr>
-                      <th>مؤشر التحقق</th>
-                      <td>{item.indicator || "—"}</td>
-                    </tr>
-                    <tr>
-                      <th>حالة التنفيذ</th>
-                      <td><strong>{item.exec_status || "لم يبدأ"}</strong></td>
-                    </tr>
-                    <tr>
-                      <th>ملاحظات وتوصيات</th>
-                      <td>{item.notes || "لا توجد ملاحظات"}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* الصفحة الثانية: صفحة الشواهد والمرفقات المستقلة */}
-              <div className="print-evidence-page">
-                <div className="print-evidence-title">
-                  📌 الشواهد والمرفقات المرئية للبرنامج: {item.name}
-                </div>
-
-                {imgs.length === 0 ? (
-                  <p style={{ textAlign: "center", color: "#64748b", fontSize: "11px", marginTop: "40px" }}>
-                    لم يتم إرفاق شواهد أو صور لهذا البرنامج.
-                  </p>
-                ) : (
-                  <div className="print-evidence-grid">
-                    {imgs.map((url, idx) => (
-                      <div key={idx} className="print-evidence-card">
-                        <img 
-                          src={url} 
-                          alt={`شاهد ${idx + 1}`} 
-                          className="print-evidence-img" 
-                        />
-                        <div style={{ fontSize: "10px", color: "#475569", marginTop: "6px", fontWeight: "bold" }}>
-                          شاهد رقم ({idx + 1})
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        }}
+        toolbarExtra={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <MinistryProgramsDialog />
+            <NoorSyncButton />
+            <Button variant="outline" onClick={handlePrintAll} className="gap-2">
+              <Printer className="size-4" /> طباعة السجل والتقرير الشامل
+            </Button>
+            <ClearProgramsButton />
+          </div>
+        }
       />
     </>
   );
