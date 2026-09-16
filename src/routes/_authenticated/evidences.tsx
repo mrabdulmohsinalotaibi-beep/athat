@@ -32,7 +32,7 @@ function EvidencesPage() {
         config={recordByKey("evidences")}
         toolbarExtra={
           <Button variant="outline" onClick={() => setOpen(true)}>
-            <Upload className="size-4" /> رفع شاهد (صورة/فيديو/مستند)
+            <Upload className="size-4" /> رفع شاهد (صورة/مستند)
           </Button>
         }
       />
