@@ -839,7 +839,7 @@ export function WeeklyGuidancePoster() {
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
-            justify"between",
+            justifyContent: "space-between",
             ...watermarkStyle,
           }}
         >
