@@ -91,6 +91,7 @@ export function StudentProfileDialog({
   );
 
   const phone = normalizeSaudiPhone(student?.["guardian_phone"]);
+  const motherPhone = normalizeSaudiPhone(student?.["mother_phone"]);
 
   async function deleteRow(sectionKey: string, table: string, id: string) {
     if (!confirm("هل تريد حذف هذا السجل من ملف الطالب؟")) return;
@@ -106,11 +107,15 @@ export function StudentProfileDialog({
 
   if (!student) return null;
 
+  // تجهيز الحقول الأساسية والإضافية (الصف، الفصل، جوال الأم إن وجدت)
   const infoFields: { label: string; key: string }[] = [
-    { label: "رقم الطالب", key: "student_no" },
-    { label: "الفصل", key: "classroom" },
-    { label: "ولي الأمر", key: "guardian_name" },
+    { label: "اسم الطالب", key: "full_name" },
     { label: "جوال ولي الأمر", key: "guardian_phone" },
+    { label: "رقم الطالب", key: "student_no" },
+    ...(student["grade"] ? [{ label: "الصف", key: "grade" }] : []),
+    ...(student["classroom"] ? [{ label: "الفصل", key: "classroom" }] : []),
+    { label: "ولي الأمر", key: "guardian_name" },
+    ...(student["mother_phone"] ? [{ label: "جوال الأم", key: "mother_phone" }] : []),
     { label: "الحالة", key: "status" },
   ];
 
@@ -135,20 +140,36 @@ export function StudentProfileDialog({
                 </div>
               ))}
             </div>
-            {phone && (
-              <Button asChild size="sm" variant="outline" className="mt-3">
-                <a
-                  href={whatsappLink(
-                    student["guardian_phone"],
-                    `السلام عليكم، بخصوص الطالب: ${fullName}`,
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageSquare className="size-4" /> تواصل عبر واتساب مع ولي الأمر
-                </a>
-              </Button>
-            )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {phone && (
+                <Button asChild size="sm" variant="outline">
+                  <a
+                    href={whatsappLink(
+                      student["guardian_phone"],
+                      `السلام عليكم، بخصوص الطالب: ${fullName}`,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageSquare className="size-4" /> تواصل عبر واتساب مع ولي الأمر
+                  </a>
+                </Button>
+              )}
+              {motherPhone && (
+                <Button asChild size="sm" variant="outline">
+                  <a
+                    href={whatsappLink(
+                      student["mother_phone"],
+                      `السلام عليكم، بخصوص الطالب: ${fullName}`,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageSquare className="size-4" /> تواصل عبر واتساب مع الأم
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* ملخص عدد السجلات المرتبطة */}
