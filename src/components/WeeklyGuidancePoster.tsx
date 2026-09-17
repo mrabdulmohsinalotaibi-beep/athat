@@ -2,10 +2,7 @@ import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toPng } from "html-to-image";
 import {
-  Download,
-  FileDown,
   Loader2,
-  Printer,
   RotateCcw,
   Share2,
   Sparkles,
@@ -13,7 +10,6 @@ import {
 import { toast } from "sonner";
 
 import { draftWeeklyGuidance } from "@/lib/deepseek.functions";
-import { elementToPdf } from "@/lib/pdf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,18 +27,6 @@ const SCHOOL_INFO = {
   authority: "وزارة التعليم",
   department: "إدارة التعليم بمكة المكرمة",
   school: "متوسطة العلاء بن الحضرمي",
-
-  /**
-   * إذا كان لديك شعار للمدرسة:
-   * 1- استورده أعلى الملف.
-   * 2- ضع مساره هنا.
-   *
-   * مثال:
-   * schoolLogo: schoolLogo,
-   *
-   * وإذا لم يوجد شعار اتركه فارغًا.
-   */
-  schoolLogo: "",
 
   /**
    * النص المستخدم كعلامة مائية خفيفة داخل المستند.
@@ -67,7 +51,7 @@ const DEFAULT_CONTENT = {
  * إنشاء خلفية العلامة المائية.
  *
  * استخدمنا SVG داخل Data URL حتى تعمل العلامة المائية
- * عند تحويل العنصر إلى PNG أو PDF.
+ * عند تحويل العنصر إلى صورة.
  */
 function watermarkBackground(text: string): string {
   const safe = text
@@ -211,7 +195,7 @@ export function WeeklyGuidancePoster() {
       }
 
       toast.success(
-        "تم توليد نص التوجيه بالذكاء الاصطناعي. راجعه وعدّله قبل التنزيل.",
+        "تم توليد نص التوجيه بالذكاء الاصطناعي. راجعه وعدّله قبل الإرسال.",
       );
     } catch (error) {
       console.error("Weekly guidance generation error:", error);
@@ -232,13 +216,6 @@ export function WeeklyGuidancePoster() {
     setReminder(DEFAULT_CONTENT.reminder);
 
     toast.success("تمت إعادة النص الافتراضي.");
-  }
-
-  /**
-   * الطباعة المباشرة لصفحة A4
-   */
-  function handlePrint() {
-    window.print();
   }
 
   /**
@@ -265,91 +242,6 @@ export function WeeklyGuidancePoster() {
         });
       }),
     );
-  }
-
-  /**
-   * تصدير اللوحة كصورة PNG.
-   */
-  async function downloadPng() {
-    if (!posterRef.current || busy || exporting) {
-      return;
-    }
-
-    setExporting(true);
-
-    try {
-      /**
-       * التأكد من اكتمال تحميل الصور قبل التصدير.
-       */
-      await waitForImages(posterRef.current);
-
-      const dataUrl = await toPng(posterRef.current, {
-        cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "#ffffff",
-        skipFonts: false,
-      });
-
-      const safeTitle =
-        title
-          .trim()
-          .replace(/[\\/:*?"<>|]/g, "-")
-          .slice(0, 80) || "الأسبوعي";
-
-      const fileName = `التوجيه_الطلابي_${safeTitle}.png`;
-
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = fileName;
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      toast.success("تم تنزيل صورة التوجيه بنجاح.");
-    } catch (error) {
-      console.error("PNG export error:", error);
-
-      toast.error(
-        "تعذّر تصدير الصورة. تأكد من تحميل الشعارات والصور ثم حاول مرة أخرى.",
-      );
-    } finally {
-      setExporting(false);
-    }
-  }
-
-  /**
-   * تصدير اللوحة إلى PDF.
-   */
-  async function downloadPdf() {
-    if (!posterRef.current || busy || exporting) {
-      return;
-    }
-
-    setExporting(true);
-
-    try {
-      const safeTitle =
-        title
-          .trim()
-          .replace(/[\\/:*?"<>|]/g, "-")
-          .slice(0, 80) || "الأسبوعي";
-
-      await elementToPdf(
-        posterRef.current,
-        `التوجيه الطلابي ${safeTitle}`,
-      );
-
-      toast.success("تم تجهيز ملف PDF بنجاح.");
-    } catch (error) {
-      console.error("PDF export error:", error);
-
-      toast.error(
-        "تعذّر تصدير PDF. حاول مرة أخرى، وإذا استمرت المشكلة أعد تحميل الصفحة.",
-      );
-    } finally {
-      setExporting(false);
-    }
   }
 
   /**
@@ -472,9 +364,7 @@ export function WeeklyGuidancePoster() {
     } catch (error) {
       console.error("WhatsApp share error:", error);
 
-      toast.error(
-        "تعذّر تجهيز المشاركة. حاول مرة أخرى بعد لحظات.",
-      );
+      toast.error("تعذّر تجهيز المشاركة. حاول مرة أخرى بعد لحظات.");
     } finally {
       setExporting(false);
     }
@@ -487,35 +377,10 @@ export function WeeklyGuidancePoster() {
       className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6"
       dir="rtl"
     >
-      {/* تنسيقات خاصة بالطباعة لإخفاء لوحة التحكم وعرض اللوحة بمقاس A4 فقط */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #printable-poster, #printable-poster * {
-            visibility: visible;
-          }
-          #printable-poster {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 794px !important;
-            height: 1123px !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-          }
-          @page {
-            size: A4 portrait;
-            margin: 0;
-          }
-        }
-      `}</style>
-
       {/* =========================================================
           لوحة التحكم
       ========================================================== */}
-      <section className="print:hidden overflow-hidden rounded-3xl border bg-card shadow-sm">
+      <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
         {/* رأس لوحة التحكم */}
         <div className="border-b bg-gradient-to-l from-primary/10 via-primary/5 to-transparent px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -582,9 +447,7 @@ export function WeeklyGuidancePoster() {
                 <Sparkles className="size-4" />
               )}
 
-              {busy
-                ? "جارٍ إعداد التوجيه..."
-                : "توليد بالذكاء الاصطناعي"}
+              {busy ? "جارٍ إعداد التوجيه..." : "توليد بالذكاء الاصطناعي"}
             </Button>
           </div>
 
@@ -662,53 +525,13 @@ export function WeeklyGuidancePoster() {
             </div>
           </div>
 
-          {/* أزرار التصدير والطباعة والمشاركة */}
+          {/* أزرار الإجراءات */}
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t pt-5">
             <Button
               type="button"
-              onClick={handlePrint}
-              disabled={isDisabled}
-            >
-              <Printer className="size-4" />
-              طباعة مباشرة
-            </Button>
-
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => void downloadPng()}
-              disabled={isDisabled}
-            >
-              {exporting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Download className="size-4" />
-              )}
-
-              تنزيل PNG
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void downloadPdf()}
-              disabled={isDisabled}
-            >
-              {exporting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <FileDown className="size-4" />
-              )}
-
-              تنزيل PDF
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
               onClick={() => void shareToWhatsApp()}
               disabled={isDisabled}
-              className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
               {exporting ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -759,6 +582,9 @@ export function WeeklyGuidancePoster() {
           <div>
             {/* =====================================================
                 الترويسة الرسمية
+                - اليمين: بيانات وزارة التعليم والمدرسة
+                - المنتصف: شعار وزارة التعليم
+                - اليسار: عنوان التوجيه + مكتب التوجيه
             ====================================================== */}
             <div
               className="flex items-center justify-between gap-4 rounded-[24px] px-6 py-4"
@@ -769,32 +595,8 @@ export function WeeklyGuidancePoster() {
                 boxShadow: "0 4px 18px rgba(0,0,0,0.06)",
               }}
             >
-              {/* شعار المدرسة */}
-              <div
-                className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-center"
-                style={{
-                  border: "3px solid white",
-                  boxShadow: "0 3px 12px rgba(0,0,0,0.10)",
-                }}
-              >
-                {SCHOOL_INFO.schoolLogo ? (
-                  <img
-                    src={SCHOOL_INFO.schoolLogo}
-                    alt="شعار المدرسة"
-                    className="size-full object-contain"
-                    crossOrigin="anonymous"
-                  />
-                ) : (
-                  <span className="px-1 text-[8px] font-semibold leading-tight text-muted-foreground">
-                    شعار
-                    <br />
-                    المدرسة
-                  </span>
-                )}
-              </div>
-
-              {/* بيانات المدرسة */}
-              <div className="min-w-0 flex-1 text-center text-xs font-bold leading-6">
+              {/* اليمين: بيانات وزارة التعليم والمدرسة */}
+              <div className="min-w-0 flex-1 text-right text-xs font-bold leading-6">
                 <p>{SCHOOL_INFO.ministry}</p>
                 <p>{SCHOOL_INFO.authority}</p>
                 <p>{SCHOOL_INFO.department}</p>
@@ -804,39 +606,33 @@ export function WeeklyGuidancePoster() {
                 </p>
               </div>
 
-              {/* شعار وزارة التعليم */}
-              <div className="flex h-14 w-24 shrink-0 items-center justify-center">
+              {/* المنتصف: شعار وزارة التعليم */}
+              <div className="flex h-20 w-24 shrink-0 items-center justify-center">
                 <img
                   src={moeLogo}
                   alt="شعار وزارة التعليم"
-                  className="max-h-14 max-w-24 object-contain"
+                  className="max-h-20 max-w-24 object-contain"
                   crossOrigin="anonymous"
                 />
               </div>
-            </div>
 
-            {/* =====================================================
-                عنوان اللوحة
-            ====================================================== */}
-            <div className="mt-6 flex justify-center">
-              <div
-                className="flex items-center gap-3 rounded-2xl px-8 py-2.5"
-                style={{
-                  background: "#f4f1ea",
-                  border: "1px solid rgba(201,180,138,0.45)",
-                  boxShadow: "3px 3px 0 rgba(0,0,0,0.10)",
-                }}
-              >
-                <span
-                  className="size-2.5 rounded-full"
+              {/* اليسار: عنوان المحتوى + مكتب التوجيه */}
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-lg font-extrabold text-[#1f2937]">
+                  التوجيه الطلابي
+                </p>
+
+                <div
+                  className="mt-1.5 h-0.5 w-10"
                   style={{
-                    background: "#1f2937",
+                    background: "#c9b48a",
+                    marginLeft: 0,
                   }}
                 />
 
-                <h1 className="text-xl font-extrabold">
-                  التوجيه الطلابي
-                </h1>
+                <p className="mt-1.5 text-xs font-bold text-muted-foreground">
+                  مكتب التوجيه
+                </p>
               </div>
             </div>
 
@@ -846,7 +642,7 @@ export function WeeklyGuidancePoster() {
             <div
               className="relative mt-6 overflow-hidden rounded-sm"
               style={{
-                height: "730px",
+                height: "790px",
                 border: "2px solid #c9b48a",
                 padding: "36px 40px",
                 boxSizing: "border-box",
@@ -874,9 +670,7 @@ export function WeeklyGuidancePoster() {
               />
 
               {/* المحتوى */}
-              <div
-                className="relative flex h-full flex-col items-center justify-around text-center"
-              >
+              <div className="relative flex h-full flex-col items-center justify-around text-center">
                 {/* المقدمة */}
                 {intro.trim() && (
                   <div className="w-full max-w-[580px]">
@@ -920,9 +714,7 @@ export function WeeklyGuidancePoster() {
                       border: "1px solid rgba(201,180,138,0.45)",
                     }}
                   >
-                    <p className="text-lg font-extrabold">
-                      تذكر دائماً
-                    </p>
+                    <p className="text-lg font-extrabold">تذكر دائماً</p>
 
                     <div
                       className="mx-auto mt-2 h-0.5 w-12"
@@ -964,9 +756,9 @@ export function WeeklyGuidancePoster() {
               تذييل اللوحة
           ====================================================== */}
           <div className="flex items-center justify-between px-2 text-[10px] font-semibold text-gray-400">
-            <span>التوجيه الطلابي</span>
+            <span>منصة الذات للتوجيه الطلابي</span>
             <span>{SCHOOL_INFO.school}</span>
-            <span>منصة ذات</span>
+            <span>مكتب التوجيه</span>
           </div>
         </div>
       </section>
