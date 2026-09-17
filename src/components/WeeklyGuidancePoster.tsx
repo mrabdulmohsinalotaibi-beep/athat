@@ -542,234 +542,237 @@ export function WeeklyGuidancePoster() {
       </section>
 
       {/* =========================================================
-          المعاينة
+          المعاينة بمقاس A4 الدقيق (794px عرض × 1123px ارتفاع)
       ========================================================== */}
-      <section className="overflow-auto rounded-3xl border bg-muted/30 p-3 sm:p-5">
+      <section className="overflow-auto rounded-3xl border bg-muted/30 p-3 sm:p-5 flex justify-center">
         <div
           ref={posterRef}
           dir="rtl"
-          className="relative mx-auto overflow-hidden bg-white text-[#1f2937]"
+          className="relative overflow-hidden bg-white text-[#1f2937] shadow-xl"
           style={{
             width: "794px",
+            height: "1123px",
+            minWidth: "794px",
             minHeight: "1123px",
-            padding: "40px",
+            maxHeight: "1123px",
+            padding: "45px 50px",
             fontFamily: "'Cairo Variable', Cairo, Arial, sans-serif",
             boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
           }}
         >
-          {/* =====================================================
-              الترويسة الرسمية
-          ====================================================== */}
-          <div
-            className="flex items-center justify-between gap-4 rounded-[28px] px-6 py-5"
-            style={{
-              background:
-                "linear-gradient(135deg, #f4f1ea 0%, #faf9f6 100%)",
-              border: "1px solid rgba(201,180,138,0.35)",
-              boxShadow: "0 4px 18px rgba(0,0,0,0.06)",
-            }}
-          >
-            {/* شعار المدرسة */}
+          <div>
+            {/* =====================================================
+                الترويسة الرسمية
+            ====================================================== */}
             <div
-              className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-center"
+              className="flex items-center justify-between gap-4 rounded-[24px] px-6 py-4"
               style={{
-                border: "4px solid white",
-                boxShadow: "0 3px 12px rgba(0,0,0,0.10)",
+                background:
+                  "linear-gradient(135deg, #f4f1ea 0%, #faf9f6 100%)",
+                border: "1px solid rgba(201,180,138,0.35)",
+                boxShadow: "0 4px 18px rgba(0,0,0,0.06)",
               }}
             >
-              {SCHOOL_INFO.schoolLogo ? (
+              {/* شعار المدرسة */}
+              <div
+                className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-center"
+                style={{
+                  border: "3px solid white",
+                  boxShadow: "0 3px 12px rgba(0,0,0,0.10)",
+                }}
+              >
+                {SCHOOL_INFO.schoolLogo ? (
+                  <img
+                    src={SCHOOL_INFO.schoolLogo}
+                    alt="شعار المدرسة"
+                    className="size-full object-contain"
+                    crossOrigin="anonymous"
+                  />
+                ) : (
+                  <span className="px-1 text-[8px] font-semibold leading-tight text-muted-foreground">
+                    شعار
+                    <br />
+                    المدرسة
+                  </span>
+                )}
+              </div>
+
+              {/* بيانات المدرسة */}
+              <div className="min-w-0 flex-1 text-center text-xs font-bold leading-6">
+                <p>{SCHOOL_INFO.ministry}</p>
+                <p>{SCHOOL_INFO.authority}</p>
+                <p>{SCHOOL_INFO.department}</p>
+
+                <p className="mt-0.5 text-sm font-extrabold">
+                  {SCHOOL_INFO.school}
+                </p>
+              </div>
+
+              {/* شعار وزارة التعليم */}
+              <div className="flex h-14 w-24 shrink-0 items-center justify-center">
                 <img
-                  src={SCHOOL_INFO.schoolLogo}
-                  alt="شعار المدرسة"
-                  className="size-full object-contain"
+                  src={moeLogo}
+                  alt="شعار وزارة التعليم"
+                  className="max-h-14 max-w-24 object-contain"
                   crossOrigin="anonymous"
                 />
-              ) : (
-                <span className="px-1 text-[9px] font-semibold leading-tight text-muted-foreground">
-                  شعار
-                  <br />
-                  المدرسة
-                </span>
-              )}
+              </div>
             </div>
 
-            {/* بيانات المدرسة */}
-            <div className="min-w-0 flex-1 text-center text-sm font-bold leading-7">
-              <p>{SCHOOL_INFO.ministry}</p>
-              <p>{SCHOOL_INFO.authority}</p>
-              <p>{SCHOOL_INFO.department}</p>
+            {/* =====================================================
+                عنوان اللوحة
+            ====================================================== */}
+            <div className="mt-6 flex justify-center">
+              <div
+                className="flex items-center gap-3 rounded-2xl px-8 py-2.5"
+                style={{
+                  background: "#f4f1ea",
+                  border: "1px solid rgba(201,180,138,0.45)",
+                  boxShadow: "3px 3px 0 rgba(0,0,0,0.10)",
+                }}
+              >
+                <span
+                  className="size-2.5 rounded-full"
+                  style={{
+                    background: "#1f2937",
+                  }}
+                />
 
-              <p className="mt-0.5 text-base font-extrabold">
-                {SCHOOL_INFO.school}
-              </p>
+                <h1 className="text-xl font-extrabold">
+                  التوجيه الطلابي
+                </h1>
+              </div>
             </div>
 
-            {/* شعار وزارة التعليم */}
-            <div className="flex h-16 w-28 shrink-0 items-center justify-center">
-              <img
-                src={moeLogo}
-                alt="شعار وزارة التعليم"
-                className="max-h-16 max-w-28 object-contain"
-                crossOrigin="anonymous"
-              />
-            </div>
-          </div>
-
-          {/* =====================================================
-              عنوان اللوحة
-          ====================================================== */}
-          <div className="mt-8 flex justify-center">
+            {/* =====================================================
+                الإطار الرئيسي
+            ====================================================== */}
             <div
-              className="flex items-center gap-3 rounded-2xl px-8 py-3"
+              className="relative mt-6 overflow-hidden rounded-sm"
               style={{
-                background: "#f4f1ea",
-                border: "1px solid rgba(201,180,138,0.45)",
-                boxShadow: "3px 3px 0 rgba(0,0,0,0.10)",
+                height: "730px",
+                border: "2px solid #c9b48a",
+                padding: "36px 40px",
+                boxSizing: "border-box",
+                ...watermarkStyle,
               }}
             >
+              {/* الزاوية العلوية اليمنى */}
               <span
-                className="size-3 rounded-full"
+                className="absolute right-0 top-0 size-6"
                 style={{
-                  background: "#1f2937",
+                  borderBottom: "2px solid #c9b48a",
+                  borderLeft: "2px solid #c9b48a",
+                  clipPath: "polygon(100% 0, 0 0, 100% 100%)",
                 }}
               />
 
-              <h1 className="text-2xl font-extrabold">
-                التوجيه الطلابي
-              </h1>
-            </div>
-          </div>
+              {/* الزاوية السفلية اليسرى */}
+              <span
+                className="absolute bottom-0 left-0 size-6"
+                style={{
+                  borderRight: "2px solid #c9b48a",
+                  borderTop: "2px solid #c9b48a",
+                  clipPath: "polygon(0 100%, 100% 100%, 0 0)",
+                }}
+              />
 
-          {/* =====================================================
-              الإطار الرئيسي
-          ====================================================== */}
-          <div
-            className="relative mt-8 overflow-hidden rounded-sm"
-            style={{
-              minHeight: "760px",
-              border: "2px solid #c9b48a",
-              padding: "54px 50px",
-              boxSizing: "border-box",
-              ...watermarkStyle,
-            }}
-          >
-            {/* الزاوية العلوية اليمنى */}
-            <span
-              className="absolute right-0 top-0 size-7"
-              style={{
-                borderBottom: "2px solid #c9b48a",
-                borderLeft: "2px solid #c9b48a",
-                clipPath: "polygon(100% 0, 0 0, 100% 100%)",
-              }}
-            />
-
-            {/* الزاوية السفلية اليسرى */}
-            <span
-              className="absolute bottom-0 left-0 size-7"
-              style={{
-                borderRight: "2px solid #c9b48a",
-                borderTop: "2px solid #c9b48a",
-                clipPath: "polygon(0 100%, 100% 100%, 0 0)",
-              }}
-            />
-
-            {/* المحتوى */}
-            <div
-              className="relative flex min-h-[650px] flex-col items-center justify-center text-center"
-              style={{
-                gap: "30px",
-              }}
-            >
-              {/* المقدمة */}
-              {intro.trim() && (
-                <div className="w-full max-w-[620px]">
-                  <p
-                    className="text-xl font-bold leading-[2.2]"
-                    style={{
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {intro}
-                  </p>
-
-                  {title.trim() && (
-                    <p className="mt-3 text-3xl font-extrabold">
-                      &quot;{title}&quot;
+              {/* المحتوى */}
+              <div
+                className="relative flex h-full flex-col items-center justify-around text-center"
+              >
+                {/* المقدمة */}
+                {intro.trim() && (
+                  <div className="w-full max-w-[580px]">
+                    <p
+                      className="text-lg font-bold leading-[2]"
+                      style={{
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {intro}
                     </p>
-                  )}
-                </div>
-              )}
 
-              {/* الفقرة الرئيسية */}
-              {body.trim() && (
-                <div className="w-full max-w-[620px]">
-                  <p
-                    className="text-lg leading-[2.2]"
-                    style={{
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {body}
-                  </p>
-                </div>
-              )}
+                    {title.trim() && (
+                      <p className="mt-2 text-2xl font-extrabold">
+                        &quot;{title}&quot;
+                      </p>
+                    )}
+                  </div>
+                )}
 
-              {/* التذكير */}
-              {reminder.trim() && (
-                <div
-                  className="w-full max-w-[620px] rounded-2xl px-7 py-6"
-                  style={{
-                    background: "rgba(244,241,234,0.76)",
-                    border: "1px solid rgba(201,180,138,0.45)",
-                  }}
-                >
-                  <p className="text-xl font-extrabold">
-                    تذكر دائماً
-                  </p>
+                {/* الفقرة الرئيسية */}
+                {body.trim() && (
+                  <div className="w-full max-w-[580px]">
+                    <p
+                      className="text-base leading-[2]"
+                      style={{
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {body}
+                    </p>
+                  </div>
+                )}
 
+                {/* التذكير */}
+                {reminder.trim() && (
                   <div
-                    className="mx-auto mt-3 h-0.5 w-16"
+                    className="w-full max-w-[580px] rounded-2xl px-6 py-4"
                     style={{
-                      background: "#c9b48a",
-                    }}
-                  />
-
-                  <p
-                    className="mt-4 text-lg font-bold leading-[2.15]"
-                    style={{
-                      overflowWrap: "anywhere",
+                      background: "rgba(244,241,234,0.76)",
+                      border: "1px solid rgba(201,180,138,0.45)",
                     }}
                   >
-                    {reminder}
-                  </p>
-                </div>
-              )}
+                    <p className="text-lg font-extrabold">
+                      تذكر دائماً
+                    </p>
+
+                    <div
+                      className="mx-auto mt-2 h-0.5 w-12"
+                      style={{
+                        background: "#c9b48a",
+                      }}
+                    />
+
+                    <p
+                      className="mt-3 text-base font-bold leading-[2]"
+                      style={{
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {reminder}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* خط زخرفي */}
+              <span
+                className="absolute bottom-5 left-8 h-px w-20"
+                style={{
+                  background: "#c9b48a",
+                }}
+              />
+
+              <span
+                className="absolute bottom-5 right-8 h-px w-20"
+                style={{
+                  background: "#c9b48a",
+                }}
+              />
             </div>
-
-            {/* خط زخرفي */}
-            <span
-              className="absolute bottom-7 left-10 h-px w-24"
-              style={{
-                background: "#c9b48a",
-              }}
-            />
-
-            <span
-              className="absolute bottom-7 right-10 h-px w-24"
-              style={{
-                background: "#c9b48a",
-              }}
-            />
           </div>
 
           {/* =====================================================
               تذييل اللوحة
           ====================================================== */}
-          <div className="mt-5 flex items-center justify-between px-2 text-[10px] font-semibold text-gray-400">
+          <div className="flex items-center justify-between px-2 text-[10px] font-semibold text-gray-400">
             <span>التوجيه الطلابي</span>
-
             <span>{SCHOOL_INFO.school}</span>
-
             <span>منصة ذات</span>
           </div>
         </div>
