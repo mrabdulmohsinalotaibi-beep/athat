@@ -1,125 +1,140 @@
-# منشور التوجيه الطلابي A4
+# منشور التوجيه الطلابي — النسخة النهائية
 
-## الملفات
+## 1. ملف الواجهة
 
-### 1) WeeklyGuidancePoster.tsx
-
-المسار:
+استبدل محتوى:
 
 `src/components/WeeklyGuidancePoster.tsx`
 
-استبدل المكوّن الحالي `WeeklyGuidancePoster` بهذا الملف.
+بالملف الموجود في:
 
-### 2) deepseek.functions.ts
+`src/components/WeeklyGuidancePoster.tsx`
 
-لا تستبدل الملف الحالي بالكامل الآن.
+## 2. ملف الذكاء الاصطناعي
 
-افتح:
+استبدل محتوى:
 
 `src/lib/deepseek.functions.ts`
 
-وتأكد أن `draftWeeklyGuidance` يعيد:
+بالملف الموجود في:
 
-- title
-- intro
-- body
-- reminder
-- theme
+`src/lib/deepseek.functions.ts`
 
-تفاصيل الـPrompt موجودة في:
+تم تعديل التكامل بحيث:
 
-`src/lib/README-DEEPSEEK.md`
+- الواجهة ترسل `topic` و `tone`.
+- DeepSeek/Lovable AI يعيد `title / intro / body / reminder / theme`.
+- الذكاء الاصطناعي يختار ThemeKey فقط.
+- الواجهة تحول ThemeKey إلى لوحة ألوان ثابتة ومتناسقة.
+- لا توجد ألوان عشوائية أو أكواد ألوان قد ينتجها الذكاء الاصطناعي.
+- المحتوى الافتراضي فارغ.
 
-## شعار وزارة التعليم
+## 3. شعار وزارة التعليم
 
-يجب أن يكون الملف:
+يجب أن يكون موجوداً:
 
 `src/assets/moe-logo-official.png`
 
-وإذا كان الاسم أو المسار مختلفاً عندك، عدّل سطر import في المكوّن:
+إذا كان اسم ملف الشعار مختلفاً، عدّل:
 
 ```ts
 import moeLogo from "@/assets/moe-logo-official.png";
 ```
 
-## الأدوات المطلوبة
+## 4. ملف PDF
 
-المكوّن يستخدم الحزم الموجودة غالباً في مشروعك:
+يجب أن يبقى:
 
-- html-to-image
-- lucide-react
-- sonner
+`src/lib/pdf.ts`
 
-إذا كانت غير موجودة:
+لأن زر PDF يستدعي:
+
+```ts
+elementToPdf(...)
+```
+
+## 5. الحزم
+
+إذا لم تكن مثبتة:
 
 ```bash
 npm install html-to-image lucide-react sonner
 ```
 
-## PDF
+## 6. الوظائف
 
-المكوّن يستدعي:
+النسخة الجديدة تشمل:
 
-```ts
-import { elementToPdf } from "@/lib/pdf";
+- مقاس A4 عمودي.
+- كليشة علوية احترافية.
+- شعار وزارة التعليم فقط في المنتصف.
+- اسم الوزارة والإدارة والمدرسة أسفل الشعار.
+- عنوان "التوجيه الطلابي".
+- إطار داخلي مشابه للتصميم المرفق.
+- علامة مائية خفيفة.
+- لون النص يتغير تلقائياً حسب موضوع التوجيه.
+- الذكاء الاصطناعي يختار الثيم.
+- النصوص تبدأ فارغة.
+- اختيار أسلوب الصياغة.
+- حفظ PNG بدقة عالية.
+- PDF.
+- طباعة A4.
+- مشاركة عبر مشاركة النظام في Android/iOS، مع إمكانية اختيار WhatsApp.
+- فتح WhatsApp كحل احتياطي في المتصفحات التي لا تدعم مشاركة الملفات.
+- `الذات - منصة التوجيه الطلابي`.
+- `جميع الحقوق محفوظة لـ Abdulmo7sin Alotaibi`.
+
+## 7. الرفع إلى GitHub
+
+في GitHub:
+
+### الملف الأول
+
+```text
+src/components/WeeklyGuidancePoster.tsx
 ```
 
-لذلك يجب أن يبقى ملف:
+افتحه ثم Edit واستبدل الكود بالكامل.
 
-`src/lib/pdf.ts`
+### الملف الثاني
 
-موجوداً في المشروع.
-
-## وظائف المنشور
-
-- A4 Portrait
-- طباعة A4
-- PNG عالي الدقة
-- PDF
-- مشاركة من Android عبر Web Share
-- فتح WhatsApp كحل احتياطي
-- النصوص تبدأ فارغة
-- الذكاء الاصطناعي يختار لوحة الألوان
-- شعار وزارة التعليم فقط في الكليشة
-- الذات - منصة التوجيه الطلابي
-- الحقوق في أسفل الصفحة
-
-## ملاحظة مهمة
-
-إذا ظهر خطأ TypeScript في `React.CSSProperties`، أضف:
-
-```ts
-import type { CSSProperties } from "react";
+```text
+src/lib/deepseek.functions.ts
 ```
 
-ثم استبدل:
+افتحه ثم Edit واستبدل الكود بالكامل.
 
-```ts
-as React.CSSProperties
+ثم اضغط:
+
+`Commit changes`
+
+بعدها انتظر إعادة بناء المشروع إذا كنت تستخدم Lovable أو منصة نشر مرتبطة بـ GitHub.
+
+## 8. نقطة مهمة
+
+لا تغيّر:
+
+```text
+LOVABLE_API_KEY
 ```
 
-بـ:
+ولا تضع مفتاح الذكاء الاصطناعي داخل React أو داخل ملف الواجهة.
 
-```ts
-as CSSProperties
+يبقى المفتاح في بيئة الخادم/Secrets كما هو في مشروعك الحالي.
+
+## 9. إذا كان المشروع Lovable
+
+إذا كان GitHub مربوطاً بـ Lovable، يمكنك أيضاً استخدام Lovable بعد رفع الملفات ليعيد بناء المشروع.
+
+المسارات يجب أن تبقى كما هي:
+
+```text
+src/
+├── components/
+│   └── WeeklyGuidancePoster.tsx
+├── lib/
+│   ├── deepseek.functions.ts
+│   └── pdf.ts
+└── assets/
+    └── moe-logo-official.png
 ```
-
-## GitHub
-
-إذا كنت تستخدم GitHub مباشرة:
-
-1. افتح المستودع.
-2. افتح `src`.
-3. افتح `components`.
-4. افتح `WeeklyGuidancePoster.tsx`.
-5. Replace / Edit واستبدل محتواه بالكود الموجود في الملف.
-6. Commit changes.
-
-ثم:
-
-1. افتح `src/lib/deepseek.functions.ts`.
-2. لا تستبدله بالكامل.
-3. عدّل `draftWeeklyGuidance` بحيث يعيد `theme` بالإضافة إلى النصوص.
-4. ارفع التعديل.
-
-إذا كنت تستخدم Lovable، من الأفضل ربط المشروع بـ GitHub ثم إجراء التعديل في GitHub أو عبر Lovable مع الحفاظ على نفس مسارات الملفات.
