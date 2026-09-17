@@ -13,15 +13,14 @@ import { Textarea } from "@/components/ui/textarea";
 import moeLogo from "@/assets/moe-logo-official.png";
 
 /**
- * عدّل هذه القيم لتطابق مدرستك.
- * schoolLogo: استورد شعار مدرستك مثل moeLogo أعلاه وضع اسمه هنا، أو اتركه فارغاً.
- * watermark: النص الخفيف المتكرر داخل الإطار (عادة اسم المدرسة أو الموجه).
+ * بيانات المدرسة والوزارة الرسمية.
  */
 const SCHOOL_INFO = {
   ministry: "المملكة العربية السعودية",
   authority: "وزارة التعليم",
   department: "إدارة التعليم بمكة المكرمة",
   school: "متوسطة العلاء بن الحضرمي",
+  watermark: "متوسطة العلاء بن الحضرمي",
 };
 
 function watermarkBackground(text: string) {
@@ -170,7 +169,7 @@ export function WeeklyGuidancePoster() {
         </div>
       </section>
 
-      {/* المعاينة القابلة للتصدير — نفس مقاسات A4 */}
+      {/* المعاينة القابلة للتصدير — مقاسات A4 */}
       <div className="overflow-auto rounded-2xl border bg-muted/30 p-4">
         <div
           ref={posterRef}
@@ -183,15 +182,8 @@ export function WeeklyGuidancePoster() {
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
           }}
         >
-          {/* الترويسة */}
-          <div className="flex items-center justify-between gap-4 rounded-[28px] bg-[#f4f1ea] px-6 py-4 shadow-sm">
-            <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white text-center shadow">
-              {SCHOOL_INFO.schoolLogo ? (
-                <img src={SCHOOL_INFO.schoolLogo} alt="شعار المدرسة" className="size-full object-contain" />
-              ) : (
-                <span className="px-1 text-[9px] leading-tight text-muted-foreground">شعار المدرسة</span>
-              )}
-            </div>
+          {/* الترويسة (شعار وزارة التعليم فقط مع بيانات الجهة) */}
+          <div className="flex items-center justify-between gap-4 rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
             <div className="flex-1 text-center text-sm font-bold leading-7">
               <p>{SCHOOL_INFO.ministry}</p>
               <p>{SCHOOL_INFO.authority}</p>
