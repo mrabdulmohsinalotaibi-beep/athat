@@ -10,11 +10,19 @@ const Input = z.object({
     .default("تربوية هادئة"),
 });
 
+/**
+ * مفاتيح الثيمات المدعومة في الواجهة.
+ * يجب أن تتطابق مع مفاتيح THEMES في WeeklyGuidancePoster.tsx
+ */
+const THEME_KEYS = ["formal", "calm", "energetic", "spiritual", "creative"] as const;
+type ThemeKey = (typeof THEME_KEYS)[number];
+
 export type WeeklyGuidanceDraft = {
   title: string;
   intro: string;
   body: string;
   reminder: string;
+  theme: ThemeKey;
 };
 
 const weeklySchema = {
@@ -24,8 +32,14 @@ const weeklySchema = {
     intro: { type: "string" },
     body: { type: "string" },
     reminder: { type: "string" },
+    theme: {
+      type: "string",
+      enum: THEME_KEYS,
+      description:
+        "الثيم البصري الأنسب للموضوع. formal = رسمي/انضباط، calm = هادئ/رفق، energetic = نشيط/حماس، spiritual = روحاني/قيم، creative = إبداعي/فنون",
+    },
   },
-  required: ["title", "intro", "body", "reminder"],
+  required: ["title", "intro", "body", "reminder", "theme"],
   additionalProperties: false,
 } as const;
 
@@ -117,24 +131,46 @@ export const draftWeeklyGuidance = createServerFn({ method: "POST" })
 اكتب "توجيه طلابي أسبوعي" حول موضوع: "${data.topic}"، بأسلوب ${data.tone}.
 الأسلوب: فصيح، دافئ، مباشر، بدون رموز تعبيرية وبدون عناوين فرعية وبدون تنسيق Markdown.
 
-المطلوب أربعة عناصر منفصلة:
+المطلوب خمسة عناصر منفصلة:
 1) title: كلمة أو عبارة قصيرة جداً (1-3 كلمات) هي القيمة المحورية.
 2) intro: جملة تمهيدية واحدة (20-30 كلمة).
 3) body: فقرة (35-55 كلمة) تشرح الفكرة وتربطها بشخصية الطالب وحياته.
 4) reminder: جملة ختامية تحفيزية (20-35 كلمة) موجهة للطلاب بصيغة الجمع.
+5) theme: الثيم البصري الأنسب لموضوع التوجيه، واختر واحداً فقط من هذه القيم:
+
+   - "formal"    → رسمي ذهبي: يناسب الانضباط، المسؤولية، الجدية، احترام الأنظمة، المواظبة.
+   - "calm"      → هادئ أزرق: يناسب الرفق، الصبر، التعاون، الهدوء، التسامح، إدارة الغضب.
+   - "energetic" → نشيط برتقالي: يناسب الحماس، الإنجاز، الرياضة، النشاط، المبادرة، التفوق.
+   - "spiritual" → روحاني أخضر: يناسب الأمانة، الصدق، بر الوالدين، الأخلاق، الصلاة، القرآن.
+   - "creative"  → إبداعي بنفسجي: يناسب الإبداع، المواهب، التفكير، الفنون، الابتكار، القراءة.
+
+   اختر الثيم الأقرب لمعنى الموضوع، وأعد قيمته بالإنجليزية فقط.
 
 لا تكرر القيمة المحورية حرفياً أكثر من مرة في كل عنصر، ولا تضع علامات تنصيص داخل النصوص.`;
 
     const raw = await generate(apiKey, prompt);
     try {
       const parsed = JSON.parse(raw) as Partial<WeeklyGuidanceDraft>;
+
+      const rawTheme = String(parsed.theme ?? "formal").toLowerCase().trim();
+      const theme: ThemeKey = (THEME_KEYS as readonly string[]).includes(rawTheme)
+        ? (rawTheme as ThemeKey)
+        : "formal";
+
       return {
         title: (parsed.title || data.topic).trim(),
         intro: (parsed.intro || "").trim(),
         body: (parsed.body || "").trim(),
         reminder: (parsed.reminder || "").trim(),
+        theme,
       };
     } catch {
-      return { title: data.topic, intro: raw.trim(), body: "", reminder: "" };
+      return {
+        title: data.topic,
+        intro: raw.trim(),
+        body: "",
+        reminder: "",
+        theme: "formal",
+      };
     }
   });
