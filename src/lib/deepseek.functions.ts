@@ -1,906 +1,176 @@
-import {
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { toPng } from "html-to-image";
-import {
-  Loader2,
-  Palette,
-  RotateCcw,
-  Share2,
-  Sparkles,
-} from "lucide-react";
-import { toast } from "sonner";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
-import { draftWeeklyGuidance } from "@/lib/deepseek.functions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import moeLogo from "@/assets/moe-logo-official.png";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-/* =========================================================
-   بيانات المدرسة
-========================================================= */
-const SCHOOL_INFO = {
-  ministry: "المملكة العربية السعودية",
-  authority: "وزارة التعليم",
-  department: "إدارة التعليم بمنطقة مكة المكرمة",
-  school: "متوسطة العلاء بن الحضرمي",
-  watermark: "متوسطة العلاء بن الحضرمي",
+const Input = z.object({
+  topic: z.string().trim().min(2).max(200),
+  tone: z
+    .enum(["تربوية هادئة", "تحفيزية حماسية", "دينية وجدانية", "توعوية مباشرة"])
+    .default("تربوية هادئة"),
+});
+
+/**
+ * مفاتيح الثيمات المدعومة في الواجهة.
+ * يجب أن تتطابق مع مفاتيح THEMES في WeeklyGuidancePoster.tsx
+ */
+const THEME_KEYS = ["formal", "calm", "energetic", "spiritual", "creative"] as const;
+type ThemeKey = (typeof THEME_KEYS)[number];
+
+export type WeeklyGuidanceDraft = {
+  title: string;
+  intro: string;
+  body: string;
+  reminder: string;
+  theme: ThemeKey;
 };
 
-const DEFAULT_CONTENT = {
-  title: "",
-  intro: "",
-  body: "",
-  reminder: "",
-};
-
-/* =========================================================
-   الثيمات
-========================================================= */
-const THEMES = {
-  formal: {
-    key: "formal",
-    label: "رسمي ذهبي",
-    primary: "#8a6f3e",
-    accent: "#c9b48a",
-    headerBg: "linear-gradient(135deg, #faf8f3 0%, #f4f1ea 100%)",
-    frameBorder: "#c9b48a",
-    cornerDecoration: "brackets",
+const weeklySchema = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    intro: { type: "string" },
+    body: { type: "string" },
+    reminder: { type: "string" },
+    theme: {
+      type: "string",
+      enum: THEME_KEYS,
+      description:
+        "الثيم البصري الأنسب للموضوع. formal = رسمي/انضباط، calm = هادئ/رفق، energetic = نشيط/حماس، spiritual = روحاني/قيم، creative = إبداعي/فنون",
+    },
   },
-  calm: {
-    key: "calm",
-    label: "هادئ أزرق",
-    primary: "#1e3a5f",
-    accent: "#7ba6c9",
-    headerBg: "linear-gradient(135deg, #f5f9fc 0%, #eaf2f8 100%)",
-    frameBorder: "#7ba6c9",
-    cornerDecoration: "dots",
-  },
-  energetic: {
-    key: "energetic",
-    label: "نشيط برتقالي",
-    primary: "#b45309",
-    accent: "#f59e0b",
-    headerBg: "linear-gradient(135deg, #fffaf0 0%, #fef3e2 100%)",
-    frameBorder: "#f59e0b",
-    cornerDecoration: "dynamic",
-  },
-  spiritual: {
-    key: "spiritual",
-    label: "روحاني أخضر",
-    primary: "#14532d",
-    accent: "#65a30d",
-    headerBg: "linear-gradient(135deg, #f7fbf5 0%, #eef7e9 100%)",
-    frameBorder: "#65a30d",
-    cornerDecoration: "star",
-  },
-  creative: {
-    key: "creative",
-    label: "إبداعي بنفسجي",
-    primary: "#5b21b6",
-    accent: "#a78bfa",
-    headerBg: "linear-gradient(135deg, #faf8ff 0%, #f3efff 100%)",
-    frameBorder: "#a78bfa",
-    cornerDecoration: "playful",
-  },
+  required: ["title", "intro", "body", "reminder", "theme"],
+  additionalProperties: false,
 } as const;
 
-type ThemeKey = keyof typeof THEMES;
-type Theme = (typeof THEMES)[ThemeKey];
-
-function isThemeKey(value: unknown): value is ThemeKey {
-  return typeof value === "string" && value in THEMES;
-}
-
-/* =========================================================
-   أدوات مساعدة
-========================================================= */
-function watermarkBackground(text: string, color: string): string {
-  const safe = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="420" height="240" viewBox="0 0 420 240">
-      <g fill="${color}" fill-opacity="0.06" font-family="Cairo, Arial, sans-serif" font-size="26" font-weight="700">
-        <text x="10" y="80" transform="rotate(-18 210 80)">${safe} ${safe}</text>
-        <text x="-70" y="190" transform="rotate(-18 210 190)">${safe} ${safe}</text>
-      </g>
-    </svg>
-  `;
-
-  return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string" && message.trim()) return message;
-  }
-
-  return "حدث خطأ غير متوقع. حاول مرة أخرى.";
-}
-
-/* =========================================================
-   زخارف الأركان
-========================================================= */
-function CornerOrnaments({ theme }: { theme: Theme }) {
-  const { primary, accent, cornerDecoration } = theme;
-
-  const corners = [
-    "right-3 top-3",
-    "left-3 top-3",
-    "right-3 bottom-3",
-    "left-3 bottom-3",
-  ];
-
-  switch (cornerDecoration) {
-    case "brackets":
-      return (
-        <>
-          <span className="pointer-events-none absolute right-3 top-3 size-8" style={{ borderTop: `2px solid ${primary}`, borderRight: `2px solid ${primary}` }} />
-          <span className="pointer-events-none absolute left-3 top-3 size-8" style={{ borderTop: `2px solid ${primary}`, borderLeft: `2px solid ${primary}` }} />
-          <span className="pointer-events-none absolute right-3 bottom-3 size-8" style={{ borderBottom: `2px solid ${primary}`, borderRight: `2px solid ${primary}` }} />
-          <span className="pointer-events-none absolute left-3 bottom-3 size-8" style={{ borderBottom: `2px solid ${primary}`, borderLeft: `2px solid ${primary}` }} />
-        </>
-      );
-
-    case "dots":
-      return (
-        <>
-          {corners.map((pos, i) => (
-            <span key={i} className={`pointer-events-none absolute ${pos} size-3 rounded-full`} style={{ background: accent, opacity: 0.55 }} />
-          ))}
-        </>
-      );
-
-    case "dynamic":
-      return (
-        <>
-          <span className="pointer-events-none absolute right-0 top-0 h-20 w-20" style={{ background: `linear-gradient(135deg, ${accent}55, transparent 70%)`, clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
-          <span className="pointer-events-none absolute left-0 top-0 h-20 w-20" style={{ background: `linear-gradient(-135deg, ${accent}55, transparent 70%)`, clipPath: "polygon(0 0, 100% 0, 0 100%)" }} />
-          <span className="pointer-events-none absolute right-0 bottom-0 h-20 w-20" style={{ background: `linear-gradient(45deg, ${accent}55, transparent 70%)`, clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
-          <span className="pointer-events-none absolute left-0 bottom-0 h-20 w-20" style={{ background: `linear-gradient(-45deg, ${accent}55, transparent 70%)`, clipPath: "polygon(0 0, 100% 100%, 0 100%)" }} />
-        </>
-      );
-
-    case "star":
-      return (
-        <>
-          {corners.map((pos, i) => (
-            <span key={i} className={`pointer-events-none absolute ${pos} size-6 rotate-45`} style={{ border: `1.5px solid ${accent}`, opacity: 0.7 }} />
-          ))}
-        </>
-      );
-
-    case "playful":
-      return (
-        <>
-          <span className="pointer-events-none absolute right-4 top-4 size-3.5 rounded-full" style={{ background: primary, opacity: 0.4 }} />
-          <span className="pointer-events-none absolute left-5 top-7 size-2.5 rounded-full" style={{ background: accent, opacity: 0.55 }} />
-          <span className="pointer-events-none absolute right-6 bottom-5 size-3 rounded-full" style={{ background: accent, opacity: 0.5 }} />
-          <span className="pointer-events-none absolute left-4 bottom-4 size-3.5 rounded-full" style={{ background: primary, opacity: 0.4 }} />
-        </>
-      );
-
-    default:
-      return null;
+function readGatewayMessage(raw: string, fallback: string) {
+  try {
+    const parsed = JSON.parse(raw) as { error?: { message?: string }; message?: string };
+    return parsed.error?.message || parsed.message || fallback;
+  } catch {
+    return fallback;
   }
 }
 
-/* =========================================================
-   فاصل زخرفي
-========================================================= */
-function ThemedDivider({ theme, width = 12 }: { theme: Theme; width?: number }) {
-  return (
-    <div className="flex items-center justify-center gap-2">
-      <div className="h-px" style={{ width, background: `linear-gradient(to left, transparent, ${theme.accent})` }} />
-      <div className="size-1.5 rotate-45" style={{ background: theme.primary }} />
-      <div className="h-px" style={{ width, background: `linear-gradient(to right, transparent, ${theme.accent})` }} />
-    </div>
-  );
+async function wait(milliseconds: number) {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-/* =========================================================
-   المكوّن الرئيسي
-========================================================= */
-export function WeeklyGuidancePoster() {
-  const generateWeeklyGuidance = useServerFn(draftWeeklyGuidance);
-  const posterRef = useRef<HTMLDivElement>(null);
-
-  const [topic, setTopic] = useState("");
-
-  const [busy, setBusy] = useState(false);
-  const [exporting, setExporting] = useState(false);
-
-  const [title, setTitle] = useState(DEFAULT_CONTENT.title);
-  const [intro, setIntro] = useState(DEFAULT_CONTENT.intro);
-  const [body, setBody] = useState(DEFAULT_CONTENT.body);
-  const [reminder, setReminder] = useState(DEFAULT_CONTENT.reminder);
-
-  const [docNumber, setDocNumber] = useState("");
-  const [docDate, setDocDate] = useState("");
-
-  const [themeKey, setThemeKey] = useState<ThemeKey>("formal");
-  const theme = THEMES[themeKey];
-
-  const watermarkStyle = useMemo<CSSProperties>(
-    () => ({
-      backgroundImage: watermarkBackground(SCHOOL_INFO.watermark, theme.primary),
-      backgroundRepeat: "repeat",
-      backgroundPosition: "center",
-    }),
-    [theme.primary],
-  );
-
-  /* ---------- توليد المحتوى ---------- */
-  async function generate() {
-    const cleanTopic = topic.trim();
-
-    if (cleanTopic.length < 2) {
-      toast.error("اكتب موضوع التوجيه أولاً، مثل: الأمانة، احترام الوقت، التنمر...");
-      return;
-    }
-
-    if (busy || exporting) return;
-
-    setBusy(true);
-
-    try {
-      const result = await generateWeeklyGuidance({ data: { topic: cleanTopic } });
-
-      if (result?.title) setTitle(String(result.title));
-      if (result?.intro) setIntro(String(result.intro));
-      if (result?.body) setBody(String(result.body));
-      if (result?.reminder) setReminder(String(result.reminder));
-
-      const aiTheme =
-        (result as { theme?: unknown })?.theme ??
-        (result as { style?: unknown })?.style ??
-        (result as { mood?: unknown })?.mood;
-
-      if (isThemeKey(aiTheme)) {
-        setThemeKey(aiTheme);
-      }
-
-      toast.success("تم توليد نص التوجيه. راجعه وعدّله قبل الإرسال.");
-    } catch (error) {
-      console.error("Weekly guidance generation error:", error);
-      toast.error(getErrorMessage(error));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function resetContent() {
-    setTitle(DEFAULT_CONTENT.title);
-    setIntro(DEFAULT_CONTENT.intro);
-    setBody(DEFAULT_CONTENT.body);
-    setReminder(DEFAULT_CONTENT.reminder);
-    setDocNumber("");
-    setDocDate("");
-    setThemeKey("formal");
-    toast.success("تمت إعادة ضبط النموذج.");
-  }
-
-  async function waitForImages(element: HTMLElement) {
-    const images = Array.from(element.querySelectorAll("img"));
-    await Promise.all(
-      images.map((image) => {
-        if (image.complete) return Promise.resolve();
-        return new Promise<void>((resolve) => {
-          const done = () => {
-            image.removeEventListener("load", done);
-            image.removeEventListener("error", done);
-            resolve();
-          };
-          image.addEventListener("load", done);
-          image.addEventListener("error", done);
-        });
+async function generate(apiKey: string, prompt: string) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Lovable-API-Key": apiKey,
+        "X-Lovable-AIG-SDK": "fetch",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-6-astra",
+        stream: true,
+        reasoning: { effort: "low", summary: "auto" },
+        include: ["reasoning.encrypted_content"],
+        input: prompt,
+        text: {
+          format: { type: "json_schema", name: "weekly_guidance", strict: true, schema: weeklySchema },
+        },
       }),
-    );
-  }
+    });
 
-  /* ---------- مشاركة الواتساب ---------- */
-  async function shareToWhatsApp() {
-    if (!posterRef.current || busy || exporting) return;
+    if (!response.ok) {
+      const body = await response.text();
+      const message = readGatewayMessage(body, "تعذّر توليد التوجيه الأسبوعي.");
+      if ((response.status === 429 || response.status >= 500) && attempt < 2) {
+        const retryAfter = Number(response.headers.get("Retry-After") || 0);
+        await wait(Math.max(retryAfter * 1000, 700 * 2 ** attempt));
+        continue;
+      }
+      if (response.status === 401) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة حالياً.");
+      if (response.status === 402) throw new Error(message || "الرصيد المخصص للذكاء الاصطناعي غير كافٍ.");
+      throw new Error(message);
+    }
 
-    setExporting(true);
-
-    try {
-      await waitForImages(posterRef.current);
-
-      const messageText = [
-        `*${title.trim() || "التوجيه الطلابي"}*`,
-        "",
-        intro.trim(),
-        "",
-        body.trim(),
-        "",
-        reminder.trim() ? `*تذكر دائماً:*\n${reminder.trim()}` : "",
-        "",
-        `— ${SCHOOL_INFO.school}`,
-      ]
-        .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
-        .join("\n")
-        .trim();
-
-      const dataUrl = await toPng(posterRef.current, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: "#ffffff",
-        skipFonts: false,
-      });
-
-      const safeTitle =
-        title.trim().replace(/[\\/:*?"<>|]/g, "-").slice(0, 60) || "الأسبوعي";
-      const fileName = `التوجيه_الطلابي_${safeTitle}.png`;
-
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-      const file = new File([blob], fileName, { type: "image/png" });
-
-      const canShareFiles =
-        typeof navigator !== "undefined" &&
-        typeof navigator.canShare === "function" &&
-        navigator.canShare({ files: [file] });
-
-      if (canShareFiles && typeof navigator.share === "function") {
+    if (!response.body) throw new Error("لم تُرجع خدمة الذكاء الاصطناعي محتوى.");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let output = "";
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      buffer += decoder.decode(chunk.value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6).trim();
+        if (!payload || payload === "[DONE]") continue;
         try {
-          await navigator.share({
-            files: [file],
-            text: messageText,
-            title: title.trim() || "التوجيه الطلابي",
-          });
-          toast.success("تم فتح نافذة المشاركة، اختر واتساب.");
-          return;
-        } catch (err) {
-          if ((err as { name?: string })?.name === "AbortError") return;
+          const event = JSON.parse(payload) as { type?: string; delta?: string };
+          if (event.type === "response.output_text.delta" && event.delta) output += event.delta;
+        } catch {
+          // تجاهل رسائل البث غير النصية
         }
       }
-
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`;
-      window.open(waUrl, "_blank", "noopener,noreferrer");
-
-      toast.success("تم تنزيل الصورة، وفتح واتساب بالنص. أرفق الصورة من المعرض.");
-    } catch (error) {
-      console.error("WhatsApp share error:", error);
-      toast.error("تعذّر تجهيز المشاركة. حاول مرة أخرى بعد لحظات.");
-    } finally {
-      setExporting(false);
     }
+    if (!output.trim()) throw new Error("اكتملت المعالجة دون نص قابل للاستخدام. حاول مرة أخرى.");
+    return output;
   }
-
-  const isDisabled = busy || exporting;
-  const hasMeta = Boolean(docNumber.trim() || docDate.trim());
-
-  return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6" dir="rtl">
-      {/* =========================================================
-          لوحة التحكم
-      ========================================================== */}
-      <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
-        <div className="border-b bg-gradient-to-l from-primary/10 via-primary/5 to-transparent px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Sparkles className="size-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-extrabold">التوجيه الطلابي الأسبوعي</h2>
-                <p className="text-xs text-muted-foreground">
-                  إعداد خطاب توجيهي رسمي بالذكاء الاصطناعي
-                </p>
-              </div>
-            </div>
-            <div className="rounded-full border bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground">
-              مدعوم بالذكاء الاصطناعي
-            </div>
-          </div>
-        </div>
-
-        <div className="p-5 sm:p-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-            <div className="flex-1">
-              <Label htmlFor="topic" className="font-bold">
-                موضوع التوجيه الأسبوعي
-              </Label>
-              <Input
-                id="topic"
-                className="mt-1.5 h-11"
-                placeholder="مثال: الأمانة، احترام الوقت، التنمر، المحافظة على الممتلكات..."
-                value={topic}
-                disabled={isDisabled}
-                onChange={(e) => setTopic(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isDisabled) {
-                    e.preventDefault();
-                    void generate();
-                  }
-                }}
-              />
-            </div>
-            <Button
-              type="button"
-              onClick={() => void generate()}
-              disabled={isDisabled}
-              className="h-11 shrink-0 px-5"
-            >
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-              {busy ? "جارٍ إعداد التوجيه..." : "توليد بالذكاء الاصطناعي"}
-            </Button>
-          </div>
-
-          <div className="mt-5">
-            <Label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-              <Palette className="size-3.5" />
-              الثيم البصري (يُختار تلقائيًا من الذكاء الاصطناعي أو يدويًا)
-            </Label>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {Object.values(THEMES).map((t) => {
-                const active = themeKey === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    type="button"
-                    disabled={isDisabled}
-                    onClick={() => setThemeKey(t.key)}
-                    className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50"
-                    style={{
-                      background: active ? t.primary : "transparent",
-                      borderColor: active ? t.primary : "#e5e7eb",
-                      color: active ? "#ffffff" : "#374151",
-                    }}
-                  >
-                    <span
-                      className="size-2.5 rounded-full"
-                      style={{
-                        background: active ? "#ffffff" : t.primary,
-                        opacity: active ? 0.9 : 1,
-                      }}
-                    />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="docNumber" className="text-xs font-semibold text-muted-foreground">
-                رقم الصادر (اختياري)
-              </Label>
-              <Input
-                id="docNumber"
-                className="mt-1.5"
-                placeholder="مثال: 1447/123"
-                value={docNumber}
-                disabled={isDisabled}
-                onChange={(e) => setDocNumber(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="docDate" className="text-xs font-semibold text-muted-foreground">
-                التاريخ (اختياري)
-              </Label>
-              <Input
-                id="docDate"
-                className="mt-1.5"
-                placeholder="مثال: 1447/03/15هـ"
-                value={docDate}
-                disabled={isDisabled}
-                onChange={(e) => setDocDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4">
-            <div>
-              <Label htmlFor="title" className="text-xs font-semibold text-muted-foreground">
-                العنوان / الكلمة المحورية
-              </Label>
-              <Input
-                id="title"
-                value={title}
-                disabled={isDisabled}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-1.5 font-bold"
-                placeholder="مثال: الانضباط، الأمانة، احترام الوقت..."
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="intro" className="text-xs font-semibold text-muted-foreground">
-                الفقرة التمهيدية
-              </Label>
-              <Textarea
-                id="intro"
-                value={intro}
-                disabled={isDisabled}
-                onChange={(e) => setIntro(e.target.value)}
-                rows={3}
-                className="mt-1.5 resize-y leading-7"
-                placeholder="اكتب أو ولّد بالذكاء الاصطناعي..."
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="body" className="text-xs font-semibold text-muted-foreground">
-                الفقرة التفصيلية
-              </Label>
-              <Textarea
-                id="body"
-                value={body}
-                disabled={isDisabled}
-                onChange={(e) => setBody(e.target.value)}
-                rows={5}
-                className="mt-1.5 resize-y leading-7"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="reminder" className="text-xs font-semibold text-muted-foreground">
-                التذكير الختامي
-              </Label>
-              <Textarea
-                id="reminder"
-                value={reminder}
-                disabled={isDisabled}
-                onChange={(e) => setReminder(e.target.value)}
-                rows={4}
-                className="mt-1.5 resize-y leading-7"
-              />
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-center gap-2 border-t pt-5">
-            <Button
-              type="button"
-              onClick={() => void shareToWhatsApp()}
-              disabled={isDisabled}
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
-            >
-              {exporting ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
-              إرسال للواتساب
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={resetContent}
-              disabled={isDisabled}
-              className="mr-auto"
-            >
-              <RotateCcw className="size-4" />
-              إعادة ضبط
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          المعاينة A4
-      ========================================================== */}
-      <section className="flex justify-center overflow-auto rounded-3xl border bg-muted/30 p-3 sm:p-5">
-        <div
-          id="printable-poster"
-          ref={posterRef}
-          dir="rtl"
-          className="relative overflow-hidden bg-white text-[#1f2937] shadow-xl"
-          style={{
-            width: "794px",
-            height: "1123px",
-            minWidth: "794px",
-            minHeight: "1123px",
-            maxHeight: "1123px",
-            padding: "40px 48px",
-            fontFamily: "'Cairo Variable', Cairo, Arial, sans-serif",
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            {/* =====================================================
-                الترويسة الرسمية — كليشة مدرسية
-                ┌─ يمين: بيانات الدولة والمدرسة
-                ├─ منتصف: شعار وزارة التعليم (ثابت)
-                └─ يسار: عنوان الوثيقة ومكتب التوجيه
-            ====================================================== */}
-            <header>
-              {/* البسملة */}
-              <p
-                className="mb-3 text-center text-[13px] font-semibold"
-                style={{ color: theme.primary }}
-              >
-                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-              </p>
-
-              {/* الإطار الرئيسي للترويسة */}
-              <div
-                className="relative grid items-stretch overflow-hidden rounded-[20px]"
-                style={{
-                  gridTemplateColumns: "1fr 130px 1fr",
-                  background: theme.headerBg,
-                  border: `1px solid ${theme.accent}66`,
-                  boxShadow: "0 4px 18px rgba(0,0,0,0.05)",
-                  minHeight: "150px",
-                }}
-              >
-                {/* خط علوي رفيع ملوّن بطول الترويسة */}
-                <span
-                  className="absolute inset-x-0 top-0 h-[3px]"
-                  style={{
-                    background: `linear-gradient(to left, transparent, ${theme.primary}, ${theme.accent}, ${theme.primary}, transparent)`,
-                  }}
-                />
-
-                {/* -------------------------------------------------
-                    اليمين: بيانات الدولة والوزارة والإدارة والمدرسة
-                ------------------------------------------------- */}
-                <div className="flex flex-col justify-center gap-1 px-6 py-5 text-right">
-                  <p className="text-[13px] font-semibold leading-6 text-[#4b5563]">
-                    المملكة العربية السعودية
-                  </p>
-                  <p className="text-[13px] font-semibold leading-6 text-[#4b5563]">
-                    وزارة التعليم
-                  </p>
-                  <p className="text-[13px] font-semibold leading-6 text-[#4b5563]">
-                    {SCHOOL_INFO.department}
-                  </p>
-
-                  <div
-                    className="my-1 ml-auto h-px w-4/5"
-                    style={{
-                      background: `linear-gradient(to left, transparent, ${theme.accent})`,
-                    }}
-                  />
-
-                  <p
-                    className="text-[14px] font-extrabold leading-6"
-                    style={{ color: theme.primary }}
-                  >
-                    {SCHOOL_INFO.school}
-                  </p>
-                </div>
-
-                {/* -------------------------------------------------
-                    المنتصف: شعار وزارة التعليم — ثابت في كل الثيمات
-                ------------------------------------------------- */}
-                <div className="relative flex items-center justify-center px-2">
-                  {/* خطوط عمودية فاصلة خفيفة على الجانبين */}
-                  <span
-                    className="absolute inset-y-6 right-0 w-px"
-                    style={{
-                      background: `linear-gradient(to bottom, transparent, ${theme.accent}80, transparent)`,
-                    }}
-                  />
-                  <span
-                    className="absolute inset-y-6 left-0 w-px"
-                    style={{
-                      background: `linear-gradient(to bottom, transparent, ${theme.accent}80, transparent)`,
-                    }}
-                  />
-
-                  <div
-                    className="flex size-[110px] items-center justify-center rounded-full"
-                    style={{
-                      background: "rgba(255,255,255,0.85)",
-                      border: `1px solid ${theme.accent}55`,
-                      boxShadow: `0 3px 14px ${theme.accent}40`,
-                    }}
-                  >
-                    <img
-                      src={moeLogo}
-                      alt="شعار وزارة التعليم"
-                      className="max-h-[88px] max-w-[88px] object-contain"
-                      crossOrigin="anonymous"
-                    />
-                  </div>
-                </div>
-
-                {/* -------------------------------------------------
-                    اليسار: عنوان الوثيقة + مكتب التوجيه
-                ------------------------------------------------- */}
-                <div className="flex flex-col justify-center gap-1 px-6 py-5 text-left">
-                  <p
-                    className="text-[15px] font-extrabold leading-6"
-                    style={{ color: theme.primary }}
-                  >
-                    التوجيه الطلابي الأسبوعي
-                  </p>
-
-                  <div
-                    className="my-1 mr-auto h-px w-4/5"
-                    style={{
-                      background: `linear-gradient(to right, transparent, ${theme.accent})`,
-                    }}
-                  />
-
-                  <p className="text-[13px] font-semibold leading-6 text-[#4b5563]">
-                    مكتب التوجيه الطلابي
-                  </p>
-                </div>
-              </div>
-
-              {/* خط الفصل الرسمي أسفل الترويسة */}
-              <div className="mt-3 flex items-center gap-3">
-                <div
-                  className="h-px flex-1"
-                  style={{
-                    background: `linear-gradient(to left, transparent, ${theme.accent})`,
-                  }}
-                />
-                <div className="size-2 rotate-45" style={{ background: theme.primary }} />
-                <div
-                  className="h-px flex-1"
-                  style={{
-                    background: `linear-gradient(to right, transparent, ${theme.accent})`,
-                  }}
-                />
-              </div>
-            </header>
-
-            {/* =====================================================
-                سطر الرقم والتاريخ
-            ====================================================== */}
-            {hasMeta && (
-              <div className="mt-4 flex items-center justify-start gap-8 text-[11px] font-bold text-[#374151]">
-                {docNumber.trim() && (
-                  <span>
-                    <span style={{ color: theme.primary }}>الرقم:</span>{" "}
-                    {docNumber}
-                  </span>
-                )}
-                {docDate.trim() && (
-                  <span>
-                    <span style={{ color: theme.primary }}>التاريخ:</span>{" "}
-                    {docDate}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* =====================================================
-                الإطار الرئيسي للمحتوى
-            ====================================================== */}
-            <div
-              className="relative mt-4 overflow-hidden"
-              style={{
-                minHeight: hasMeta ? "745px" : "775px",
-                border: `2px solid ${theme.frameBorder}`,
-                padding: "40px 44px",
-                boxSizing: "border-box",
-                background: "rgba(255,255,255,0.6)",
-                ...watermarkStyle,
-              }}
-            >
-              <CornerOrnaments theme={theme} />
-
-              <div className="relative mb-6 flex items-center justify-center gap-2">
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-                <div className="size-1.5 rotate-45" style={{ background: theme.primary }} />
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-              </div>
-
-              <div className="relative flex flex-col items-center gap-6 text-center">
-                {title.trim() && (
-                  <div>
-                    <h2
-                      className="text-[30px] font-extrabold leading-tight"
-                      style={{ color: theme.primary }}
-                    >
-                      {title}
-                    </h2>
-                    <div className="mt-3">
-                      <ThemedDivider theme={theme} width={22} />
-                    </div>
-                  </div>
-                )}
-
-                {intro.trim() && (
-                  <p
-                    className="max-w-[600px] text-[16px] font-bold leading-[2.1]"
-                    style={{ overflowWrap: "anywhere" }}
-                  >
-                    {intro}
-                  </p>
-                )}
-
-                {body.trim() && (
-                  <p
-                    className="max-w-[600px] text-[15px] leading-[2.1] text-[#374151]"
-                    style={{ overflowWrap: "anywhere" }}
-                  >
-                    {body}
-                  </p>
-                )}
-
-                {reminder.trim() && body.trim() && (
-                  <ThemedDivider theme={theme} width={16} />
-                )}
-
-                {reminder.trim() && (
-                  <div
-                    className="relative w-full max-w-[600px] overflow-hidden rounded-2xl px-7 py-5"
-                    style={{
-                      background: "rgba(255,255,255,0.85)",
-                      border: `1.5px solid ${theme.accent}`,
-                      boxShadow: `0 3px 14px ${theme.accent}33`,
-                    }}
-                  >
-                    <span
-                      className="absolute right-0 top-0 h-full w-1.5"
-                      style={{ background: theme.primary }}
-                    />
-                    <span
-                      className="absolute left-0 top-0 h-full w-1.5"
-                      style={{ background: theme.primary }}
-                    />
-
-                    <p className="text-[16px] font-extrabold" style={{ color: theme.primary }}>
-                      تذكير
-                    </p>
-
-                    <div className="mx-auto mt-2 mb-3">
-                      <ThemedDivider theme={theme} width={14} />
-                    </div>
-
-                    <p
-                      className="text-[15px] font-bold leading-[2.1]"
-                      style={{ overflowWrap: "anywhere" }}
-                    >
-                      {reminder}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="pointer-events-none absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2">
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-                <div className="size-1.5 rotate-45" style={{ background: theme.primary }} />
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-              </div>
-            </div>
-          </div>
-
-          {/* =====================================================
-              التذييل
-          ====================================================== */}
-          <footer className="mt-4">
-            <div
-              className="h-px w-full"
-              style={{
-                background: `linear-gradient(to right, transparent, ${theme.accent}, transparent)`,
-              }}
-            />
-            <div className="mt-3 flex items-center justify-between px-1 text-[10px] font-bold text-[#6b7280]">
-              <span style={{ color: theme.primary }}>منصة الذات للتوجيه الطلابي</span>
-              <span>{SCHOOL_INFO.school}</span>
-              <span>مكتب التوجيه الطلابي</span>
-            </div>
-          </footer>
-        </div>
-      </section>
-    </div>
-  );
+  throw new Error("تعذّر توليد التوجيه بعد عدة محاولات.");
 }
+
+/** توليد نص "التوجيه الطلابي الأسبوعي" عبر الذكاء الاصطناعي المدمج في المنصة. */
+export const draftWeeklyGuidance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => Input.parse(input))
+  .handler(async ({ data }): Promise<WeeklyGuidanceDraft> => {
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة حالياً.");
+
+    const prompt = `أنت مساعد صياغة تربوي لمكتب التوجيه الطلابي بمدرسة سعودية.
+اكتب "توجيه طلابي أسبوعي" حول موضوع: "${data.topic}"، بأسلوب ${data.tone}.
+الأسلوب: فصيح، دافئ، مباشر، بدون رموز تعبيرية وبدون عناوين فرعية وبدون تنسيق Markdown.
+
+المطلوب خمسة عناصر منفصلة:
+1) title: كلمة أو عبارة قصيرة جداً (1-3 كلمات) هي القيمة المحورية.
+2) intro: جملة تمهيدية واحدة (20-30 كلمة).
+3) body: فقرة (35-55 كلمة) تشرح الفكرة وتربطها بشخصية الطالب وحياته.
+4) reminder: جملة ختامية تحفيزية (20-35 كلمة) موجهة للطلاب بصيغة الجمع.
+5) theme: الثيم البصري الأنسب لموضوع التوجيه، واختر واحداً فقط من هذه القيم:
+
+   - "formal"    → رسمي ذهبي: يناسب الانضباط، المسؤولية، الجدية، احترام الأنظمة، المواظبة.
+   - "calm"      → هادئ أزرق: يناسب الرفق، الصبر، التعاون، الهدوء، التسامح، إدارة الغضب.
+   - "energetic" → نشيط برتقالي: يناسب الحماس، الإنجاز، الرياضة، النشاط، المبادرة، التفوق.
+   - "spiritual" → روحاني أخضر: يناسب الأمانة، الصدق، بر الوالدين، الأخلاق، الصلاة، القرآن.
+   - "creative"  → إبداعي بنفسجي: يناسب الإبداع، المواهب، التفكير، الفنون، الابتكار، القراءة.
+
+   اختر الثيم الأقرب لمعنى الموضوع، وأعد قيمته بالإنجليزية فقط.
+
+لا تكرر القيمة المحورية حرفياً أكثر من مرة في كل عنصر، ولا تضع علامات تنصيص داخل النصوص.`;
+
+    const raw = await generate(apiKey, prompt);
+    try {
+      const parsed = JSON.parse(raw) as Partial<WeeklyGuidanceDraft>;
+
+      const rawTheme = String(parsed.theme ?? "formal").toLowerCase().trim();
+      const theme: ThemeKey = (THEME_KEYS as readonly string[]).includes(rawTheme)
+        ? (rawTheme as ThemeKey)
+        : "formal";
+
+      return {
+        title: (parsed.title || data.topic).trim(),
+        intro: (parsed.intro || "").trim(),
+        body: (parsed.body || "").trim(),
+        reminder: (parsed.reminder || "").trim(),
+        theme,
+      };
+    } catch {
+      return {
+        title: data.topic,
+        intro: raw.trim(),
+        body: "",
+        reminder: "",
+        theme: "formal",
+      };
+    }
+  });
