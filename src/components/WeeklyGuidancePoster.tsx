@@ -5,6 +5,7 @@ import {
   Download,
   FileDown,
   Loader2,
+  Printer,
   RotateCcw,
   Sparkles,
 } from "lucide-react";
@@ -233,6 +234,13 @@ export function WeeklyGuidancePoster() {
   }
 
   /**
+   * الطباعة المباشرة لصفحة A4
+   */
+  function handlePrint() {
+    window.print();
+  }
+
+  /**
    * تصدير اللوحة كصورة PNG.
    */
   async function downloadPng() {
@@ -345,10 +353,35 @@ export function WeeklyGuidancePoster() {
       className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6"
       dir="rtl"
     >
+      {/* تنسيقات خاصة بالطباعة لإخفاء لوحة التحكم وعرض اللوحة بمقاس A4 فقط */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-poster, #printable-poster * {
+            visibility: visible;
+          }
+          #printable-poster {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 794px !important;
+            height: 1123px !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 0;
+          }
+        }
+      `}</style>
+
       {/* =========================================================
           لوحة التحكم
       ========================================================== */}
-      <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
+      <section className="print:hidden overflow-hidden rounded-3xl border bg-card shadow-sm">
         {/* رأس لوحة التحكم */}
         <div className="border-b bg-gradient-to-l from-primary/10 via-primary/5 to-transparent px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -495,8 +528,17 @@ export function WeeklyGuidancePoster() {
             </div>
           </div>
 
-          {/* أزرار التصدير */}
+          {/* أزرار التصدير والطباعة */}
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t pt-5">
+            <Button
+              type="button"
+              onClick={handlePrint}
+              disabled={isDisabled}
+            >
+              <Printer className="size-4" />
+              طباعة مباشرة
+            </Button>
+
             <Button
               type="button"
               variant="secondary"
@@ -546,6 +588,7 @@ export function WeeklyGuidancePoster() {
       ========================================================== */}
       <section className="overflow-auto rounded-3xl border bg-muted/30 p-3 sm:p-5 flex justify-center">
         <div
+          id="printable-poster"
           ref={posterRef}
           dir="rtl"
           className="relative overflow-hidden bg-white text-[#1f2937] shadow-xl"
