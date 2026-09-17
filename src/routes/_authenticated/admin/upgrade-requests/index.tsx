@@ -4,7 +4,7 @@ import { CheckCircle2, XCircle, Clock, ShieldCheck, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/_authenticated/admin/upgrade-requests")({
+export const Route = createFileRoute("/_authenticated/admin/upgrade-requests/")({
   head: () => ({ meta: [
     { title: "إدارة طلبات الترقية | لوحة التحكم" },
     { name: "description", content: "مراجعة وإدارة طلبات الترقية لباقة الموجه المحترف." },
