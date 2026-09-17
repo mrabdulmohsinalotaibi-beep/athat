@@ -5,10 +5,10 @@ import {
   Download,
   FileDown,
   Loader2,
-  Sparkles,
-  Printer,
   MessageCircle,
+  Printer,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,16 +34,17 @@ const BRAND = {
   copyright: "جميع الحقوق محفوظة لـ Abdulmo7sin Alotaibi",
 };
 
-const DEFAULT_THEME = {
-  primary: "#263238",
-  secondary: "#546E7A",
-  accent: "#B08A45",
-  soft: "#F5F2EB",
-  border: "#C9B48A",
-  reminder: "#275D4B",
-};
+const THEME_KEYS = [
+  "formal",
+  "calm",
+  "energetic",
+  "spiritual",
+  "creative",
+] as const;
 
-type PosterTheme = {
+type ThemeKey = (typeof THEME_KEYS)[number];
+
+type Theme = {
   primary: string;
   secondary: string;
   accent: string;
@@ -52,21 +53,54 @@ type PosterTheme = {
   reminder: string;
 };
 
-function safeColor(value: unknown, fallback: string) {
-  if (typeof value !== "string") return fallback;
-  const color = value.trim();
-  return /^#[0-9A-Fa-f]{6}$/.test(color) ? color : fallback;
-}
+const THEMES: Record<ThemeKey, Theme> = {
+  formal: {
+    primary: "#263238",
+    secondary: "#4F5D66",
+    accent: "#A77A32",
+    soft: "#F5F1E8",
+    border: "#C9B48A",
+    reminder: "#37474F",
+  },
+  calm: {
+    primary: "#234E70",
+    secondary: "#426B85",
+    accent: "#5C8FA8",
+    soft: "#EEF5F8",
+    border: "#A9C6D4",
+    reminder: "#28556F",
+  },
+  energetic: {
+    primary: "#7A351B",
+    secondary: "#A3532E",
+    accent: "#D9822B",
+    soft: "#FFF4E8",
+    border: "#E0B27B",
+    reminder: "#8A3F1E",
+  },
+  spiritual: {
+    primary: "#20513F",
+    secondary: "#3E6F5B",
+    accent: "#A47C2C",
+    soft: "#F1F5EE",
+    border: "#B9C7B0",
+    reminder: "#245843",
+  },
+  creative: {
+    primary: "#4D376B",
+    secondary: "#70568E",
+    accent: "#8C68B2",
+    soft: "#F6F0FA",
+    border: "#C8B5D9",
+    reminder: "#563C75",
+  },
+};
 
-function normalizeTheme(theme?: Partial<PosterTheme>): PosterTheme {
-  return {
-    primary: safeColor(theme?.primary, DEFAULT_THEME.primary),
-    secondary: safeColor(theme?.secondary, DEFAULT_THEME.secondary),
-    accent: safeColor(theme?.accent, DEFAULT_THEME.accent),
-    soft: safeColor(theme?.soft, DEFAULT_THEME.soft),
-    border: safeColor(theme?.border, DEFAULT_THEME.border),
-    reminder: safeColor(theme?.reminder, DEFAULT_THEME.reminder),
-  };
+function normalizeTheme(value: unknown): ThemeKey {
+  const theme = String(value ?? "").toLowerCase().trim();
+  return (THEME_KEYS as readonly string[]).includes(theme)
+    ? (theme as ThemeKey)
+    : "formal";
 }
 
 function watermarkBackground(text: string) {
@@ -99,42 +133,55 @@ export function WeeklyGuidancePoster() {
   const posterRef = useRef<HTMLDivElement>(null);
 
   const [topic, setTopic] = useState("");
+  const [tone, setTone] = useState<
+    "تربوية هادئة" | "تحفيزية حماسية" | "دينية وجدانية" | "توعوية مباشرة"
+  >("تربوية هادئة");
+
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  // النص الافتراضي فارغ كما طلبت
+  // يبدأ المنشور فارغاً كما طلبت.
   const [title, setTitle] = useState("");
   const [intro, setIntro] = useState("");
   const [body, setBody] = useState("");
   const [reminder, setReminder] = useState("");
+  const [themeKey, setThemeKey] = useState<ThemeKey>("formal");
 
-  // يحدده الذكاء الاصطناعي حسب الموضوع
-  const [theme, setTheme] = useState<PosterTheme>(DEFAULT_THEME);
+  const theme = THEMES[themeKey];
 
   async function generate() {
     const cleanTopic = topic.trim();
 
     if (cleanTopic.length < 2) {
-      toast.error("اكتب موضوع التوجيه أولاً، مثل: الانضباط، التنمر، احترام الوقت...");
+      toast.error(
+        "اكتب موضوع التوجيه أولاً، مثل: الانضباط، الأمانة، التنمر، احترام الوقت..."
+      );
       return;
     }
 
     setBusy(true);
 
     try {
-      const result = await draft({ data: { topic: cleanTopic } });
+      const result = await draft({
+        data: {
+          topic: cleanTopic,
+          tone,
+        },
+      });
 
       setTitle(result.title || "");
       setIntro(result.intro || "");
       setBody(result.body || "");
       setReminder(result.reminder || "");
-      setTheme(normalizeTheme(result.theme));
+      setThemeKey(normalizeTheme(result.theme));
 
-      toast.success("تم إنشاء المنشور بالذكاء الاصطناعي.");
+      toast.success("تم إنشاء المحتوى واختيار التصميم المناسب للموضوع.");
     } catch (error) {
       console.error(error);
       toast.error(
-        error instanceof Error ? error.message : "تعذّر توليد محتوى المنشور."
+        error instanceof Error
+          ? error.message
+          : "تعذّر توليد محتوى التوجيه."
       );
     } finally {
       setBusy(false);
@@ -147,12 +194,14 @@ export function WeeklyGuidancePoster() {
     setIntro("");
     setBody("");
     setReminder("");
-    setTheme(DEFAULT_THEME);
+    setThemeKey("formal");
     toast.success("تم تفريغ المنشور.");
   }
 
   async function prepareForExport() {
-    if (document.fonts?.ready) await document.fonts.ready;
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
 
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => {
@@ -162,7 +211,9 @@ export function WeeklyGuidancePoster() {
   }
 
   async function createPng() {
-    if (!posterRef.current) throw new Error("تعذر العثور على المنشور.");
+    if (!posterRef.current) {
+      throw new Error("تعذر العثور على المنشور.");
+    }
 
     await prepareForExport();
 
@@ -189,7 +240,7 @@ export function WeeklyGuidancePoster() {
       link.click();
       link.remove();
 
-      toast.success("تم حفظ صورة المنشور بجودة عالية.");
+      toast.success("تم حفظ صورة PNG بجودة عالية.");
     } catch (error) {
       console.error(error);
       toast.error("تعذّر تصدير صورة PNG.");
@@ -212,7 +263,7 @@ export function WeeklyGuidancePoster() {
       toast.success("تم إنشاء ملف PDF.");
     } catch (error) {
       console.error(error);
-      toast.error("تعذّر إنشاء ملف PDF.");
+      toast.error("تعذّر إنشاء PDF.");
     } finally {
       setExporting(false);
     }
@@ -237,6 +288,7 @@ export function WeeklyGuidancePoster() {
         type: "image/png",
       });
 
+      // على Android/iOS يفتح مشاركة النظام، ويمكن اختيار WhatsApp مباشرة.
       if (
         navigator.share &&
         (!navigator.canShare || navigator.canShare({ files: [file] }))
@@ -246,15 +298,19 @@ export function WeeklyGuidancePoster() {
           text: `${BRAND.platform}${title ? `\nموضوع: ${title}` : ""}`,
           files: [file],
         });
-        toast.success("تم فتح خيارات المشاركة.");
         return;
       }
 
+      // احتياطي للمتصفحات التي لا تدعم مشاركة الملفات.
       const message = encodeURIComponent(
         `${BRAND.platform}${title ? `\nموضوع: ${title}` : ""}`
       );
+
       window.open(`https://wa.me/?text=${message}`, "_blank");
-      toast.info("تم فتح WhatsApp. قد تحتاج لإرفاق الصورة يدويًا.");
+
+      toast.info(
+        "تم فتح WhatsApp. هذا المتصفح لا يدعم إرفاق الصورة تلقائياً؛ يمكنك إرفاقها من حفظ PNG."
+      );
     } catch (error) {
       if ((error as Error)?.name !== "AbortError") {
         console.error(error);
@@ -273,7 +329,7 @@ export function WeeklyGuidancePoster() {
     []
   );
 
-  const posterStyle = {
+  const cssVars = {
     "--primary": theme.primary,
     "--secondary": theme.secondary,
     "--accent": theme.accent,
@@ -296,7 +352,7 @@ export function WeeklyGuidancePoster() {
             height: 297mm;
             margin: 0 !important;
             padding: 0 !important;
-            background: white !important;
+            background: #fff !important;
           }
 
           body * {
@@ -326,9 +382,10 @@ export function WeeklyGuidancePoster() {
       `}</style>
 
       <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4" dir="rtl">
+        {/* لوحة التحكم */}
         <section className="no-print rounded-2xl border bg-card p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex-1">
+          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <div>
               <Label htmlFor="topic" className="font-bold">
                 موضوع التوجيه الأسبوعي
               </Label>
@@ -345,7 +402,12 @@ export function WeeklyGuidancePoster() {
               />
             </div>
 
-            <Button type="button" onClick={generate} disabled={busy}>
+            <Button
+              type="button"
+              onClick={generate}
+              disabled={busy}
+              className="self-end"
+            >
               {busy ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -355,6 +417,32 @@ export function WeeklyGuidancePoster() {
             </Button>
           </div>
 
+          <div className="mt-4">
+            <Label htmlFor="tone" className="text-xs text-muted-foreground">
+              أسلوب الصياغة
+            </Label>
+
+            <select
+              id="tone"
+              value={tone}
+              onChange={(event) =>
+                setTone(
+                  event.target.value as
+                    | "تربوية هادئة"
+                    | "تحفيزية حماسية"
+                    | "دينية وجدانية"
+                    | "توعوية مباشرة"
+                )
+              }
+              className="mt-1 flex h-10 w-full rounded-md border bg-background px-3 text-sm"
+            >
+              <option value="تربوية هادئة">تربوية هادئة</option>
+              <option value="تحفيزية حماسية">تحفيزية حماسية</option>
+              <option value="دينية وجدانية">دينية وجدانية</option>
+              <option value="توعوية مباشرة">توعوية مباشرة</option>
+            </select>
+          </div>
+
           <div className="mt-5 grid gap-4">
             <div>
               <Label className="text-xs text-muted-foreground">العنوان</Label>
@@ -362,12 +450,14 @@ export function WeeklyGuidancePoster() {
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 className="mt-1 font-bold"
-                placeholder="يظهر هنا العنوان بعد التوليد"
+                placeholder="يظهر هنا بعد التوليد"
               />
             </div>
 
             <div>
-              <Label className="text-xs text-muted-foreground">المقدمة</Label>
+              <Label className="text-xs text-muted-foreground">
+                الفقرة التمهيدية
+              </Label>
               <Textarea
                 value={intro}
                 onChange={(event) => setIntro(event.target.value)}
@@ -378,7 +468,9 @@ export function WeeklyGuidancePoster() {
             </div>
 
             <div>
-              <Label className="text-xs text-muted-foreground">المحتوى</Label>
+              <Label className="text-xs text-muted-foreground">
+                الفقرة التفصيلية
+              </Label>
               <Textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
@@ -449,13 +541,14 @@ export function WeeklyGuidancePoster() {
           </div>
         </section>
 
+        {/* معاينة A4 */}
         <div className="overflow-auto rounded-2xl border bg-muted/30 p-4">
           <div
             ref={posterRef}
             dir="rtl"
             className="print-poster mx-auto overflow-hidden bg-white text-[var(--primary)]"
             style={{
-              ...posterStyle,
+              ...cssVars,
               width: 794,
               height: 1123,
               padding: 38,
@@ -487,7 +580,7 @@ export function WeeklyGuidancePoster() {
                   crossOrigin="anonymous"
                 />
 
-                <div className="mt-1 text-center text-[13px] font-bold leading-6 text-[var(--primary)]">
+                <div className="mt-1 text-center text-[13px] font-bold leading-6">
                   <div>{SCHOOL_INFO.ministry}</div>
                   <div>{SCHOOL_INFO.authority}</div>
                   <div>{SCHOOL_INFO.department}</div>
