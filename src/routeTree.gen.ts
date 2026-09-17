@@ -30,6 +30,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWeeklyPosterRouteImport } from './routes/_authenticated/weekly-poster'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedAdminUpgradeRequestsIndexRouteImport } from './routes/_authenticated/admin/upgrade-requests/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -139,6 +140,11 @@ const AuthenticatedWeeklyPosterRoute =
     path: '/weekly-poster',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminUpgradeRequestsIndexRoute =
   AuthenticatedAdminUpgradeRequestsIndexRouteImport.update({
     id: '/admin/upgrade-requests/',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/upgrade-requests': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesById {
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
+    | '/.lovable/oauth/consent'
     | '/admin/upgrade-requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
+    | '/.lovable/oauth/consent'
     | '/admin/upgrade-requests'
   id:
     | '__root__'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/subscription'
     | '/_authenticated/weekly-poster'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/admin/upgrade-requests/'
   fileRoutesById: FileRoutesById
 }
@@ -296,6 +308,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   McpRoute: typeof McpRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -447,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWeeklyPosterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/upgrade-requests/': {
       id: '/_authenticated/admin/upgrade-requests/'
       path: '/admin/upgrade-requests'
@@ -508,6 +528,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

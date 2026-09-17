@@ -15,11 +15,19 @@ import { Copyright } from "@/components/Copyright";
 const DEMO_EMAIL = "demo@thaat.sa";
 const DEMO_PASSWORD = "Thaat-Demo-2026";
 
+function safeNext(value: unknown): string {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : "";
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  beforeLoad: async () => {
+  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s["next"]) }),
+  beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: "/dashboard" });
+    if (data.user) {
+      if (search.next) throw redirect({ href: search.next });
+      throw redirect({ to: "/dashboard" });
+    }
   },
   head: () => ({
     meta: [
