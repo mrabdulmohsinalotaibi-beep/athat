@@ -182,15 +182,16 @@ export function WeeklyGuidancePoster() {
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
           }}
         >
-          {/* الترويسة (شعار وزارة التعليم فقط مع بيانات الجهة) */}
+          {/* الترويسة المعدلة: الشعار في المنتصف ومعلومات المدرسة في اليمين */}
           <div className="flex items-center justify-between gap-4 rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
-            <div className="flex-1 text-center text-sm font-bold leading-7">
+            <div className="text-right text-xs font-bold leading-6">
               <p>{SCHOOL_INFO.ministry}</p>
               <p>{SCHOOL_INFO.authority}</p>
               <p>{SCHOOL_INFO.department}</p>
               <p>{SCHOOL_INFO.school}</p>
             </div>
-            <img src={moeLogo} alt="شعار وزارة التعليم" className="h-16 w-28 shrink-0 object-contain" />
+            <img src={moeLogo} alt="شعار وزارة التعليم" className="h-16 w-28 shrink-0 object-contain mx-auto" />
+            <div className="w-24"></div> {/* مساحة مطابقة لموازنة التوزيع على الجانبين */}
           </div>
 
           {/* عنوان اللوحة */}
@@ -233,7 +234,7 @@ export function WeeklyGuidancePoster() {
               )}
             </div>
 
-            {/* تذييل الصفحة داخل الإطار (التوجيه الطلابي يمين ومنصة الذات يسار) */}
+            {/* تذييل الصفحة داخل الإطار */}
             <div className="relative mt-8 flex items-center justify-between border-t border-[#c9b48a]/40 pt-3 text-xs text-muted-foreground font-medium">
               <span>التوجيه الطلابي</span>
               <span>منصة الذات للتوجيه الطلابي</span>
