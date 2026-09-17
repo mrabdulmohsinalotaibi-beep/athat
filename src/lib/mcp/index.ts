@@ -10,7 +10,7 @@ import listStudentsTool from "./tools/list-students";
 const projectRef = import.meta.env["VITE_SUPABASE_PROJECT_ID"] ?? "project-ref-unset";
 
 export default defineMcp({
-  name: "مكتب-التوجيه-الطلابي",
+  name: "my-app-mcp",
   title: "مكتب التوجيه الطلابي",
   version: "0.1.0",
   instructions:
