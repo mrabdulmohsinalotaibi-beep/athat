@@ -12,6 +12,8 @@ import {
   ShieldAlert,
   Trash2,
   UserRound,
+  CopyX,
+  ArrowDownUp,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -75,7 +77,16 @@ export function StudentProfileDialog({
           result[section.key] = [];
           continue;
         }
-        result[section.key] = (data ?? []) as unknown as Row[];
+        let rows = (data ?? []) as unknown as Row[];
+
+        // 1. ترتيب الأبجدي تلقائياً بناءً على حقل العنوان
+        rows = rows.sort((a, b) => {
+          const valA = String(a[section.titleField] ?? "").toLowerCase();
+          const valB = String(b[section.titleField] ?? "").toLowerCase();
+          return valA.localeCompare(valB, "ar");
+        });
+
+        result[section.key] = rows;
       }
       return result;
     },
@@ -105,29 +116,55 @@ export function StudentProfileDialog({
     toast.success("تم حذف السجل من ملف الطالب");
   }
 
+  // دالة حذف السجلات المتكررة داخل القسم الواحد
+  async function removeDuplicates(sectionKey: string, table: string, rows: Row[]) {
+    if (!rows || rows.length === 0) return;
+    if (!confirm("هل أنت متأكد من حذف السجلات المتكررة والإبقاء على نسخة واحدة فقط؟")) return;
+
+    // تحديد التكرار بناءً على تطابق حقل العنوان والتاريخ مثلاً أو العنوان فقط
+    const seen = new Set<string>();
+    const idsToDelete: string[] = [];
+
+    for (const row of rows) {
+      const sectionConfig = LINKED_SECTIONS.find((s) => s.key === sectionKey);
+      const titleVal = String(row[sectionConfig?.titleField ?? ""] ?? "").trim();
+      
+      if (seen.has(titleVal)) {
+        idsToDelete.push(String(row.id));
+      } else {
+        seen.add(titleVal);
+      }
+    }
+
+    if (idsToDelete.length === 0) {
+      toast.info("لا توجد سجلات متكررة للحذف.");
+      return;
+    }
+
+    // تنفيذ الحذف دفعة واحدة من قاعدة البيانات
+    const { error } = await supabase.from(table as never).delete().in("id", idsToDelete);
+    if (error) {
+      toast.error(`تعذّر حذف المتكرر: ${error.message}`);
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["student-profile", fullName, studentNo] });
+    queryClient.invalidateQueries({ queryKey: [table] });
+    toast.success(`تم بنجاح حذف ${idsToDelete.length} من السجلات المتكررة.`);
+  }
+
   if (!student) return null;
 
-  // تجهيز الحقول الأساسية والإضافية مع إزالة التكرار والترتيب الأبجدي حسب التسمية (Label)
-  const infoFields = useMemo(() => {
-    const fields: { label: string; key: string }[] = [
-      { label: "اسم الطالب", key: "full_name" },
-      { label: "جوال ولي الأمر", key: "guardian_phone" },
-      { label: "رقم الطالب", key: "student_no" },
-      ...(student["grade"] ? [{ label: "الصف", key: "grade" }] : []),
-      ...(student["classroom"] ? [{ label: "الفصل", key: "classroom" }] : []),
-      { label: "ولي الأمر", key: "guardian_name" },
-      ...(student["mother_phone"] ? [{ label: "جوال الأم", key: "mother_phone" }] : []),
-      { label: "الحالة", key: "status" },
-    ];
-
-    // إزالة التكرار بناءً على الـ key
-    const uniqueFields = Array.from(
-      new Map(fields.map((f) => [f.key, f])).values()
-    );
-
-    // الترتيب الأبجدي حسب الـ label باللغة العربية
-    return uniqueFields.sort((a, b) => a.label.localeCompare(b.label, "ar"));
-  }, [student]);
+  const infoFields: { label: string; key: string }[] = [
+    { label: "اسم الطالب", key: "full_name" },
+    { label: "جوال ولي الأمر", key: "guardian_phone" },
+    { label: "رقم الطالب", key: "student_no" },
+    ...(student["grade"] ? [{ label: "الصف", key: "grade" }] : []),
+    ...(student["classroom"] ? [{ label: "الفصل", key: "classroom" }] : []),
+    { label: "ولي الأمر", key: "guardian_name" },
+    ...(student["mother_phone"] ? [{ label: "جوال الأم", key: "mother_phone" }] : []),
+    { label: "الحالة", key: "status" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -209,11 +246,24 @@ export function StudentProfileDialog({
                       <span className="flex items-center gap-2">
                         <Icon className="size-4 text-primary" />
                         {config.title} ({rows.length})
+                        <span className="text-xs font-normal text-muted-foreground flex items-center gap-1 mr-2">
+                          <ArrowDownUp className="size-3" /> مرتب تصاعدياً أبجديّاً
+                        </span>
                       </span>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="mb-2 flex justify-end">
-                        <Button asChild size="sm" variant="outline">
+                      <div className="mb-2 flex flex-wrap justify-between gap-2">
+                        {rows.length > 0 && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => removeDuplicates(section.key, config.table, rows)}
+                            className="gap-1"
+                          >
+                            <CopyX className="size-4" /> حذف السجلات المتكررة
+                          </Button>
+                        )}
+                        <Button asChild size="sm" variant="outline" className="mr-auto">
                           <Link to={`/${section.key}` as never} onClick={() => onOpenChange(false)}>
                             <GraduationCap className="size-4" /> إضافة سجل جديد لهذا الطالب في {config.title}
                           </Link>
