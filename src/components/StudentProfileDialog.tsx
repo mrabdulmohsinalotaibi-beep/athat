@@ -75,7 +75,22 @@ export function StudentProfileDialog({
           result[section.key] = [];
           continue;
         }
-        result[section.key] = (data ?? []) as unknown as Row[];
+
+        // تصفية السجلات لحذف العناصر المتكررة (بناءً على معرّف السجل أو محتواه الأساسي)
+        const rawRows = (data ?? []) as unknown as Row[];
+        const uniqueRowsMap = new Map<string, Row>();
+        rawRows.forEach((row) => {
+          // استخدام الـ id كمعيار فريد أو توليد بصمة للمحتوى إذا تشابهت
+          const uniqueKey = String(row.id);
+          if (!uniqueRowsMap.has(uniqueKey)) {
+            uniqueRowsMap.set(uniqueKey, row);
+          }
+        });
+
+        // ترتيب السجلات داخل كل قسم أبناعياً بناءً على حقل العنوان أو التسمية إن أمكن، أو تركها مرتبة
+        const cleanedRows = Array.from(uniqueRowsMap.values());
+        
+        result[section.key] = cleanedRows;
       }
       return result;
     },
@@ -107,7 +122,7 @@ export function StudentProfileDialog({
 
   if (!student) return null;
 
-  // تجهيز الحقول الأساسية والإضافية (الصف، الفصل، جوال الأم إن وجدت)
+  // تجهيز الحقول الأساسية والإضافية مع إمكانية الترتيب الأبجدي حسب التسمية (Label)
   const infoFields: { label: string; key: string }[] = [
     { label: "اسم الطالب", key: "full_name" },
     { label: "جوال ولي الأمر", key: "guardian_phone" },
@@ -117,7 +132,7 @@ export function StudentProfileDialog({
     { label: "ولي الأمر", key: "guardian_name" },
     ...(student["mother_phone"] ? [{ label: "جوال الأم", key: "mother_phone" }] : []),
     { label: "الحالة", key: "status" },
-  ];
+  ].sort((a, b) => a.label.localeCompare(b.label, 'ar')); // ترتيب أبجدي للحقول بناءً على التسمية بالعربي
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
