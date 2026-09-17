@@ -20,7 +20,7 @@ const SCHOOL_INFO = {
   authority: "وزارة التعليم",
   department: "إدارة التعليم بمكة المكرمة",
   school: "متوسطة العلاء بن الحضرمي",
-  watermark: "متوسطة العلاء بن الحضرمي",
+  watermark: "متوسطة العلاء بن الحضرمي بمكة المكرمة",
 };
 
 function watermarkBackground(text: string) {
