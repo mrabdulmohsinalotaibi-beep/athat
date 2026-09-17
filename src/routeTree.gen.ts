@@ -27,6 +27,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
+import { Route as AuthenticatedWeeklyPosterRouteImport } from './routes/_authenticated/weekly-poster'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -118,6 +119,12 @@ const AuthenticatedSubscriptionRoute =
     path: '/subscription',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedWeeklyPosterRoute =
+  AuthenticatedWeeklyPosterRouteImport.update({
+    id: '/weekly-poster',
+    path: '/weekly-poster',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -156,6 +164,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,6 +186,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
+  '/_authenticated/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/subscription'
+    | '/weekly-poster'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/subscription'
+    | '/weekly-poster'
   id:
     | '__root__'
     | '/'
@@ -237,6 +249,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/students'
     | '/_authenticated/subscription'
+    | '/_authenticated/weekly-poster'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -373,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSubscriptionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/weekly-poster': {
+      id: '/_authenticated/weekly-poster'
+      path: '/weekly-poster'
+      fullPath: '/weekly-poster'
+      preLoaderRoute: typeof AuthenticatedWeeklyPosterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -392,6 +412,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
+  AuthenticatedWeeklyPosterRoute: typeof AuthenticatedWeeklyPosterRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -410,6 +431,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
+  AuthenticatedWeeklyPosterRoute: AuthenticatedWeeklyPosterRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
