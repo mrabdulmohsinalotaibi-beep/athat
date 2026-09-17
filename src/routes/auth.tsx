@@ -15,11 +15,19 @@ import { Copyright } from "@/components/Copyright";
 const DEMO_EMAIL = "demo@thaat.sa";
 const DEMO_PASSWORD = "Thaat-Demo-2026";
 
+function safeNext(value: unknown): string {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : "";
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  beforeLoad: async () => {
+  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s["next"]) }),
+  beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: "/dashboard" });
+    if (data.user) {
+      if (search.next) throw redirect({ href: search.next });
+      throw redirect({ to: "/dashboard" });
+    }
   },
   head: () => ({
     meta: [
@@ -39,6 +47,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +55,10 @@ function AuthPage() {
   const [busy, setBusy] = useState<"" | "form" | "google" | "demo">("");
 
   function goToDashboard() {
+    if (next) {
+      window.location.replace(next);
+      return;
+    }
     navigate({ to: "/dashboard", replace: true });
   }
 
@@ -66,7 +79,10 @@ function AuthPage() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/auth" },
+          options: {
+            emailRedirectTo:
+              window.location.origin + "/auth" + (next ? `?next=${encodeURIComponent(next)}` : ""),
+          },
         });
         if (signUpError) throw signUpError;
 
@@ -105,7 +121,9 @@ function AuthPage() {
     setBusy("google");
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: next
+          ? window.location.origin + "/auth?next=" + encodeURIComponent(next)
+          : window.location.origin,
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
