@@ -180,7 +180,7 @@ function ProgramsPage() {
     },
   });
 
-  const ministryNames = useMemo(() => new Set(MINISTRY_PROGRAMS.map((p) => p[1])), []);
+  const ministryNames = useMemo(() => new Set<string>(MINISTRY_PROGRAMS.map((p) => p[1])), []);
 
   const save = useMutation({
     mutationFn: async (draft: ProgramDraft) => {
@@ -196,7 +196,7 @@ function ProgramsPage() {
         start_date: draft.start_date || null,
         end_date: draft.end_date || null,
         exec_status: draft.exec_status || "لم يبدأ",
-        beneficiaries: draft.beneficiaries === "" || draft.beneficiaries == null ? null : Number(draft.beneficiaries),
+        beneficiaries: draft.beneficiaries == null || String(draft.beneficiaries).trim() === "" ? null : Number(draft.beneficiaries),
         required_evidence: draft.required_evidence || null,
         notes: draft.notes || null,
       };

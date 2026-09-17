@@ -337,12 +337,12 @@ function ReportsPage() {
     );
   }, [selected, sections]);
 
-  const totalEvidence = sections?.evidences?.length ?? 0;
+  const totalEvidence = sections?.["evidences"]?.length ?? 0;
 
-  const totalPrograms = sections?.programs?.length ?? 0;
+  const totalPrograms = sections?.["programs"]?.length ?? 0;
 
   const totalBeneficiaries = useMemo(() => {
-    const programs = sections?.programs ?? [];
+    const programs = sections?.["programs"] ?? [];
 
     return programs.reduce((sum, row) => {
       const value = Number(row["beneficiaries"] ?? 0);
@@ -351,7 +351,7 @@ function ReportsPage() {
   }, [sections]);
 
   const programStatusData = useMemo(() => {
-    const rows = sections?.programs ?? [];
+    const rows = sections?.["programs"] ?? [];
     const map = new Map<string, number>();
 
     rows.forEach((row) => {
@@ -366,7 +366,7 @@ function ReportsPage() {
   }, [sections]);
 
   const programDomainData = useMemo(() => {
-    const rows = sections?.programs ?? [];
+    const rows = sections?.["programs"] ?? [];
     const map = new Map<string, number>();
 
     rows.forEach((row) => {
@@ -679,7 +679,7 @@ function ReportsPage() {
                       <Cell
                         key={`status-${index}`}
                         fill={
-                          CHART_COLORS[index % CHART_COLORS.length]
+                          CHART_COLORS[index % CHART_COLORS.length] ?? "#888888"
                         }
                       />
                     ))}
@@ -753,7 +753,7 @@ function ReportsPage() {
                       <Cell
                         key={`domain-${index}`}
                         fill={
-                          CHART_COLORS[index % CHART_COLORS.length]
+                          CHART_COLORS[index % CHART_COLORS.length] ?? "#888888"
                         }
                       />
                     ))}
@@ -1359,15 +1359,15 @@ function ReportsPage() {
           {/* Evidence */}
 
           {reportSections.evidence &&
-            sections?.evidences &&
-            sections.evidences.length > 0 && (
+            sections?.["evidences"] &&
+            sections["evidences"].length > 0 && (
               <section className="mt-7 break-inside-avoid">
                 <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                   الشواهد والمرفقات
                 </h2>
 
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {sections.evidences
+                  {sections["evidences"]
                     .filter(
                       (row) =>
                         String(
@@ -1405,7 +1405,7 @@ function ReportsPage() {
 
                 <p className="mt-3 text-[10px] text-paper-muted-foreground">
                   إجمالي الشواهد المسجلة:{" "}
-                  {sections.evidences.length}
+                  {sections["evidences"].length}
                 </p>
               </section>
             )}
