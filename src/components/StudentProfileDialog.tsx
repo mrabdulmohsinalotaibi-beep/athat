@@ -108,10 +108,6 @@ export function StudentProfileDialog({
 
   const infoFields: { label: string; key: string }[] = [
     { label: "رقم الطالب", key: "student_no" },
-    { label: "رقم الهوية", key: "national_id" },
-    { label: "الجنسية", key: "nationality" },
-    { label: "المرحلة", key: "stage" },
-    { label: "الصف", key: "grade" },
     { label: "الفصل", key: "classroom" },
     { label: "ولي الأمر", key: "guardian_name" },
     { label: "جوال ولي الأمر", key: "guardian_phone" },
