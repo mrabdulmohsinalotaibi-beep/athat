@@ -53,7 +53,6 @@ export function WeeklyGuidancePoster() {
     "الطلاب المتميزون هم أكثرهم انضباطاً بالتنظيم والالتزام، فلنصنع معاً أسبوعاً دراسياً مثالياً وخالياً من التعثرات ولنثبت لأنفسنا أولاً وللجميع أننا أهل للمسؤولية.",
   );
 
-  // تفعيل الذكاء الاصطناعي لتوليد محتوى التوجيه الأسبوعي عبر DeepSeek
   async function generate() {
     if (topic.trim().length < 2) {
       toast.error("اكتب موضوع التوجيه أولاً، مثل: الأمانة، احترام الوقت، التنمر...");
@@ -66,7 +65,7 @@ export function WeeklyGuidancePoster() {
       setIntro(result.intro);
       setBody(result.body);
       if (result.reminder) setReminder(result.reminder);
-      toast.success("تم توليد النص بالذكاء الاصطناعي بنجاح، راجعه وعدّله قبل التنزيل.");
+      toast.success("تم توليد النص بنجاح عبر محرك الذكاء الاصطناعي.");
     } catch (error) {
       toast.error((error as Error).message || "تعذّر توليد النص.");
     } finally {
@@ -135,7 +134,7 @@ export function WeeklyGuidancePoster() {
           </div>
           <Button type="button" onClick={generate} disabled={busy} className="shrink-0">
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-            {busy ? "جارٍ الكتابة..." : "توليد بالذكاء الاصطناعي"}
+            {busy ? "جارٍ التوليد بالذكاء الاصطناعي..." : "توليد بالذكاء الاصطناعي"}
           </Button>
         </div>
 
@@ -183,18 +182,18 @@ export function WeeklyGuidancePoster() {
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
           }}
         >
-          {/* الترويسة المعدلة: معلومات المدرسة يمين، الشعار في المنتصف */}
-          <div className="grid grid-cols-3 items-center rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
+          {/* الترويسة المعدلة: معلومات المدرسة يمين والشعار في المنتصف */}
+          <div className="flex items-center justify-between rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
             <div className="text-right text-sm font-bold leading-7">
               <p>{SCHOOL_INFO.ministry}</p>
               <p>{SCHOOL_INFO.authority}</p>
               <p>{SCHOOL_INFO.department}</p>
               <p>{SCHOOL_INFO.school}</p>
             </div>
-            <div className="flex justify-center">
+            <div className="flex-1 flex justify-center">
               <img src={moeLogo} alt="شعار وزارة التعليم" className="h-16 w-28 object-contain" />
             </div>
-            <div />
+            <div className="w-32" /> {/* عنصر موازنة لمسار الفراغ الأيسر لضمان توسيط الشعار بدقة */}
           </div>
 
           {/* عنوان اللوحة */}
@@ -237,7 +236,7 @@ export function WeeklyGuidancePoster() {
               )}
             </div>
 
-            {/* تذييل الصفحة داخل الإطار (التوجيه الطلابي يمين ومنصة الذات يسار) */}
+            {/* تذييل الصفحة داخل الإطار */}
             <div className="relative mt-8 flex items-center justify-between border-t border-[#c9b48a]/40 pt-3 text-xs text-muted-foreground font-medium">
               <span>التوجيه الطلابي</span>
               <span>منصة الذات للتوجيه الطلابي</span>
