@@ -7,6 +7,7 @@ import {
   Loader2,
   Printer,
   RotateCcw,
+  Share2,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -241,6 +242,32 @@ export function WeeklyGuidancePoster() {
   }
 
   /**
+   * انتظار تحميل جميع الصور داخل العنصر قبل التصدير.
+   */
+  async function waitForImages(element: HTMLElement) {
+    const images = Array.from(element.querySelectorAll("img"));
+
+    await Promise.all(
+      images.map((image) => {
+        if (image.complete) {
+          return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve) => {
+          const done = () => {
+            image.removeEventListener("load", done);
+            image.removeEventListener("error", done);
+            resolve();
+          };
+
+          image.addEventListener("load", done);
+          image.addEventListener("error", done);
+        });
+      }),
+    );
+  }
+
+  /**
    * تصدير اللوحة كصورة PNG.
    */
   async function downloadPng() {
@@ -254,28 +281,7 @@ export function WeeklyGuidancePoster() {
       /**
        * التأكد من اكتمال تحميل الصور قبل التصدير.
        */
-      const images = Array.from(
-        posterRef.current.querySelectorAll("img"),
-      );
-
-      await Promise.all(
-        images.map((image) => {
-          if (image.complete) {
-            return Promise.resolve();
-          }
-
-          return new Promise<void>((resolve) => {
-            const done = () => {
-              image.removeEventListener("load", done);
-              image.removeEventListener("error", done);
-              resolve();
-            };
-
-            image.addEventListener("load", done);
-            image.addEventListener("error", done);
-          });
-        }),
-      );
+      await waitForImages(posterRef.current);
 
       const dataUrl = await toPng(posterRef.current, {
         cacheBust: true,
@@ -340,6 +346,134 @@ export function WeeklyGuidancePoster() {
 
       toast.error(
         "تعذّر تصدير PDF. حاول مرة أخرى، وإذا استمرت المشكلة أعد تحميل الصفحة.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  /**
+   * إرسال اللوحة والرسالة إلى الواتساب.
+   *
+   * الطريقة:
+   * 1) نحاول استخدام Web Share API لمشاركة الصورة مباشرة (يعمل ممتاز على الجوال).
+   * 2) إن لم يكن مدعومًا (كمعظم أجهزة الكمبيوتر):
+   *    - ننزّل الصورة تلقائيًا.
+   *    - نفتح واتساب بالنص جاهزًا، ويُرفق المستخدم الصورة يدويًا.
+   */
+  async function shareToWhatsApp() {
+    if (!posterRef.current || busy || exporting) {
+      return;
+    }
+
+    setExporting(true);
+
+    try {
+      /**
+       * التأكد من تحميل الصور (الشعارات) قبل التصدير.
+       */
+      await waitForImages(posterRef.current);
+
+      /**
+       * نص الرسالة المرسل مع الصورة.
+       */
+      const messageText = [
+        `*${title.trim() || "التوجيه الطلابي"}*`,
+        "",
+        intro.trim(),
+        "",
+        body.trim(),
+        "",
+        reminder.trim() ? `*تذكر دائماً:*\n${reminder.trim()}` : "",
+        "",
+        `— ${SCHOOL_INFO.school}`,
+      ]
+        .filter((line, index, arr) => {
+          // إزالة الأسطر الفارغة المتتالية.
+          if (line === "" && arr[index - 1] === "") {
+            return false;
+          }
+          return true;
+        })
+        .join("\n")
+        .trim();
+
+      /**
+       * توليد صورة اللوحة.
+       * pixelRatio = 2 لتقليل حجم الملف حتى لا يفشل الإرسال في واتساب.
+       */
+      const dataUrl = await toPng(posterRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+        skipFonts: false,
+      });
+
+      const safeTitle =
+        title
+          .trim()
+          .replace(/[\\/:*?"<>|]/g, "-")
+          .slice(0, 60) || "الأسبوعي";
+
+      const fileName = `التوجيه_الطلابي_${safeTitle}.png`;
+
+      /**
+       * تحويل الصورة إلى File لمشاركتها.
+       */
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: "image/png" });
+
+      /**
+       * المحاولة الأولى: Web Share API مع الصورة.
+       */
+      const canShareFiles =
+        typeof navigator !== "undefined" &&
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] });
+
+      if (canShareFiles && typeof navigator.share === "function") {
+        try {
+          await navigator.share({
+            files: [file],
+            text: messageText,
+            title: title.trim() || "التوجيه الطلابي",
+          });
+
+          toast.success("تم فتح نافذة المشاركة، اختر واتساب.");
+          return;
+        } catch (err) {
+          // إذا ألغى المستخدم المشاركة، لا نكمل للطريقة الثانية.
+          if ((err as { name?: string })?.name === "AbortError") {
+            return;
+          }
+          // أي خطأ آخر: ننتقل للطريقة الاحتياطية.
+        }
+      }
+
+      /**
+       * الطريقة الاحتياطية:
+       * 1) ننزّل الصورة تلقائيًا.
+       * 2) نفتح واتساب بالنص جاهزًا.
+       */
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`;
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+
+      toast.success(
+        "تم تنزيل الصورة، وفتح واتساب بالنص. أرفق الصورة من المعرض.",
+      );
+    } catch (error) {
+      console.error("WhatsApp share error:", error);
+
+      toast.error(
+        "تعذّر تجهيز المشاركة. حاول مرة أخرى بعد لحظات.",
       );
     } finally {
       setExporting(false);
@@ -528,7 +662,7 @@ export function WeeklyGuidancePoster() {
             </div>
           </div>
 
-          {/* أزرار التصدير والطباعة */}
+          {/* أزرار التصدير والطباعة والمشاركة */}
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t pt-5">
             <Button
               type="button"
@@ -567,6 +701,22 @@ export function WeeklyGuidancePoster() {
               )}
 
               تنزيل PDF
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void shareToWhatsApp()}
+              disabled={isDisabled}
+              className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+            >
+              {exporting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Share2 className="size-4" />
+              )}
+
+              إرسال للواتساب
             </Button>
 
             <Button
