@@ -55,6 +55,10 @@ function AuthPage() {
   const [busy, setBusy] = useState<"" | "form" | "google" | "demo">("");
 
   function goToDashboard() {
+    if (next) {
+      window.location.replace(next);
+      return;
+    }
     navigate({ to: "/dashboard", replace: true });
   }
 
