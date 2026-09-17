@@ -20,7 +20,7 @@ const SCHOOL_INFO = {
   authority: "وزارة التعليم",
   department: "إدارة التعليم بمكة المكرمة",
   school: "متوسطة العلاء بن الحضرمي",
-  watermark: "متوسطة العلاء بن الحضرمي بمكة المكرمة",
+  watermark: "متوسطة العلاء بن الحضرمي",
 };
 
 function watermarkBackground(text: string) {
@@ -174,7 +174,7 @@ export function WeeklyGuidancePoster() {
         <div
           ref={posterRef}
           dir="rtl"
-          className="mx-auto bg-white text-[#1f2937]"
+          className="mx-auto bg-white text-[#1f2937] flex flex-col justify-between"
           style={{
             width: 794,
             minHeight: 1123,
@@ -182,57 +182,65 @@ export function WeeklyGuidancePoster() {
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
           }}
         >
-          {/* الترويسة (شعار وزارة التعليم فقط مع بيانات الجهة) */}
-          <div className="flex items-center justify-between gap-4 rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
-            <div className="flex-1 text-center text-sm font-bold leading-7">
-              <p>{SCHOOL_INFO.ministry}</p>
-              <p>{SCHOOL_INFO.authority}</p>
-              <p>{SCHOOL_INFO.department}</p>
-              <p>{SCHOOL_INFO.school}</p>
+          <div>
+            {/* الترويسة (شعار وزارة التعليم فقط مع بيانات الجهة) */}
+            <div className="flex items-center justify-between gap-4 rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
+              <div className="flex-1 text-center text-sm font-bold leading-7">
+                <p>{SCHOOL_INFO.ministry}</p>
+                <p>{SCHOOL_INFO.authority}</p>
+                <p>{SCHOOL_INFO.department}</p>
+                <p>{SCHOOL_INFO.school}</p>
+              </div>
+              <img src={moeLogo} alt="شعار وزارة التعليم" className="h-16 w-28 shrink-0 object-contain" />
             </div>
-            <img src={moeLogo} alt="شعار وزارة التعليم" className="h-16 w-28 shrink-0 object-contain" />
-          </div>
 
-          {/* عنوان اللوحة */}
-          <div className="mt-8 flex justify-center">
-            <div className="flex items-center gap-3 rounded-xl border bg-[#f4f1ea] px-8 py-3 shadow-[3px_3px_0_rgba(0,0,0,0.12)]">
-              <span className="size-3 rounded-full bg-[#1f2937]" />
-              <h1 className="text-2xl font-extrabold">التوجيه الطلابي</h1>
+            {/* عنوان اللوحة */}
+            <div className="mt-8 flex justify-center">
+              <div className="flex items-center gap-3 rounded-xl border bg-[#f4f1ea] px-8 py-3 shadow-[3px_3px_0_rgba(0,0,0,0.12)]">
+                <span className="size-3 rounded-full bg-[#1f2937]" />
+                <h1 className="text-2xl font-extrabold">التوجيه الطلابي</h1>
+              </div>
             </div>
-          </div>
 
-          {/* الإطار الرئيسي */}
-          <div
-            className="relative mt-8 min-h-[760px] overflow-hidden rounded-sm border-2 border-[#c9b48a] p-10"
-            style={watermarkStyle}
-          >
-            {/* زوايا مطوية للديكور */}
-            <span
-              className="absolute right-0 top-0 size-6 border-b-2 border-l-2 border-[#c9b48a]"
-              style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
-            />
-            <span
-              className="absolute bottom-0 left-0 size-6 border-r-2 border-t-2 border-[#c9b48a]"
-              style={{ clipPath: "polygon(0 100%, 100% 100%, 0 0)" }}
-            />
+            {/* الإطار الرئيسي */}
+            <div
+              className="relative mt-8 min-h-[760px] overflow-hidden rounded-sm border-2 border-[#c9b48a] p-10"
+              style={watermarkStyle}
+            >
+              {/* زوايا مطوية للديكور */}
+              <span
+                className="absolute right-0 top-0 size-6 border-b-2 border-l-2 border-[#c9b48a]"
+                style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
+              />
+              <span
+                className="absolute bottom-0 left-0 size-6 border-r-2 border-t-2 border-[#c9b48a]"
+                style={{ clipPath: "polygon(0 100%, 100% 100%, 0 0)" }}
+              />
 
-            <div className="relative flex h-full flex-col items-center justify-center gap-8 text-center">
-              <div className="max-w-xl">
-                <p className="text-xl font-bold leading-10">{intro}</p>
-                {title && <p className="mt-2 text-2xl font-extrabold">&quot;{title}&quot;</p>}
+              <div className="relative flex h-full flex-col items-center justify-center gap-8 text-center">
+                <div className="max-w-xl">
+                  <p className="text-xl font-bold leading-10">{intro}</p>
+                  {title && <p className="mt-2 text-2xl font-extrabold">&quot;{title}&quot;</p>}
+                </div>
+
+                {body && <p className="max-w-xl text-lg leading-9">{body}</p>}
+
+                {reminder && (
+                  <div className="mt-4 max-w-xl text-lg font-extrabold leading-9">
+                    <p>تذكر دائماً:</p>
+                    <p>{reminder}</p>
+                  </div>
+                )}
               </div>
 
-              {body && <p className="max-w-xl text-lg leading-9">{body}</p>}
-
-              {reminder && (
-                <div className="mt-4 max-w-xl text-lg font-extrabold leading-9">
-                  <p>تذكر دائماً:</p>
-                  <p>{reminder}</p>
-                </div>
-              )}
+              <span className="absolute bottom-6 left-10 h-px w-20 bg-[#c9b48a]" />
             </div>
+          </div>
 
-            <span className="absolute bottom-6 left-10 h-px w-20 bg-[#c9b48a]" />
+          {/* تذييل الصفحة (اليمين واليسار بخط صغير) */}
+          <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground px-2 pt-2 border-t border-muted">
+            <span>التوجيه الطلابي</span>
+            <span>منصة الذات للتوجيه الطلابي</span>
           </div>
         </div>
       </div>
