@@ -57,21 +57,21 @@ export function WeeklyGuidancePoster() {
     }
     setBusy(true);
     try {
-      // إرسال البيانات بالهيكلة الصحيحة المتوافقة مع دالة السيرفر
-      const result = await draftFn({ data: { topic: topic.trim() } });
+      // التصحيح: إرسال الكائن مباشرة بالشكل الصحيح المتوافق مع دالة السيرفر
+      const result = await draftFn({ topic: topic.trim() });
       
-      if (result) {
+      if (result && typeof result === "object") {
         setTitle(result.title || topic);
         setIntro(result.intro || "");
         setBody(result.body || "");
         if (result.reminder) setReminder(result.reminder);
-        toast.success("تم توليد المحتوى بالذكاء الاصطناعي بنجاح.");
+        toast.success("تم توليد المحتوى بنجاح.");
       } else {
-        throw new Error("لم يتم استلام بيانات صحيحة");
+        throw new Error("استجابة غير صالحة");
       }
     } catch (error: any) {
       console.error(error);
-      toast.error(error?.message || "تعذّر توليد المحتوى عبر الذكاء الاصطناعي.");
+      toast.error("حدث خطأ أثناء التوليد، يجدر التأكد من مفتاح الربط.");
     } finally {
       setBusy(false);
     }
@@ -153,7 +153,7 @@ export function WeeklyGuidancePoster() {
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">الفقرة التفصيلية</Label>
-            <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={3} className="mt-1" />
+            <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows5={3} className="mt-1" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">تذكر دائماً</Label>
@@ -173,7 +173,7 @@ export function WeeklyGuidancePoster() {
         </div>
       </section>
 
-      {/* المعاينة القابلة للتصدير — مقاسات A4 */}
+      {/* المعاينة القابلة للتصدير */}
       <div className="overflow-auto rounded-2xl border bg-muted/30 p-4">
         <div
           ref={posterRef}
@@ -186,7 +186,7 @@ export function WeeklyGuidancePoster() {
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
           }}
         >
-          {/* الترويسة: الشعار في المنتصف ومعلومات المدرسة يمين */}
+          {/* الترويسة */}
           <div className="grid grid-cols-3 items-center rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
             <div className="text-right text-sm font-bold leading-7">
               <p>{SCHOOL_INFO.ministry}</p>
