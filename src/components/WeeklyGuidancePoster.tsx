@@ -1,15 +1,19 @@
 import {
+  useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type CSSProperties,
-  type ReactNode,
 } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toPng } from "html-to-image";
 import {
+  Check,
+  Copy,
   Loader2,
   Palette,
+  Printer,
   RotateCcw,
   Share2,
   Sparkles,
@@ -32,11 +36,18 @@ const SCHOOL_INFO = {
   department: "إدارة التعليم بمنطقة مكة المكرمة",
   school: "متوسطة العلاء بن الحضرمي",
   watermark: "متوسطة العلاء بن الحضرمي",
-};
+} as const;
 
 /* =========================================================
-   المحتوى الافتراضي فارغ — يملؤه الذكاء الاصطناعي أو المعلم
+   حدود النصوص — لضمان عدم خروج المحتوى عن حدود صفحة A4
 ========================================================= */
+const FIELD_LIMITS = {
+  title: 60,
+  intro: 220,
+  body: 520,
+  reminder: 260,
+} as const;
+
 const DEFAULT_CONTENT = {
   title: "",
   intro: "",
@@ -44,14 +55,13 @@ const DEFAULT_CONTENT = {
   reminder: "",
 };
 
+const DRAFT_STORAGE_KEY = "weekly-guidance-draft-v1";
+const AUTOSAVE_DEBOUNCE_MS = 600;
+
 /* =========================================================
-   الثيمات — يتفنن الذكاء الاصطناعي باختيار الثيم المناسب
-   لكل موضوع (أمانة، احترام وقت، تنمر، ...) ويُحدّث الحقول.
-   
-   ⚠️ لتشغيل اختيار الثيم تلقائيًا من الذكاء الاصطناعي،
-   اجعل دالة draftWeeklyGuidance في الخادم تُعيد حقلًا
-   باسم `theme` بقيمة أحد المفاتيح: formal | calm | energetic
-   | spiritual | creative.
+   الثيمات — يختار الذكاء الاصطناعي الثيم المناسب لكل موضوع
+   (أمانة، احترام وقت، تنمر، ...) عبر حقل `theme` في الاستجابة.
+   المفاتيح المدعومة: formal | calm | energetic | spiritual | creative
 ========================================================= */
 const THEMES = {
   formal: {
@@ -108,6 +118,17 @@ function isThemeKey(value: unknown): value is ThemeKey {
   return typeof value === "string" && value in THEMES;
 }
 
+type DraftShape = {
+  topic: string;
+  title: string;
+  intro: string;
+  body: string;
+  reminder: string;
+  docNumber: string;
+  docDate: string;
+  themeKey: ThemeKey;
+};
+
 /* =========================================================
    أدوات مساعدة
 ========================================================= */
@@ -140,6 +161,35 @@ function getErrorMessage(error: unknown): string {
   }
 
   return "حدث خطأ غير متوقع. حاول مرة أخرى.";
+}
+
+function readDraft(): Partial<DraftShape> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as Partial<DraftShape>;
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(draft: DraftShape) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  } catch {
+    /* التخزين المحلي غير متاح — نتجاهل بصمت */
+  }
+}
+
+function clearDraft() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    /* نتجاهل بصمت */
+  }
 }
 
 /* =========================================================
@@ -223,16 +273,123 @@ function ThemedDivider({ theme, width = 12 }: { theme: Theme; width?: number }) 
 }
 
 /* =========================================================
+   مبدّل الثيمات — مكوّن مستقل لتحسين القراءة
+========================================================= */
+function ThemeSwitcher({
+  activeKey,
+  disabled,
+  onSelect,
+}: {
+  activeKey: ThemeKey;
+  disabled: boolean;
+  onSelect: (key: ThemeKey) => void;
+}) {
+  return (
+    <div>
+      <Label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+        <Palette className="size-3.5" />
+        الثيم البصري (يُختار تلقائيًا من الذكاء الاصطناعي أو يدويًا)
+      </Label>
+      <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label="اختيار الثيم البصري">
+        {Object.values(THEMES).map((t) => {
+          const active = activeKey === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              disabled={disabled}
+              onClick={() => onSelect(t.key)}
+              className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50"
+              style={{
+                background: active ? t.primary : "transparent",
+                borderColor: active ? t.primary : "#e5e7eb",
+                color: active ? "#ffffff" : "#374151",
+              }}
+            >
+              <span
+                className="size-2.5 rounded-full"
+                style={{
+                  background: active ? "#ffffff" : t.primary,
+                  opacity: active ? 0.9 : 1,
+                }}
+              />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   حقل نصي مع عدّاد أحرف وتنبيه عند الاقتراب من الحد
+========================================================= */
+function CountedTextarea({
+  id,
+  label,
+  value,
+  maxLength,
+  disabled,
+  rows,
+  placeholder,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  maxLength: number;
+  disabled: boolean;
+  rows: number;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) {
+  const remaining = maxLength - value.length;
+  const isNearLimit = remaining <= Math.max(20, maxLength * 0.1);
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <Label htmlFor={id} className="text-xs font-semibold text-muted-foreground">
+          {label}
+        </Label>
+        <span
+          className={`text-[11px] tabular-nums ${isNearLimit ? "font-bold text-amber-600" : "text-muted-foreground"}`}
+          aria-live="polite"
+        >
+          {value.length}/{maxLength}
+        </span>
+      </div>
+      <Textarea
+        id={id}
+        value={value}
+        disabled={disabled}
+        maxLength={maxLength}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
+        className="mt-1.5 resize-y leading-7"
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
+/* =========================================================
    المكوّن الرئيسي
 ========================================================= */
 export function WeeklyGuidancePoster() {
   const generateWeeklyGuidance = useServerFn(draftWeeklyGuidance);
   const posterRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const hasLoadedDraft = useRef(false);
 
   const [topic, setTopic] = useState("");
 
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [title, setTitle] = useState(DEFAULT_CONTENT.title);
   const [intro, setIntro] = useState(DEFAULT_CONTENT.intro);
@@ -245,6 +402,49 @@ export function WeeklyGuidancePoster() {
   const [themeKey, setThemeKey] = useState<ThemeKey>("formal");
   const theme = THEMES[themeKey];
 
+  /* ---------- استرجاع المسودة المحفوظة محليًا عند أول تحميل ---------- */
+  useEffect(() => {
+    if (hasLoadedDraft.current) return;
+    hasLoadedDraft.current = true;
+
+    const draft = readDraft();
+    if (!draft) return;
+
+    if (draft.topic) setTopic(draft.topic);
+    if (draft.title) setTitle(draft.title);
+    if (draft.intro) setIntro(draft.intro);
+    if (draft.body) setBody(draft.body);
+    if (draft.reminder) setReminder(draft.reminder);
+    if (draft.docNumber) setDocNumber(draft.docNumber);
+    if (draft.docDate) setDocDate(draft.docDate);
+    if (isThemeKey(draft.themeKey)) setThemeKey(draft.themeKey);
+
+    toast.message("تم استرجاع مسودة محفوظة سابقًا.");
+  }, []);
+
+  /* ---------- حفظ تلقائي مؤجَّل (debounced) للمسودة ---------- */
+  useEffect(() => {
+    if (!hasLoadedDraft.current) return;
+
+    const hasContent =
+      topic.trim() || title.trim() || intro.trim() || body.trim() || reminder.trim();
+
+    const timeout = window.setTimeout(() => {
+      if (hasContent) {
+        writeDraft({ topic, title, intro, body, reminder, docNumber, docDate, themeKey });
+      } else {
+        clearDraft();
+      }
+    }, AUTOSAVE_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [topic, title, intro, body, reminder, docNumber, docDate, themeKey]);
+
+  /* ---------- إلغاء أي طلب معلّق عند إزالة المكوّن ---------- */
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
   const watermarkStyle = useMemo<CSSProperties>(
     () => ({
       backgroundImage: watermarkBackground(SCHOOL_INFO.watermark, theme.primary),
@@ -255,7 +455,7 @@ export function WeeklyGuidancePoster() {
   );
 
   /* ---------- توليد المحتوى بالذكاء الاصطناعي ---------- */
-  async function generate() {
+  const generate = useCallback(async () => {
     const cleanTopic = topic.trim();
 
     if (cleanTopic.length < 2) {
@@ -265,15 +465,21 @@ export function WeeklyGuidancePoster() {
 
     if (busy || exporting) return;
 
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setBusy(true);
 
     try {
       const result = await generateWeeklyGuidance({ data: { topic: cleanTopic } });
 
-      if (result?.title) setTitle(String(result.title));
-      if (result?.intro) setIntro(String(result.intro));
-      if (result?.body) setBody(String(result.body));
-      if (result?.reminder) setReminder(String(result.reminder));
+      if (controller.signal.aborted) return;
+
+      if (result?.title) setTitle(String(result.title).slice(0, FIELD_LIMITS.title));
+      if (result?.intro) setIntro(String(result.intro).slice(0, FIELD_LIMITS.intro));
+      if (result?.body) setBody(String(result.body).slice(0, FIELD_LIMITS.body));
+      if (result?.reminder) setReminder(String(result.reminder).slice(0, FIELD_LIMITS.reminder));
 
       /**
        * إن أعاد الذكاء الاصطناعي حقل `theme`، نطبّقه تلقائيًا.
@@ -290,14 +496,23 @@ export function WeeklyGuidancePoster() {
 
       toast.success("تم توليد نص التوجيه. راجعه وعدّله قبل الإرسال.");
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error("Weekly guidance generation error:", error);
       toast.error(getErrorMessage(error));
     } finally {
-      setBusy(false);
+      if (!controller.signal.aborted) setBusy(false);
     }
-  }
+  }, [busy, exporting, generateWeeklyGuidance, topic]);
 
-  function resetContent() {
+  const resetContent = useCallback(() => {
+    const hasContent =
+      topic.trim() || title.trim() || intro.trim() || body.trim() || reminder.trim();
+
+    if (hasContent && !window.confirm("سيتم مسح كل الحقول الحالية. هل أنت متأكد؟")) {
+      return;
+    }
+
+    setTopic("");
     setTitle(DEFAULT_CONTENT.title);
     setIntro(DEFAULT_CONTENT.intro);
     setBody(DEFAULT_CONTENT.body);
@@ -305,8 +520,9 @@ export function WeeklyGuidancePoster() {
     setDocNumber("");
     setDocDate("");
     setThemeKey("formal");
+    clearDraft();
     toast.success("تمت إعادة ضبط النموذج.");
-  }
+  }, [body, intro, reminder, title, topic]);
 
   async function waitForImages(element: HTMLElement) {
     const images = Array.from(element.querySelectorAll("img"));
@@ -326,29 +542,57 @@ export function WeeklyGuidancePoster() {
     );
   }
 
+  function buildMessageText() {
+    return [
+      `*${title.trim() || "التوجيه الطلابي"}*`,
+      "",
+      intro.trim(),
+      "",
+      body.trim(),
+      "",
+      reminder.trim() ? `*تذكر دائماً:*\n${reminder.trim()}` : "",
+      "",
+      `— ${SCHOOL_INFO.school}`,
+    ]
+      .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
+      .join("\n")
+      .trim();
+  }
+
+  /* ---------- نسخ نص التوجيه إلى الحافظة ---------- */
+  async function copyText() {
+    if (!title.trim() && !intro.trim() && !body.trim()) {
+      toast.error("لا يوجد نص لنسخه بعد.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(buildMessageText());
+      setCopied(true);
+      toast.success("تم نسخ النص إلى الحافظة.");
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Copy error:", error);
+      toast.error("تعذّر نسخ النص. جرّب التحديد اليدوي.");
+    }
+  }
+
+  /* ---------- طباعة مباشرة عبر نافذة المتصفح ---------- */
+  function printPoster() {
+    if (isExportBlocked) return;
+    window.print();
+  }
+
   /* ---------- مشاركة الواتساب ---------- */
   async function shareToWhatsApp() {
-    if (!posterRef.current || busy || exporting) return;
+    if (!posterRef.current || isExportBlocked) return;
 
     setExporting(true);
 
     try {
       await waitForImages(posterRef.current);
 
-      const messageText = [
-        `*${title.trim() || "التوجيه الطلابي"}*`,
-        "",
-        intro.trim(),
-        "",
-        body.trim(),
-        "",
-        reminder.trim() ? `*تذكر دائماً:*\n${reminder.trim()}` : "",
-        "",
-        `— ${SCHOOL_INFO.school}`,
-      ]
-        .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
-        .join("\n")
-        .trim();
+      const messageText = buildMessageText();
 
       const dataUrl = await toPng(posterRef.current, {
         cacheBust: true,
@@ -404,14 +648,16 @@ export function WeeklyGuidancePoster() {
   }
 
   const isDisabled = busy || exporting;
+  const isExportBlocked = busy || exporting;
   const hasMeta = Boolean(docNumber.trim() || docDate.trim());
+  const canExport = Boolean(title.trim() || intro.trim() || body.trim());
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6" dir="rtl">
       {/* =========================================================
           لوحة التحكم
       ========================================================== */}
-      <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
+      <section className="overflow-hidden rounded-3xl border bg-card shadow-sm print:hidden">
         <div className="border-b bg-gradient-to-l from-primary/10 via-primary/5 to-transparent px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -466,38 +712,7 @@ export function WeeklyGuidancePoster() {
 
           {/* اختيار الثيم */}
           <div className="mt-5">
-            <Label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-              <Palette className="size-3.5" />
-              الثيم البصري (يُختار تلقائيًا من الذكاء الاصطناعي أو يدويًا)
-            </Label>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {Object.values(THEMES).map((t) => {
-                const active = themeKey === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    type="button"
-                    disabled={isDisabled}
-                    onClick={() => setThemeKey(t.key)}
-                    className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50"
-                    style={{
-                      background: active ? t.primary : "transparent",
-                      borderColor: active ? t.primary : "#e5e7eb",
-                      color: active ? "#ffffff" : "#374151",
-                    }}
-                  >
-                    <span
-                      className="size-2.5 rounded-full"
-                      style={{
-                        background: active ? "#ffffff" : t.primary,
-                        opacity: active ? 0.9 : 1,
-                      }}
-                    />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
+            <ThemeSwitcher activeKey={themeKey} disabled={isDisabled} onSelect={setThemeKey} />
           </div>
 
           {/* صادر / تاريخ */}
@@ -533,61 +748,55 @@ export function WeeklyGuidancePoster() {
           {/* الحقول */}
           <div className="mt-6 grid gap-4">
             <div>
-              <Label htmlFor="title" className="text-xs font-semibold text-muted-foreground">
-                العنوان / الكلمة المحورية
-              </Label>
+              <div className="flex items-baseline justify-between">
+                <Label htmlFor="title" className="text-xs font-semibold text-muted-foreground">
+                  العنوان / الكلمة المحورية
+                </Label>
+                <span className="text-[11px] text-muted-foreground tabular-nums">
+                  {title.length}/{FIELD_LIMITS.title}
+                </span>
+              </div>
               <Input
                 id="title"
                 value={title}
                 disabled={isDisabled}
+                maxLength={FIELD_LIMITS.title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="mt-1.5 font-bold"
                 placeholder="مثال: الانضباط، الأمانة، احترام الوقت..."
               />
             </div>
 
-            <div>
-              <Label htmlFor="intro" className="text-xs font-semibold text-muted-foreground">
-                الفقرة التمهيدية
-              </Label>
-              <Textarea
-                id="intro"
-                value={intro}
-                disabled={isDisabled}
-                onChange={(e) => setIntro(e.target.value)}
-                rows={3}
-                className="mt-1.5 resize-y leading-7"
-                placeholder="اكتب أو ولّد بالذكاء الاصطناعي..."
-              />
-            </div>
+            <CountedTextarea
+              id="intro"
+              label="الفقرة التمهيدية"
+              value={intro}
+              maxLength={FIELD_LIMITS.intro}
+              disabled={isDisabled}
+              rows={3}
+              placeholder="اكتب أو ولّد بالذكاء الاصطناعي..."
+              onChange={setIntro}
+            />
 
-            <div>
-              <Label htmlFor="body" className="text-xs font-semibold text-muted-foreground">
-                الفقرة التفصيلية
-              </Label>
-              <Textarea
-                id="body"
-                value={body}
-                disabled={isDisabled}
-                onChange={(e) => setBody(e.target.value)}
-                rows={5}
-                className="mt-1.5 resize-y leading-7"
-              />
-            </div>
+            <CountedTextarea
+              id="body"
+              label="الفقرة التفصيلية"
+              value={body}
+              maxLength={FIELD_LIMITS.body}
+              disabled={isDisabled}
+              rows={5}
+              onChange={setBody}
+            />
 
-            <div>
-              <Label htmlFor="reminder" className="text-xs font-semibold text-muted-foreground">
-                التذكير الختامي
-              </Label>
-              <Textarea
-                id="reminder"
-                value={reminder}
-                disabled={isDisabled}
-                onChange={(e) => setReminder(e.target.value)}
-                rows={4}
-                className="mt-1.5 resize-y leading-7"
-              />
-            </div>
+            <CountedTextarea
+              id="reminder"
+              label="التذكير الختامي"
+              value={reminder}
+              maxLength={FIELD_LIMITS.reminder}
+              disabled={isDisabled}
+              rows={4}
+              onChange={setReminder}
+            />
           </div>
 
           {/* الأزرار */}
@@ -595,12 +804,33 @@ export function WeeklyGuidancePoster() {
             <Button
               type="button"
               onClick={() => void shareToWhatsApp()}
-              disabled={isDisabled}
+              disabled={isDisabled || !canExport}
               className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
               {exporting ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
               إرسال للواتساب
             </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={printPoster}
+              disabled={isDisabled || !canExport}
+            >
+              <Printer className="size-4" />
+              طباعة
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void copyText()}
+              disabled={isDisabled || !canExport}
+            >
+              {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              {copied ? "تم النسخ" : "نسخ النص"}
+            </Button>
+
             <Button
               type="button"
               variant="ghost"
@@ -618,12 +848,12 @@ export function WeeklyGuidancePoster() {
       {/* =========================================================
           المعاينة — كليشة رسمية A4 (794 × 1123)
       ========================================================== */}
-      <section className="flex justify-center overflow-auto rounded-3xl border bg-muted/30 p-3 sm:p-5">
+      <section className="flex justify-center overflow-auto rounded-3xl border bg-muted/30 p-3 sm:p-5 print:border-0 print:bg-transparent print:p-0">
         <div
           id="printable-poster"
           ref={posterRef}
           dir="rtl"
-          className="relative overflow-hidden bg-white text-[#1f2937] shadow-xl"
+          className="relative overflow-hidden bg-white text-[#1f2937] shadow-xl print:shadow-none"
           style={{
             width: "794px",
             height: "1123px",
@@ -760,83 +990,92 @@ export function WeeklyGuidancePoster() {
               </div>
 
               {/* المحتوى */}
-              <div className="relative flex flex-col items-center gap-6 text-center">
-                {/* العنوان */}
-                {title.trim() && (
-                  <div>
-                    <h2
-                      className="text-[30px] font-extrabold leading-tight"
-                      style={{ color: theme.primary }}
-                    >
-                      {title}
-                    </h2>
-                    <div className="mt-3">
-                      <ThemedDivider theme={theme} width={22} />
+              {title.trim() || intro.trim() || body.trim() || reminder.trim() ? (
+                <div className="relative flex flex-col items-center gap-6 text-center">
+                  {/* العنوان */}
+                  {title.trim() && (
+                    <div>
+                      <h2
+                        className="text-[30px] font-extrabold leading-tight"
+                        style={{ color: theme.primary }}
+                      >
+                        {title}
+                      </h2>
+                      <div className="mt-3">
+                        <ThemedDivider theme={theme} width={22} />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* المقدمة */}
-                {intro.trim() && (
-                  <p
-                    className="max-w-[600px] text-[16px] font-bold leading-[2.1]"
-                    style={{ overflowWrap: "anywhere" }}
-                  >
-                    {intro}
-                  </p>
-                )}
-
-                {/* الفقرة الرئيسية */}
-                {body.trim() && (
-                  <p
-                    className="max-w-[600px] text-[15px] leading-[2.1] text-[#374151]"
-                    style={{ overflowWrap: "anywhere" }}
-                  >
-                    {body}
-                  </p>
-                )}
-
-                {/* الفاصل قبل التذكير */}
-                {reminder.trim() && body.trim() && (
-                  <ThemedDivider theme={theme} width={16} />
-                )}
-
-                {/* التذكير الختامي */}
-                {reminder.trim() && (
-                  <div
-                    className="relative w-full max-w-[600px] overflow-hidden rounded-2xl px-7 py-5"
-                    style={{
-                      background: "rgba(255,255,255,0.85)",
-                      border: `1.5px solid ${theme.accent}`,
-                      boxShadow: `0 3px 14px ${theme.accent}33`,
-                    }}
-                  >
-                    <span
-                      className="absolute right-0 top-0 h-full w-1.5"
-                      style={{ background: theme.primary }}
-                    />
-                    <span
-                      className="absolute left-0 top-0 h-full w-1.5"
-                      style={{ background: theme.primary }}
-                    />
-
-                    <p className="text-[16px] font-extrabold" style={{ color: theme.primary }}>
-                      تذكير
-                    </p>
-
-                    <div className="mx-auto mt-2 mb-3">
-                      <ThemedDivider theme={theme} width={14} />
-                    </div>
-
+                  {/* المقدمة */}
+                  {intro.trim() && (
                     <p
-                      className="text-[15px] font-bold leading-[2.1]"
+                      className="max-w-[600px] text-[16px] font-bold leading-[2.1]"
                       style={{ overflowWrap: "anywhere" }}
                     >
-                      {reminder}
+                      {intro}
                     </p>
-                  </div>
-                )}
-              </div>
+                  )}
+
+                  {/* الفقرة الرئيسية */}
+                  {body.trim() && (
+                    <p
+                      className="max-w-[600px] text-[15px] leading-[2.1] text-[#374151]"
+                      style={{ overflowWrap: "anywhere" }}
+                    >
+                      {body}
+                    </p>
+                  )}
+
+                  {/* الفاصل قبل التذكير */}
+                  {reminder.trim() && body.trim() && (
+                    <ThemedDivider theme={theme} width={16} />
+                  )}
+
+                  {/* التذكير الختامي */}
+                  {reminder.trim() && (
+                    <div
+                      className="relative w-full max-w-[600px] overflow-hidden rounded-2xl px-7 py-5"
+                      style={{
+                        background: "rgba(255,255,255,0.85)",
+                        border: `1.5px solid ${theme.accent}`,
+                        boxShadow: `0 3px 14px ${theme.accent}33`,
+                      }}
+                    >
+                      <span
+                        className="absolute right-0 top-0 h-full w-1.5"
+                        style={{ background: theme.primary }}
+                      />
+                      <span
+                        className="absolute left-0 top-0 h-full w-1.5"
+                        style={{ background: theme.primary }}
+                      />
+
+                      <p className="text-[16px] font-extrabold" style={{ color: theme.primary }}>
+                        تذكير
+                      </p>
+
+                      <div className="mx-auto mt-2 mb-3">
+                        <ThemedDivider theme={theme} width={14} />
+                      </div>
+
+                      <p
+                        className="text-[15px] font-bold leading-[2.1]"
+                        style={{ overflowWrap: "anywhere" }}
+                      >
+                        {reminder}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative flex h-[600px] flex-col items-center justify-center gap-3 text-center text-[#9ca3af]">
+                  <Sparkles className="size-8 opacity-40" />
+                  <p className="text-sm font-semibold">
+                    اكتب موضوع التوجيه وولّد المحتوى، أو املأ الحقول يدويًا لمعاينة الكليشة هنا
+                  </p>
+                </div>
+              )}
 
               {/* شريط زخرفي سفلي */}
               <div className="pointer-events-none absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2">
