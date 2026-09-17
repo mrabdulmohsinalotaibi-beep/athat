@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import moeLogo from "@/assets/moe-logo-official.png";
 
 /* =========================================================
-   بيانات المدرسة
+   بيانات المدرسة الرسمية
 ========================================================= */
 const SCHOOL_INFO = {
   ministry: "المملكة العربية السعودية",
@@ -59,9 +59,7 @@ const DRAFT_STORAGE_KEY = "weekly-guidance-draft-v1";
 const AUTOSAVE_DEBOUNCE_MS = 600;
 
 /* =========================================================
-   الثيمات — يختار الذكاء الاصطناعي الثيم المناسب لكل موضوع
-   (أمانة، احترام وقت، تنمر، ...) عبر حقل `theme` في الاستجابة.
-   المفاتيح المدعومة: formal | calm | energetic | spiritual | creative
+   الثيمات البصرية
 ========================================================= */
 const THEMES = {
   formal: {
@@ -142,9 +140,9 @@ function watermarkBackground(text: string, color: string): string {
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="420" height="240" viewBox="0 0 420 240">
-      <g fill="${color}" fill-opacity="0.06" font-family="Cairo, Arial, sans-serif" font-size="26" font-weight="700">
-        <text x="10" y="80" transform="rotate(-18 210 80)">${safe} ${safe}</text>
-        <text x="-70" y="190" transform="rotate(-18 210 190)">${safe} ${safe}</text>
+      <g fill="${color}" fill-opacity="0.05" font-family="Cairo, Arial, sans-serif" font-size="24" font-weight="700">
+        <text x="10" y="80" transform="rotate(-18 210 80)">${safe}</text>
+        <text x="-70" y="190" transform="rotate(-18 210 190)">${safe}</text>
       </g>
     </svg>
   `;
@@ -154,12 +152,10 @@ function watermarkBackground(text: string, color: string): string {
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
-
   if (typeof error === "object" && error !== null && "message" in error) {
     const message = (error as { message?: unknown }).message;
     if (typeof message === "string" && message.trim()) return message;
   }
-
   return "حدث خطأ غير متوقع. حاول مرة أخرى.";
 }
 
@@ -167,8 +163,7 @@ function readDraft(): Partial<DraftShape> | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as Partial<DraftShape>;
+    return raw ? (JSON.parse(raw) as Partial<DraftShape>) : null;
   } catch {
     return null;
   }
@@ -179,7 +174,7 @@ function writeDraft(draft: DraftShape) {
   try {
     window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
   } catch {
-    /* التخزين المحلي غير متاح — نتجاهل بصمت */
+    /* تجنب توقف التطبيق في حال امتلأ التخزين */
   }
 }
 
@@ -188,16 +183,15 @@ function clearDraft() {
   try {
     window.localStorage.removeItem(DRAFT_STORAGE_KEY);
   } catch {
-    /* نتجاهل بصمت */
+    /* ignore */
   }
 }
 
 /* =========================================================
-   زخارف الأركان — تختلف حسب الثيم
+   زخارف الأركان
 ========================================================= */
 function CornerOrnaments({ theme }: { theme: Theme }) {
   const { primary, accent, cornerDecoration } = theme;
-
   const corners = [
     "right-3 top-3",
     "left-3 top-3",
@@ -215,65 +209,60 @@ function CornerOrnaments({ theme }: { theme: Theme }) {
           <span className="pointer-events-none absolute left-3 bottom-3 size-8" style={{ borderBottom: `2px solid ${primary}`, borderLeft: `2px solid ${primary}` }} />
         </>
       );
-
     case "dots":
       return (
         <>
           {corners.map((pos, i) => (
-            <span key={i} className={`pointer-events-none absolute ${pos} size-3 rounded-full`} style={{ background: accent, opacity: 0.55 }} />
+            <span key={i} className={`pointer-events-none absolute ${pos} size-3 rounded-full`} style={{ background: accent, opacity: 0.6 }} />
           ))}
         </>
       );
-
     case "dynamic":
       return (
         <>
-          <span className="pointer-events-none absolute right-0 top-0 h-20 w-20" style={{ background: `linear-gradient(135deg, ${accent}55, transparent 70%)`, clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
-          <span className="pointer-events-none absolute left-0 top-0 h-20 w-20" style={{ background: `linear-gradient(-135deg, ${accent}55, transparent 70%)`, clipPath: "polygon(0 0, 100% 0, 0 100%)" }} />
-          <span className="pointer-events-none absolute right-0 bottom-0 h-20 w-20" style={{ background: `linear-gradient(45deg, ${accent}55, transparent 70%)`, clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
-          <span className="pointer-events-none absolute left-0 bottom-0 h-20 w-20" style={{ background: `linear-gradient(-45deg, ${accent}55, transparent 70%)`, clipPath: "polygon(0 0, 100% 100%, 0 100%)" }} />
+          <span className="pointer-events-none absolute right-0 top-0 h-16 w-16" style={{ background: `linear-gradient(135deg, ${accent}44, transparent 70%)`, clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
+          <span className="pointer-events-none absolute left-0 top-0 h-16 w-16" style={{ background: `linear-gradient(-135deg, ${accent}44, transparent 70%)`, clipPath: "polygon(0 0, 100% 0, 0 100%)" }} />
+          <span className="pointer-events-none absolute right-0 bottom-0 h-16 w-16" style={{ background: `linear-gradient(45deg, ${accent}44, transparent 70%)`, clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
+          <span className="pointer-events-none absolute left-0 bottom-0 h-16 w-16" style={{ background: `linear-gradient(-45deg, ${accent}44, transparent 70%)`, clipPath: "polygon(0 0, 100% 100%, 0 100%)" }} />
         </>
       );
-
     case "star":
       return (
         <>
           {corners.map((pos, i) => (
-            <span key={i} className={`pointer-events-none absolute ${pos} size-6 rotate-45`} style={{ border: `1.5px solid ${accent}`, opacity: 0.7 }} />
+            <span key={i} className={`pointer-events-none absolute ${pos} size-5 rotate-45`} style={{ border: `1.5px solid ${accent}`, opacity: 0.7 }} />
           ))}
         </>
       );
-
     case "playful":
       return (
         <>
-          <span className="pointer-events-none absolute right-4 top-4 size-3.5 rounded-full" style={{ background: primary, opacity: 0.4 }} />
-          <span className="pointer-events-none absolute left-5 top-7 size-2.5 rounded-full" style={{ background: accent, opacity: 0.55 }} />
+          <span className="pointer-events-none absolute right-4 top-4 size-3 rounded-full" style={{ background: primary, opacity: 0.4 }} />
+          <span className="pointer-events-none absolute left-5 top-6 size-2.5 rounded-full" style={{ background: accent, opacity: 0.55 }} />
           <span className="pointer-events-none absolute right-6 bottom-5 size-3 rounded-full" style={{ background: accent, opacity: 0.5 }} />
           <span className="pointer-events-none absolute left-4 bottom-4 size-3.5 rounded-full" style={{ background: primary, opacity: 0.4 }} />
         </>
       );
-
     default:
       return null;
   }
 }
 
 /* =========================================================
-   فاصل زخرفي متناسق مع الثيم
+   فاصل زخرفي
 ========================================================= */
-function ThemedDivider({ theme, width = 12 }: { theme: Theme; width?: number }) {
+function ThemedDivider({ theme, width = 16 }: { theme: Theme; width?: number }) {
   return (
-    <div className="flex items-center justify-center gap-2">
-      <div className="h-px" style={{ width, background: `linear-gradient(to left, transparent, ${theme.accent})` }} />
-      <div className="size-1.5 rotate-45" style={{ background: theme.primary }} />
-      <div className="h-px" style={{ width, background: `linear-gradient(to right, transparent, ${theme.accent})` }} />
+    <div className="flex items-center justify-center gap-2 my-2">
+      <div className="h-px" style={{ width: `${width}rem`, background: `linear-gradient(to left, transparent, ${theme.accent})` }} />
+      <div className="size-2 rotate-45" style={{ background: theme.primary }} />
+      <div className="h-px" style={{ width: `${width}rem`, background: `linear-gradient(to right, transparent, ${theme.accent})` }} />
     </div>
   );
 }
 
 /* =========================================================
-   مبدّل الثيمات — مكوّن مستقل لتحسين القراءة
+   مبدّل الثيمات
 ========================================================= */
 function ThemeSwitcher({
   activeKey,
@@ -288,9 +277,9 @@ function ThemeSwitcher({
     <div>
       <Label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
         <Palette className="size-3.5" />
-        الثيم البصري (يُختار تلقائيًا من الذكاء الاصطناعي أو يدويًا)
+        الثيم البصري (تلقائي مع الذكاء الاصطناعي أو يدوي)
       </Label>
-      <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label="اختيار الثيم البصري">
+      <div className="mt-2 flex flex-wrap gap-2" role="radiogroup">
         {Object.values(THEMES).map((t) => {
           const active = activeKey === t.key;
           return (
@@ -301,7 +290,7 @@ function ThemeSwitcher({
               aria-checked={active}
               disabled={disabled}
               onClick={() => onSelect(t.key)}
-              className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50"
+              className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50"
               style={{
                 background: active ? t.primary : "transparent",
                 borderColor: active ? t.primary : "#e5e7eb",
@@ -312,7 +301,6 @@ function ThemeSwitcher({
                 className="size-2.5 rounded-full"
                 style={{
                   background: active ? "#ffffff" : t.primary,
-                  opacity: active ? 0.9 : 1,
                 }}
               />
               {t.label}
@@ -325,7 +313,7 @@ function ThemeSwitcher({
 }
 
 /* =========================================================
-   حقل نصي مع عدّاد أحرف وتنبيه عند الاقتراب من الحد
+   حقل نصي مع عدّاد
 ========================================================= */
 function CountedTextarea({
   id,
@@ -357,7 +345,6 @@ function CountedTextarea({
         </Label>
         <span
           className={`text-[11px] tabular-nums ${isNearLimit ? "font-bold text-amber-600" : "text-muted-foreground"}`}
-          aria-live="polite"
         >
           {value.length}/{maxLength}
         </span>
@@ -386,7 +373,6 @@ export function WeeklyGuidancePoster() {
   const hasLoadedDraft = useRef(false);
 
   const [topic, setTopic] = useState("");
-
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -402,7 +388,7 @@ export function WeeklyGuidancePoster() {
   const [themeKey, setThemeKey] = useState<ThemeKey>("formal");
   const theme = THEMES[themeKey];
 
-  /* ---------- استرجاع المسودة المحفوظة محليًا عند أول تحميل ---------- */
+  /* ---------- استرجاع المسودة ---------- */
   useEffect(() => {
     if (hasLoadedDraft.current) return;
     hasLoadedDraft.current = true;
@@ -422,7 +408,7 @@ export function WeeklyGuidancePoster() {
     toast.message("تم استرجاع مسودة محفوظة سابقًا.");
   }, []);
 
-  /* ---------- حفظ تلقائي مؤجَّل (debounced) للمسودة ---------- */
+  /* ---------- حفظ تلقائي مؤجل ---------- */
   useEffect(() => {
     if (!hasLoadedDraft.current) return;
 
@@ -440,7 +426,6 @@ export function WeeklyGuidancePoster() {
     return () => window.clearTimeout(timeout);
   }, [topic, title, intro, body, reminder, docNumber, docDate, themeKey]);
 
-  /* ---------- إلغاء أي طلب معلّق عند إزالة المكوّن ---------- */
   useEffect(() => {
     return () => abortRef.current?.abort();
   }, []);
@@ -454,10 +439,9 @@ export function WeeklyGuidancePoster() {
     [theme.primary],
   );
 
-  /* ---------- توليد المحتوى بالذكاء الاصطناعي ---------- */
+  /* ---------- التوليد بالذكاء الاصطناعي ---------- */
   const generate = useCallback(async () => {
     const cleanTopic = topic.trim();
-
     if (cleanTopic.length < 2) {
       toast.error("اكتب موضوع التوجيه أولاً، مثل: الأمانة، احترام الوقت، التنمر...");
       return;
@@ -481,10 +465,6 @@ export function WeeklyGuidancePoster() {
       if (result?.body) setBody(String(result.body).slice(0, FIELD_LIMITS.body));
       if (result?.reminder) setReminder(String(result.reminder).slice(0, FIELD_LIMITS.reminder));
 
-      /**
-       * إن أعاد الذكاء الاصطناعي حقل `theme`، نطبّقه تلقائيًا.
-       * المفاتيح المدعومة: formal | calm | energetic | spiritual | creative
-       */
       const aiTheme =
         (result as { theme?: unknown })?.theme ??
         (result as { style?: unknown })?.style ??
@@ -494,7 +474,7 @@ export function WeeklyGuidancePoster() {
         setThemeKey(aiTheme);
       }
 
-      toast.success("تم توليد نص التوجيه. راجعه وعدّله قبل الإرسال.");
+      toast.success("تم توليد نص التوجيه بنجاح.");
     } catch (error) {
       if (controller.signal.aborted) return;
       console.error("Weekly guidance generation error:", error);
@@ -559,7 +539,6 @@ export function WeeklyGuidancePoster() {
       .trim();
   }
 
-  /* ---------- نسخ نص التوجيه إلى الحافظة ---------- */
   async function copyText() {
     if (!title.trim() && !intro.trim() && !body.trim()) {
       toast.error("لا يوجد نص لنسخه بعد.");
@@ -573,19 +552,17 @@ export function WeeklyGuidancePoster() {
       window.setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error("Copy error:", error);
-      toast.error("تعذّر نسخ النص. جرّب التحديد اليدوي.");
+      toast.error("تعذّر نسخ النص.");
     }
   }
 
-  /* ---------- طباعة مباشرة عبر نافذة المتصفح ---------- */
   function printPoster() {
-    if (isExportBlocked) return;
+    if (busy || exporting) return;
     window.print();
   }
 
-  /* ---------- مشاركة الواتساب ---------- */
   async function shareToWhatsApp() {
-    if (!posterRef.current || isExportBlocked) return;
+    if (!posterRef.current || busy || exporting) return;
 
     setExporting(true);
 
@@ -593,7 +570,6 @@ export function WeeklyGuidancePoster() {
       await waitForImages(posterRef.current);
 
       const messageText = buildMessageText();
-
       const dataUrl = await toPng(posterRef.current, {
         cacheBust: true,
         pixelRatio: 2,
@@ -621,7 +597,7 @@ export function WeeklyGuidancePoster() {
             text: messageText,
             title: title.trim() || "التوجيه الطلابي",
           });
-          toast.success("تم فتح نافذة المشاركة، اختر واتساب.");
+          toast.success("تم فتح نافذة المشاركة.");
           return;
         } catch (err) {
           if ((err as { name?: string })?.name === "AbortError") return;
@@ -638,18 +614,16 @@ export function WeeklyGuidancePoster() {
       const waUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`;
       window.open(waUrl, "_blank", "noopener,noreferrer");
 
-      toast.success("تم تنزيل الصورة، وفتح واتساب بالنص. أرفق الصورة من المعرض.");
+      toast.success("تم تنزيل الصورة وفتح واتساب.");
     } catch (error) {
       console.error("WhatsApp share error:", error);
-      toast.error("تعذّر تجهيز المشاركة. حاول مرة أخرى بعد لحظات.");
+      toast.error("تعذّر تجهيز المشاركة.");
     } finally {
       setExporting(false);
     }
   }
 
   const isDisabled = busy || exporting;
-  const isExportBlocked = busy || exporting;
-  const hasMeta = Boolean(docNumber.trim() || docDate.trim());
   const canExport = Boolean(title.trim() || intro.trim() || body.trim());
 
   return (
@@ -687,7 +661,7 @@ export function WeeklyGuidancePoster() {
               <Input
                 id="topic"
                 className="mt-1.5 h-11"
-                placeholder="مثال: الأمانة، احترام الوقت، التنمر، المحافظة على الممتلكات..."
+                placeholder="مثال: الأمانة، احترام الوقت، التنمر..."
                 value={topic}
                 disabled={isDisabled}
                 onChange={(e) => setTopic(e.target.value)}
@@ -706,7 +680,7 @@ export function WeeklyGuidancePoster() {
               className="h-11 shrink-0 px-5"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-              {busy ? "جارٍ إعداد التوجيه..." : "توليد بالذكاء الاصطناعي"}
+              {busy ? "جارٍ التوليد..." : "توليد بالذكاء الاصطناعي"}
             </Button>
           </div>
 
@@ -763,7 +737,7 @@ export function WeeklyGuidancePoster() {
                 maxLength={FIELD_LIMITS.title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="mt-1.5 font-bold"
-                placeholder="مثال: الانضباط، الأمانة، احترام الوقت..."
+                placeholder="مثال: الانضباط، الأمانة..."
               />
             </div>
 
@@ -846,7 +820,7 @@ export function WeeklyGuidancePoster() {
       </section>
 
       {/* =========================================================
-          المعاينة — كليشة رسمية A4 (794 × 1123)
+          المعاينة — A4 (794 × 1123)
       ========================================================== */}
       <section className="flex justify-center overflow-auto rounded-3xl border bg-muted/30 p-3 sm:p-5 print:border-0 print:bg-transparent print:p-0">
         <div
@@ -860,244 +834,127 @@ export function WeeklyGuidancePoster() {
             minWidth: "794px",
             minHeight: "1123px",
             maxHeight: "1123px",
-            padding: "40px 48px",
-            fontFamily: "'Cairo Variable', Cairo, Arial, sans-serif",
+            padding: "48px 56px",
+            fontFamily: "'Cairo', sans-serif",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
+            justify"between",
+            ...watermarkStyle,
           }}
         >
-          <div>
-            {/* =====================================================
-                الترويسة الرسمية — كليشة المدرسة
-            ====================================================== */}
+          <CornerOrnaments theme={theme} />
+
+          {/* الجزء العلوي: الترويسة والمحتوى */}
+          <div className="flex flex-col gap-6">
             <header>
-              {/* البسملة */}
               <p
-                className="mb-3 text-center text-[13px] font-semibold"
+                className="mb-2 text-center text-xs font-semibold"
                 style={{ color: theme.primary }}
               >
                 بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
               </p>
 
-              {/* الصف الرئيسي: 3 أعمدة */}
               <div
-                className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-[20px] px-5 py-4"
+                className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-[20px] px-6 py-4"
                 style={{
                   background: theme.headerBg,
                   border: `1px solid ${theme.accent}66`,
-                  boxShadow: "0 4px 18px rgba(0,0,0,0.05)",
+                  boxShadow: "0 4px 18px rgba(0,0,0,0.04)",
                 }}
               >
-                {/* اليمين — البيانات الرسمية */}
                 <div className="text-right text-[11px] font-bold leading-6 text-[#1f2937]">
                   <p className="font-extrabold">{SCHOOL_INFO.ministry}</p>
                   <p>{SCHOOL_INFO.authority}</p>
                   <p>{SCHOOL_INFO.department}</p>
                   <div
-                    className="my-1.5 h-px w-16"
-                    style={{ background: theme.accent, marginRight: 0 }}
+                    className="my-1 h-px w-12"
+                    style={{ background: theme.accent }}
                   />
                   <p className="text-[12px] font-extrabold" style={{ color: theme.primary }}>
                     {SCHOOL_INFO.school}
                   </p>
                 </div>
 
-                {/* المنتصف — شعار وزارة التعليم */}
                 <div className="flex flex-col items-center justify-center">
                   <img
                     src={moeLogo}
                     alt="شعار وزارة التعليم"
                     className="max-h-[74px] max-w-[96px] object-contain"
                     crossOrigin="anonymous"
+                    loading="eager"
                   />
                 </div>
 
-                {/* اليسار — عنوان الوثيقة + مكتب التوجيه */}
-                <div className="text-left">
-                  <p className="text-[15px] font-extrabold leading-tight" style={{ color: theme.primary }}>
+                <div className="text-left text-[11px] font-bold leading-6 text-[#1f2937]">
+                  <p className="text-[14px] font-extrabold" style={{ color: theme.primary }}>
                     التوجيه الطلابي
                   </p>
-                  <p className="text-[12px] font-bold text-[#4b5563]">
-                    الأسبوعي
-                  </p>
+                  <p className="text-[#4b5563]">الأسبوعي</p>
                   <div
-                    className="my-1.5 h-px w-16"
+                    className="my-1 h-px w-12 ml-auto"
                     style={{ background: theme.accent }}
                   />
-                  <p className="text-[11px] font-extrabold text-[#1f2937]">
-                    مكتب التوجيه الطلابي
-                  </p>
+                  {docNumber && <p>الرقم: {docNumber}</p>}
+                  {docDate && <p>التاريخ: {docDate}</p>}
                 </div>
-              </div>
-
-              {/* خط الفصل الرسمي */}
-              <div className="mt-3 flex items-center gap-3">
-                <div
-                  className="h-px flex-1"
-                  style={{ background: `linear-gradient(to left, transparent, ${theme.accent})` }}
-                />
-                <div className="size-2 rotate-45" style={{ background: theme.primary }} />
-                <div
-                  className="h-px flex-1"
-                  style={{ background: `linear-gradient(to right, transparent, ${theme.accent})` }}
-                />
               </div>
             </header>
 
-            {/* =====================================================
-                سطر الرقم والتاريخ (رسمي)
-            ====================================================== */}
-            {hasMeta && (
-              <div className="mt-4 flex items-center justify-end gap-8 text-[11px] font-bold text-[#374151]">
-                {docNumber.trim() && (
-                  <span>
-                    <span style={{ color: theme.primary }}>الرقم:</span>{" "}
-                    {docNumber}
-                  </span>
-                )}
-                {docDate.trim() && (
-                  <span>
-                    <span style={{ color: theme.primary }}>التاريخ:</span>{" "}
-                    {docDate}
-                  </span>
-                )}
-              </div>
-            )}
+            <ThemedDivider theme={theme} />
 
-            {/* =====================================================
-                الإطار الرئيسي للمحتوى
-            ====================================================== */}
-            <div
-              className="relative mt-4 overflow-hidden"
-              style={{
-                minHeight: "775px",
-                border: `2px solid ${theme.frameBorder}`,
-                padding: "40px 44px",
-                boxSizing: "border-box",
-                background: "rgba(255,255,255,0.6)",
-                ...watermarkStyle,
-              }}
-            >
-              <CornerOrnaments theme={theme} />
-
-              {/* شريط زخرفي علوي */}
-              <div className="relative mb-6 flex items-center justify-center gap-2">
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-                <div className="size-1.5 rotate-45" style={{ background: theme.primary }} />
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-              </div>
-
-              {/* المحتوى */}
-              {title.trim() || intro.trim() || body.trim() || reminder.trim() ? (
-                <div className="relative flex flex-col items-center gap-6 text-center">
-                  {/* العنوان */}
-                  {title.trim() && (
-                    <div>
-                      <h2
-                        className="text-[30px] font-extrabold leading-tight"
-                        style={{ color: theme.primary }}
-                      >
-                        {title}
-                      </h2>
-                      <div className="mt-3">
-                        <ThemedDivider theme={theme} width={22} />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* المقدمة */}
-                  {intro.trim() && (
-                    <p
-                      className="max-w-[600px] text-[16px] font-bold leading-[2.1]"
-                      style={{ overflowWrap: "anywhere" }}
-                    >
-                      {intro}
-                    </p>
-                  )}
-
-                  {/* الفقرة الرئيسية */}
-                  {body.trim() && (
-                    <p
-                      className="max-w-[600px] text-[15px] leading-[2.1] text-[#374151]"
-                      style={{ overflowWrap: "anywhere" }}
-                    >
-                      {body}
-                    </p>
-                  )}
-
-                  {/* الفاصل قبل التذكير */}
-                  {reminder.trim() && body.trim() && (
-                    <ThemedDivider theme={theme} width={16} />
-                  )}
-
-                  {/* التذكير الختامي */}
-                  {reminder.trim() && (
-                    <div
-                      className="relative w-full max-w-[600px] overflow-hidden rounded-2xl px-7 py-5"
-                      style={{
-                        background: "rgba(255,255,255,0.85)",
-                        border: `1.5px solid ${theme.accent}`,
-                        boxShadow: `0 3px 14px ${theme.accent}33`,
-                      }}
-                    >
-                      <span
-                        className="absolute right-0 top-0 h-full w-1.5"
-                        style={{ background: theme.primary }}
-                      />
-                      <span
-                        className="absolute left-0 top-0 h-full w-1.5"
-                        style={{ background: theme.primary }}
-                      />
-
-                      <p className="text-[16px] font-extrabold" style={{ color: theme.primary }}>
-                        تذكير
-                      </p>
-
-                      <div className="mx-auto mt-2 mb-3">
-                        <ThemedDivider theme={theme} width={14} />
-                      </div>
-
-                      <p
-                        className="text-[15px] font-bold leading-[2.1]"
-                        style={{ overflowWrap: "anywhere" }}
-                      >
-                        {reminder}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="relative flex h-[600px] flex-col items-center justify-center gap-3 text-center text-[#9ca3af]">
-                  <Sparkles className="size-8 opacity-40" />
-                  <p className="text-sm font-semibold">
-                    اكتب موضوع التوجيه وولّد المحتوى، أو املأ الحقول يدويًا لمعاينة الكليشة هنا
-                  </p>
+            {/* العنوان والمحتوى الرئيسي */}
+            <main className="flex flex-col gap-5 text-center mt-2">
+              {title && (
+                <div className="inline-block mx-auto rounded-xl px-6 py-2" style={{ background: `${theme.accent}22`, border: `1px solid ${theme.accent}44` }}>
+                  <h1 className="text-2xl font-black" style={{ color: theme.primary }}>
+                    {title}
+                  </h1>
                 </div>
               )}
 
-              {/* شريط زخرفي سفلي */}
-              <div className="pointer-events-none absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2">
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-                <div className="size-1.5 rotate-45" style={{ background: theme.primary }} />
-                <div className="h-px w-12" style={{ background: theme.accent }} />
-              </div>
-            </div>
+              {intro && (
+                <p className="text-base font-semibold leading-relaxed text-gray-800 px-4">
+                  {intro}
+                </p>
+              )}
+
+              {body && (
+                <div
+                  className="rounded-2xl p-6 text-right text-sm leading-8 text-gray-700 bg-gray-50/80 border"
+                  style={{ borderColor: `${theme.accent}33` }}
+                >
+                  {body}
+                </div>
+              )}
+
+              {reminder && (
+                <div
+                  className="rounded-xl p-4 text-center text-xs font-bold leading-6"
+                  style={{
+                    background: theme.headerBg,
+                    color: theme.primary,
+                    border: `1px dashed ${theme.accent}`,
+                  }}
+                >
+                  <span className="block text-sm font-extrabold mb-1">تذكر دائماً</span>
+                  {reminder}
+                </div>
+              )}
+            </main>
           </div>
 
-          {/* =====================================================
-              التذييل الرسمي
-          ====================================================== */}
-          <footer className="mt-4">
-            <div
-              className="h-px w-full"
-              style={{ background: `linear-gradient(to right, transparent, ${theme.accent}, transparent)` }}
-            />
-            <div className="mt-3 flex items-center justify-between px-1 text-[10px] font-bold text-[#6b7280]">
-              <span style={{ color: theme.primary }}>منصة الذات للتوجيه الطلابي</span>
-              <span>{SCHOOL_INFO.school}</span>
-              <span>مكتب التوجيه الطلابي</span>
+          {/* الجزء السفلي: التوقيع والختام */}
+          <footer className="mt-auto border-t pt-4" style={{ borderColor: `${theme.accent}44` }}>
+            <div className="flex items-end justify-between px-6 text-xs font-bold text-gray-600">
+              <div className="text-right">
+                <p>الموجه الطلابي</p>
+                <p className="mt-6 text-gray-400">( التوقيع )</p>
+              </div>
+              <div className="text-left">
+                <p>مدير المدرسة</p>
+                <p className="mt-6 text-gray-400">( الاعتماد )</p>
+              </div>
             </div>
           </footer>
         </div>
