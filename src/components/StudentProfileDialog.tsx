@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import {
   UserRound,
   CopyX,
   ArrowDownUp,
+  Upload,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +59,7 @@ export function StudentProfileDialog({
   const queryClient = useQueryClient();
   const fullName = String(student?.["full_name"] ?? "");
   const studentNo = String(student?.["student_no"] ?? "");
+  const [importingSection, setImportingSection] = useState<string | null>(null);
 
   // نجلب كل السجلات المرتبطة بهذا الطالب من كل الجداول المرتبطة باسمه دفعة واحدة
   const { data: sections = {}, isLoading } = useQuery({
@@ -79,7 +81,7 @@ export function StudentProfileDialog({
         }
         let rows = (data ?? []) as unknown as Row[];
 
-        // 1. ترتيب الأبجدي تلقائياً بناءً على حقل العنوان
+        // ترتيب الأبجدي تلقائياً بناءً على حقل العنوان باللغة العربية
         rows = rows.sort((a, b) => {
           const valA = String(a[section.titleField] ?? "").toLowerCase();
           const valB = String(b[section.titleField] ?? "").toLowerCase();
@@ -116,12 +118,11 @@ export function StudentProfileDialog({
     toast.success("تم حذف السجل من ملف الطالب");
   }
 
-  // دالة حذف السجلات المتكررة داخل القسم الواحد
+  // دالة حذف السجلات المتكررة داخل القسم الواحد بضغطة زر
   async function removeDuplicates(sectionKey: string, table: string, rows: Row[]) {
     if (!rows || rows.length === 0) return;
     if (!confirm("هل أنت متأكد من حذف السجلات المتكررة والإبقاء على نسخة واحدة فقط؟")) return;
 
-    // تحديد التكرار بناءً على تطابق حقل العنوان والتاريخ مثلاً أو العنوان فقط
     const seen = new Set<string>();
     const idsToDelete: string[] = [];
 
@@ -141,7 +142,6 @@ export function StudentProfileDialog({
       return;
     }
 
-    // تنفيذ الحذف دفعة واحدة من قاعدة البيانات
     const { error } = await supabase.from(table as never).delete().in("id", idsToDelete);
     if (error) {
       toast.error(`تعذّر حذف المتكرر: ${error.message}`);
@@ -151,6 +151,56 @@ export function StudentProfileDialog({
     queryClient.invalidateQueries({ queryKey: ["student-profile", fullName, studentNo] });
     queryClient.invalidateQueries({ queryKey: [table] });
     toast.success(`تم بنجاح حذف ${idsToDelete.length} من السجلات المتكررة.`);
+  }
+
+  // دالة استيراد ملف CSV ورفع السجلات مباشرة لهذا القسم
+  async function handleCSVImport(table: string, sectionKey: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split("\n").filter((l) => l.trim() !== "");
+        if (lines.length < 2) {
+          toast.error("ملف الـ CSV فارغ أو لا يحتوي على بيانات صحيحة.");
+          return;
+        }
+
+        const headers = lines[0].split(",").map((h) => h.trim().replace(/^["']|["']$/g, ""));
+        const recordsToInsert = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(",").map((v) => v.trim().replace(/^["']|["']$/g, ""));
+          const record: Record<string, any> = { student_name: fullName };
+
+          headers.forEach((header, index) => {
+            if (values[index] !== undefined) {
+              record[header] = values[index];
+            }
+          });
+          recordsToInsert.push(record);
+        }
+
+        setImportingSection(sectionKey);
+        const { error } = await supabase.from(table as never).insert(recordsToInsert as never);
+        
+        if (error) {
+          toast.error(`فشل الاستيراد: ${error.message}`);
+        } else {
+          toast.success("تم استيراد السجلات بنجاح!");
+          queryClient.invalidateQueries({ queryKey: ["student-profile", fullName, studentNo] });
+          queryClient.invalidateQueries({ queryKey: [table] });
+        }
+      } catch (err: any) {
+        toast.error("حدث خطأ أثناء قراءة ملف الـ CSV");
+      } finally {
+        setImportingSection(null);
+        e.target.value = ""; // إعادة تعيين الحقل
+      }
+    };
+    reader.readAsText(file);
   }
 
   if (!student) return null;
@@ -247,28 +297,48 @@ export function StudentProfileDialog({
                         <Icon className="size-4 text-primary" />
                         {config.title} ({rows.length})
                         <span className="text-xs font-normal text-muted-foreground flex items-center gap-1 mr-2">
-                          <ArrowDownUp className="size-3" /> مرتب تصاعدياً أبجديّاً
+                          <ArrowDownUp className="size-3" /> مرتب أبجديّاً
                         </span>
                       </span>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="mb-2 flex flex-wrap justify-between gap-2">
-                        {rows.length > 0 && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeDuplicates(section.key, config.table, rows)}
-                            className="gap-1"
-                          >
-                            <CopyX className="size-4" /> حذف السجلات المتكررة
-                          </Button>
-                        )}
-                        <Button asChild size="sm" variant="outline" className="mr-auto">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-2">
+                          {rows.length > 0 && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => removeDuplicates(section.key, config.table, rows)}
+                              className="gap-1"
+                            >
+                              <CopyX className="size-4" /> حذف المتكرر
+                            </Button>
+                          )}
+                          
+                          {/* زر استيراد CSV سريع */}
+                          <label className="cursor-pointer">
+                            <Button size="sm" variant="outline" asChild className="gap-1">
+                              <span>
+                                <Upload className="size-4" />
+                                {importingSection === section.key ? "جارٍ الاستيراد..." : "استيراد CSV"}
+                              </span>
+                            </Button>
+                            <input
+                              type="file"
+                              accept=".csv"
+                              className="hidden"
+                              onChange={(e) => handleCSVImport(config.table, section.key, e)}
+                            />
+                          </label>
+                        </div>
+
+                        <Button asChild size="sm" variant="outline">
                           <Link to={`/${section.key}` as never} onClick={() => onOpenChange(false)}>
-                            <GraduationCap className="size-4" /> إضافة سجل جديد لهذا الطالب في {config.title}
+                            <GraduationCap className="size-4" /> إضافة سجل جديد
                           </Link>
                         </Button>
                       </div>
+
                       {rows.length === 0 ? (
                         <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
                           لا توجد سجلات مرتبطة بهذا الطالب في {config.title} بعد.
