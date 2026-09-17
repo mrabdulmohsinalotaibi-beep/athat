@@ -17,65 +17,117 @@ export type WeeklyGuidanceDraft = {
   reminder: string;
 };
 
-/**
- * توليد نص "التوجيه الطلابي الأسبوعي" عبر DeepSeek.
- * يتطلّب متغيّر البيئة DEEPSEEK_API_KEY (أضِفه في .env ولوحة تحكم الاستضافة، ولا تكتبه في الواجهة أبداً).
- */
+const weeklySchema = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    intro: { type: "string" },
+    body: { type: "string" },
+    reminder: { type: "string" },
+  },
+  required: ["title", "intro", "body", "reminder"],
+  additionalProperties: false,
+} as const;
+
+function readGatewayMessage(raw: string, fallback: string) {
+  try {
+    const parsed = JSON.parse(raw) as { error?: { message?: string }; message?: string };
+    return parsed.error?.message || parsed.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+async function wait(milliseconds: number) {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function generate(apiKey: string, prompt: string) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Lovable-API-Key": apiKey,
+        "X-Lovable-AIG-SDK": "fetch",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-6-astra",
+        stream: true,
+        reasoning: { effort: "low", summary: "auto" },
+        include: ["reasoning.encrypted_content"],
+        input: prompt,
+        text: {
+          format: { type: "json_schema", name: "weekly_guidance", strict: true, schema: weeklySchema },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      const message = readGatewayMessage(body, "تعذّر توليد التوجيه الأسبوعي.");
+      if ((response.status === 429 || response.status >= 500) && attempt < 2) {
+        const retryAfter = Number(response.headers.get("Retry-After") || 0);
+        await wait(Math.max(retryAfter * 1000, 700 * 2 ** attempt));
+        continue;
+      }
+      if (response.status === 401) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة حالياً.");
+      if (response.status === 402) throw new Error(message || "الرصيد المخصص للذكاء الاصطناعي غير كافٍ.");
+      throw new Error(message);
+    }
+
+    if (!response.body) throw new Error("لم تُرجع خدمة الذكاء الاصطناعي محتوى.");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let output = "";
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      buffer += decoder.decode(chunk.value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          const event = JSON.parse(payload) as { type?: string; delta?: string };
+          if (event.type === "response.output_text.delta" && event.delta) output += event.delta;
+        } catch {
+          // تجاهل رسائل البث غير النصية
+        }
+      }
+    }
+    if (!output.trim()) throw new Error("اكتملت المعالجة دون نص قابل للاستخدام. حاول مرة أخرى.");
+    return output;
+  }
+  throw new Error("تعذّر توليد التوجيه بعد عدة محاولات.");
+}
+
+/** توليد نص "التوجيه الطلابي الأسبوعي" عبر الذكاء الاصطناعي المدمج في المنصة. */
 export const draftWeeklyGuidance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }): Promise<WeeklyGuidanceDraft> => {
-    const apiKey = process.env["DEEPSEEK_API_KEY"];
-    if (!apiKey) {
-      throw new Error("مفتاح DeepSeek غير مُهيأ. أضِف DEEPSEEK_API_KEY في متغيرات البيئة على الخادم.");
-    }
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة حالياً.");
 
     const prompt = `أنت مساعد صياغة تربوي لمكتب التوجيه الطلابي بمدرسة سعودية.
 اكتب "توجيه طلابي أسبوعي" حول موضوع: "${data.topic}"، بأسلوب ${data.tone}.
 الأسلوب: فصيح، دافئ، مباشر، بدون رموز تعبيرية وبدون عناوين فرعية وبدون تنسيق Markdown.
 
 المطلوب أربعة عناصر منفصلة:
-1) title: كلمة أو عبارة قصيرة جداً (1-3 كلمات) هي القيمة المحورية، مثل "الانضباط" أو "احترام الوقت".
-2) intro: جملة تمهيدية واحدة (20-30 كلمة) تمهّد لأهمية القيمة، تبدأ أسلوبها بمثل "مع انطلاقة هذا الأسبوع...".
-3) body: فقرة ثانية (35-55 كلمة) تشرح الفكرة بعمق وتربطها بشخصية الطالب وحياته.
-4) reminder: جملة ختامية تحفيزية واحدة (20-35 كلمة) تبدأ فكرتها بمعنى "تذكّر دائماً"، موجهة للطلاب مباشرة بصيغة الجمع.
+1) title: كلمة أو عبارة قصيرة جداً (1-3 كلمات) هي القيمة المحورية.
+2) intro: جملة تمهيدية واحدة (20-30 كلمة).
+3) body: فقرة (35-55 كلمة) تشرح الفكرة وتربطها بشخصية الطالب وحياته.
+4) reminder: جملة ختامية تحفيزية (20-35 كلمة) موجهة للطلاب بصيغة الجمع.
 
-لا تكرر القيمة المحورية حرفياً أكثر من مرة واحدة في كل عنصر. لا تضع علامات تنصيص داخل النصوص.
-أعد النتيجة بصيغة JSON فقط بدون أي نص إضافي وبالمفاتيح التالية بالضبط:
-{"title": "...", "intro": "...", "body": "...", "reminder": "..."}`;
+لا تكرر القيمة المحورية حرفياً أكثر من مرة في كل عنصر، ولا تضع علامات تنصيص داخل النصوص.`;
 
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        temperature: 0.8,
-        max_tokens: 500,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: "أنت مساعد كتابة عربي محترف متخصص في التوجيه الطلابي المدرسي." },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`تعذّر الاتصال بخدمة DeepSeek (${response.status}): ${errText.slice(0, 200)}`);
-    }
-
-    const json = (await response.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const raw = json.choices?.[0]?.message?.content;
-    if (!raw) throw new Error("لم تُرجع الخدمة أي نص. حاول مرة أخرى.");
-
+    const raw = await generate(apiKey, prompt);
     try {
       const parsed = JSON.parse(raw) as Partial<WeeklyGuidanceDraft>;
-      if (!parsed.intro && !parsed.body) throw new Error("empty");
       return {
         title: (parsed.title || data.topic).trim(),
         intro: (parsed.intro || "").trim(),
@@ -83,7 +135,6 @@ export const draftWeeklyGuidance = createServerFn({ method: "POST" })
         reminder: (parsed.reminder || "").trim(),
       };
     } catch {
-      // نص احتياطي في حال لم يلتزم النموذج بصيغة JSON
       return { title: data.topic, intro: raw.trim(), body: "", reminder: "" };
     }
   });

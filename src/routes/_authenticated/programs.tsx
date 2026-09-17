@@ -180,7 +180,7 @@ function ProgramsPage() {
     },
   });
 
-  const ministryNames = useMemo(() => new Set(MINISTRY_PROGRAMS.map((p) => p[1])), []);
+  const ministryNames = useMemo(() => new Set<string>(MINISTRY_PROGRAMS.map((p) => p[1])), []);
 
   const save = useMutation({
     mutationFn: async (draft: ProgramDraft) => {
@@ -196,7 +196,7 @@ function ProgramsPage() {
         start_date: draft.start_date || null,
         end_date: draft.end_date || null,
         exec_status: draft.exec_status || "لم يبدأ",
-        beneficiaries: draft.beneficiaries === "" || draft.beneficiaries == null ? null : Number(draft.beneficiaries),
+        beneficiaries: draft.beneficiaries == null || String(draft.beneficiaries).trim() === "" ? null : Number(draft.beneficiaries),
         required_evidence: draft.required_evidence || null,
         notes: draft.notes || null,
       };
@@ -394,9 +394,9 @@ function ProgramsPage() {
       name: p[1], ptype: p[2], domain: p[3], target_group: p[4], term: "الفصل الدراسي الأول",
       goal: p[5], indicator: p[6], exec_status: "لم يبدأ", required_evidence: "صور، ملفات PDF، فيديو تنفيذي",
     }));
-    if (!payload.length) return toast.info("جميع البرامج الوزارية موجودة مسبقاً.");
+    if (!payload.length) { toast.info("جميع البرامج الوزارية موجودة مسبقاً."); return; }
     const { error } = await supabase.from("programs").insert(payload as never);
-    if (error) return toast.error(`تعذّر الاستيراد: ${error.message}`);
+    if (error) { toast.error(`تعذّر الاستيراد: `); return; }
     await queryClient.invalidateQueries({ queryKey: ["programs"] });
     toast.success(`تم استيراد ${payload.length} برنامجاً`);
   }
@@ -436,7 +436,7 @@ function ProgramsPage() {
                   <td className="p-3 font-bold">{row.name || "—"}</td><td className="p-3">{row.ptype || "—"}</td><td className="p-3">{row.domain || "—"}</td><td className="p-3">{row.target_group || "—"}</td><td className="p-3">{row.exec_status || "—"}</td><td className="p-3">{row.beneficiaries ?? "—"}</td>
                   <td className="no-print p-2"><div className="flex justify-end gap-1">
                     <Button size="sm" onClick={() => openEdit(row)}><Pencil className="size-4" /> فتح المستند</Button>
-                    <Button variant="ghost" size="icon" title="نسخ" onClick={() => { setEditing({ ...row, id: undefined, program_no: `${row.program_no || ""} - نسخة` }); setEditorOpen(true); }}><Copy className="size-4" /></Button>
+                    <Button variant="ghost" size="icon" title="نسخ" onClick={() => { setEditing({ ...row, id: "", program_no: ` - نسخة` }); setEditorOpen(true); }}><Copy className="size-4" /></Button>
                     <Button variant="ghost" size="icon" title="المرفقات" onClick={() => setAttachFor(row)}><Upload className="size-4" /></Button>
                     <Button variant="ghost" size="icon" title="طباعة رسمية" onClick={() => setPrintFor(row)}><Printer className="size-4" /></Button>
                     <Button variant="ghost" size="icon" title="حذف" onClick={() => deleteProgram(row)} disabled={deleteBusy}><Trash2 className="size-4 text-destructive" /></Button>
