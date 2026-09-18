@@ -205,14 +205,6 @@
     border-color: color-mix(in oklab, var(--border) 86%, var(--primary));
   }
 
-  .ai-assistant-panel {
-    border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--border));
-    border-radius: var(--radius-lg);
-    background: var(--card);
-    padding: 1rem;
-    box-shadow: var(--shadow-card);
-  }
-
   .print-area {
     background: var(--paper);
     color: var(--paper-foreground);

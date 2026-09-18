@@ -1,28 +1,17 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, FileSpreadsheet, Sparkles, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { readExcel, sheetHeaders } from "@/lib/sheet";
 import { STUDENT_IMPORT_FIELDS, autoMap, cleanId, cleanPhone } from "@/lib/students-import";
-import { mapImportColumns } from "@/lib/ai.functions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type SheetRow = Record<string, unknown>;
 type RowError = { row: number; name: string; reason: string };
-
-function sampleOf(rows: SheetRow[], headers: string[]) {
-  return rows.slice(0, 3).map((row) => {
-    const out: Record<string, string> = {};
-    headers.forEach((h) => {
-      out[h] = String(row[h] ?? "").slice(0, 300);
-    });
-    return out;
-  });
-}
 
 export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const queryClient = useQueryClient();
@@ -32,7 +21,6 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const [aiBusy, setAiBusy] = useState(false);
   const [result, setResult] = useState<{ inserted: number; errors: RowError[] } | null>(null);
 
   function reset() {
@@ -42,30 +30,6 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
     setMapping({});
     setResult(null);
     if (fileRef.current) fileRef.current.value = "";
-  }
-
-  async function runAiMapping(hdrs: string[], parsed: SheetRow[], silent = false) {
-    setAiBusy(true);
-    try {
-      const aiMap = await mapImportColumns({
-        data: {
-          headers: hdrs.slice(0, 80),
-          sample: sampleOf(parsed, hdrs.slice(0, 80)),
-          fields: STUDENT_IMPORT_FIELDS.map((f) => ({ name: f.name, label: f.label })),
-        },
-      });
-      const filled = Object.fromEntries(Object.entries(aiMap).filter(([, column]) => Boolean(column)));
-      if (Object.keys(filled).length) {
-        setMapping((current) => ({ ...current, ...filled }));
-        toast.success("وزّع الذكاء الاصطناعي بيانات الملف على خانات الموقع تلقائياً");
-      } else if (!silent) {
-        toast.info("تعذّر التعرف الآلي على الأعمدة، عدّل التوزيع يدوياً.");
-      }
-    } catch (error) {
-      if (!silent) toast.error(`تعذّر التوزيع الذكي: ${(error as Error).message}`);
-    } finally {
-      setAiBusy(false);
-    }
   }
 
   async function pickFile(file: File) {
@@ -81,7 +45,6 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
       setHeaders(hdrs);
       setMapping(autoMap(hdrs));
       setResult(null);
-      void runAiMapping(hdrs, parsed, true);
     } catch (error) {
       toast.error(`تعذّرت قراءة الملف: ${(error as Error).message}`);
     }
@@ -179,8 +142,7 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
         <DialogHeader>
           <DialogTitle>استيراد الطلاب من ملف Excel</DialogTitle>
           <DialogDescription>
-            ارفع كشف الطلاب بصيغة Excel أو CSV، ويقوم الذكاء الاصطناعي المدمج بتوزيع الأسماء والبيانات على خانات الموقع
-            تلقائياً، مع إمكانية التعديل قبل الحفظ. ويمكن أيضاً إضافة طالب يدوياً من شاشة الطلاب.
+            ارفع كشف الطلاب بصيغة Excel أو CSV، ثم راجع توزيع الأعمدة وعدّله يدوياً قبل الحفظ. ويمكن أيضاً إضافة طالب يدوياً من شاشة الطلاب.
           </DialogDescription>
         </DialogHeader>
 
@@ -217,15 +179,6 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
               <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-bold">1) توزيع البيانات على الخانات</h3>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={aiBusy}
-                    onClick={() => runAiMapping(headers, rows)}
-                  >
-                    <Sparkles className="size-3.5" /> {aiBusy ? "جارٍ التوزيع الذكي..." : "إعادة التوزيع الذكي"}
-                  </Button>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {STUDENT_IMPORT_FIELDS.map((f) => (

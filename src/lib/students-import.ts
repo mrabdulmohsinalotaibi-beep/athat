@@ -81,7 +81,7 @@ export function normalizeHeader(value: string): string {
     .trim();
 }
 
-/** المطابقة البرمجية السريعة قبل تدخّل الذكاء الاصطناعي */
+/** مطابقة عناوين الأعمدة البرمجية */
 export function autoMap(headers: string[]): Record<string, string> {
   const map: Record<string, string> = {};
   const used = new Set<string>();

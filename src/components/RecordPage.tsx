@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Copy, Download, FileDown, Plus, Printer, Search, Send, Trash2, Upload, Pencil, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,13 +9,11 @@ import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
 import { displayRecordValue } from "@/lib/display";
 import { mergeLookupOptions } from "@/lib/lookups";
-import { mapImportColumns } from "@/lib/ai.functions";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { AiDraftAssistant } from "@/components/AiDraftAssistant";
 import { RecordPrintDialog } from "@/components/RecordPrintDialog";
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { Button } from "@/components/ui/button";
@@ -33,7 +30,6 @@ import {
 
 type Row = Record<string, unknown> & { id: string };
 
-const AI_RECORD_KEYS = new Set(["cases", "interviews", "behavior", "reports", "referrals"]);
 const LINKED_TYPE: Record<string, string> = { cases: "حالة", programs: "برنامج", interviews: "مقابلة", attendance: "مواظبة", behavior: "سلوك", referrals: "إحالة", committees: "اجتماع", plan: "مهمة" };
 
 export function RecordPage({
@@ -64,7 +60,6 @@ export function RecordPage({
   const [attachFor, setAttachFor] = useState<Row | null>(null);
   const [printFor, setPrintFor] = useState<Row | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
-  const smartMap = useServerFn(mapImportColumns);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -188,32 +183,12 @@ export function RecordPage({
       const sheetRows = await readExcel(file);
       const importFields = config.fields.filter((field) => !field.generated);
       const headers = Array.from(new Set(sheetRows.flatMap((row) => Object.keys(row))));
-      const unmatched = importFields.filter((f) => !headers.includes(f.label) && !headers.includes(f.name));
-
-      let smart: Record<string, string> = {};
-      if (headers.length && unmatched.length) {
-        try {
-          smart = await smartMap({
-            data: {
-              headers,
-              sample: sheetRows.slice(0, 3).map((row) =>
-                Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? "").slice(0, 300)])),
-              ),
-              fields: importFields.map((f) => ({ name: f.name, label: f.label })),
-            },
-          });
-          if (Object.keys(smart).length) toast.success("تم تعيين الأعمدة آلياً بالذكاء الاصطناعي");
-        } catch {
-          // Fall back to direct header matching.
-        }
-      }
 
       const payloads = sheetRows
         .map((sheetRow) => {
           const payload: Record<string, unknown> = {};
           importFields.forEach((f) => {
-            const smartColumn = smart[f.name];
-            const value = sheetRow[f.label] ?? sheetRow[f.name] ?? (smartColumn ? sheetRow[smartColumn] : undefined);
+            const value = sheetRow[f.label] ?? sheetRow[f.name];
             if (value === undefined || value === "") return;
             if (f.type === "date") payload[f.name] = toIsoDate(value);
             else if (f.type === "number") payload[f.name] = Number(value) || null;
@@ -520,51 +495,6 @@ export function RecordPage({
               save.mutate(values);
             }}
           >
-            {AI_RECORD_KEYS.has(config.key) && (
-              <AiDraftAssistant
-                recordKey={config.key as "cases" | "interviews" | "behavior" | "reports" | "referrals"}
-                context={Object.fromEntries(
-                  config.fields.map((field) => [field.name, auto[field.name] ?? String(editing?.[field.name] ?? "")]),
-                )}
-                availableOptions={Object.fromEntries(config.fields.filter((field) => field.type === "select").map((field) => [field.name, optionsFor(field)]))}
-                onDraft={(draft) => {
-                  const generated: Record<string, string> = {};
-                  if (config.key === "cases") {
-                    generated["summary"] = `${draft.summary}\n\nوصف المشكلة:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف الإرشادية:\n${draft.goals}`;
-                    const interventionField = config.fields.find((field) => field.name === "intervention_plan");
-                    if (interventionField && optionsFor(interventionField).includes(draft.interventionPlan)) generated["intervention_plan"] = draft.interventionPlan;
-                    generated["next_action"] = draft.nextAction;
-                    generated["notes"] = `الإجراءات:\n${draft.actions}\n\nالتوصيات:\n${draft.recommendations}\n\n${draft.notes}`;
-                  } else if (config.key === "interviews") {
-                    generated["topic"] = draft.problemDescription || draft.summary;
-                    generated["result"] = `${draft.actions}\n\nالنتيجة:\n${draft.result}`;
-                    generated["recommendations"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
-                    generated["notes"] = draft.notes;
-                  } else if (config.key === "behavior") {
-                    generated["observation"] = `${draft.problemDescription}\n\nالأسباب المحتملة: ${draft.causes}`;
-                    const actionField = config.fields.find((field) => field.name === "action");
-                    const resultField = config.fields.find((field) => field.name === "result");
-                    const action = draft.actions || draft.interventionPlan;
-                    if (actionField && optionsFor(actionField).includes(action)) generated["action"] = action;
-                    if (resultField && optionsFor(resultField).includes(draft.result)) generated["result"] = draft.result;
-                    generated["notes"] = `${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}`;
-                  } else if (config.key === "referrals") {
-                    generated["reason"] = `${draft.problemDescription}\n\nالمبررات:\n${draft.causes}`;
-                    generated["attachments"] = `الإجراءات السابقة:\n${draft.actions}`;
-                    generated["result"] = draft.recommendations || draft.result;
-                    generated["notes"] = `التوصيات:\n${draft.recommendations}\n\nالإجراء القادم: ${draft.nextAction}\n\n${draft.notes}`;
-                  } else {
-                    generated["summary"] = draft.summary;
-                    generated["notes"] = `وصف الموضوع:\n${draft.problemDescription}\n\nالأسباب المحتملة:\n${draft.causes}\n\nالأهداف:\n${draft.goals}\n\nالإجراءات:\n${draft.actions}\n\nخطة العمل:\n${draft.interventionPlan}\n\nالنتائج:\n${draft.result}\n\nالتوصيات:\n${draft.recommendations}\n\nالإجراء القادم:\n${draft.nextAction}`;
-                  }
-                  Object.entries(draft.suggestedSelections).forEach(([fieldName, value]) => {
-                    const field = config.fields.find((item) => item.name === fieldName);
-                    if (field?.type === "select" && value && optionsFor(field).includes(value)) generated[fieldName] = value;
-                  });
-                  setAuto((current) => ({ ...current, ...generated }));
-                }}
-              />
-            )}
             {config.fields.filter((field) => !field.generated).map((f) => {
               const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
               return (
