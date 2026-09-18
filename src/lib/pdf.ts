@@ -3,12 +3,14 @@ import { jsPDF } from "jspdf";
 
 /** استخراج اسم المستند تلقائياً من داخل العنصر */
 function getDocumentTitle(element: HTMLElement, defaultName: string = "مستند"): string {
-  const titleElement = element.querySelector<HTMLElement>("[data-pdf-title], h1, h2, .document-title");
-  
+  const titleElement = element.querySelector<HTMLElement>(
+    "[data-pdf-title], h1, h2, .document-title",
+  );
+
   if (titleElement && titleElement.innerText.trim()) {
     return titleElement.innerText.trim().replace(/[/\\?%*:|"<>]/g, "-");
   }
-  
+
   return defaultName;
 }
 
@@ -46,10 +48,32 @@ async function createPdf(element: HTMLElement) {
     if (!context) throw new Error("تعذّر تجهيز صفحة PDF");
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-    context.drawImage(canvas, 0, sourceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+    context.drawImage(
+      canvas,
+      0,
+      sourceY,
+      canvas.width,
+      sliceHeight,
+      0,
+      0,
+      canvas.width,
+      sliceHeight,
+    );
     const renderedHeight = (sliceHeight * contentWidth) / canvas.width;
     if (pageIndex > 0) pdf.addPage();
-    pdf.addImage(pageCanvas.toDataURL("image/jpeg", 0.94), "JPEG", margin, margin, contentWidth, renderedHeight, undefined, "FAST");
+    pdf.addImage(
+      pageCanvas.toDataURL("image/jpeg", 0.94),
+      "JPEG",
+      margin,
+      margin,
+      contentWidth,
+      renderedHeight,
+      undefined,
+      "FAST",
+    );
+    pdf.setFontSize(8);
+    pdf.setTextColor(110, 110, 110);
+    pdf.text(`صفحة ${pageIndex + 1}`, pageWidth - margin, pageHeight - 4, { align: "right" });
     sourceY += sliceHeight;
     pageIndex += 1;
   }
@@ -57,7 +81,10 @@ async function createPdf(element: HTMLElement) {
 }
 
 /** تحويل العنصر إلى PDF وتنزيله باسم المستند المكتوب داخله */
-export async function elementToPdf(element: HTMLElement, fallbackFileName: string = "تقرير_إرشادي") {
+export async function elementToPdf(
+  element: HTMLElement,
+  fallbackFileName: string = "تقرير_إرشادي",
+) {
   const fileName = getDocumentTitle(element, fallbackFileName);
   const pdf = await createPdf(element);
   const url = URL.createObjectURL(pdf.output("blob"));
@@ -71,7 +98,10 @@ export async function elementToPdf(element: HTMLElement, fallbackFileName: strin
 }
 
 /** تحويل العنصر إلى ملف File باسم المستند المكتوب داخله */
-export async function elementToPdfFile(element: HTMLElement, fallbackFileName: string = "تقرير_إرشادي") {
+export async function elementToPdfFile(
+  element: HTMLElement,
+  fallbackFileName: string = "تقرير_إرشادي",
+) {
   const fileName = getDocumentTitle(element, fallbackFileName);
   const pdf = await createPdf(element);
   return new File([pdf.output("blob")], `${fileName}.pdf`, { type: "application/pdf" });

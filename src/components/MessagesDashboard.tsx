@@ -1,39 +1,55 @@
 import { useMemo, useRef, useState } from "react";
 import {
   CheckSquare,
+  ChevronDown,
   Copy,
   Download,
   FileDown,
-  FileText,
   Link2,
-  Loader2,
   MessageSquareText,
   Printer,
+  QrCode,
+  RotateCcw,
+  Send,
   Square,
-  Sparkles,
+  Star,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { aiErrorMessage, requestAi } from "@/lib/ai";
 import { useSchool } from "@/lib/school";
 import { elementToPdf } from "@/lib/pdf";
+import { shareOnWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { Textarea } from "@/components/ui/textarea";
 
-interface FeedbackMessage {
+const STATUSES = ["جديد", "قيد المراجعة", "تم الرد", "محفوظ"];
+
+type FeedbackMessage = {
   id: string;
   sender_name: string;
   sender_contact: string | null;
+  sender_role: string;
   category: string;
+  satisfaction: number | null;
   message: string;
+  internal_notes?: string | null;
   status: string;
-  ai_summary: string | null;
-  ai_category: string | null;
   created_at: string;
+};
+
+function createFeedbackToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(18));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function messageExcerpt(message: string) {
+  const compact = message.replace(/\s+/g, " ").trim();
+  return compact.length > 90 ? `${compact.slice(0, 90)}…` : compact;
 }
 
 export default function MessagesDashboard() {
@@ -42,7 +58,10 @@ export default function MessagesDashboard() {
   const printRef = useRef<HTMLDivElement>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [category, setCategory] = useState("الكل");
+  const [status, setStatus] = useState("الكل");
+  const [exporting, setExporting] = useState(false);
+  const [rotatingLink, setRotatingLink] = useState(false);
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["feedback_messages"],
@@ -60,16 +79,37 @@ export default function MessagesDashboard() {
     typeof window === "undefined" || !school?.public_feedback_token
       ? ""
       : `${window.location.origin}/feedback/${school.public_feedback_token}`;
+
+  const categories = useMemo(
+    () => Array.from(new Set(messages.map((item) => item.category).filter(Boolean))),
+    [messages],
+  );
   const filtered = useMemo(
     () =>
-      messages.filter((item) =>
-        `${item.sender_name} ${item.category} ${item.message}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-      ),
-    [messages, search],
+      messages.filter((item) => {
+        const matchesSearch =
+          `${item.sender_name} ${item.sender_role} ${item.category} ${item.message}`
+            .toLowerCase()
+            .includes(search.trim().toLowerCase());
+        return (
+          matchesSearch &&
+          (category === "الكل" || item.category === category) &&
+          (status === "الكل" || item.status === status)
+        );
+      }),
+    [messages, search, category, status],
   );
-  const selected = filtered.filter((item) => selectedIds.includes(item.id));
+  const selected = messages.filter((item) => selectedIds.includes(item.id));
+  const allVisibleSelected =
+    filtered.length > 0 && filtered.every((item) => selectedIds.includes(item.id));
+  const newMessages = messages.filter((item) => item.status === "جديد").length;
+  const helpRequests = messages.filter((item) => item.category === "طلب مساعدة").length;
+  const rated = messages.filter((item) => item.satisfaction != null);
+  const averageRating = rated.length
+    ? (rated.reduce((total, item) => total + Number(item.satisfaction), 0) / rated.length).toFixed(
+        1,
+      )
+    : "—";
 
   function toggle(id: string) {
     setSelectedIds((current) =>
@@ -77,66 +117,137 @@ export default function MessagesDashboard() {
     );
   }
 
-  async function assist(item: FeedbackMessage) {
-    setBusyId(item.id);
-    try {
-      const data = await requestAi("feedback", { message: item.message, category: item.category });
-      await (supabase as any)
-        .from("feedback_messages")
-        .update({ ai_summary: data?.summary ?? null, ai_category: data?.category ?? null })
-        .eq("id", item.id);
-      await queryClient.invalidateQueries({ queryKey: ["feedback_messages"] });
-      toast.success("تم تلخيص الرسالة وتصنيفها.");
-    } catch (error) {
-      toast.error(aiErrorMessage(error));
-    } finally {
-      setBusyId(null);
-    }
+  function toggleAllVisible() {
+    setSelectedIds((current) =>
+      allVisibleSelected
+        ? current.filter((id) => !filtered.some((item) => item.id === id))
+        : Array.from(new Set([...current, ...filtered.map((item) => item.id)])),
+    );
   }
 
-  function copyLink() {
-    if (!publicLink) return;
-    navigator.clipboard.writeText(publicLink);
-    toast.success("تم نسخ رابط النموذج");
+  async function updateStatus(id: string, nextStatus: string) {
+    const { error } = await (supabase as any)
+      .from("feedback_messages")
+      .update({ status: nextStatus })
+      .eq("id", id);
+    if (error) {
+      toast.error(`تعذّر تحديث حالة الرسالة: ${error.message}`);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["feedback_messages"] });
   }
-  function shareLink() {
+
+  async function updateNotes(id: string, notes: string) {
+    const { error } = await (supabase as any)
+      .from("feedback_messages")
+      .update({ internal_notes: notes.trim() || null })
+      .eq("id", id);
+    if (error) {
+      toast.error(`تعذّر حفظ الملاحظة: ${error.message}`);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["feedback_messages"] });
+    toast.success("تم حفظ الملاحظة الداخلية");
+  }
+
+  async function copyLink() {
     if (!publicLink) return;
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(`نرحب بمشاركتك عبر نموذج الآراء والرسائل: ${publicLink}`)}`,
-      "_blank",
-      "noopener,noreferrer",
+    await navigator.clipboard.writeText(publicLink);
+    toast.success("تم نسخ رابط الاستبانة");
+  }
+
+  function shareFormLink() {
+    if (!publicLink) return;
+    shareOnWhatsApp(
+      `السلام عليكم ورحمة الله وبركاته\nنأمل التكرم بتعبئة استبانة الآراء والمقترحات لخدمات التوجيه الطلابي عبر الرابط التالي:\n${publicLink}\nشاكرين لكم تعاونكم.`,
     );
+  }
+
+  async function rotateLink() {
+    if (!school?.id || rotatingLink) return;
+    if (!window.confirm("سيصبح رابط الاستبانة الحالي غير فعال. هل تريد إنشاء رابط جديد؟")) return;
+    setRotatingLink(true);
+    const { error } = await supabase
+      .from("school_settings")
+      .update({ public_feedback_token: createFeedbackToken() } as never)
+      .eq("id", school.id);
+    setRotatingLink(false);
+    if (error) {
+      toast.error(`تعذّر إنشاء رابط جديد: ${error.message}`);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["school_settings"] });
+    toast.success("تم إنشاء رابط استبانة جديد");
   }
 
   function exportCsv() {
     const rows = filtered.map((item) => [
       item.sender_name,
+      item.sender_role,
       item.sender_contact ?? "",
       item.category,
-      item.message,
+      item.satisfaction ?? "",
       item.status,
+      item.message,
       new Date(item.created_at).toLocaleString("ar-SA"),
     ]);
     const csv = [
-      "الاسم,التواصل,التصنيف,الرسالة,الحالة,التاريخ",
+      "الاسم,صفة المشارك,التواصل,نوع المشاركة,التقييم,الحالة,الرسالة,تاريخ الاستلام",
       ...rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")),
     ].join("\n");
     const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "الآراء_والرسائل.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "الآراء_والرسائل.csv";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }
 
   async function exportPdf() {
-    if (!printRef.current) return;
-    await elementToPdf(printRef.current, "تقرير الآراء والرسائل");
+    if (!printRef.current || !selected.length || exporting) return;
+    setExporting(true);
+    try {
+      await elementToPdf(printRef.current, "تقرير الآراء والرسائل");
+      toast.success("تم حفظ التقرير بصيغة PDF");
+    } catch {
+      toast.error("تعذّر حفظ ملف PDF.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function printSelected() {
+    if (!selected.length) return;
+    window.print();
+  }
+
+  function printOne(id: string) {
+    setSelectedIds([id]);
+    window.setTimeout(() => window.print(), 120);
+  }
+
+  function shareSelected() {
+    if (!selected.length) return;
+    const rows = selected.map((item, index) =>
+      [
+        `${index + 1}. ${item.category} — ${item.sender_role}`,
+        `المرسل: ${item.sender_name || "مستفيد"}`,
+        `التاريخ: ${new Date(item.created_at).toLocaleDateString("ar-SA")}`,
+        `الرسالة: ${item.message}`,
+      ].join("\n"),
+    );
+    shareOnWhatsApp(
+      [`ملخص الآراء والرسائل — ${school?.school_name || "التوجيه الطلابي"}`, "", ...rows].join(
+        "\n\n",
+      ),
+    );
   }
 
   return (
     <div className="space-y-6" dir="rtl">
-      <section className="rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-[oklch(0.29_0.09_25)] p-6 text-primary-foreground shadow-xl shadow-primary/15">
+      <section className="no-print rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-[oklch(0.29_0.09_25)] p-6 text-primary-foreground shadow-xl shadow-primary/15">
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
             <div className="flex items-center gap-2 text-amber-200">
@@ -145,88 +256,167 @@ export default function MessagesDashboard() {
             </div>
             <h1 className="mt-2 text-2xl font-black">الآراء والرسائل</h1>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-primary-foreground/75">
-              أنشئ رابطًا عامًا لاستقبال المشاركات، ثم استعرضها وحللها واحفظها بصيغة PDF.
+              استبانة مدرسية داخل المنصة؛ شارك رابطًا واحدًا، ثم تابع الردود واطبعها أو أرسلها
+              مباشرةً.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={copyLink} disabled={!publicLink}>
               <Copy className="size-4" /> نسخ الرابط
             </Button>
-            <Button variant="secondary" onClick={shareLink} disabled={!publicLink}>
-              <Link2 className="size-4" /> مشاركة
+            <Button variant="secondary" onClick={shareFormLink} disabled={!publicLink}>
+              <Link2 className="size-4" /> مشاركة واتساب
+            </Button>
+            <Button variant="secondary" onClick={rotateLink} disabled={!publicLink || rotatingLink}>
+              <RotateCcw className="size-4" /> {rotatingLink ? "جارٍ الإنشاء..." : "رابط جديد"}
             </Button>
           </div>
         </div>
         {publicLink && (
-          <div className="mt-5 flex items-center gap-2 rounded-xl bg-black/15 p-3 text-xs">
-            <span className="truncate font-mono">{publicLink}</span>
+          <div className="mt-5 flex flex-col gap-4 rounded-xl bg-black/15 p-3 text-xs sm:flex-row sm:items-center">
+            <img
+              className="size-28 rounded-lg bg-white p-2"
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(publicLink)}`}
+              alt="رمز QR للاستبانة"
+            />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 font-bold">
+                <QrCode className="size-4" /> رمز QR ورابط الاستبانة
+              </div>
+              <span className="mt-2 block break-all font-mono">{publicLink}</span>
+              <p className="mt-2 text-primary-foreground/70">
+                يمكن طباعة الرمز وتعليقه في المدرسة أو إضافته إلى التعميم.
+              </p>
+            </div>
           </div>
         )}
       </section>
 
-      <section className="rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-black">الردود الواردة</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              حدد الردود للطباعة أو استخدم المساعدة الذكية للتلخيص والتصنيف.
-            </p>
+      <section className="no-print grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard label="إجمالي المشاركات" value={messages.length} hint="كل الردود المستلمة" />
+        <SummaryCard label="رسائل جديدة" value={newMessages} hint="بحاجة إلى مراجعة" tone="amber" />
+        <SummaryCard
+          label="طلبات مساعدة"
+          value={helpRequests}
+          hint="تحتاج عناية مباشرة"
+          tone="rose"
+        />
+        <SummaryCard
+          label="متوسط التقييم"
+          value={averageRating}
+          hint={rated.length ? `من ${rated.length} تقييم` : "لا توجد تقييمات بعد"}
+          icon={<Star className="size-4 fill-current" />}
+        />
+      </section>
+
+      <section className="no-print rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="grid flex-1 gap-3 sm:grid-cols-3">
+            <div>
+              <Label htmlFor="feedback-search">بحث</Label>
+              <Input
+                id="feedback-search"
+                className="mt-1"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="الاسم أو نص الرسالة"
+              />
+            </div>
+            <div>
+              <Label htmlFor="feedback-category-filter">النوع</Label>
+              <select
+                id="feedback-category-filter"
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option>الكل</option>
+                {categories.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="feedback-status-filter">الحالة</Label>
+              <select
+                id="feedback-status-filter"
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option>الكل</option>
+                {STATUSES.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={exportCsv}>
-              <Download className="size-4" /> CSV
+              <Download className="size-4" /> تصدير CSV
             </Button>
-            <Button variant="outline" onClick={exportPdf} disabled={!selected.length}>
-              <FileDown className="size-4" /> حفظ PDF
+            <Button variant="outline" onClick={shareSelected} disabled={!selected.length}>
+              <Send className="size-4" /> إرسال المحدد
             </Button>
-            <Button variant="outline" onClick={() => window.print()} disabled={!selected.length}>
-              <Printer className="size-4" /> طباعة PDF
+            <Button variant="outline" onClick={printSelected} disabled={!selected.length}>
+              <Printer className="size-4" /> طباعة المحدد
+            </Button>
+            <Button onClick={exportPdf} disabled={!selected.length || exporting}>
+              <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF"}
             </Button>
           </div>
         </div>
-        <div className="mt-4">
-          <Label htmlFor="feedback-search">بحث</Label>
-          <Input
-            id="feedback-search"
-            className="mt-1"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث بالاسم أو التصنيف أو نص الرسالة"
-          />
-        </div>
       </section>
 
-      <section className="overflow-hidden rounded-3xl border border-primary/12 bg-card shadow-sm">
+      <section className="no-print overflow-hidden rounded-3xl border border-primary/12 bg-card shadow-sm">
+        <div className="border-b bg-muted/30 px-5 py-3 text-sm">
+          <strong>{filtered.length}</strong> مشاركة مطابقة — حدد المشاركات التي تريد طباعتها أو
+          إرسالها.
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-right text-sm">
+          <table className="w-full min-w-[980px] text-right text-sm">
             <thead className="bg-muted/50 text-xs">
               <tr>
-                <th className="p-4">تحديد</th>
-                <th className="p-4">المرسل</th>
+                <th className="p-4">
+                  <button type="button" onClick={toggleAllVisible} title="تحديد كل النتائج">
+                    {allVisibleSelected ? (
+                      <CheckSquare className="text-primary" />
+                    ) : (
+                      <Square className="text-muted-foreground" />
+                    )}
+                  </button>
+                </th>
+                <th className="p-4">المشارك</th>
                 <th className="p-4">التصنيف</th>
-                <th className="p-4">الرسالة</th>
-                <th className="p-4">التاريخ</th>
-                <th className="p-4">الإجراءات</th>
+                <th className="p-4">التقييم</th>
+                <th className="p-4">الملخص</th>
+                <th className="p-4">الاستلام</th>
+                <th className="p-4">الحالة</th>
+                <th className="p-4">إجراء</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-10 text-center text-muted-foreground">
                     جارٍ تحميل الردود...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-muted-foreground">
-                    لا توجد ردود مطابقة حتى الآن.
+                  <td colSpan={8} className="p-10 text-center text-muted-foreground">
+                    لا توجد مشاركات مطابقة حتى الآن.
                   </td>
                 </tr>
               ) : (
                 filtered.map((item) => (
                   <tr key={item.id} className="border-t border-border/60 align-top">
                     <td className="p-4">
-                      <button aria-label="تحديد الرد" onClick={() => toggle(item.id)}>
+                      <button
+                        type="button"
+                        aria-label="تحديد المشاركة"
+                        onClick={() => toggle(item.id)}
+                      >
                         {selectedIds.includes(item.id) ? (
                           <CheckSquare className="text-primary" />
                         ) : (
@@ -236,40 +426,57 @@ export default function MessagesDashboard() {
                     </td>
                     <td className="p-4 font-bold">
                       {item.sender_name}
-                      <span className="block text-xs font-normal text-muted-foreground">
-                        {item.sender_contact}
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                        {item.sender_role}
+                        {item.sender_contact ? ` · ${item.sender_contact}` : ""}
                       </span>
                     </td>
                     <td className="p-4">
                       <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
-                        {item.ai_category || item.category}
+                        {item.category}
                       </span>
                     </td>
-                    <td className="max-w-md p-4 leading-7">
-                      {item.message}
-                      {item.ai_summary && (
-                        <p className="mt-2 rounded-lg bg-muted/50 p-2 text-xs text-muted-foreground">
-                          ملخص: {item.ai_summary}
-                        </p>
+                    <td className="p-4">
+                      {item.satisfaction ? (
+                        <span className="inline-flex items-center gap-1 text-amber-500">
+                          <Star className="size-4 fill-current" /> {item.satisfaction}/5
+                        </span>
+                      ) : (
+                        "—"
                       )}
+                    </td>
+                    <td className="max-w-sm p-4 leading-7" title={item.message}>
+                      {messageExcerpt(item.message)}
                     </td>
                     <td className="p-4 text-xs text-muted-foreground">
                       {new Date(item.created_at).toLocaleDateString("ar-SA")}
                     </td>
                     <td className="p-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => assist(item)}
-                        disabled={busyId === item.id}
+                      <select
+                        value={item.status}
+                        onChange={(event) => updateStatus(item.id, event.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
                       >
-                        <Sparkles className="size-4" />
-                        {busyId === item.id ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          "مساعدة ذكية"
-                        )}
+                        {STATUSES.map((itemStatus) => (
+                          <option key={itemStatus}>{itemStatus}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="p-4">
+                      <Button size="sm" variant="outline" onClick={() => printOne(item.id)}>
+                        <Printer className="size-4" /> طباعة
                       </Button>
+                      <details className="mt-2 min-w-48 text-xs">
+                        <summary className="flex cursor-pointer items-center gap-1 text-primary">
+                          <ChevronDown className="size-3" /> ملاحظة داخلية
+                        </summary>
+                        <Textarea
+                          defaultValue={item.internal_notes || ""}
+                          className="mt-2 min-h-16 text-xs"
+                          placeholder="الإجراء أو الملاحظة"
+                          onBlur={(event) => void updateNotes(item.id, event.target.value)}
+                        />
+                      </details>
                     </td>
                   </tr>
                 ))
@@ -286,29 +493,80 @@ export default function MessagesDashboard() {
         <OfficialHeader
           school={school}
           title="تقرير الآراء والرسائل"
-          reportType="تواصل المستفيدين"
+          reportType="استبانة المستفيدين"
         />
+        <div className="mt-5 rounded-lg border border-paper-border p-3 text-xs">
+          <strong>الفترة:</strong> حتى {new Date().toLocaleDateString("ar-SA")}{" "}
+          <span className="mx-3">|</span>
+          <strong>عدد المشاركات المطبوعة:</strong> {selected.length}
+        </div>
         <div className="mt-5 space-y-4">
-          {selected.map((item) => (
+          {selected.map((item, index) => (
             <article
               key={item.id}
               className="break-inside-avoid rounded-xl border border-paper-border p-4"
             >
-              <div className="flex justify-between border-b border-paper-border pb-2 text-xs font-bold">
-                <span>{item.sender_name}</span>
+              <div className="flex items-start justify-between gap-4 border-b border-paper-border pb-2 text-xs font-bold">
+                <span>
+                  {index + 1}. {item.category} — {item.sender_role}
+                </span>
                 <span>{new Date(item.created_at).toLocaleDateString("ar-SA")}</span>
               </div>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-8">{item.message}</p>
-              {item.ai_summary && (
-                <p className="mt-3 border-t border-paper-border pt-2 text-xs">
-                  الملخص: {item.ai_summary}
+              <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+                <p>
+                  <strong>المرسل:</strong> {item.sender_name}
                 </p>
-              )}
+                <p>
+                  <strong>وسيلة التواصل:</strong> {item.sender_contact || "—"}
+                </p>
+                {item.satisfaction && (
+                  <p>
+                    <strong>التقييم:</strong> {item.satisfaction} من 5
+                  </p>
+                )}
+                <p>
+                  <strong>الحالة:</strong> {item.status}
+                </p>
+              </div>
+              <p className="mt-3 whitespace-pre-wrap border-t border-paper-border pt-3 text-sm leading-8">
+                {item.message}
+              </p>
             </article>
           ))}
         </div>
         <OfficialFooter school={school} />
       </div>
     </div>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  hint,
+  tone = "primary",
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  hint: string;
+  tone?: "primary" | "amber" | "rose";
+  icon?: React.ReactNode;
+}) {
+  const toneClass =
+    tone === "amber"
+      ? "border-amber-300/40 bg-amber-50/60 text-amber-800"
+      : tone === "rose"
+        ? "border-rose-300/40 bg-rose-50/60 text-rose-800"
+        : "border-primary/12 bg-card text-primary";
+  return (
+    <article className={`rounded-2xl border p-4 shadow-sm ${toneClass}`}>
+      <p className="text-xs font-semibold">{label}</p>
+      <div className="mt-2 flex items-center gap-2">
+        <strong className="text-2xl font-black">{value}</strong>
+        {icon}
+      </div>
+      <p className="mt-1 text-xs opacity-75">{hint}</p>
+    </article>
   );
 }

@@ -664,40 +664,43 @@ export type Database = {
       };
       feedback_messages: {
         Row: {
-          ai_category: string | null;
-          ai_summary: string | null;
           category: string;
           created_at: string;
           id: string;
+          internal_notes: string | null;
           message: string;
           sender_contact: string | null;
           sender_name: string;
+          sender_role: string;
+          satisfaction: number | null;
           status: string;
           updated_at: string;
           user_id: string;
         };
         Insert: {
-          ai_category?: string | null;
-          ai_summary?: string | null;
           category?: string;
           created_at?: string;
           id?: string;
+          internal_notes?: string | null;
           message: string;
           sender_contact?: string | null;
           sender_name: string;
+          sender_role?: string;
+          satisfaction?: number | null;
           status?: string;
           updated_at?: string;
           user_id?: string;
         };
         Update: {
-          ai_category?: string | null;
-          ai_summary?: string | null;
           category?: string;
           created_at?: string;
           id?: string;
+          internal_notes?: string | null;
           message?: string;
           sender_contact?: string | null;
           sender_name?: string;
+          sender_role?: string;
+          satisfaction?: number | null;
           status?: string;
           updated_at?: string;
           user_id?: string;
@@ -716,6 +719,7 @@ export type Database = {
           logo_url: string | null;
           principal_name: string | null;
           principal_signature: string | null;
+          public_feedback_token: string;
           school_name: string | null;
           semester: string | null;
           theme: string;

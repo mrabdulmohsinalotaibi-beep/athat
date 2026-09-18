@@ -1,90 +1,105 @@
 import * as XLSX from "xlsx";
+
 import type { FieldDef } from "./records";
 
+function safeFileName(value: string, fallback: string) {
+  return (
+    (value || fallback)
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, " ")
+      .slice(0, 120) || fallback
+  );
+}
+
+/** تصدير السجل الحالي إلى Excel بعناوين عربية، اتجاه RTL، وتنسيق قراءة مناسب. */
 export function exportToExcel(
   fields: FieldDef[],
   rows: Record<string, unknown>[],
-  fileName: string
+  fileName: string,
 ) {
   const data = rows.map((row) => {
     const out: Record<string, unknown> = {};
-    fields.forEach((f) => {
-      out[f.label] = row[f.name] ?? "";
+    fields.forEach((field) => {
+      out[field.label] = row[field.name] ?? "";
     });
     return out;
   });
 
-  const ws = XLSX.utils.json_to_sheet(data);
-  ws["!dir"] = "rtl";
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  worksheet["!dir"] = "rtl";
+  worksheet["!autofilter"] = data.length
+    ? {
+        ref: XLSX.utils.encode_range({
+          s: { r: 0, c: 0 },
+          e: { r: data.length, c: Math.max(fields.length - 1, 0) },
+        }),
+      }
+    : undefined;
 
-  if (data.length > 0) {
-    const headers = Object.keys(data[0] || {});
-    ws["!cols"] = headers.map((header) => {
-      const maxLen = data.reduce((max, row) => {
-        const val = String(row[header] ?? "");
-        return Math.max(max, val.length);
-      }, header.length);
-      return { wch: Math.min(Math.max(maxLen + 4, 12), 50) };
-    });
-  }
+  const headers = fields.map((field) => field.label);
+  worksheet["!cols"] = headers.map((header) => {
+    const maxLength = data.reduce(
+      (max, row) => Math.max(max, String(row[header] ?? "").length),
+      header.length,
+    );
+    return { wch: Math.min(Math.max(maxLength + 4, 14), 55) };
+  });
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "بيانات");
-  XLSX.writeFile(wb, `${fileName.trim() || "تصدير_بيانات"}.xlsx`);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات");
+  XLSX.writeFile(workbook, `${safeFileName(fileName, "تصدير_بيانات")}.xlsx`, { compression: true });
 }
 
-/** قراءة ملف Excel أو CSV وإرجاع صفوفه */
+/** قراءة الصفوف من أول ورقة في ملف Excel أو CSV بعد تنظيف عناوين الأعمدة. */
 export async function readExcel(file: File): Promise<Record<string, unknown>[]> {
-  try {
-    if (!file) return [];
-
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { cellDates: true });
-
-    const sheetName = wb.SheetNames[0];
-    if (!sheetName) return [];
-
-    const sheet = wb.Sheets[sheetName];
-    if (!sheet) return [];
-
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-      defval: "",
-      blankrows: false,
-    });
-
-    return rows;
-  } catch (error) {
-    console.error("خطأ أثناء قراءة ملف Excel:", error);
-    return [];
+  if (!file || !/\.(xlsx|xls|csv)$/i.test(file.name)) {
+    throw new Error("اختر ملف Excel أو CSV صالحًا.");
   }
+
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { cellDates: true, raw: false });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName || !workbook.Sheets[sheetName]) return [];
+
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
+    defval: "",
+    blankrows: false,
+  });
+
+  return rows.map((row) =>
+    Object.fromEntries(
+      Object.entries(row).map(([key, value]) => [
+        String(key)
+          .replace(/^\uFEFF/, "")
+          .trim(),
+        value,
+      ]),
+    ),
+  );
 }
 
 export function sheetHeaders(rows: Record<string, unknown>[]): string[] {
-  if (!rows || rows.length === 0) return [];
-  const set = new Set<string>();
-  rows.forEach((r) => Object.keys(r).forEach((k) => set.add(k)));
-  return Array.from(set);
+  if (!rows.length) return [];
+  return Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
 }
 
+/** توحيد قيم التواريخ المستوردة إلى YYYY-MM-DD، بما يشمل رقم التاريخ في Excel. */
 export function toIsoDate(value: unknown): string | null {
   if (value === null || value === undefined || value === "") return null;
 
   if (value instanceof Date) {
-    return !Number.isNaN(value.getTime()) ? value.toISOString().slice(0, 10) : null;
+    return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
   }
 
-  if (typeof value === "number") {
-    const date = new Date(Math.round((value - 25569) * 86400 * 1000));
-    return !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 10) : null;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const parsed = XLSX.SSF.parse_date_code(value);
+    if (!parsed) return null;
+    return `${String(parsed.y).padStart(4, "0")}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
   }
 
   const text = String(value).trim();
   if (!text) return null;
-
   const parsed = new Date(text);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toISOString().slice(0, 10);
-  }
-
-  return null;
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10);
 }

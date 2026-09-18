@@ -29,7 +29,7 @@ export function OfficialHeader({
         <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
           <p>المملكة العربية السعودية</p>
           <p>وزارة التعليم</p>
-          <p>إدارة التعليم {school?.education_dept || "—"}</p>
+          <p>{school?.education_dept || "إدارة التعليم"}</p>
           <p>{school?.school_name || "اسم المدرسة"}</p>
         </div>
 
@@ -43,7 +43,10 @@ export function OfficialHeader({
           />
         </div>
 
-        <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6" dir="rtl">
+        <div
+          className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6"
+          dir="rtl"
+        >
           <p>التاريخ: {todayDate()}</p>
           <p>العام الدراسي: {school?.academic_year || "—"}</p>
           <p>الفصل الدراسي: {school?.semester || "—"}</p>
@@ -63,15 +66,27 @@ export function OfficialFooter({ school }: { school?: SchoolSettings | null | un
       <div className="flex min-h-28 flex-col items-center text-center">
         <p>الموجه الطلابي</p>
         {school?.counselor_signature ? (
-          <img src={school.counselor_signature} alt="توقيع الموجه الطلابي" className="mt-2 h-16 w-40 object-contain" />
-        ) : <div className="h-16" />}
+          <img
+            src={school.counselor_signature}
+            alt="توقيع الموجه الطلابي"
+            className="mt-2 h-16 w-40 object-contain"
+          />
+        ) : (
+          <div className="h-16" />
+        )}
         <p>{school?.counselor_name || "................."}</p>
       </div>
       <div className="flex min-h-28 flex-col items-center text-center">
         <p>مدير المدرسة</p>
         {school?.principal_signature ? (
-          <img src={school.principal_signature} alt="توقيع مدير المدرسة" className="mt-2 h-16 w-40 object-contain" />
-        ) : <div className="h-16" />}
+          <img
+            src={school.principal_signature}
+            alt="توقيع مدير المدرسة"
+            className="mt-2 h-16 w-40 object-contain"
+          />
+        ) : (
+          <div className="h-16" />
+        )}
         <p>{school?.principal_name || "................."}</p>
       </div>
       <Copyright className="col-span-full mt-2 border-t pt-3 font-normal" />

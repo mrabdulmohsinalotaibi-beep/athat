@@ -1,17 +1,9 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  FileSpreadsheet,
-  Loader2,
-  Sparkles,
-  Upload,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { aiErrorMessage, requestAi } from "@/lib/ai";
 import { readExcel, sheetHeaders } from "@/lib/sheet";
 import { STUDENT_IMPORT_FIELDS, autoMap, cleanId, cleanPhone } from "@/lib/students-import";
 import { Button } from "@/components/ui/button";
@@ -42,7 +34,6 @@ export function StudentsImportDialog({
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const [aiBusy, setAiBusy] = useState(false);
   const [result, setResult] = useState<{ inserted: number; errors: RowError[] } | null>(null);
 
   function reset() {
@@ -159,40 +150,26 @@ export function StudentsImportDialog({
     }
   }
 
-  async function analyzeHeaders() {
-    if (!headers.length || aiBusy) return;
-    setAiBusy(true);
-    try {
-      const result = await requestAi("import", {
-        headers,
-        expectedFields: STUDENT_IMPORT_FIELDS.map((field) => ({
-          name: field.name,
-          label: field.label,
-          required: field.required,
-        })),
-      });
-      const safeMapping = Object.fromEntries(
-        Object.entries(result.mapping ?? {}).filter(
-          ([field, column]) =>
-            STUDENT_IMPORT_FIELDS.some((item) => item.name === field) &&
-            headers.includes(String(column)),
-        ),
-      );
-      if (Object.keys(safeMapping).length) {
-        setMapping((current) => ({ ...current, ...safeMapping }));
-        toast.success("تمت مراجعة عناوين الأعمدة واقتراح التوزيع.");
-      } else {
-        toast.info(result.summary || "لم يعثر المساعد على توزيع مناسب؛ راجع الأعمدة يدوياً.");
-      }
-    } catch (error) {
-      toast.error(aiErrorMessage(error));
-    } finally {
-      setAiBusy(false);
-    }
-  }
-
   const preview = rows.slice(0, 5);
   const missingRequired = STUDENT_IMPORT_FIELDS.filter((f) => f.required && !mapping[f.name]);
+
+  function downloadErrorReport() {
+    if (!result?.errors.length) return;
+    const csv = [
+      "رقم الصف,اسم الطالب,سبب التجاوز",
+      ...result.errors.map((error) =>
+        [error.row || "", error.name, error.reason]
+          .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+          .join(","),
+      ),
+    ].join("\n");
+    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "تقرير_أخطاء_استيراد_الطلاب.csv";
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
 
   return (
     <Dialog
@@ -246,20 +223,6 @@ export function StudentsImportDialog({
               <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-bold">1) توزيع البيانات على الخانات</h3>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={analyzeHeaders}
-                    disabled={aiBusy}
-                  >
-                    {aiBusy ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="size-4" />
-                    )}
-                    مراجعة العناوين بالذكاء
-                  </Button>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {STUDENT_IMPORT_FIELDS.map((f) => (
@@ -328,25 +291,30 @@ export function StudentsImportDialog({
                 {result.errors.length > 0 && <span> — وتم تجاوز {result.errors.length} صفاً</span>}
               </div>
               {result.errors.length > 0 && (
-                <div className="max-h-64 overflow-y-auto rounded-lg border">
-                  <table className="w-full text-right text-xs">
-                    <thead>
-                      <tr className="border-b bg-muted/60">
-                        <th className="p-2 font-bold">الصف في الملف</th>
-                        <th className="p-2 font-bold">الاسم</th>
-                        <th className="p-2 font-bold">سبب التجاوز</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {result.errors.map((e, i) => (
-                        <tr key={i} className="border-b last:border-0">
-                          <td className="p-2">{e.row || "—"}</td>
-                          <td className="p-2">{e.name}</td>
-                          <td className="p-2 text-destructive">{e.reason}</td>
+                <div className="space-y-2">
+                  <Button type="button" variant="outline" size="sm" onClick={downloadErrorReport}>
+                    <Download className="size-4" /> تنزيل تقرير الأخطاء
+                  </Button>
+                  <div className="max-h-64 overflow-y-auto rounded-lg border">
+                    <table className="w-full text-right text-xs">
+                      <thead>
+                        <tr className="border-b bg-muted/60">
+                          <th className="p-2 font-bold">الصف في الملف</th>
+                          <th className="p-2 font-bold">الاسم</th>
+                          <th className="p-2 font-bold">سبب التجاوز</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {result.errors.map((e, i) => (
+                          <tr key={i} className="border-b last:border-0">
+                            <td className="p-2">{e.row || "—"}</td>
+                            <td className="p-2">{e.name}</td>
+                            <td className="p-2 text-destructive">{e.reason}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
