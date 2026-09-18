@@ -122,7 +122,7 @@ function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <Button asChild variant="ghost" className="hidden sm:inline-flex text-sm font-semibold">
-              <Link to="/auth">تسجيل الدخول</Link>
+              <Link to="/auth" search={{ next: "" }}>تسجيل الدخول</Link>
             </Button>
             <Button asChild size="sm" className="font-bold shadow-md">
               <Link to={ctaTo}>{signedIn ? "لوحة التحكم" : "إنشاء حساب"}</Link>

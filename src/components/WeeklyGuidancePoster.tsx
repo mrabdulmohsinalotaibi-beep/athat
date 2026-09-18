@@ -58,7 +58,7 @@ export function WeeklyGuidancePoster() {
     setBusy(true);
     try {
       // التصحيح: إرسال الكائن مباشرة بالشكل الصحيح المتوافق مع دالة السيرفر
-      const result = await draftFn({ topic: topic.trim() });
+      const result = await draftFn({ data: { topic: topic.trim() } });
       
       if (result && typeof result === "object") {
         setTitle(result.title || topic);
@@ -153,7 +153,7 @@ export function WeeklyGuidancePoster() {
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">الفقرة التفصيلية</Label>
-            <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows5={3} className="mt-1" />
+            <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={3} className="mt-1" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">تذكر دائماً</Label>
