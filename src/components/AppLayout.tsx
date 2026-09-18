@@ -21,6 +21,7 @@ import {
   FolderKanban,
   Crown,
   Sparkles,
+  Inbox,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -42,6 +43,7 @@ const NAV = [
   ]},
   { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
   { to: "/weekly-poster", label: "التوجيه الطلابي الأسبوعي", icon: Sparkles },
+  { to: "/messages", label: "الآراء والرسائل", icon: Inbox },
   { to: "/reports", label: "التقارير والإحصائيات", icon: Printer },
   { to: "/subscription", label: "الاشتراك والترقية", icon: Crown },
   { to: "/settings", label: "الإعدادات", icon: Settings },
