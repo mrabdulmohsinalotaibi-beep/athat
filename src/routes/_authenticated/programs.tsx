@@ -248,7 +248,6 @@ function ProgramsPage() {
     setEditing({ ...row });
     setPendingFiles([]);
     setUploadedAttachments([]);
-    setQuickIdea("");
     setEditorOpen(true);
     try {
       await loadAttachments(row.id);

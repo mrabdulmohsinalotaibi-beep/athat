@@ -385,34 +385,6 @@ function ReportsPage() {
     (key) => recordByKey(key).title,
   );
 
-  const statisticsContext = useMemo(() => {
-    const counts = selected.map((key) => {
-      const title = recordByKey(key).title;
-      const count = sections?.[key]?.length ?? 0;
-      return `${title}: ${count}`;
-    });
-
-    return [
-      `عنوان التقرير: ${reportTitle}`,
-      `الفترة: ${period}`,
-      `السجلات المختارة: ${selectedTitles.join("، ")}`,
-      `إجمالي السجلات: ${totalRecords}`,
-      `عدد البرامج: ${totalPrograms}`,
-      `عدد المستفيدين من البرامج: ${totalBeneficiaries}`,
-      `عدد الشواهد: ${totalEvidence}`,
-      counts.join(" | "),
-    ].join("\n");
-  }, [
-    reportTitle,
-    period,
-    selectedTitles,
-    totalRecords,
-    totalPrograms,
-    totalBeneficiaries,
-    totalEvidence,
-    sections,
-  ]);
-
   function toggleRecord(key: string) {
     setSelected((current) => {
       if (current.includes(key)) {
@@ -1158,10 +1130,8 @@ function ReportsPage() {
               </section>
             )}
 
-          {/* AI analysis */}
-
           {reportSections.analysis &&
-            aiNarrative && (
+            reportNarrative && (
               <section className="mt-7 break-inside-avoid">
                 <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                   التحليل والصياغة المهنية
@@ -1169,7 +1139,7 @@ function ReportsPage() {
 
                 <div className="rounded-xl border border-paper-border p-5">
                   <p className="whitespace-pre-wrap text-sm leading-8">
-                    {aiNarrative}
+                    {reportNarrative}
                   </p>
                 </div>
               </section>
@@ -1334,7 +1304,7 @@ function ReportsPage() {
           {/* Recommendations */}
 
           {reportSections.recommendations &&
-            aiNarrative && (
+            reportNarrative && (
               <section className="mt-7 break-inside-avoid">
                 <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                   التوصيات والإجراءات القادمة
@@ -1343,7 +1313,7 @@ function ReportsPage() {
                 <div className="rounded-xl border border-paper-border bg-paper-muted p-5">
                   <p className="whitespace-pre-wrap text-sm leading-8">
                     {extractRecommendations(
-                      aiNarrative,
+                      reportNarrative,
                     )}
                   </p>
                 </div>
