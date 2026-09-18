@@ -1,7 +1,7 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
-import MessagesDashboard from '../components/MessagesDashboard'
+import MessagesDashboard from '../../components/MessagesDashboard'
 
-export const Route = createLazyFileRoute('/messages')({
+export const Route = createLazyFileRoute('/_authenticated/messages')({
   component: MessagesPage,
 })
 

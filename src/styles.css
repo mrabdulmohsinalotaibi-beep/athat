@@ -165,7 +165,6 @@
   color-scheme: light;
 }
 
-
 @layer base {
   * {
     border-color: var(--color-border);
@@ -180,20 +179,63 @@
     overflow-x: hidden;
   }
 
-  h1, h2, h3 { letter-spacing: 0; }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: 0;
+  }
 
-  button, a, input, textarea, select { transition-duration: 180ms; }
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    transition-duration: 180ms;
+  }
 
-  html, body { max-width: 100%; }
+  html,
+  body {
+    max-width: 100%;
+  }
 
   @media (prefers-reduced-motion: no-preference) {
-    body, aside, header, main, footer, button, a, input, textarea, select {
+    body,
+    aside,
+    header,
+    main,
+    footer,
+    button,
+    a,
+    input,
+    textarea,
+    select {
       transition-property: color, background-color, border-color, box-shadow;
     }
   }
 }
 
 @layer components {
+  .dashboard-shell {
+    background: radial-gradient(
+      circle at 85% 0%,
+      color-mix(in oklab, var(--accent) 55%, transparent),
+      transparent 28rem
+    );
+  }
+
+  .dashboard-panel {
+    box-shadow: 0 10px 28px -22px color-mix(in oklab, var(--primary) 45%, transparent);
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  .dashboard-panel:hover {
+    border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
+    box-shadow: 0 16px 34px -24px color-mix(in oklab, var(--primary) 55%, transparent);
+  }
+
   .app-shell main > div > .rounded-xl,
   .app-shell main > div > .rounded-lg,
   .app-shell main .print-area {
