@@ -906,7 +906,7 @@ function ReportsPage() {
 
           <div className="mt-5">
               <Label
-                htmlFor="ai-narrative"
+                htmlFor="report-narrative"
                 className="mb-2 block text-xs font-bold"
               >
                 التحليل والتوصيات
