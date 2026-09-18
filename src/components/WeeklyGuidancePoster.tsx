@@ -1,10 +1,8 @@
 import { useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toPng } from "html-to-image";
-import { Download, FileDown, Loader2, Sparkles } from "lucide-react";
+import { Download, FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { draftWeeklyGuidance } from "@/lib/deepseek.functions";
 import { elementToPdf } from "@/lib/pdf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,11 +30,8 @@ function watermarkBackground(text: string) {
 }
 
 export function WeeklyGuidancePoster() {
-  const draftFn = useServerFn(draftWeeklyGuidance);
   const posterRef = useRef<HTMLDivElement>(null);
 
-  const [topic, setTopic] = useState("");
-  const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const [title, setTitle] = useState("الانضباط");
@@ -49,33 +44,6 @@ export function WeeklyGuidancePoster() {
   const [reminder, setReminder] = useState(
     "الطلاب المتميزون هم أكثرهم انضباطاً بالتنظيم والالتزام، فلنصنع معاً أسبوعاً دراسياً مثالياً وخالياً من التعثرات ولنثبت لأنفسنا أولاً وللجميع أننا أهل للمسؤولية.",
   );
-
-  async function generate() {
-    if (topic.trim().length < 2) {
-      toast.error("اكتب موضوع التوجيه أولاً، مثل: الصلاة، الأمانة، احترام الوقت...");
-      return;
-    }
-    setBusy(true);
-    try {
-      // التصحيح: إرسال الكائن مباشرة بالشكل الصحيح المتوافق مع دالة السيرفر
-      const result = await draftFn({ data: { topic: topic.trim() } });
-      
-      if (result && typeof result === "object") {
-        setTitle(result.title || topic);
-        setIntro(result.intro || "");
-        setBody(result.body || "");
-        if (result.reminder) setReminder(result.reminder);
-        toast.success("تم توليد المحتوى بنجاح.");
-      } else {
-        throw new Error("استجابة غير صالحة");
-      }
-    } catch (error: any) {
-      console.error(error);
-      toast.error("حدث خطأ أثناء التوليد، يجدر التأكد من مفتاح الربط.");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function downloadPng() {
     if (!posterRef.current) return;
@@ -123,26 +91,7 @@ export function WeeklyGuidancePoster() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4" dir="rtl">
       {/* لوحة التحكم */}
       <section className="rounded-2xl border bg-card p-4 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1">
-            <Label htmlFor="topic" className="font-bold">
-              موضوع التوجيه الأسبوعي
-            </Label>
-            <Input
-              id="topic"
-              className="mt-1"
-              placeholder="مثال: الصلاة، الأمانة، احترام الوقت..."
-              value={topic}
-              onChange={(event) => setTopic(event.target.value)}
-            />
-          </div>
-          <Button type="button" onClick={generate} disabled={busy} className="shrink-0">
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-            {busy ? "جارٍ التوليد..." : "إنشاء بالذكاء الاصطناعي"}
-          </Button>
-        </div>
-
-        <div className="mt-4 grid gap-3">
+        <div className="grid gap-3">
           <div>
             <Label className="text-xs text-muted-foreground">العنوان</Label>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} className="mt-1 font-bold" />

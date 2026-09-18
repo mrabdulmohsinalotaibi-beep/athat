@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       {
         name: "description",
         content:
-          "إعداد وتوليد لوحة التوجيه الطلابي الأسبوعية باستخدام الذكاء الاصطناعي، مع إمكانية تعديل النص وتصديره بصيغة PNG أو PDF.",
+          "إعداد لوحة التوجيه الطلابي الأسبوعية وتعديل نصها وتصديرها بصيغة PNG أو PDF.",
       },
       {
         property: "og:title",
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       {
         property: "og:description",
         content:
-          "أنشئ لوحة توجيهية أسبوعية للطلاب بالذكاء الاصطناعي، ثم عدّلها واحفظها بصيغة PNG أو PDF.",
+          "أنشئ لوحة توجيهية أسبوعية للطلاب ثم احفظها بصيغة PNG أو PDF.",
       },
       {
         property: "og:type",
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       {
         name: "twitter:description",
         content:
-          "توليد وتجهيز لوحات التوجيه الطلابي الأسبوعية بالذكاء الاصطناعي.",
+          "تجهيز لوحات التوجيه الطلابي الأسبوعية وطباعتها.",
       },
     ],
   }),

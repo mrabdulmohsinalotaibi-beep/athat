@@ -24,7 +24,6 @@ import {
   Printer,
   RefreshCw,
   Share2,
-  Sparkles,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -38,7 +37,6 @@ import { whatsappLink } from "@/lib/whatsapp";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { displayRecordValue } from "@/lib/display";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
-import { AiDraftAssistant } from "@/components/AiDraftAssistant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,7 +57,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
       {
         name: "description",
         content:
-          "لوحة التقارير والإحصائيات لأعمال التوجيه الطلابي مع الذكاء الاصطناعي والطباعة والتصدير PDF.",
+          "لوحة التقارير والإحصائيات لأعمال التوجيه الطلابي مع الطباعة والتصدير PDF.",
       },
       {
         property: "og:title",
@@ -300,7 +298,7 @@ function ReportsPage() {
   );
 
   const [reportSummary, setReportSummary] = useState("");
-  const [aiNarrative, setAiNarrative] = useState("");
+  const [reportNarrative, setReportNarrative] = useState("");
 
   const [reportSections, setReportSections] = useState<
     Record<ReportSectionKey, boolean>
@@ -387,34 +385,6 @@ function ReportsPage() {
     (key) => recordByKey(key).title,
   );
 
-  const statisticsContext = useMemo(() => {
-    const counts = selected.map((key) => {
-      const title = recordByKey(key).title;
-      const count = sections?.[key]?.length ?? 0;
-      return `${title}: ${count}`;
-    });
-
-    return [
-      `عنوان التقرير: ${reportTitle}`,
-      `الفترة: ${period}`,
-      `السجلات المختارة: ${selectedTitles.join("، ")}`,
-      `إجمالي السجلات: ${totalRecords}`,
-      `عدد البرامج: ${totalPrograms}`,
-      `عدد المستفيدين من البرامج: ${totalBeneficiaries}`,
-      `عدد الشواهد: ${totalEvidence}`,
-      counts.join(" | "),
-    ].join("\n");
-  }, [
-    reportTitle,
-    period,
-    selectedTitles,
-    totalRecords,
-    totalPrograms,
-    totalBeneficiaries,
-    totalEvidence,
-    sections,
-  ]);
-
   function toggleRecord(key: string) {
     setSelected((current) => {
       if (current.includes(key)) {
@@ -442,7 +412,7 @@ function ReportsPage() {
     setTo("");
     setReportTitle("التقرير الشامل لأعمال التوجيه الطلابي");
     setReportSummary("");
-    setAiNarrative("");
+    setReportNarrative("");
     setReportSections(DEFAULT_REPORT_SECTIONS);
 
     toast.success("تمت إعادة إعداد التقرير");
@@ -545,10 +515,6 @@ function ReportsPage() {
                   التقارير والإحصائيات
                 </h1>
 
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
-                  <Sparkles className="size-3.5" />
-                  ذكاء اصطناعي
-                </span>
               </div>
 
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -912,83 +878,12 @@ function ReportsPage() {
         </div>
       </div>
 
-      {/* =========================================================
-          DEEPSEEK AI
-      ========================================================= */}
-
-      <div className="no-print overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
-        <div className="border-b bg-primary/5 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
-              <Sparkles className="size-5" />
-            </div>
-
-            <div>
-              <h2 className="font-extrabold">
-                المساعد الذكي — DeepSeek
-              </h2>
-
-              <p className="text-xs text-muted-foreground">
-                صياغة التقرير وتحليل البيانات بأسلوب تربوي ومهني.
-              </p>
-            </div>
-          </div>
+      <div className="no-print overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="border-b px-5 py-4">
+          <h2 className="font-extrabold">محتوى التقرير</h2>
+          <p className="text-xs text-muted-foreground">اكتب الملخص والتحليل والتوصيات التي ستظهر في التقرير.</p>
         </div>
-
         <div className="p-5">
-          <AiDraftAssistant
-            recordKey="reports"
-            context={{
-              report_type: reportTitle,
-              period,
-              included_records: selectedTitles.join("، "),
-              statistics: statisticsContext,
-              school_name: String(
-                school?.school_name ?? "",
-              ),
-              counselor_name: String(
-                school?.counselor_name ?? "",
-              ),
-            }}
-            onDraft={(draft) => {
-              setReportSummary(draft.summary);
-
-              setAiNarrative(
-                [
-                  draft.problemDescription
-                    ? `وصف الموضوع:\n${draft.problemDescription}`
-                    : "",
-                  draft.causes
-                    ? `الأسباب والتحليل:\n${draft.causes}`
-                    : "",
-                  draft.goals
-                    ? `الأهداف:\n${draft.goals}`
-                    : "",
-                  draft.actions
-                    ? `الإجراءات المنفذة:\n${draft.actions}`
-                    : "",
-                  draft.interventionPlan
-                    ? `خطة العمل والتدخل:\n${draft.interventionPlan}`
-                    : "",
-                  draft.result
-                    ? `النتائج:\n${draft.result}`
-                    : "",
-                  draft.recommendations
-                    ? `التوصيات:\n${draft.recommendations}`
-                    : "",
-                  draft.nextAction
-                    ? `الإجراء القادم:\n${draft.nextAction}`
-                    : "",
-                  draft.notes
-                    ? `ملاحظات إضافية:\n${draft.notes}`
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join("\n\n"),
-              );
-            }}
-          />
-
           <div className="mt-5">
             <Label
               htmlFor="report-summary"
@@ -1005,30 +900,28 @@ function ReportsPage() {
               }
               rows={5}
               className="rounded-xl"
-              placeholder="يمكنك كتابة الملخص بنفسك أو توليده بواسطة DeepSeek ثم مراجعته وتعديله."
+              placeholder="اكتب الملخص التنفيذي للتقرير."
             />
           </div>
 
-          {aiNarrative && (
-            <div className="mt-5">
+          <div className="mt-5">
               <Label
-                htmlFor="ai-narrative"
+                htmlFor="report-narrative"
                 className="mb-2 block text-xs font-bold"
               >
-                الصياغة والتحليل الذكي
+                التحليل والتوصيات
               </Label>
 
               <Textarea
-                id="ai-narrative"
-                value={aiNarrative}
+                id="report-narrative"
+                value={reportNarrative}
                 onChange={(event) =>
-                  setAiNarrative(event.target.value)
+                  setReportNarrative(event.target.value)
                 }
                 rows={15}
                 className="rounded-xl leading-7"
               />
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -1237,10 +1130,8 @@ function ReportsPage() {
               </section>
             )}
 
-          {/* AI analysis */}
-
           {reportSections.analysis &&
-            aiNarrative && (
+            reportNarrative && (
               <section className="mt-7 break-inside-avoid">
                 <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                   التحليل والصياغة المهنية
@@ -1248,7 +1139,7 @@ function ReportsPage() {
 
                 <div className="rounded-xl border border-paper-border p-5">
                   <p className="whitespace-pre-wrap text-sm leading-8">
-                    {aiNarrative}
+                    {reportNarrative}
                   </p>
                 </div>
               </section>
@@ -1413,7 +1304,7 @@ function ReportsPage() {
           {/* Recommendations */}
 
           {reportSections.recommendations &&
-            aiNarrative && (
+            reportNarrative && (
               <section className="mt-7 break-inside-avoid">
                 <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                   التوصيات والإجراءات القادمة
@@ -1422,7 +1313,7 @@ function ReportsPage() {
                 <div className="rounded-xl border border-paper-border bg-paper-muted p-5">
                   <p className="whitespace-pre-wrap text-sm leading-8">
                     {extractRecommendations(
-                      aiNarrative,
+                      reportNarrative,
                     )}
                   </p>
                 </div>

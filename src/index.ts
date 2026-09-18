@@ -1,4 +1,3 @@
-export { AiDraftAssistant } from "./components/AiDraftAssistant"
 export { AppLayout } from "./components/AppLayout"
 export { Copyright } from "./components/Copyright"
 export { EvidenceUploadDialog, EvidenceGallery } from "./components/EvidenceUpload"
