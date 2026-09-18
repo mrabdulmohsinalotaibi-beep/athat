@@ -29,7 +29,6 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWeeklyPosterRouteImport } from './routes/_authenticated/weekly-poster'
-import { Route as FeedbackTokenRouteImport } from './routes/feedback.$token'
 import { Route as AuthenticatedAdminUpgradeRequestsIndexRouteImport } from './routes/_authenticated/admin/upgrade-requests/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -135,11 +134,6 @@ const AuthenticatedWeeklyPosterRoute =
     path: '/weekly-poster',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const FeedbackTokenRoute = FeedbackTokenRouteImport.update({
-  id: '/feedback/$token',
-  path: '/feedback/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedAdminUpgradeRequestsIndexRoute =
   AuthenticatedAdminUpgradeRequestsIndexRouteImport.update({
     id: '/admin/upgrade-requests/',
@@ -167,7 +161,6 @@ export interface FileRoutesByFullPath {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
-  '/feedback/$token': typeof FeedbackTokenRoute
   '/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -190,7 +183,6 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
-  '/feedback/$token': typeof FeedbackTokenRoute
   '/admin/upgrade-requests': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesById {
@@ -215,7 +207,6 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
-  '/feedback/$token': typeof FeedbackTokenRoute
   '/_authenticated/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -240,7 +231,6 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
-    | '/feedback/$token'
     | '/admin/upgrade-requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -263,7 +253,6 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
-    | '/feedback/$token'
     | '/admin/upgrade-requests'
   id:
     | '__root__'
@@ -287,7 +276,6 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/subscription'
     | '/_authenticated/weekly-poster'
-    | '/feedback/$token'
     | '/_authenticated/admin/upgrade-requests/'
   fileRoutesById: FileRoutesById
 }
@@ -295,7 +283,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  FeedbackTokenRoute: typeof FeedbackTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -440,13 +427,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWeeklyPosterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/feedback/$token': {
-      id: '/feedback/$token'
-      path: '/feedback/$token'
-      fullPath: '/feedback/$token'
-      preLoaderRoute: typeof FeedbackTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/admin/upgrade-requests/': {
       id: '/_authenticated/admin/upgrade-requests/'
       path: '/admin/upgrade-requests'
@@ -507,7 +487,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  FeedbackTokenRoute: FeedbackTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

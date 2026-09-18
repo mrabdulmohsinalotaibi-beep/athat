@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       {
         name: "description",
         content:
-          "إعداد لوحة التوجيه الطلابي الأسبوعية وتعديل نصها وحفظها بصيغة PDF الرسمية.",
+          "إعداد لوحة التوجيه الطلابي الأسبوعية وتعديل نصها وتصديرها بصيغة PNG أو PDF.",
       },
       {
         property: "og:title",
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       {
         property: "og:description",
         content:
-          "أنشئ لوحة توجيهية أسبوعية للطلاب ثم احفظها بصيغة PDF الرسمية.",
+          "أنشئ لوحة توجيهية أسبوعية للطلاب ثم احفظها بصيغة PNG أو PDF.",
       },
       {
         property: "og:type",

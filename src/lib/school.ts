@@ -11,7 +11,6 @@ export interface SchoolSettings {
   semester?: string | null;
   counselor_signature?: string | null;
   principal_signature?: string | null;
-  public_feedback_token?: string | null;
   theme?: string | null;
 }
 
@@ -30,7 +29,7 @@ export function useSchool() {
         console.error("خطأ في جلب إعدادات المدرسة:", error.message);
         throw error;
       }
-
+      
       return data as SchoolSettings | null;
     },
     staleTime: 1000 * 60 * 30, // احتفاظ بالبيانات في الكاش لمدة 30 دقيقة بدون إعادة طلب
