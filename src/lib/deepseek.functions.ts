@@ -16,11 +16,10 @@ export type WeeklyGuidanceDraft = {
 };
 
 export const draftWeeklyGuidance = createServerFn({ method: "POST" })
-  .validator((data: unknown) => Input.parse(data))
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }) => {
-    await requireSupabaseAuth();
-
-    const apiKey = process.env.DEEPSEEK_API_KEY;
+    const apiKey = process.env["DEEPSEEK_API_KEY"];
     if (!apiKey) {
       throw new Error("مفتاح ربط DeepSeek غير متوفر في إعدادات البيئة.");
     }
