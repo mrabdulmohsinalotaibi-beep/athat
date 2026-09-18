@@ -1,70 +1,68 @@
 import { useMemo, useRef, useState } from "react";
-import { toPng } from "html-to-image";
-import { Download, FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { elementToPdf } from "@/lib/pdf";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchool } from "@/lib/school";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import moeLogo from "@/assets/moe-logo-official.png";
 
-const SCHOOL_INFO = {
-  ministry: "المملكة العربية السعودية",
-  authority: "وزارة التعليم",
-  department: "إدارة التعليم بمكة المكرمة",
-  school: "متوسطة العلاء بن الحضرمي",
-  watermark: "متوسطة العلاء بن الحضرمي",
-};
+const TOPICS = [
+  "الانضباط",
+  "الاحترام",
+  "المواطنة الرقمية",
+  "الاستعداد للاختبارات",
+  "الصحة النفسية",
+  "التعاون",
+];
 
 function watermarkBackground(text: string) {
   const safe = text.replace(/[<>&]/g, "");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="380" height="200">
-      <text x="10" y="70" font-family="Cairo, sans-serif" font-size="24" font-weight="700"
-        fill="#1f2937" fill-opacity="0.055" transform="rotate(-18 190 70)">${safe} ${safe}</text>
-      <text x="-60" y="170" font-family="Cairo, sans-serif" font-size="24" font-weight="700"
-        fill="#1f2937" fill-opacity="0.055" transform="rotate(-18 190 170)">${safe} ${safe}</text>
-    </svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="380" height="200"><text x="10" y="70" font-family="Cairo, sans-serif" font-size="24" font-weight="700" fill="#7f1d1d" fill-opacity="0.055" transform="rotate(-18 190 70)">${safe} ${safe}</text><text x="-60" y="170" font-family="Cairo, sans-serif" font-size="24" font-weight="700" fill="#7f1d1d" fill-opacity="0.055" transform="rotate(-18 190 170)">${safe} ${safe}</text></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
 export function WeeklyGuidancePoster() {
+  const { data: school } = useSchool();
   const posterRef = useRef<HTMLDivElement>(null);
-
   const [exporting, setExporting] = useState(false);
-
+  const [aiBusy, setAiBusy] = useState(false);
   const [title, setTitle] = useState("الانضباط");
   const [intro, setIntro] = useState(
-    "مع انطلاقة هذا الأسبوع، نضع نصب أعيننا قيمة أساسية لا غنى عنها لصناعة النجاح",
+    "مع انطلاقة هذا الأسبوع، نضع نصب أعيننا قيمة أساسية لصناعة النجاح.",
   );
   const [body, setBody] = useState(
-    "الانضباط ليس مجرد قوانين مدرسية نلتزم بها، بل هو مهارة حياتية وعنوان لشخصيتك الواعية والناضجة، إنه الفارق الحقيقي بين ما تود أن تكونه وما ستحققه فعلياً في حياتك.",
+    "الانضباط مهارة حياتية وعنوان لشخصيتك الواعية؛ فهو يساعدك على تنظيم وقتك والوفاء بوعودك وتحقيق أهدافك بخطوات ثابتة.",
   );
   const [reminder, setReminder] = useState(
-    "الطلاب المتميزون هم أكثرهم انضباطاً بالتنظيم والالتزام، فلنصنع معاً أسبوعاً دراسياً مثالياً وخالياً من التعثرات ولنثبت لأنفسنا أولاً وللجميع أننا أهل للمسؤولية.",
+    "ابدأ أسبوعك بخطة واضحة، واحرص على الحضور المبكر والاستعداد الجيد.",
   );
 
-  async function downloadPng() {
-    if (!posterRef.current) return;
-    setExporting(true);
-    try {
-      const dataUrl = await toPng(posterRef.current, {
-        cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "#ffffff",
-      });
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `التوجيه_الطلابي_${title || "الأسبوعي"}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch {
-      toast.error("تعذّر تصدير الصورة.");
-    } finally {
-      setExporting(false);
+  const watermarkStyle = useMemo(
+    () => ({
+      backgroundImage: watermarkBackground(school?.school_name || "منصة الذات"),
+      backgroundRepeat: "repeat" as const,
+    }),
+    [school?.school_name],
+  );
+
+  async function generateWithAi() {
+    setAiBusy(true);
+    const { data, error } = await supabase.functions.invoke("ai-assist", {
+      body: { action: "weekly", text: `الموضوع: ${title}` },
+    });
+    setAiBusy(false);
+    if (error) {
+      toast.error("تعذّر تشغيل Gemini. تأكد من إضافة GEMINI_API_KEY في Supabase.");
+      return;
     }
+    if (data?.summary) setBody(String(data.summary));
+    if (data?.suggestion) setReminder(String(data.suggestion));
+    toast.success("تم إعداد مسودة إرشادية جديدة.");
   }
 
   async function downloadPdf() {
@@ -72,58 +70,92 @@ export function WeeklyGuidancePoster() {
     setExporting(true);
     try {
       await elementToPdf(posterRef.current, `التوجيه الطلابي ${title || "الأسبوعي"}`);
+      toast.success("تم حفظ لوحة التوجيه بصيغة PDF");
     } catch {
-      toast.error("تعذّر تصدير PDF.");
+      toast.error("تعذّر حفظ PDF.");
     } finally {
       setExporting(false);
     }
   }
 
-  const watermarkStyle = useMemo(
-    () => ({
-      backgroundImage: watermarkBackground(SCHOOL_INFO.watermark),
-      backgroundRepeat: "repeat" as const,
-    }),
-    [],
-  );
-
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4" dir="rtl">
-      {/* لوحة التحكم */}
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
-        <div className="grid gap-3">
-          <div>
-            <Label className="text-xs text-muted-foreground">العنوان</Label>
-            <Input value={title} onChange={(event) => setTitle(event.target.value)} className="mt-1 font-bold" />
+    <div className="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-[minmax(0,360px)_1fr]" dir="rtl">
+      <section className="no-print h-fit rounded-3xl border border-primary/12 bg-card p-5 shadow-sm lg:sticky lg:top-24">
+        <div className="mb-5 flex items-center gap-2">
+          <div className="rounded-xl bg-primary/10 p-2 text-primary">
+            <Sparkles className="size-5" />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">الفقرة التمهيدية</Label>
-            <Textarea value={intro} onChange={(event) => setIntro(event.target.value)} rows={2} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">الفقرة التفصيلية</Label>
-            <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={3} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">تذكر دائماً</Label>
-            <Textarea value={reminder} onChange={(event) => setReminder(event.target.value)} rows={2} className="mt-1" />
+            <h1 className="font-black">التوجيه الطلابي الأسبوعي</h1>
+            <p className="text-xs text-muted-foreground">أنشئ لوحة رسمية واحفظها PDF</p>
           </div>
         </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button type="button" variant="secondary" onClick={downloadPng} disabled={exporting}>
-            {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-            حفظ PNG
+        <div className="space-y-4">
+          <div>
+            <Label>موضوع الأسبوع</Label>
+            <select
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {TOPICS.map((topic) => (
+                <option key={topic}>{topic}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label>العنوان المخصص</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1 font-bold"
+            />
+          </div>
+          <div>
+            <Label>التمهيد</Label>
+            <Textarea
+              value={intro}
+              onChange={(e) => setIntro(e.target.value)}
+              rows={3}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label>الرسالة الإرشادية</Label>
+            <Textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={6}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label>تذكّر دائمًا</Label>
+            <Textarea
+              value={reminder}
+              onChange={(e) => setReminder(e.target.value)}
+              rows={4}
+              className="mt-1"
+            />
+          </div>
+        </div>
+        <div className="mt-5 grid gap-2">
+          <Button onClick={generateWithAi} variant="secondary" disabled={aiBusy}>
+            <Sparkles className="size-4" />
+            {aiBusy ? "جارٍ إعداد المسودة..." : "اقتراح مسودة بالذكاء الاصطناعي"}
           </Button>
-          <Button type="button" variant="outline" onClick={downloadPdf} disabled={exporting}>
-            <FileDown className="size-4" />
-            PDF
+          <Button onClick={downloadPdf} disabled={exporting}>
+            {exporting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <FileDown className="size-4" />
+            )}{" "}
+            حفظ PDF
           </Button>
         </div>
       </section>
 
-      {/* المعاينة القابلة للتصدير */}
-      <div className="overflow-auto rounded-2xl border bg-muted/30 p-4">
+      <div className="overflow-auto rounded-3xl border bg-muted/30 p-4">
         <div
           ref={posterRef}
           dir="rtl"
@@ -135,60 +167,49 @@ export function WeeklyGuidancePoster() {
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
           }}
         >
-          {/* الترويسة */}
-          <div className="grid grid-cols-3 items-center rounded-[28px] bg-[#f4f1ea] px-8 py-4 shadow-sm">
+          <div className="grid grid-cols-3 items-center rounded-[28px] border-b-4 border-[#c58a22] bg-[#fbf7ef] px-8 py-4">
             <div className="text-right text-sm font-bold leading-7">
-              <p>{SCHOOL_INFO.ministry}</p>
-              <p>{SCHOOL_INFO.authority}</p>
-              <p>{SCHOOL_INFO.department}</p>
-              <p>{SCHOOL_INFO.school}</p>
+              <p>المملكة العربية السعودية</p>
+              <p>وزارة التعليم</p>
+              <p>{school?.education_dept || "إدارة التعليم"}</p>
+              <p>{school?.school_name || "اسم المدرسة"}</p>
             </div>
             <div className="flex justify-center">
               <img src={moeLogo} alt="شعار وزارة التعليم" className="h-16 w-28 object-contain" />
             </div>
-            <div />
-          </div>
-
-          {/* عنوان اللوحة */}
-          <div className="mt-8 flex justify-center">
-            <div className="flex items-center gap-3 rounded-xl border bg-[#f4f1ea] px-8 py-3 shadow-[3px_3px_0_rgba(0,0,0,0.12)]">
-              <span className="size-3 rounded-full bg-[#1f2937]" />
-              <h1 className="text-2xl font-extrabold">التوجيه الطلابي</h1>
+            <div className="text-left text-xs font-semibold leading-6">
+              <p>العام الدراسي: {school?.academic_year || "—"}</p>
+              <p>{school?.semester || "الفصل الدراسي"}</p>
+              <p>{new Date().toLocaleDateString("ar-SA")}</p>
             </div>
           </div>
-
-          {/* الإطار الرئيسي */}
+          <div className="mt-8 flex justify-center">
+            <div className="flex items-center gap-3 rounded-xl border border-[#c9b48a] bg-[#fbf7ef] px-8 py-3 shadow-[3px_3px_0_rgba(127,29,29,0.14)]">
+              <span className="size-3 rounded-full bg-[#7f1d1d]" />
+              <h2 className="text-2xl font-extrabold">التوجيه الطلابي</h2>
+            </div>
+          </div>
           <div
-            className="relative mt-8 min-h-[720px] overflow-hidden rounded-sm border-2 border-[#c9b48a] p-10 flex flex-col justify-between"
+            className="relative mt-8 flex min-h-[720px] flex-col justify-between overflow-hidden rounded-sm border-2 border-[#c9b48a] p-10"
             style={watermarkStyle}
           >
-            <span
-              className="absolute right-0 top-0 size-6 border-b-2 border-l-2 border-[#c9b48a]"
-              style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
-            />
-            <span
-              className="absolute bottom-0 left-0 size-6 border-r-2 border-t-2 border-[#c9b48a]"
-              style={{ clipPath: "polygon(0 100%, 100% 100%, 0 0)" }}
-            />
-
-            <div className="relative flex flex-col items-center justify-center gap-8 text-center my-auto">
+            <div className="relative my-auto flex flex-col items-center justify-center gap-8 text-center">
               <div className="max-w-xl">
                 <p className="text-xl font-bold leading-10">{intro}</p>
-                {title && <p className="mt-2 text-2xl font-extrabold">&quot;{title}&quot;</p>}
+                {title && (
+                  <p className="mt-2 text-2xl font-extrabold text-[#7f1d1d]">&quot;{title}&quot;</p>
+                )}
               </div>
-
               {body && <p className="max-w-xl text-lg leading-9">{body}</p>}
-
               {reminder && (
                 <div className="mt-4 max-w-xl text-lg font-extrabold leading-9">
-                  <p>تذكر دائماً:</p>
+                  <p className="text-[#7f1d1d]">تذكّر دائمًا:</p>
                   <p>{reminder}</p>
                 </div>
               )}
             </div>
-
-            <div className="relative mt-8 flex items-center justify-between border-t border-[#c9b48a]/40 pt-3 text-xs text-muted-foreground font-medium">
-              <span>التوجيه الطلابي</span>
+            <div className="relative mt-8 flex items-center justify-between border-t border-[#c9b48a]/40 pt-3 text-xs font-medium text-gray-500">
+              <span>الموجه الطلابي: {school?.counselor_name || "—"}</span>
               <span>منصة الذات للتوجيه الطلابي</span>
             </div>
           </div>

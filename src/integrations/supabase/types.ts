@@ -668,6 +668,48 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_messages: {
+        Row: {
+          ai_category: string | null
+          ai_summary: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          sender_contact: string | null
+          sender_name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_category?: string | null
+          ai_summary?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_contact?: string | null
+          sender_name: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          ai_category?: string | null
+          ai_summary?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_contact?: string | null
+          sender_name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       school_settings: {
         Row: {
           academic_year: string | null
@@ -826,6 +868,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      submit_public_feedback: {
+        Args: {
+          p_category: string
+          p_message: string
+          p_sender_contact: string
+          p_sender_name: string
+          p_token: string
+        }
+        Returns: string
+      }
       [_ in never]: never
     }
     Enums: {
