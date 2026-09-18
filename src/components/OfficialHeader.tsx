@@ -1,7 +1,14 @@
 import type { SchoolSettings } from "@/lib/school";
 import moeLogo from "@/assets/moe-logo-official.png";
 import { Copyright } from "@/components/Copyright";
-import { formatHijriDate } from "@/lib/hijri";
+
+function todayDate() {
+  return new Date().toLocaleDateString("ar-SA-u-ca-gregory", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
 
 export function OfficialHeader({
   school,
@@ -37,7 +44,7 @@ export function OfficialHeader({
         </div>
 
         <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6" dir="rtl">
-          <p>التاريخ الهجري: {formatHijriDate()}</p>
+          <p>التاريخ: {todayDate()}</p>
           <p>العام الدراسي: {school?.academic_year || "—"}</p>
           <p>الفصل الدراسي: {school?.semester || "—"}</p>
           <p>نوع السجل: {reportType || title}</p>

@@ -23,7 +23,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { elementToPdf } from "@/lib/pdf";
-import { todayIsoDate } from "@/lib/hijri";
 import { draftGuidanceReport, type GuidanceDraft } from "@/lib/ai.functions";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
@@ -110,7 +109,7 @@ const MINISTRY_PROGRAMS = [
 ] as const;
 
 function today() {
-  return todayIsoDate();
+  return new Date().toISOString().slice(0, 10);
 }
 
 function emptyDraft(): ProgramDraft {

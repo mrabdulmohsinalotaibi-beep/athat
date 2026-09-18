@@ -153,7 +153,7 @@ export function WeeklyGuidancePoster() {
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">الفقرة التفصيلية</Label>
-            <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={5} className="mt-1" />
+            <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={3} className="mt-1" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">تذكر دائماً</Label>

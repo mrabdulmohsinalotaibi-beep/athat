@@ -35,7 +35,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
-import { todayIsoDate } from "@/lib/hijri";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -51,7 +50,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
-const today = todayIsoDate;
+const today = () => new Date().toISOString().slice(0, 10);
 
 function useDashboard() {
   return useQuery({
