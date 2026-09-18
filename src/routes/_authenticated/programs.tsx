@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   CalendarRange,
   Check,
@@ -13,7 +12,6 @@ import {
   Pencil,
   Plus,
   Printer,
-  Sparkles,
   Trash2,
   Upload,
   X,
@@ -23,7 +21,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { elementToPdf } from "@/lib/pdf";
-import { draftGuidanceReport, type GuidanceDraft } from "@/lib/ai.functions";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { RecordPrintDialog } from "@/components/RecordPrintDialog";
@@ -135,35 +132,14 @@ function value(v: unknown) {
   return String(v ?? "");
 }
 
-function draftToFields(draft: GuidanceDraft, current: ProgramDraft) {
-  return {
-    ...current,
-    goal: draft.goals || draft.summary || current.goal || "",
-    indicator: draft.result || draft.nextAction || current.indicator || "",
-    notes: [
-      draft.problemDescription ? `وصف البرنامج:\n${draft.problemDescription}` : "",
-      draft.goals ? `الأهداف:\n${draft.goals}` : "",
-      draft.actions ? `آلية التنفيذ والإجراءات:\n${draft.actions}` : "",
-      draft.interventionPlan ? `خطة العمل:\n${draft.interventionPlan}` : "",
-      draft.result ? `النتائج المتوقعة/المتحققة:\n${draft.result}` : "",
-      draft.recommendations ? `التوصيات:\n${draft.recommendations}` : "",
-      draft.nextAction ? `الإجراء القادم:\n${draft.nextAction}` : "",
-      draft.notes || "",
-    ].filter(Boolean).join("\n\n"),
-  };
-}
-
 function ProgramsPage() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
-  const draftAi = useServerFn(draftGuidanceReport);
   const printRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editing, setEditing] = useState<ProgramDraft | null>(null);
-  const [quickIdea, setQuickIdea] = useState("");
-  const [aiBusy, setAiBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [attachFor, setAttachFor] = useState<ProgramRow | null>(null);
@@ -261,38 +237,10 @@ function ProgramsPage() {
     }
   }
 
-  async function generateWithAi() {
-    if (!editing) return;
-    if (quickIdea.trim().length < 3 && !editing.name?.trim()) {
-      toast.error("اختر اسم البرنامج واكتب وصفاً مختصراً أو كلمات مفتاحية أولاً.");
-      return;
-    }
-    setAiBusy(true);
-    try {
-      const context = Object.fromEntries(Object.entries(editing).map(([k, v]) => [k, value(v)]));
-      const draft = await draftAi({
-        data: {
-          recordKey: "reports",
-          notes: quickIdea.trim() || `أكمل إعداد برنامج إرشادي بعنوان: ${editing.name}`,
-          context: { ...context, program_type: "برنامج/نشاط إرشادي" },
-          availableOptions: { ptype: PROGRAM_TYPES, domain: DOMAINS, exec_status: EXEC_STATUS },
-        },
-      });
-      setEditing((current) => current ? draftToFields(draft, current) : current);
-      setQuickIdea("");
-      toast.success("تمت تعبئة محتوى البرنامج بالذكاء الاصطناعي. راجع النص قبل الحفظ.");
-    } catch (error) {
-      toast.error((error as Error).message || "تعذّر تشغيل المساعد الذكي.");
-    } finally {
-      setAiBusy(false);
-    }
-  }
-
   function openNew() {
     setEditing(emptyDraft());
     setPendingFiles([]);
     setUploadedAttachments([]);
-    setQuickIdea("");
     setEditorOpen(true);
   }
 
@@ -406,7 +354,7 @@ function ProgramsPage() {
       <div className="no-print flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">البرامج والأنشطة</h1>
-          <p className="mt-1 text-sm text-muted-foreground">أنشئ البرنامج كمستند رسمي A4، أكمله بالذكاء الاصطناعي، وأرفق الشواهد والصور داخله.</p>
+          <p className="mt-1 text-sm text-muted-foreground">أنشئ البرنامج كمستند رسمي A4، واكتب تفاصيله، وأرفق الشواهد والصور داخله.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={openNew}><Plus className="size-4" /> إضافة برنامج</Button>
@@ -452,16 +400,14 @@ function ProgramsPage() {
         <DialogContent dir="rtl" className="max-h-[96vh] max-w-6xl overflow-y-auto p-0">
           <DialogHeader className="no-print border-b px-6 py-4">
             <DialogTitle>{editing?.id ? "تحرير مستند البرنامج" : "إنشاء مستند برنامج جديد"}</DialogTitle>
-            <DialogDescription>اختر اسم البرنامج، اكتب فكرة مختصرة، ثم دع المساعد الذكي يكمل الصياغة. يمكنك تعديل كل شيء قبل الحفظ.</DialogDescription>
+            <DialogDescription>اختر اسم البرنامج، ثم أدخل التفاصيل والإجراءات والنتائج قبل الحفظ.</DialogDescription>
           </DialogHeader>
 
-          <div className="no-print grid gap-4 bg-muted/20 p-4 lg:grid-cols-[360px_1fr]">
+          <div className="no-print grid gap-4 bg-muted/20 p-4 lg:grid-cols-[300px_1fr]">
             <div className="space-y-4 rounded-xl border bg-card p-4">
               <div><Label className="mb-1.5 block">اسم البرنامج من القائمة المنسدلة</Label><select value={value(editing?.name)} onChange={(e) => selectMinistryProgram(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option value="">— اختر برنامجاً وزارياً أو اكتب اسماً أدناه —</option>{MINISTRY_PROGRAMS.map((p) => <option key={p[1]} value={p[1]}>{p[1]}</option>)}</select></div>
               <div><Label className="mb-1.5 block">اسم البرنامج / النشاط</Label><Input value={value(editing?.name)} onChange={(e) => setEditing((x) => ({ ...(x ?? emptyDraft()), name: e.target.value }))} /></div>
-              <div><Label className="mb-1.5 block">وصف سريع أو ما تم تنفيذه</Label><Textarea rows={5} value={quickIdea} onChange={(e) => setQuickIdea(e.target.value)} placeholder="مثال: تم تنفيذ لقاء توعوي للطلاب عن مهارات إدارة الوقت، مع عرض مرئي وتوزيع مطويات..." /></div>
-              <Button type="button" className="w-full" onClick={generateWithAi} disabled={aiBusy}><Sparkles className="size-4" />{aiBusy ? "جارٍ إعداد البرنامج..." : "أكمل البرنامج بالذكاء الاصطناعي"}</Button>
-              <p className="text-[11px] leading-5 text-muted-foreground">المساعد يستخدم الصياغة الموجودة في النظام ثم يعيدها في حقول قابلة للتعديل. راجع المحتوى قبل اعتماده.</p>
+              <p className="text-xs leading-5 text-muted-foreground">أكمل بيانات البرنامج في الحقول أسفل المستند، ثم راجع المعاينة قبل الحفظ أو التصدير.</p>
             </div>
 
             <div className="mx-auto w-full max-w-[210mm]">
