@@ -1,19 +1,40 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FileSpreadsheet,
+  Loader2,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { aiErrorMessage, requestAi } from "@/lib/ai";
 import { readExcel, sheetHeaders } from "@/lib/sheet";
 import { STUDENT_IMPORT_FIELDS, autoMap, cleanId, cleanPhone } from "@/lib/students-import";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type SheetRow = Record<string, unknown>;
 type RowError = { row: number; name: string; reason: string };
 
-export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function StudentsImportDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState("");
@@ -21,6 +42,7 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
   const [result, setResult] = useState<{ inserted: number; errors: RowError[] } | null>(null);
 
   function reset() {
@@ -65,7 +87,9 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
     try {
       const { data: existing } = await supabase.from("students").select("national_id");
       const known = new Set(
-        (existing ?? []).map((s) => cleanId((s as { national_id: string | null }).national_id)).filter(Boolean),
+        (existing ?? [])
+          .map((s) => cleanId((s as { national_id: string | null }).national_id))
+          .filter(Boolean),
       );
 
       const payloads: Record<string, string | null>[] = [];
@@ -91,7 +115,11 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
           return;
         }
         if (known.has(id)) {
-          errors.push({ row: rowNo, name, reason: "رقم الهوية مكرر (موجود مسبقاً أو متكرر في الملف)" });
+          errors.push({
+            row: rowNo,
+            name,
+            reason: "رقم الهوية مكرر (موجود مسبقاً أو متكرر في الملف)",
+          });
           return;
         }
         known.add(id);
@@ -109,7 +137,11 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
         const { error } = await supabase.from("students").insert(chunk as never);
         if (error) {
           chunk.forEach((c) =>
-            errors.push({ row: 0, name: String(c["full_name"] ?? "—"), reason: `خطأ في الحفظ: ${error.message}` }),
+            errors.push({
+              row: 0,
+              name: String(c["full_name"] ?? "—"),
+              reason: `خطأ في الحفظ: ${error.message}`,
+            }),
           );
         } else {
           inserted += chunk.length;
@@ -124,6 +156,38 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
       toast.error(`تعذّر الاستيراد: ${(error as Error).message}`);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function analyzeHeaders() {
+    if (!headers.length || aiBusy) return;
+    setAiBusy(true);
+    try {
+      const result = await requestAi("import", {
+        headers,
+        expectedFields: STUDENT_IMPORT_FIELDS.map((field) => ({
+          name: field.name,
+          label: field.label,
+          required: field.required,
+        })),
+      });
+      const safeMapping = Object.fromEntries(
+        Object.entries(result.mapping ?? {}).filter(
+          ([field, column]) =>
+            STUDENT_IMPORT_FIELDS.some((item) => item.name === field) &&
+            headers.includes(String(column)),
+        ),
+      );
+      if (Object.keys(safeMapping).length) {
+        setMapping((current) => ({ ...current, ...safeMapping }));
+        toast.success("تمت مراجعة عناوين الأعمدة واقتراح التوزيع.");
+      } else {
+        toast.info(result.summary || "لم يعثر المساعد على توزيع مناسب؛ راجع الأعمدة يدوياً.");
+      }
+    } catch (error) {
+      toast.error(aiErrorMessage(error));
+    } finally {
+      setAiBusy(false);
     }
   }
 
@@ -142,7 +206,8 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
         <DialogHeader>
           <DialogTitle>استيراد الطلاب من ملف Excel</DialogTitle>
           <DialogDescription>
-            ارفع كشف الطلاب بصيغة Excel أو CSV، ثم راجع توزيع الأعمدة وعدّله يدوياً قبل الحفظ. ويمكن أيضاً إضافة طالب يدوياً من شاشة الطلاب.
+            ارفع كشف الطلاب بصيغة Excel أو CSV، ثم راجع توزيع الأعمدة وعدّله يدوياً قبل الحفظ. ويمكن
+            أيضاً إضافة طالب يدوياً من شاشة الطلاب.
           </DialogDescription>
         </DialogHeader>
 
@@ -162,7 +227,8 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
             <div className="rounded-xl border border-dashed p-8 text-center">
               <FileSpreadsheet className="mx-auto size-10 text-muted-foreground" />
               <p className="mt-3 text-sm text-muted-foreground">
-                الأعمدة المتوقعة: اسم الطالب · رقم الهوية · الجنسية · الصف · الفصل · ولي الأمر · جوال ولي الأمر
+                الأعمدة المتوقعة: اسم الطالب · رقم الهوية · الجنسية · الصف · الفصل · ولي الأمر ·
+                جوال ولي الأمر
               </p>
               <Button className="mt-4" onClick={() => fileRef.current?.click()}>
                 <Upload className="size-4" /> اختيار ملف
@@ -173,12 +239,27 @@ export function StudentsImportDialog({ open, onOpenChange }: { open: boolean; on
           {rows.length > 0 && !result && (
             <div className="space-y-5">
               <p className="text-sm text-muted-foreground">
-                الملف: <span className="font-semibold text-foreground">{fileName}</span> — {rows.length} صف
+                الملف: <span className="font-semibold text-foreground">{fileName}</span> —{" "}
+                {rows.length} صف
               </p>
 
               <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-bold">1) توزيع البيانات على الخانات</h3>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={analyzeHeaders}
+                    disabled={aiBusy}
+                  >
+                    {aiBusy ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="size-4" />
+                    )}
+                    مراجعة العناوين بالذكاء
+                  </Button>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {STUDENT_IMPORT_FIELDS.map((f) => (

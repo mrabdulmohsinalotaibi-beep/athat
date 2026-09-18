@@ -1,9 +1,28 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Copy, Download, FileDown, Plus, Printer, Search, Send, Trash2, Upload, Pencil, Paperclip, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Download,
+  FileDown,
+  Plus,
+  Printer,
+  Search,
+  Send,
+  Trash2,
+  Upload,
+  Pencil,
+  Paperclip,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { aiErrorMessage, requestAi } from "@/lib/ai";
 import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
@@ -12,7 +31,11 @@ import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
-import { StudentCombobox, useStudentOptions, type StudentOption } from "@/components/StudentCombobox";
+import {
+  StudentCombobox,
+  useStudentOptions,
+  type StudentOption,
+} from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { RecordPrintDialog } from "@/components/RecordPrintDialog";
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
@@ -30,7 +53,16 @@ import {
 
 type Row = Record<string, unknown> & { id: string };
 
-const LINKED_TYPE: Record<string, string> = { cases: "حالة", programs: "برنامج", interviews: "مقابلة", attendance: "مواظبة", behavior: "سلوك", referrals: "إحالة", committees: "اجتماع", plan: "مهمة" };
+const LINKED_TYPE: Record<string, string> = {
+  cases: "حالة",
+  programs: "برنامج",
+  interviews: "مقابلة",
+  attendance: "مواظبة",
+  behavior: "سلوك",
+  referrals: "إحالة",
+  committees: "اجتماع",
+  plan: "مهمة",
+};
 
 export function RecordPage({
   config,
@@ -57,32 +89,44 @@ export function RecordPage({
   const [auto, setAuto] = useState<Record<string, string>>({});
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
+  const [aiImporting, setAiImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
   const [printFor, setPrintFor] = useState<Row | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [aiDraftBusy, setAiDraftBusy] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const aiFileRef = useRef<HTMLInputElement>(null);
+  const editFormRef = useRef<HTMLFormElement>(null);
 
   const listFields = config.fields.filter((f) => f.list).slice(0, 7);
 
   const { data: lookups = [] } = useQuery({
     queryKey: ["lookups"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("lookups").select("id, category, value, sort_order").order("sort_order", { ascending: true });
+      const { data, error } = await supabase
+        .from("lookups")
+        .select("id, category, value, sort_order")
+        .order("sort_order", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
   });
 
-  const optionsFor = (field: (typeof config.fields)[number]) => mergeLookupOptions(
-    field.options,
-    lookups.filter((item) => item.category === field.lookupCategory).map((item) => item.value ?? ""),
-  );
+  const optionsFor = (field: (typeof config.fields)[number]) =>
+    mergeLookupOptions(
+      field.options,
+      lookups
+        .filter((item) => item.category === field.lookupCategory)
+        .map((item) => item.value ?? ""),
+    );
 
   async function addOption(category: string, label: string) {
     const value = window.prompt(`أدخل خياراً جديداً في ${label}`)?.trim();
     if (!value) return;
-    const exists = lookups.some((item) => item.category === category && item.value?.trim() === value);
+    const exists = lookups.some(
+      (item) => item.category === category && item.value?.trim() === value,
+    );
     if (exists) {
       toast.info("هذا الخيار موجود بالفعل");
       return;
@@ -93,7 +137,10 @@ export function RecordPage({
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["lookups"] });
-    setAuto((current) => ({ ...current, [config.fields.find((field) => field.lookupCategory === category)?.name ?? ""]: value }));
+    setAuto((current) => ({
+      ...current,
+      [config.fields.find((field) => field.lookupCategory === category)?.name ?? ""]: value,
+    }));
     toast.success("تمت إضافة الخيار للقائمة");
   }
 
@@ -113,7 +160,9 @@ export function RecordPage({
     const term = search.trim();
     let out = rows;
     if (term) {
-      out = out.filter((row) => config.fields.some((f) => String(row[f.name] ?? "").includes(term)));
+      out = out.filter((row) =>
+        config.fields.some((f) => String(row[f.name] ?? "").includes(term)),
+      );
     }
     if (extraFilter) out = out.filter((row) => extraFilter(row));
     if (sort) {
@@ -138,20 +187,29 @@ export function RecordPage({
   function toggleSort(key: string) {
     setPage(1);
     setSort((current) =>
-      current?.key === key ? (current.dir === "asc" ? { key, dir: "desc" } : null) : { key, dir: "asc" },
+      current?.key === key
+        ? current.dir === "asc"
+          ? { key, dir: "desc" }
+          : null
+        : { key, dir: "asc" },
     );
   }
 
   const save = useMutation({
     mutationFn: async (values: Partial<Row>) => {
       const payload: Record<string, unknown> = {};
-      config.fields.filter((field) => !field.generated).forEach((f) => {
-        const raw = values[f.name];
-        if (f.type === "number") payload[f.name] = raw === "" || raw == null ? null : Number(raw);
-        else payload[f.name] = raw === "" ? null : (raw ?? null);
-      });
+      config.fields
+        .filter((field) => !field.generated)
+        .forEach((f) => {
+          const raw = values[f.name];
+          if (f.type === "number") payload[f.name] = raw === "" || raw == null ? null : Number(raw);
+          else payload[f.name] = raw === "" ? null : (raw ?? null);
+        });
       if (values.id) {
-        const { error } = await supabase.from(config.table as never).update(payload as never).eq("id", values.id);
+        const { error } = await supabase
+          .from(config.table as never)
+          .update(payload as never)
+          .eq("id", values.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from(config.table as never).insert(payload as never);
@@ -168,7 +226,10 @@ export function RecordPage({
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(config.table as never).delete().eq("id", id);
+      const { error } = await supabase
+        .from(config.table as never)
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -177,18 +238,86 @@ export function RecordPage({
     },
   });
 
-  async function handleImport(file: File) {
+  async function improveDraft() {
+    if (!editFormRef.current || aiDraftBusy) return;
+    const formData = new FormData(editFormRef.current);
+    const editableFields = config.fields.filter(
+      (field) =>
+        !field.generated &&
+        !field.student &&
+        field.type !== "date" &&
+        field.type !== "number" &&
+        field.type !== "select",
+    );
+    const values = Object.fromEntries(
+      editableFields.map((field) => [field.name, String(formData.get(field.name) ?? "")]),
+    );
+    if (!Object.values(values).some((value) => value.trim())) {
+      toast.info("اكتب مسودة أو نقاطاً أولاً ليتم تحسينها.");
+      return;
+    }
+    setAiDraftBusy(true);
+    try {
+      const result = await requestAi("document", {
+        documentTitle: config.title,
+        documentType: config.singular,
+        allowedFields: editableFields.map((field) => ({ name: field.name, label: field.label })),
+        fields: values,
+      });
+      const allowed = new Set(editableFields.map((field) => field.name));
+      const updates = Object.fromEntries(
+        Object.entries(result.fields ?? {}).filter(
+          ([name, value]) => allowed.has(name) && typeof value === "string",
+        ),
+      );
+      if (!Object.keys(updates).length) {
+        toast.info(
+          result.suggestion || "لم يقترح المساعد تعديلات مباشرة. راجع الملخص ثم أكمل النص.",
+        );
+        return;
+      }
+      setAuto((current) => ({ ...current, ...updates }));
+      toast.success("تمت صياغة المسودة؛ راجعها قبل الحفظ.");
+    } catch (error) {
+      toast.error(aiErrorMessage(error));
+    } finally {
+      setAiDraftBusy(false);
+    }
+  }
+
+  async function handleImport(file: File, useAiMapping = false) {
     setImporting(true);
+    if (useAiMapping) setAiImporting(true);
     try {
       const sheetRows = await readExcel(file);
       const importFields = config.fields.filter((field) => !field.generated);
       const headers = Array.from(new Set(sheetRows.flatMap((row) => Object.keys(row))));
+      let aiMapping: Record<string, string> = {};
+      if (useAiMapping) {
+        const result = await requestAi("import", {
+          headers,
+          expectedFields: importFields.map((field) => ({
+            name: field.name,
+            label: field.label,
+            required: Boolean(field.list),
+          })),
+        });
+        aiMapping = Object.fromEntries(
+          Object.entries(result.mapping ?? {}).filter(
+            ([field, column]) =>
+              importFields.some((item) => item.name === field) && headers.includes(String(column)),
+          ),
+        );
+      }
 
       const payloads = sheetRows
         .map((sheetRow) => {
           const payload: Record<string, unknown> = {};
           importFields.forEach((f) => {
-            const value = sheetRow[f.label] ?? sheetRow[f.name];
+            const value =
+              sheetRow[f.label] ??
+              sheetRow[f.name] ??
+              (aiMapping[f.name] ? sheetRow[aiMapping[f.name]] : undefined);
             if (value === undefined || value === "") return;
             if (f.type === "date") payload[f.name] = toIsoDate(value);
             else if (f.type === "number") payload[f.name] = Number(value) || null;
@@ -205,12 +334,16 @@ export function RecordPage({
       const { error } = await supabase.from(config.table as never).insert(payloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: [config.table] });
-      toast.success(`تم استيراد ${payloads.length} سجلاً`);
+      toast.success(
+        `تم استيراد ${payloads.length} سجلاً${useAiMapping ? " بعد مراجعة عناوين الملف" : ""}`,
+      );
     } catch (error) {
-      toast.error(`تعذّر الاستيراد: ${(error as Error).message}`);
+      toast.error(`تعذّر الاستيراد: ${aiErrorMessage(error)}`);
     } finally {
       setImporting(false);
+      setAiImporting(false);
       if (fileRef.current) fileRef.current.value = "";
+      if (aiFileRef.current) aiFileRef.current.value = "";
     }
   }
 
@@ -245,21 +378,33 @@ export function RecordPage({
           </Button>
           {toolbarExtra}
           {!hideImport && (
-            <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={importing}>
+            <Button
+              variant="outline"
+              onClick={() => fileRef.current?.click()}
+              disabled={importing || aiImporting}
+            >
               <Upload className="size-4" /> استيراد Excel
             </Button>
           )}
-          <Button variant="outline" onClick={() => exportToExcel(config.fields, filtered, config.title)}>
+          {!hideImport && (
+            <Button
+              variant="outline"
+              onClick={() => aiFileRef.current?.click()}
+              disabled={importing || aiImporting}
+            >
+              <Sparkles className="size-4" /> {aiImporting ? "جارٍ مراجعة الملف..." : "استيراد ذكي"}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => exportToExcel(config.fields, filtered, config.title)}
+          >
             <Download className="size-4" /> تصدير Excel
           </Button>
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="size-4" /> طباعة
           </Button>
-          <Button
-            variant="outline"
-            onClick={exportPdf}
-            disabled={exportingPdf}
-          >
+          <Button variant="outline" onClick={exportPdf} disabled={exportingPdf}>
             <FileDown className="size-4" /> {exportingPdf ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
           </Button>
           <input
@@ -270,6 +415,16 @@ export function RecordPage({
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) handleImport(file);
+            }}
+          />
+          <input
+            ref={aiFileRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleImport(file, true);
             }}
           />
         </div>
@@ -319,7 +474,11 @@ export function RecordPage({
                     >
                       {f.label}
                       {sort?.key === f.name &&
-                        (sort.dir === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
+                        (sort.dir === "asc" ? (
+                          <ArrowUp className="size-3" />
+                        ) : (
+                          <ArrowDown className="size-3" />
+                        ))}
                     </button>
                   </th>
                 ))}
@@ -329,14 +488,20 @@ export function RecordPage({
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={listFields.length + 1} className="p-6 text-center text-muted-foreground">
+                  <td
+                    colSpan={listFields.length + 1}
+                    className="p-6 text-center text-muted-foreground"
+                  >
                     جارٍ التحميل...
                   </td>
                 </tr>
               )}
               {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={listFields.length + 1} className="p-6 text-center text-muted-foreground">
+                  <td
+                    colSpan={listFields.length + 1}
+                    className="p-6 text-center text-muted-foreground"
+                  >
                     لا توجد سجلات بعد.
                   </td>
                 </tr>
@@ -414,10 +579,20 @@ export function RecordPage({
                       >
                         <Copy className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" title="المرفقات" onClick={() => setAttachFor(row)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="المرفقات"
+                        onClick={() => setAttachFor(row)}
+                      >
                         <Paperclip className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" title="طباعة رسمية / PDF" onClick={() => setPrintFor(row)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="طباعة رسمية / PDF"
+                        onClick={() => setPrintFor(row)}
+                      >
                         <Printer className="size-4" />
                       </Button>
                       {config.key === "referrals" && (
@@ -462,11 +637,23 @@ export function RecordPage({
         </div>
         {pageCount > 1 && (
           <div className="no-print mt-4 flex items-center justify-between gap-3 text-sm">
-            <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setPage(currentPage - 1)}
+            >
               <ChevronRight className="size-4" /> السابق
             </Button>
-            <span className="text-muted-foreground">صفحة {currentPage} من {pageCount}</span>
-            <Button variant="outline" size="sm" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>
+            <span className="text-muted-foreground">
+              صفحة {currentPage} من {pageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === pageCount}
+              onClick={() => setPage(currentPage + 1)}
+            >
               التالي <ChevronLeft className="size-4" />
             </Button>
           </div>
@@ -479,118 +666,138 @@ export function RecordPage({
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? `تعديل ${config.singular}` : `إضافة ${config.singular}`}</DialogTitle>
+            <DialogTitle>
+              {editing?.id ? `تعديل ${config.singular}` : `إضافة ${config.singular}`}
+            </DialogTitle>
           </DialogHeader>
           <form
             id="record-form"
+            ref={editFormRef}
             className="grid gap-4 sm:grid-cols-2"
             onSubmit={(e) => {
               e.preventDefault();
               const data = new FormData(e.currentTarget);
               const values: Partial<Row> = {};
               if (editing?.id) values.id = editing.id as string;
-              config.fields.filter((field) => !field.generated).forEach((f) => {
-                values[f.name] = data.get(f.name) as string;
-              });
+              config.fields
+                .filter((field) => !field.generated)
+                .forEach((f) => {
+                  values[f.name] = data.get(f.name) as string;
+                });
               save.mutate(values);
             }}
           >
-            {config.fields.filter((field) => !field.generated).map((f) => {
-              const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
-              return (
-              <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
-                <Label htmlFor={f.name} className="mb-1.5 block text-xs">
-                  {f.label}
-                </Label>
-                {f.student ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <StudentCombobox
-                        value={current}
-                        onType={(name) => setAuto((a) => ({ ...a, student_name: name }))}
-                        onSelect={(s: StudentOption) =>
-                          setAuto((a) => ({
-                            ...a,
-                            student_name: s.full_name,
-                            student_no: s.student_no || s.national_id,
-                            guardian_name: s.guardian_name,
-                            grade: s.grade,
-                            classroom: s.classroom,
-                            participant: a["participant"] || s.guardian_name,
-                          }))
-                        }
-                        onClear={() => setAuto((a) => ({ ...a, student_name: "" }))}
+            {config.fields
+              .filter((field) => !field.generated)
+              .map((f) => {
+                const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
+                return (
+                  <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
+                    <Label htmlFor={f.name} className="mb-1.5 block text-xs">
+                      {f.label}
+                    </Label>
+                    {f.student ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <StudentCombobox
+                            value={current}
+                            onType={(name) => setAuto((a) => ({ ...a, student_name: name }))}
+                            onSelect={(s: StudentOption) =>
+                              setAuto((a) => ({
+                                ...a,
+                                student_name: s.full_name,
+                                student_no: s.student_no || s.national_id,
+                                guardian_name: s.guardian_name,
+                                grade: s.grade,
+                                classroom: s.classroom,
+                                participant: a["participant"] || s.guardian_name,
+                              }))
+                            }
+                            onClear={() => setAuto((a) => ({ ...a, student_name: "" }))}
+                          />
+                        </div>
+                        {(() => {
+                          const match = studentOptions.find((s) => s.full_name === current);
+                          if (!match?.guardian_phone) return null;
+                          return (
+                            <WhatsAppButton
+                              phone={match.guardian_phone}
+                              guardian={match.guardian_name}
+                              student={match.full_name}
+                            />
+                          );
+                        })()}
+                        <input type="hidden" name={f.name} value={current} readOnly />
+                      </div>
+                    ) : f.type === "textarea" ? (
+                      <Textarea
+                        key={current}
+                        id={f.name}
+                        name={f.name}
+                        defaultValue={current}
+                        rows={4}
                       />
-                    </div>
-                    {(() => {
-                      const match = studentOptions.find((s) => s.full_name === current);
-                      if (!match?.guardian_phone) return null;
-                      return (
-                        <WhatsAppButton
-                          phone={match.guardian_phone}
-                          guardian={match.guardian_name}
-                          student={match.full_name}
-                        />
-                      );
-                    })()}
-                    <input type="hidden" name={f.name} value={current} readOnly />
-                  </div>
-                ) : f.type === "textarea" ? (
-                  <Textarea
-                    key={current}
-                    id={f.name}
-                    name={f.name}
-                    defaultValue={current}
-                    rows={4}
-                  />
-                ) : f.type === "select" ? (
-                  <div className="flex gap-2">
-                    <select
-                      key={current}
-                      id={f.name}
-                      name={f.name}
-                      defaultValue={current}
-                      className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
-                    >
-                      <option value="">—</option>
-                      {optionsFor(f).map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                    {current && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title={`مسح اختيار ${f.label}`}
-                        aria-label={`مسح اختيار ${f.label}`}
-                        onClick={() => setAuto((a) => ({ ...a, [f.name]: "" }))}
-                      >
-                        <X className="size-4" />
-                      </Button>
-                    )}
-                    {f.lookupCategory && (
-                      <Button type="button" variant="outline" size="icon" title={`إضافة خيار إلى ${f.label}`} aria-label={`إضافة خيار إلى ${f.label}`} onClick={() => addOption(f.lookupCategory ?? "", f.label)}>
-                        <Plus className="size-4" />
-                      </Button>
+                    ) : f.type === "select" ? (
+                      <div className="flex gap-2">
+                        <select
+                          key={current}
+                          id={f.name}
+                          name={f.name}
+                          defaultValue={current}
+                          className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          <option value="">—</option>
+                          {optionsFor(f).map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        {current && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            title={`مسح اختيار ${f.label}`}
+                            aria-label={`مسح اختيار ${f.label}`}
+                            onClick={() => setAuto((a) => ({ ...a, [f.name]: "" }))}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        )}
+                        {f.lookupCategory && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            title={`إضافة خيار إلى ${f.label}`}
+                            aria-label={`إضافة خيار إلى ${f.label}`}
+                            onClick={() => addOption(f.lookupCategory ?? "", f.label)}
+                          >
+                            <Plus className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <Input
+                        key={current}
+                        id={f.name}
+                        name={f.name}
+                        type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+                        defaultValue={current}
+                      />
                     )}
                   </div>
-                ) : (
-                  <Input
-                    key={current}
-                    id={f.name}
-                    name={f.name}
-                    type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
-                    defaultValue={current}
-                  />
-                )}
-              </div>
-              );
-            })}
+                );
+              })}
           </form>
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => setEditing(null)}>
               إلغاء
+            </Button>
+            <Button type="button" variant="secondary" onClick={improveDraft} disabled={aiDraftBusy}>
+              <Sparkles className="size-4" />{" "}
+              {aiDraftBusy ? "جارٍ تحسين المسودة..." : "تحسين المسودة بالذكاء"}
             </Button>
             <Button type="submit" form="record-form" disabled={save.isPending}>
               حفظ

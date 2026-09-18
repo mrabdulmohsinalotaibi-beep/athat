@@ -1,149 +1,313 @@
-import React, { useState } from 'react';
-import { Printer, FileText, CheckSquare, Square } from 'lucide-react';
+import { useMemo, useRef, useState } from "react";
+import {
+  CheckSquare,
+  Copy,
+  Download,
+  FileDown,
+  FileText,
+  Link2,
+  Loader2,
+  MessageSquareText,
+  Printer,
+  Square,
+  Sparkles,
+} from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-// نموذج لبيانات الرسائل الواردة (يمكن ربطها بـ Supabase لاحقاً)
-interface Message {
+import { supabase } from "@/integrations/supabase/client";
+import { aiErrorMessage, requestAi } from "@/lib/ai";
+import { useSchool } from "@/lib/school";
+import { elementToPdf } from "@/lib/pdf";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+
+interface FeedbackMessage {
   id: string;
-  senderName: string;
-  date: string;
-  content: string;
+  sender_name: string;
+  sender_contact: string | null;
   category: string;
+  message: string;
+  status: string;
+  ai_summary: string | null;
+  ai_category: string | null;
+  created_at: string;
 }
 
-const initialMessages: Message[] = [
-  { id: '1', senderName: 'محمد أحمد', date: '2026-09-18', content: 'رسالة بخصوص طلب استشارة طلابية وتوجيه.', category: 'استشارة' },
-  { id: '2', senderName: 'خالد عبدالله', date: '2026-09-17', content: 'ملاحظة حول الأنشطة الصفية والبرامج المقدمة.', category: 'ملاحظة' },
-];
-
 export default function MessagesDashboard() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { data: school } = useSchool();
+  const queryClient = useQueryClient();
+  const printRef = useRef<HTMLDivElement>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [printingMessage, setPrintingMessage] = useState<Message | null>(null);
+  const [search, setSearch] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  // تحديد/إلغاء تحديد رسالة للطباعة الجماعية
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+  const { data: messages = [], isLoading } = useQuery({
+    queryKey: ["feedback_messages"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("feedback_messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as FeedbackMessage[];
+    },
+  });
+
+  const publicLink =
+    typeof window === "undefined" || !school?.public_feedback_token
+      ? ""
+      : `${window.location.origin}/feedback/${school.public_feedback_token}`;
+  const filtered = useMemo(
+    () =>
+      messages.filter((item) =>
+        `${item.sender_name} ${item.category} ${item.message}`
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+      ),
+    [messages, search],
+  );
+  const selected = filtered.filter((item) => selectedIds.includes(item.id));
+
+  function toggle(id: string) {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
     );
-  };
+  }
 
-  // طباعة رسالة فردية بكليشة رسمية
-  const handlePrintSingle = (msg: Message) => {
-    setPrintingMessage(msg);
-    setTimeout(() => {
-      window.print();
-    }, 300);
-  };
+  async function assist(item: FeedbackMessage) {
+    setBusyId(item.id);
+    try {
+      const data = await requestAi("feedback", { message: item.message, category: item.category });
+      await (supabase as any)
+        .from("feedback_messages")
+        .update({ ai_summary: data?.summary ?? null, ai_category: data?.category ?? null })
+        .eq("id", item.id);
+      await queryClient.invalidateQueries({ queryKey: ["feedback_messages"] });
+      toast.success("تم تلخيص الرسالة وتصنيفها.");
+    } catch (error) {
+      toast.error(aiErrorMessage(error));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function copyLink() {
+    if (!publicLink) return;
+    navigator.clipboard.writeText(publicLink);
+    toast.success("تم نسخ رابط النموذج");
+  }
+  function shareLink() {
+    if (!publicLink) return;
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(`نرحب بمشاركتك عبر نموذج الآراء والرسائل: ${publicLink}`)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
+  function exportCsv() {
+    const rows = filtered.map((item) => [
+      item.sender_name,
+      item.sender_contact ?? "",
+      item.category,
+      item.message,
+      item.status,
+      new Date(item.created_at).toLocaleString("ar-SA"),
+    ]);
+    const csv = [
+      "الاسم,التواصل,التصنيف,الرسالة,الحالة,التاريخ",
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")),
+    ].join("\n");
+    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "الآراء_والرسائل.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function exportPdf() {
+    if (!printRef.current) return;
+    await elementToPdf(printRef.current, "تقرير الآراء والرسائل");
+  }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen rounded-xl shadow-inner">
-      {/* قسم عرض النموذج (Microsoft Forms Embed) */}
-      <div className="mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold mb-3 text-gray-800">نموذج استقبال الآراء والرسائل</h2>
-        <div className="w-full h-[400px] overflow-hidden rounded-lg border">
-          <iframe 
-            src="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=fzu0XJrLzUiQCBUY6oBA4J4AHLLZqklFneKnUkWb919UN01LNllKWFo0VVZJV1VXOTlIOTlNMVpZUC4u" 
-            width="100%" 
-            height="100%" 
-            style={{ border: 'none' }}
-            title="نموذج الاستقبال"
-          ></iframe>
+    <div className="space-y-6" dir="rtl">
+      <section className="rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-[oklch(0.29_0.09_25)] p-6 text-primary-foreground shadow-xl shadow-primary/15">
+        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+          <div>
+            <div className="flex items-center gap-2 text-amber-200">
+              <MessageSquareText className="size-5" />
+              <span className="text-xs font-bold">التواصل مع المستفيدين</span>
+            </div>
+            <h1 className="mt-2 text-2xl font-black">الآراء والرسائل</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-primary-foreground/75">
+              أنشئ رابطًا عامًا لاستقبال المشاركات، ثم استعرضها وحللها واحفظها بصيغة PDF.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={copyLink} disabled={!publicLink}>
+              <Copy className="size-4" /> نسخ الرابط
+            </Button>
+            <Button variant="secondary" onClick={shareLink} disabled={!publicLink}>
+              <Link2 className="size-4" /> مشاركة
+            </Button>
+          </div>
         </div>
-      </div>
+        {publicLink && (
+          <div className="mt-5 flex items-center gap-2 rounded-xl bg-black/15 p-3 text-xs">
+            <span className="truncate font-mono">{publicLink}</span>
+          </div>
+        )}
+      </section>
 
-      {/* لوحة التحكم المصغرة للرسائل */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">لوحة تحكم الرسائل والآراء الواردة</h3>
-          <button 
-            onClick={() => window.print()}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            <Printer size={18} /> طباعة المحدد (تصدير رسمي)
-          </button>
+      <section className="rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-black">الردود الواردة</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              حدد الردود للطباعة أو استخدم المساعدة الذكية للتلخيص والتصنيف.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={exportCsv}>
+              <Download className="size-4" /> CSV
+            </Button>
+            <Button variant="outline" onClick={exportPdf} disabled={!selected.length}>
+              <FileDown className="size-4" /> حفظ PDF
+            </Button>
+            <Button variant="outline" onClick={() => window.print()} disabled={!selected.length}>
+              <Printer className="size-4" /> طباعة PDF
+            </Button>
+          </div>
         </div>
+        <div className="mt-4">
+          <Label htmlFor="feedback-search">بحث</Label>
+          <Input
+            id="feedback-search"
+            className="mt-1"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="ابحث بالاسم أو التصنيف أو نص الرسالة"
+          />
+        </div>
+      </section>
 
+      <section className="overflow-hidden rounded-3xl border border-primary/12 bg-card shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-right border-collapse">
-            <thead>
-              <tr className="border-b bg-gray-100 text-gray-700 text-sm">
-                <th className="p-3">اختر</th>
-                <th className="p-3">المرسل</th>
-                <th className="p-3">التاريخ</th>
-                <th className="p-3">التصنيف</th>
-                <th className="p-3">محتوى الرسالة</th>
-                <th className="p-3">الإجراءات</th>
+          <table className="w-full min-w-[800px] text-right text-sm">
+            <thead className="bg-muted/50 text-xs">
+              <tr>
+                <th className="p-4">تحديد</th>
+                <th className="p-4">المرسل</th>
+                <th className="p-4">التصنيف</th>
+                <th className="p-4">الرسالة</th>
+                <th className="p-4">التاريخ</th>
+                <th className="p-4">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
-              {messages.map((msg) => (
-                <tr key={msg.id} className="border-b hover:bg-gray-50 text-sm">
-                  <td className="p-3 cursor-pointer" onClick={() => toggleSelect(msg.id)}>
-                    {selectedIds.includes(msg.id) ? (
-                      <CheckSquare className="text-blue-600" size={20} />
-                    ) : (
-                      <Square className="text-gray-400" size={20} />
-                    )}
-                  </td>
-                  <td className="p-3 font-medium text-gray-900">{msg.senderName}</td>
-                  <td className="p-3 text-gray-500">{msg.date}</td>
-                  <td className="p-3">
-                    <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full text-xs">
-                      {msg.category}
-                    </span>
-                  </td>
-                  <td className="p-3 text-gray-700 max-w-xs truncate">{msg.content}</td>
-                  <td className="p-3">
-                    <button 
-                      onClick={() => handlePrintSingle(msg)}
-                      className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-semibold bg-blue-50 px-3 py-1.5 rounded-md"
-                    >
-                      <FileText size={14} /> طباعة رسمية
-                    </button>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="p-10 text-center text-muted-foreground">
+                    جارٍ تحميل الردود...
                   </td>
                 </tr>
-              ))}
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-10 text-center text-muted-foreground">
+                    لا توجد ردود مطابقة حتى الآن.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((item) => (
+                  <tr key={item.id} className="border-t border-border/60 align-top">
+                    <td className="p-4">
+                      <button aria-label="تحديد الرد" onClick={() => toggle(item.id)}>
+                        {selectedIds.includes(item.id) ? (
+                          <CheckSquare className="text-primary" />
+                        ) : (
+                          <Square className="text-muted-foreground" />
+                        )}
+                      </button>
+                    </td>
+                    <td className="p-4 font-bold">
+                      {item.sender_name}
+                      <span className="block text-xs font-normal text-muted-foreground">
+                        {item.sender_contact}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
+                        {item.ai_category || item.category}
+                      </span>
+                    </td>
+                    <td className="max-w-md p-4 leading-7">
+                      {item.message}
+                      {item.ai_summary && (
+                        <p className="mt-2 rounded-lg bg-muted/50 p-2 text-xs text-muted-foreground">
+                          ملخص: {item.ai_summary}
+                        </p>
+                      )}
+                    </td>
+                    <td className="p-4 text-xs text-muted-foreground">
+                      {new Date(item.created_at).toLocaleDateString("ar-SA")}
+                    </td>
+                    <td className="p-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => assist(item)}
+                        disabled={busyId === item.id}
+                      >
+                        <Sparkles className="size-4" />
+                        {busyId === item.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          "مساعدة ذكية"
+                        )}
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
-      {/* قالب الطباعة المخفي (يظهر فقط عند الطباعة عبر CSS) */}
-      <div className="hidden print:block print:p-8 bg-white text-black font-sans">
-        <div className="text-center border-b pb-4 mb-6">
-          <h1 className="text-xl font-bold">المملكة العربية السعودية</h1>
-          <h2 className="text-lg">وزارة التعليم</h2>
-          <p className="text-sm text-gray-600">إدارة التعليم - نموذج تقرير الرسائل والآراء الرسمية</p>
-        </div>
-
-        <div className="mb-6">
-          <p><strong>تاريخ الطباعة:</strong> {new Date().toLocaleDateString('ar-SA')}</p>
-        </div>
-
-        <div className="space-y-6">
-          {messages
-            .filter(m => selectedIds.includes(m.id) || (printingMessage && printingMessage.id === m.id))
-            .map((msg, index) => (
-              <div key={msg.id} className="border p-4 rounded-lg mb-4 page-break">
-                <div className="flex justify-between font-bold border-b pb-2 mb-2">
-                  <span>المرسل: {msg.senderName}</span>
-                  <span>التاريخ: {msg.date}</span>
-                </div>
-                <p className="text-gray-800 leading-relaxed mt-2">{msg.content}</p>
+      <div
+        ref={printRef}
+        className="print-area hidden bg-paper p-6 text-paper-foreground print:block"
+      >
+        <OfficialHeader
+          school={school}
+          title="تقرير الآراء والرسائل"
+          reportType="تواصل المستفيدين"
+        />
+        <div className="mt-5 space-y-4">
+          {selected.map((item) => (
+            <article
+              key={item.id}
+              className="break-inside-avoid rounded-xl border border-paper-border p-4"
+            >
+              <div className="flex justify-between border-b border-paper-border pb-2 text-xs font-bold">
+                <span>{item.sender_name}</span>
+                <span>{new Date(item.created_at).toLocaleDateString("ar-SA")}</span>
               </div>
-            ))}
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-8">{item.message}</p>
+              {item.ai_summary && (
+                <p className="mt-3 border-t border-paper-border pt-2 text-xs">
+                  الملخص: {item.ai_summary}
+                </p>
+              )}
+            </article>
+          ))}
         </div>
-
-        <div className="mt-16 flex justify-between pt-8 border-t text-sm">
-          <div>
-            <p>المختص / الموجه الطلابي:</p>
-            <p className="mt-8">التوقيع: ........................</p>
-          </div>
-          <div>
-            <p>اعتماد إدارة المدرسة:</p>
-            <p className="mt-8">الختم: ........................</p>
-          </div>
-        </div>
+        <OfficialFooter school={school} />
       </div>
     </div>
   );

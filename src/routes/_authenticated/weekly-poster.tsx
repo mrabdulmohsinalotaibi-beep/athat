@@ -10,8 +10,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       },
       {
         name: "description",
-        content:
-          "إعداد لوحة التوجيه الطلابي الأسبوعية وتعديل نصها وتصديرها بصيغة PNG أو PDF.",
+        content: "إعداد لوحة التوجيه الطلابي الأسبوعية وتعديل نصها وحفظها بصيغة PDF الرسمية.",
       },
       {
         property: "og:title",
@@ -19,8 +18,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       },
       {
         property: "og:description",
-        content:
-          "أنشئ لوحة توجيهية أسبوعية للطلاب ثم احفظها بصيغة PNG أو PDF.",
+        content: "أنشئ لوحة توجيهية أسبوعية للطلاب ثم احفظها بصيغة PDF الرسمية.",
       },
       {
         property: "og:type",
@@ -36,8 +34,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
       },
       {
         name: "twitter:description",
-        content:
-          "تجهيز لوحات التوجيه الطلابي الأسبوعية وطباعتها.",
+        content: "تجهيز لوحات التوجيه الطلابي الأسبوعية وطباعتها.",
       },
     ],
   }),

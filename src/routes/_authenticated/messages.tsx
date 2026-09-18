@@ -16,9 +16,7 @@ function MessagesPage() {
 
       {/* محتوى الصفحة */}
       <div className="rounded-xl border bg-card p-6 shadow-sm">
-        <p className="text-sm text-muted-foreground">
-          لا توجد رسائل أو آراء حتى الآن.
-        </p>
+        <p className="text-sm text-muted-foreground">لا توجد رسائل أو آراء حتى الآن.</p>
       </div>
     </div>
   );
