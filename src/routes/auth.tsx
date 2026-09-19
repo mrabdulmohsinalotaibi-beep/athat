@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, KeyRound, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -17,16 +17,28 @@ function safeNext(value: unknown): string {
   return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : "";
 }
 
+function hasRecoveryCallback(): boolean {
+  if (typeof window === "undefined") return false;
+  const search = new URLSearchParams(window.location.search);
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  return (
+    search.has("code") ||
+    search.get("recovery") === "1" ||
+    search.get("reset") === "1" ||
+    hash.get("type") === "recovery"
+  );
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
     next: safeNext(s["next"]),
-    reset: s["reset"] === "1",
+    reset: s["reset"] === "1" || s["recovery"] === "1",
   }),
   beforeLoad: async ({ search }) => {
     // A password-recovery link creates a temporary session that must stay on this
     // page long enough for the user to choose a new password.
-    if (search.reset) return;
+    if (search.reset || hasRecoveryCallback()) return;
 
     const { data } = await supabase.auth.getUser();
     if (data.user) {
@@ -53,7 +65,9 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { next, reset } = Route.useSearch();
-  const [screen, setScreen] = useState<ScreenMode>(reset ? "reset" : "signin");
+  const [screen, setScreen] = useState<ScreenMode>(
+    reset || hasRecoveryCallback() ? "reset" : "signin",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -62,6 +76,48 @@ function AuthPage() {
   const [recoverySent, setRecoverySent] = useState(false);
 
   const isAccountScreen = screen === "signin" || screen === "signup";
+
+  useEffect(() => {
+    let active = true;
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+
+    async function finishRecoverySession() {
+      try {
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+        }
+        if (!active) return;
+        const { data } = await supabase.auth.getSession();
+        if (data.session && hasRecoveryCallback()) {
+          setScreen("reset");
+          setError("");
+          // Remove the one-time code after it becomes a session, while retaining a
+          // clear recovery marker if the page is refreshed during password entry.
+          window.history.replaceState({}, "", "/auth?recovery=1");
+        }
+      } catch (err) {
+        if (!active) return;
+        const message = arabicAuthError((err as Error).message);
+        setError(message);
+        toast.error(message);
+      }
+    }
+
+    void finishRecoverySession();
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" && active) {
+        setScreen("reset");
+        setError("");
+        window.history.replaceState({}, "", "/auth?recovery=1");
+      }
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   function goToDashboard() {
     if (next) {
@@ -130,7 +186,7 @@ function AuthPage() {
 
     try {
       const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth?reset=1`,
+        redirectTo: `${window.location.origin}/auth?recovery=1`,
       });
       if (recoveryError) throw recoveryError;
 

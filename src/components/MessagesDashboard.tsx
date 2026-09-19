@@ -6,6 +6,8 @@ import {
   Download,
   FileDown,
   Link2,
+  Mail,
+  MessageCircle,
   MessageSquareText,
   Printer,
   QrCode,
@@ -13,6 +15,7 @@ import {
   Send,
   Square,
   Star,
+  UserCog,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -20,7 +23,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { elementToPdf } from "@/lib/pdf";
-import { shareOnWhatsApp } from "@/lib/whatsapp";
+import { normalizeSaudiPhone, shareOnWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +31,14 @@ import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Textarea } from "@/components/ui/textarea";
 
 const STATUSES = ["جديد", "قيد المراجعة", "تم الرد", "محفوظ"];
+const ASSIGNEES = [
+  "الموجه الطلابي",
+  "إدارة المدرسة",
+  "وكيل شؤون الطلاب",
+  "لجنة التوجيه الطلابي",
+  "المرشد الصحي",
+  "معلم/ـة",
+];
 
 type FeedbackMessage = {
   id: string;
@@ -38,6 +49,10 @@ type FeedbackMessage = {
   satisfaction: number | null;
   message: string;
   internal_notes?: string | null;
+  response_note?: string | null;
+  assigned_to?: string | null;
+  assigned_channel?: string | null;
+  responded_at?: string | null;
   status: string;
   created_at: string;
 };
@@ -52,6 +67,29 @@ function messageExcerpt(message: string) {
   return compact.length > 90 ? `${compact.slice(0, 90)}…` : compact;
 }
 
+function isEmail(value: string | null | undefined) {
+  return Boolean(value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()));
+}
+
+function deliveryText(items: FeedbackMessage[], schoolName: string) {
+  return [
+    `السلام عليكم ورحمة الله وبركاته`,
+    `من ${schoolName || "التوجيه الطلابي"}`,
+    "",
+    ...items.map((item, index) =>
+      [
+        `${index + 1}. ${item.category} — ${item.sender_role}`,
+        `المرسل: ${item.sender_name || "مستفيد"}`,
+        `التاريخ: ${new Date(item.created_at).toLocaleDateString("ar-SA")}`,
+        `المشاركة: ${item.message}`,
+        item.response_note ? `الرد/الإجراء: ${item.response_note}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    ),
+  ].join("\n\n");
+}
+
 export default function MessagesDashboard() {
   const { data: school } = useSchool();
   const queryClient = useQueryClient();
@@ -60,8 +98,10 @@ export default function MessagesDashboard() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("الكل");
   const [status, setStatus] = useState("الكل");
+  const [assignee, setAssignee] = useState("الكل");
   const [exporting, setExporting] = useState(false);
   const [rotatingLink, setRotatingLink] = useState(false);
+  const [includeInternal, setIncludeInternal] = useState(true);
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["feedback_messages"],
@@ -88,22 +128,30 @@ export default function MessagesDashboard() {
     () =>
       messages.filter((item) => {
         const matchesSearch =
-          `${item.sender_name} ${item.sender_role} ${item.category} ${item.message}`
+          `${item.sender_name} ${item.sender_role} ${item.category} ${item.message} ${item.assigned_to ?? ""}`
             .toLowerCase()
             .includes(search.trim().toLowerCase());
         return (
           matchesSearch &&
           (category === "الكل" || item.category === category) &&
-          (status === "الكل" || item.status === status)
+          (status === "الكل" || item.status === status) &&
+          (assignee === "الكل" || (item.assigned_to || "الموجه الطلابي") === assignee)
         );
       }),
-    [messages, search, category, status],
+    [messages, search, category, status, assignee],
   );
+
   const selected = messages.filter((item) => selectedIds.includes(item.id));
   const allVisibleSelected =
     filtered.length > 0 && filtered.every((item) => selectedIds.includes(item.id));
   const newMessages = messages.filter((item) => item.status === "جديد").length;
-  const helpRequests = messages.filter((item) => item.category === "طلب مساعدة").length;
+  const counselorInbox = messages.filter(
+    (item) =>
+      (item.assigned_to || "الموجه الطلابي") === "الموجه الطلابي" && item.status !== "تم الرد",
+  ).length;
+  const helpRequests = messages.filter(
+    (item) => item.category === "طلب مساعدة" && item.status !== "تم الرد",
+  ).length;
   const rated = messages.filter((item) => item.satisfaction != null);
   const averageRating = rated.length
     ? (rated.reduce((total, item) => total + Number(item.satisfaction), 0) / rated.length).toFixed(
@@ -125,29 +173,42 @@ export default function MessagesDashboard() {
     );
   }
 
-  async function updateStatus(id: string, nextStatus: string) {
-    const { error } = await (supabase as any)
-      .from("feedback_messages")
-      .update({ status: nextStatus })
-      .eq("id", id);
+  async function updateMessage(
+    id: string,
+    patch: Record<string, unknown>,
+    successMessage?: string,
+  ) {
+    const { error } = await (supabase as any).from("feedback_messages").update(patch).eq("id", id);
     if (error) {
-      toast.error(`تعذّر تحديث حالة الرسالة: ${error.message}`);
-      return;
+      toast.error(`تعذّر تحديث الرسالة: ${error.message}`);
+      return false;
     }
     await queryClient.invalidateQueries({ queryKey: ["feedback_messages"] });
+    if (successMessage) toast.success(successMessage);
+    return true;
+  }
+
+  async function updateStatus(id: string, nextStatus: string) {
+    await updateMessage(id, {
+      status: nextStatus,
+      ...(nextStatus === "تم الرد" ? { responded_at: new Date().toISOString() } : {}),
+    });
   }
 
   async function updateNotes(id: string, notes: string) {
-    const { error } = await (supabase as any)
-      .from("feedback_messages")
-      .update({ internal_notes: notes.trim() || null })
-      .eq("id", id);
-    if (error) {
-      toast.error(`تعذّر حفظ الملاحظة: ${error.message}`);
-      return;
-    }
-    await queryClient.invalidateQueries({ queryKey: ["feedback_messages"] });
-    toast.success("تم حفظ الملاحظة الداخلية");
+    await updateMessage(id, { internal_notes: notes.trim() || null }, "تم حفظ الملاحظة الداخلية");
+  }
+
+  async function updateResponse(id: string, response: string) {
+    await updateMessage(
+      id,
+      {
+        response_note: response.trim() || null,
+        status: response.trim() ? "تم الرد" : undefined,
+        responded_at: response.trim() ? new Date().toISOString() : undefined,
+      },
+      "تم حفظ الرد والإجراء",
+    );
   }
 
   async function copyLink() {
@@ -187,13 +248,18 @@ export default function MessagesDashboard() {
       item.sender_contact ?? "",
       item.category,
       item.satisfaction ?? "",
+      item.assigned_to || "الموجه الطلابي",
       item.status,
       item.message,
+      item.response_note ?? "",
+      item.internal_notes ?? "",
       new Date(item.created_at).toLocaleString("ar-SA"),
     ]);
     const csv = [
-      "الاسم,صفة المشارك,التواصل,نوع المشاركة,التقييم,الحالة,الرسالة,تاريخ الاستلام",
-      ...rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")),
+      "الاسم,صفة المشارك,التواصل,نوع المشاركة,التقييم,الجهة المسؤولة,الحالة,الرسالة,الرد أو الإجراء,ملاحظات داخلية,تاريخ الاستلام",
+      ...rows.map((row) =>
+        row.map((cell) => `\"${String(cell).replaceAll('"', '""')}\"`).join(","),
+      ),
     ].join("\n");
     const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -209,7 +275,10 @@ export default function MessagesDashboard() {
     if (!printRef.current || !selected.length || exporting) return;
     setExporting(true);
     try {
-      await elementToPdf(printRef.current, "تقرير الآراء والرسائل");
+      await elementToPdf(
+        printRef.current,
+        includeInternal ? "تقرير داخلي للآراء والرسائل" : "تقرير الآراء والرسائل",
+      );
       toast.success("تم حفظ التقرير بصيغة PDF");
     } catch {
       toast.error("تعذّر حفظ ملف PDF.");
@@ -218,31 +287,55 @@ export default function MessagesDashboard() {
     }
   }
 
-  function printSelected() {
+  function printSelected(internal: boolean) {
     if (!selected.length) return;
-    window.print();
+    setIncludeInternal(internal);
+    window.setTimeout(() => window.print(), 150);
   }
 
-  function printOne(id: string) {
-    setSelectedIds([id]);
-    window.setTimeout(() => window.print(), 120);
+  function printAll() {
+    setSelectedIds(filtered.map((item) => item.id));
+    setIncludeInternal(true);
+    window.setTimeout(() => window.print(), 150);
   }
 
-  function shareSelected() {
-    if (!selected.length) return;
-    const rows = selected.map((item, index) =>
-      [
-        `${index + 1}. ${item.category} — ${item.sender_role}`,
-        `المرسل: ${item.sender_name || "مستفيد"}`,
-        `التاريخ: ${new Date(item.created_at).toLocaleDateString("ar-SA")}`,
-        `الرسالة: ${item.message}`,
-      ].join("\n"),
+  async function sendWhatsApp(items = selected, preferredContact?: string | null) {
+    if (!items.length) return;
+    const suggested = normalizeSaudiPhone(
+      preferredContact || (items.length === 1 ? items[0].sender_contact : ""),
     );
-    shareOnWhatsApp(
-      [`ملخص الآراء والرسائل — ${school?.school_name || "التوجيه الطلابي"}`, "", ...rows].join(
-        "\n\n",
-      ),
+    const phone = window.prompt(
+      "رقم الجوال المستلم بصيغة 05XXXXXXXX (اتركه فارغاً لاختيار محادثة داخل واتساب):",
+      suggested,
     );
+    if (phone === null) return;
+    shareOnWhatsApp(deliveryText(items, school?.school_name || "التوجيه الطلابي"), phone);
+  }
+
+  function sendEmail(items = selected, preferredContact?: string | null) {
+    if (!items.length) return;
+    const suggested = isEmail(preferredContact) ? preferredContact! : "";
+    const email = window.prompt("البريد الإلكتروني المستلم:", suggested);
+    if (!email?.trim()) return;
+    const subject = encodeURIComponent(`رسالة من ${school?.school_name || "التوجيه الطلابي"}`);
+    window.location.href = `mailto:${encodeURIComponent(email.trim())}?subject=${subject}&body=${encodeURIComponent(deliveryText(items, school?.school_name || "التوجيه الطلابي"))}`;
+  }
+
+  async function replyToBeneficiary(item: FeedbackMessage) {
+    const note = window.prompt(
+      "اكتب الرد أو الإجراء المراد إرساله للمستفيد:",
+      item.response_note || "",
+    );
+    if (note === null || !note.trim()) return;
+    const saved = await updateMessage(
+      item.id,
+      { response_note: note.trim(), status: "تم الرد", responded_at: new Date().toISOString() },
+      "تم حفظ الرد",
+    );
+    if (!saved) return;
+    if (isEmail(item.sender_contact))
+      sendEmail([{ ...item, response_note: note.trim() }], item.sender_contact);
+    else void sendWhatsApp([{ ...item, response_note: note.trim() }], item.sender_contact);
   }
 
   return (
@@ -252,12 +345,12 @@ export default function MessagesDashboard() {
           <div>
             <div className="flex items-center gap-2 text-amber-200">
               <MessageSquareText className="size-5" />
-              <span className="text-xs font-bold">التواصل مع المستفيدين</span>
+              <span className="text-xs font-bold">مركز تواصل المستفيدين</span>
             </div>
             <h1 className="mt-2 text-2xl font-black">الآراء والرسائل</h1>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-primary-foreground/75">
-              استبانة مدرسية داخل المنصة؛ شارك رابطًا واحدًا، ثم تابع الردود واطبعها أو أرسلها
-              مباشرةً.
+              استبانة موحّدة للطالب وولي الأمر والمعلم؛ تُستلم هنا، وتُوجّه للجهة المسؤولة، ثم تُطبع
+              أو تُصدّر أو يُرسل الرد منها.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -285,33 +378,40 @@ export default function MessagesDashboard() {
               </div>
               <span className="mt-2 block break-all font-mono">{publicLink}</span>
               <p className="mt-2 text-primary-foreground/70">
-                يمكن طباعة الرمز وتعليقه في المدرسة أو إضافته إلى التعميم.
+                شارك الرابط كما تشارك نموذج Forms؛ تبقى الردود داخل المنصة فقط.
               </p>
             </div>
           </div>
         )}
       </section>
 
-      <section className="no-print grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="no-print grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <SummaryCard label="إجمالي المشاركات" value={messages.length} hint="كل الردود المستلمة" />
-        <SummaryCard label="رسائل جديدة" value={newMessages} hint="بحاجة إلى مراجعة" tone="amber" />
+        <SummaryCard label="رسائل جديدة" value={newMessages} hint="بحاجة إلى فرز" tone="amber" />
+        <SummaryCard
+          label="صندوق الموجه"
+          value={counselorInbox}
+          hint="مسندة للموجه الطلابي"
+          tone="primary"
+          icon={<UserCog className="size-4" />}
+        />
         <SummaryCard
           label="طلبات مساعدة"
           value={helpRequests}
-          hint="تحتاج عناية مباشرة"
+          hint="تحتاج متابعة مباشرة"
           tone="rose"
         />
         <SummaryCard
           label="متوسط التقييم"
           value={averageRating}
-          hint={rated.length ? `من ${rated.length} تقييم` : "لا توجد تقييمات بعد"}
+          hint={rated.length ? `من ${rated.length} تقييم` : "لا توجد تقييمات"}
           icon={<Star className="size-4 fill-current" />}
         />
       </section>
 
       <section className="no-print rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="grid flex-1 gap-3 sm:grid-cols-3">
+          <div className="grid flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div>
               <Label htmlFor="feedback-search">بحث</Label>
               <Input
@@ -337,6 +437,20 @@ export default function MessagesDashboard() {
               </select>
             </div>
             <div>
+              <Label htmlFor="feedback-assignee-filter">الجهة المسؤولة</Label>
+              <select
+                id="feedback-assignee-filter"
+                value={assignee}
+                onChange={(event) => setAssignee(event.target.value)}
+                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option>الكل</option>
+                {ASSIGNEES.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+            <div>
               <Label htmlFor="feedback-status-filter">الحالة</Label>
               <select
                 id="feedback-status-filter"
@@ -355,11 +469,29 @@ export default function MessagesDashboard() {
             <Button variant="outline" onClick={exportCsv}>
               <Download className="size-4" /> تصدير CSV
             </Button>
-            <Button variant="outline" onClick={shareSelected} disabled={!selected.length}>
-              <Send className="size-4" /> إرسال المحدد
+            <Button
+              variant="outline"
+              onClick={() => void sendWhatsApp()}
+              disabled={!selected.length}
+            >
+              <MessageCircle className="size-4" /> واتساب
             </Button>
-            <Button variant="outline" onClick={printSelected} disabled={!selected.length}>
-              <Printer className="size-4" /> طباعة المحدد
+            <Button variant="outline" onClick={() => sendEmail()} disabled={!selected.length}>
+              <Mail className="size-4" /> بريد
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => printSelected(false)}
+              disabled={!selected.length}
+            >
+              <Printer className="size-4" /> طباعة مشاركة
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => printSelected(true)}
+              disabled={!selected.length}
+            >
+              <Printer className="size-4" /> طباعة داخلية
             </Button>
             <Button onClick={exportPdf} disabled={!selected.length || exporting}>
               <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF"}
@@ -369,12 +501,16 @@ export default function MessagesDashboard() {
       </section>
 
       <section className="no-print overflow-hidden rounded-3xl border border-primary/12 bg-card shadow-sm">
-        <div className="border-b bg-muted/30 px-5 py-3 text-sm">
-          <strong>{filtered.length}</strong> مشاركة مطابقة — حدد المشاركات التي تريد طباعتها أو
-          إرسالها.
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3 text-sm">
+          <span>
+            <strong>{filtered.length}</strong> مشاركة مطابقة — حدّدها للطباعة أو التصدير أو الإرسال.
+          </span>
+          <Button size="sm" variant="ghost" onClick={printAll}>
+            <Printer className="size-4" /> طباعة قائمة النتائج
+          </Button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-right text-sm">
+          <table className="w-full min-w-[1140px] text-right text-sm">
             <thead className="bg-muted/50 text-xs">
               <tr>
                 <th className="p-4">
@@ -388,6 +524,7 @@ export default function MessagesDashboard() {
                 </th>
                 <th className="p-4">المشارك</th>
                 <th className="p-4">التصنيف</th>
+                <th className="p-4">المسؤول</th>
                 <th className="p-4">التقييم</th>
                 <th className="p-4">الملخص</th>
                 <th className="p-4">الاستلام</th>
@@ -398,13 +535,13 @@ export default function MessagesDashboard() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="p-10 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-10 text-center text-muted-foreground">
                     جارٍ تحميل الردود...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-10 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-10 text-center text-muted-foreground">
                     لا توجد مشاركات مطابقة حتى الآن.
                   </td>
                 </tr>
@@ -437,6 +574,23 @@ export default function MessagesDashboard() {
                       </span>
                     </td>
                     <td className="p-4">
+                      <select
+                        value={item.assigned_to || "الموجه الطلابي"}
+                        onChange={(event) =>
+                          void updateMessage(
+                            item.id,
+                            { assigned_to: event.target.value },
+                            "تم توجيه الرسالة",
+                          )
+                        }
+                        className="h-8 max-w-44 rounded-md border border-input bg-background px-2 text-xs"
+                      >
+                        {ASSIGNEES.map((name) => (
+                          <option key={name}>{name}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="p-4">
                       {item.satisfaction ? (
                         <span className="inline-flex items-center gap-1 text-amber-500">
                           <Star className="size-4 fill-current" /> {item.satisfaction}/5
@@ -454,7 +608,7 @@ export default function MessagesDashboard() {
                     <td className="p-4">
                       <select
                         value={item.status}
-                        onChange={(event) => updateStatus(item.id, event.target.value)}
+                        onChange={(event) => void updateStatus(item.id, event.target.value)}
                         className="h-8 rounded-md border border-input bg-background px-2 text-xs"
                       >
                         {STATUSES.map((itemStatus) => (
@@ -463,17 +617,39 @@ export default function MessagesDashboard() {
                       </select>
                     </td>
                     <td className="p-4">
-                      <Button size="sm" variant="outline" onClick={() => printOne(item.id)}>
-                        <Printer className="size-4" /> طباعة
-                      </Button>
-                      <details className="mt-2 min-w-48 text-xs">
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void replyToBeneficiary(item)}
+                        >
+                          <Send className="size-4" /> رد
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => printSelected(true)}
+                          disabled={!selectedIds.includes(item.id)}
+                        >
+                          <Printer className="size-4" />
+                        </Button>
+                      </div>
+                      <details className="mt-2 min-w-56 text-xs">
                         <summary className="flex cursor-pointer items-center gap-1 text-primary">
-                          <ChevronDown className="size-3" /> ملاحظة داخلية
+                          <ChevronDown className="size-3" /> الإجراء والملاحظات
                         </summary>
+                        <Label className="mt-2 block text-[11px]">الرد أو الإجراء للمستفيد</Label>
+                        <Textarea
+                          defaultValue={item.response_note || ""}
+                          className="mt-1 min-h-16 text-xs"
+                          placeholder="الرد أو الإجراء المتخذ"
+                          onBlur={(event) => void updateResponse(item.id, event.target.value)}
+                        />
+                        <Label className="mt-2 block text-[11px]">ملاحظة داخلية</Label>
                         <Textarea
                           defaultValue={item.internal_notes || ""}
-                          className="mt-2 min-h-16 text-xs"
-                          placeholder="الإجراء أو الملاحظة"
+                          className="mt-1 min-h-16 text-xs"
+                          placeholder="ملاحظة خاصة بالموجه"
                           onBlur={(event) => void updateNotes(item.id, event.target.value)}
                         />
                       </details>
@@ -492,13 +668,15 @@ export default function MessagesDashboard() {
       >
         <OfficialHeader
           school={school}
-          title="تقرير الآراء والرسائل"
+          title={includeInternal ? "تقرير داخلي للآراء والرسائل" : "تقرير الآراء والرسائل"}
           reportType="استبانة المستفيدين"
         />
         <div className="mt-5 rounded-lg border border-paper-border p-3 text-xs">
           <strong>الفترة:</strong> حتى {new Date().toLocaleDateString("ar-SA")}{" "}
           <span className="mx-3">|</span>
-          <strong>عدد المشاركات المطبوعة:</strong> {selected.length}
+          <strong>عدد المشاركات:</strong> {selected.length}
+          <span className="mx-3">|</span>
+          <strong>نوع النسخة:</strong> {includeInternal ? "داخلية" : "مشاركة"}
         </div>
         <div className="mt-5 space-y-4">
           {selected.map((item, index) => (
@@ -519,18 +697,31 @@ export default function MessagesDashboard() {
                 <p>
                   <strong>وسيلة التواصل:</strong> {item.sender_contact || "—"}
                 </p>
+                <p>
+                  <strong>الجهة المسؤولة:</strong> {item.assigned_to || "الموجه الطلابي"}
+                </p>
+                <p>
+                  <strong>الحالة:</strong> {item.status}
+                </p>
                 {item.satisfaction && (
                   <p>
                     <strong>التقييم:</strong> {item.satisfaction} من 5
                   </p>
                 )}
-                <p>
-                  <strong>الحالة:</strong> {item.status}
-                </p>
               </div>
               <p className="mt-3 whitespace-pre-wrap border-t border-paper-border pt-3 text-sm leading-8">
                 {item.message}
               </p>
+              {item.response_note && (
+                <p className="mt-3 rounded-lg bg-muted/40 p-3 text-sm">
+                  <strong>الرد أو الإجراء:</strong> {item.response_note}
+                </p>
+              )}
+              {includeInternal && item.internal_notes && (
+                <p className="mt-3 rounded-lg border border-amber-300/50 bg-amber-50 p-3 text-sm">
+                  <strong>ملاحظة داخلية:</strong> {item.internal_notes}
+                </p>
+              )}
             </article>
           ))}
         </div>

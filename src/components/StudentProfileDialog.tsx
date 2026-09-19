@@ -29,12 +29,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Row = Record<string, unknown> & { id: string };
 
@@ -59,6 +54,7 @@ export function StudentProfileDialog({
   const queryClient = useQueryClient();
   const fullName = String(student?.["full_name"] ?? "");
   const studentNo = String(student?.["student_no"] ?? "");
+  const studentId = String(student?.id ?? "");
   const [importingSection, setImportingSection] = useState<string | null>(null);
 
   // نجلب كل السجلات المرتبطة بهذا الطالب من كل الجداول المرتبطة باسمه دفعة واحدة
@@ -70,22 +66,34 @@ export function StudentProfileDialog({
       for (const section of LINKED_SECTIONS) {
         const config = recordByKey(section.key);
         if (!config) continue;
-        const { data, error } = await supabase
-          .from(config.table as never)
-          .select("*")
-          .eq("student_name", fullName)
-          .order("created_at", { ascending: false });
-        if (error) {
-          result[section.key] = [];
-          continue;
-        }
-        let rows = (data ?? []) as unknown as Row[];
-
-        // ترتيب الأبجدي تلقائياً بناءً على حقل العنوان باللغة العربية
-        rows = rows.sort((a, b) => {
-          const valA = String(a[section.titleField] ?? "").toLowerCase();
-          const valB = String(b[section.titleField] ?? "").toLowerCase();
-          return valA.localeCompare(valB, "ar");
+        // New records use student_id, while historical records still match by the
+        // student number/name. Keep both paths so no older information disappears.
+        const [linked, legacy] = await Promise.all([
+          studentId
+            ? supabase
+                .from(config.table as never)
+                .select("*")
+                .eq("student_id", studentId)
+            : Promise.resolve({ data: [], error: null }),
+          studentNo
+            ? supabase
+                .from(config.table as never)
+                .select("*")
+                .eq("student_no", studentNo)
+            : supabase
+                .from(config.table as never)
+                .select("*")
+                .eq("student_name", fullName),
+        ]);
+        const merged = [
+          ...((linked.data ?? []) as unknown as Row[]),
+          ...((legacy.data ?? []) as unknown as Row[]),
+        ];
+        const unique = new Map(merged.map((row) => [row.id, row]));
+        const rows = Array.from(unique.values()).sort((a, b) => {
+          const dateA = String(a[section.dateField] ?? a.created_at ?? "");
+          const dateB = String(b[section.dateField] ?? b.created_at ?? "");
+          return dateB.localeCompare(dateA, "ar");
         });
 
         result[section.key] = rows;
@@ -108,7 +116,10 @@ export function StudentProfileDialog({
 
   async function deleteRow(sectionKey: string, table: string, id: string) {
     if (!confirm("هل تريد حذف هذا السجل من ملف الطالب؟")) return;
-    const { error } = await supabase.from(table as never).delete().eq("id", id);
+    const { error } = await supabase
+      .from(table as never)
+      .delete()
+      .eq("id", id);
     if (error) {
       toast.error(`تعذّر الحذف: ${error.message}`);
       return;
@@ -129,7 +140,7 @@ export function StudentProfileDialog({
     for (const row of rows) {
       const sectionConfig = LINKED_SECTIONS.find((s) => s.key === sectionKey);
       const titleVal = String(row[sectionConfig?.titleField ?? ""] ?? "").trim();
-      
+
       if (seen.has(titleVal)) {
         idsToDelete.push(String(row.id));
       } else {
@@ -142,7 +153,10 @@ export function StudentProfileDialog({
       return;
     }
 
-    const { error } = await supabase.from(table as never).delete().in("id", idsToDelete);
+    const { error } = await supabase
+      .from(table as never)
+      .delete()
+      .in("id", idsToDelete);
     if (error) {
       toast.error(`تعذّر حذف المتكرر: ${error.message}`);
       return;
@@ -154,7 +168,11 @@ export function StudentProfileDialog({
   }
 
   // دالة استيراد ملف CSV ورفع السجلات مباشرة لهذا القسم
-  async function handleCSVImport(table: string, sectionKey: string, e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleCSVImport(
+    table: string,
+    sectionKey: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -168,11 +186,15 @@ export function StudentProfileDialog({
           return;
         }
 
-        const headers = (lines[0] ?? "").split(",").map((h) => h.trim().replace(/^["']|["']$/g, ""));
+        const headers = (lines[0] ?? "")
+          .split(",")
+          .map((h) => h.trim().replace(/^["']|["']$/g, ""));
         const recordsToInsert = [];
 
         for (let i = 1; i < lines.length; i++) {
-          const values = (lines[i] ?? "").split(",").map((v) => v.trim().replace(/^["']|["']$/g, ""));
+          const values = (lines[i] ?? "")
+            .split(",")
+            .map((v) => v.trim().replace(/^["']|["']$/g, ""));
           const record: Record<string, any> = { student_name: fullName };
 
           headers.forEach((header, index) => {
@@ -185,7 +207,7 @@ export function StudentProfileDialog({
 
         setImportingSection(sectionKey);
         const { error } = await supabase.from(table as never).insert(recordsToInsert as never);
-        
+
         if (error) {
           toast.error(`فشل الاستيراد: ${error.message}`);
         } else {
@@ -314,13 +336,15 @@ export function StudentProfileDialog({
                               <CopyX className="size-4" /> حذف المتكرر
                             </Button>
                           )}
-                          
+
                           {/* زر استيراد CSV سريع */}
                           <label className="cursor-pointer">
                             <Button size="sm" variant="outline" asChild className="gap-1">
                               <span>
                                 <Upload className="size-4" />
-                                {importingSection === section.key ? "جارٍ الاستيراد..." : "استيراد CSV"}
+                                {importingSection === section.key
+                                  ? "جارٍ الاستيراد..."
+                                  : "استيراد CSV"}
                               </span>
                             </Button>
                             <input
@@ -379,8 +403,9 @@ export function StudentProfileDialog({
 
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <BookOpenText className="size-3.5" />
-            هذا الملف يجمع تلقائياً كل سجل داخل الموقع مرتبط باسم الطالب «{fullName}» في الحالات والمقابلات والمواظبة
-            والسلوك والإحالات.
+            هذا الملف يجمع تلقائياً كل سجل مرتبط بالطالب في الحالات والمقابلات والمواظبة والسلوك
+            والإحالات. تُربط السجلات الجديدة بمعرّف الطالب مباشرةً، وتظل السجلات السابقة ظاهرة برقم
+            الطالب أو الاسم.
           </p>
         </div>
       </DialogContent>

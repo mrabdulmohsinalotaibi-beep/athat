@@ -22,6 +22,7 @@ import {
   Crown,
   Sparkles,
   Inbox,
+  UserRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -32,15 +33,28 @@ import { isAppTheme, useTheme } from "@/lib/theme";
 
 const NAV = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
-  { label: "الطلاب والسجلات الإرشادية", icon: Users, children: [
-    { to: "/students", label: "سجل الطلاب", icon: Users }, { to: "/cases", label: "الحالات الإرشادية", icon: HeartHandshake },
-    { to: "/interviews", label: "المقابلات والتواصل", icon: MessagesSquare }, { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
-    { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert }, { to: "/referrals", label: "الإحالات", icon: Send },
-  ]},
-  { label: "الخطط والبرامج", icon: FolderKanban, children: [
-    { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList }, { to: "/programs", label: "البرامج والأنشطة", icon: CalendarDays },
-    { to: "/calendar", label: "التقويم والمتابعة", icon: CalendarDays }, { to: "/committees", label: "اللجان والاجتماعات", icon: Gavel },
-  ]},
+  {
+    label: "الطلاب والسجلات الإرشادية",
+    icon: Users,
+    children: [
+      { to: "/students", label: "سجل الطلاب", icon: Users },
+      { to: "/cases", label: "الحالات الإرشادية", icon: HeartHandshake },
+      { to: "/interviews", label: "المقابلات والتواصل", icon: MessagesSquare },
+      { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
+      { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert },
+      { to: "/referrals", label: "الإحالات", icon: Send },
+    ],
+  },
+  {
+    label: "الخطط والبرامج",
+    icon: FolderKanban,
+    children: [
+      { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList },
+      { to: "/programs", label: "البرامج والأنشطة", icon: CalendarDays },
+      { to: "/calendar", label: "التقويم والمتابعة", icon: CalendarDays },
+      { to: "/committees", label: "اللجان والاجتماعات", icon: Gavel },
+    ],
+  },
   { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
   { to: "/weekly-poster", label: "التوجيه الطلابي الأسبوعي", icon: Sparkles },
   { to: "/messages", label: "الآراء والرسائل", icon: Inbox },
@@ -54,7 +68,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [expanded, setExpanded] = useState<string[]>(["الطلاب والسجلات الإرشادية", "الخطط والبرامج"]);
+  const [expanded, setExpanded] = useState<string[]>([
+    "الطلاب والسجلات الإرشادية",
+    "الخطط والبرامج",
+  ]);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { setTheme } = useTheme();
 
@@ -66,7 +83,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
     if (!open) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = previous; };
+    return () => {
+      document.body.style.overflow = previous;
+    };
   }, [open]);
 
   async function signOut() {
@@ -87,10 +106,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center p-0.5">
-               <img src="/IMG_3331.png" alt="شعار منصة الذات" className="size-full object-contain" />
+              <img src="/IMG_3331.png" alt="شعار منصة الذات" className="size-full object-contain" />
             </div>
             <div>
-               <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
+              <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
               <p className="mt-1 text-xs text-sidebar-foreground/70">منصة الموجه الطلابي</p>
             </div>
           </div>
@@ -101,14 +120,67 @@ export function AppLayout({ children }: { children: ReactNode }) {
             if ("children" in item) {
               const isOpen = expanded.includes(item.label);
               const active = item.children.some((child) => pathname === child.to);
-              return <div key={item.label}>
-                <Button type="button" variant="ghost" onClick={() => setExpanded((v) => isOpen ? v.filter((x) => x !== item.label) : [...v, item.label])} className={cn("w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground", active && "text-sidebar-primary")}>
-                  <Icon className="size-4" /><span className="flex-1 text-right">{item.label}</span><ChevronDown className={cn("size-4 transition-transform", isOpen && "rotate-180")} />
-                </Button>
-                {isOpen && <div className="mr-5 space-y-1 border-r border-sidebar-border pr-2">{item.children.map((child) => { const ChildIcon=child.icon; return <Link key={child.to} to={child.to} onClick={() => setOpen(false)} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-xs hover:bg-sidebar-accent", pathname === child.to && "bg-sidebar-accent font-semibold text-sidebar-primary")}><ChildIcon className="size-3.5" />{child.label}</Link>; })}</div>}
-              </div>;
+              return (
+                <div key={item.label}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() =>
+                      setExpanded((v) =>
+                        isOpen ? v.filter((x) => x !== item.label) : [...v, item.label],
+                      )
+                    }
+                    className={cn(
+                      "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                      active && "text-sidebar-primary",
+                    )}
+                  >
+                    <Icon className="size-4" />
+                    <span className="flex-1 text-right">{item.label}</span>
+                    <ChevronDown
+                      className={cn("size-4 transition-transform", isOpen && "rotate-180")}
+                    />
+                  </Button>
+                  {isOpen && (
+                    <div className="mr-5 space-y-1 border-r border-sidebar-border pr-2">
+                      {item.children.map((child) => {
+                        const ChildIcon = child.icon;
+                        return (
+                          <Link
+                            key={child.to}
+                            to={child.to}
+                            onClick={() => setOpen(false)}
+                            className={cn(
+                              "flex items-center gap-2 rounded-md px-3 py-2 text-xs hover:bg-sidebar-accent",
+                              pathname === child.to &&
+                                "bg-sidebar-accent font-semibold text-sidebar-primary",
+                            )}
+                          >
+                            <ChildIcon className="size-3.5" />
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
             }
-            return <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={cn("flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm hover:bg-sidebar-accent", pathname === item.to && "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary")}><Icon className="size-4" />{item.label}</Link>;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm hover:bg-sidebar-accent",
+                  pathname === item.to &&
+                    "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary",
+                )}
+              >
+                <Icon className="size-4" />
+                {item.label}
+              </Link>
+            );
           })}
         </nav>
         <div className="mt-auto border-t border-sidebar-border p-3">
@@ -138,10 +210,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <header className="no-print sticky top-0 z-20 border-b bg-card/90 shadow-sm backdrop-blur-xl">
           <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setOpen(true)}
+              >
                 <Menu className="size-5" />
               </Button>
-               <img src="/IMG_3331.png" alt="شعار منصة الذات" className="hidden size-12 object-contain sm:block" />
+              <img
+                src="/IMG_3331.png"
+                alt="شعار منصة الذات"
+                className="hidden size-12 object-contain sm:block"
+              />
               <div>
                 <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
                 <p className="text-xs text-muted-foreground">
@@ -149,16 +230,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 </p>
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              <p>الموجه الطلابي: {school?.counselor_name || "—"}</p>
-              <p>
-                {school?.academic_year || "العام الدراسي"} · {school?.semester || "الفصل الدراسي"}
-              </p>
+            <div className="flex items-center gap-2">
+              <div className="hidden text-xs text-muted-foreground sm:block">
+                <p>الموجه الطلابي: {school?.counselor_name || "—"}</p>
+                <p>
+                  {school?.academic_year || "العام الدراسي"} · {school?.semester || "الفصل الدراسي"}
+                </p>
+              </div>
+              <Button asChild variant="outline" size="sm" className="gap-2">
+                <Link to="/profile" title="حسابي الشخصي">
+                  <UserRound className="size-4" />
+                  <span className="hidden sm:inline">حسابي</span>
+                </Link>
+              </Button>
             </div>
           </div>
         </header>
         <main className="min-w-0 flex-1 p-4 lg:p-8">{children}</main>
-        <footer className="no-print border-t px-4 py-4"><Copyright /></footer>
+        <footer className="no-print border-t px-4 py-4">
+          <Copyright />
+        </footer>
       </div>
     </div>
   );

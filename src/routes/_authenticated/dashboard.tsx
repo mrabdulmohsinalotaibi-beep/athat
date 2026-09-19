@@ -30,6 +30,8 @@ import {
   Clock,
   CheckCircle2,
   Zap,
+  Inbox,
+  FileWarning,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -59,19 +61,35 @@ function useDashboard() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [students, cases, attendance, behavior, programs, calendar, planTasks, interviews] =
-        await Promise.all([
-          supabase.from("students").select("id, stage"),
-          supabase
-            .from("counseling_cases")
-            .select("id, domain, case_status, priority, followup_at, last_followup, student_name"),
-          supabase.from("attendance").select("id, adate, case_type, count_days"),
-          supabase.from("behavior").select("id, bdate"),
-          supabase.from("programs").select("id, exec_status"),
-          supabase.from("calendar_events").select("id, edate, title, etype, status, priority"),
-          supabase.from("plan_tasks").select("id, exec_status"),
-          supabase.from("interviews").select("id, itype"),
-        ]);
+      const [
+        students,
+        cases,
+        attendance,
+        behavior,
+        programs,
+        calendar,
+        planTasks,
+        interviews,
+        feedback,
+      ] = await Promise.all([
+        supabase.from("students").select("id, stage, created_at"),
+        supabase
+          .from("counseling_cases")
+          .select(
+            "id, domain, case_status, priority, followup_at, last_followup, student_name, created_at",
+          ),
+        supabase.from("attendance").select("id, adate, case_type, count_days, created_at"),
+        supabase.from("behavior").select("id, bdate, created_at"),
+        supabase.from("programs").select("id, exec_status, created_at"),
+        supabase.from("calendar_events").select("id, edate, title, etype, status, priority"),
+        supabase
+          .from("plan_tasks")
+          .select("id, exec_status, due_date, doc_status, task, created_at"),
+        supabase.from("interviews").select("id, itype"),
+        (supabase as any)
+          .from("feedback_messages")
+          .select("id, sender_name, category, status, assigned_to, created_at"),
+      ]);
       return {
         students: students.data ?? [],
         cases: cases.data ?? [],
@@ -81,6 +99,7 @@ function useDashboard() {
         calendar: calendar.data ?? [],
         planTasks: planTasks.data ?? [],
         interviews: interviews.data ?? [],
+        feedback: feedback.data ?? [],
       };
     },
   });
@@ -99,6 +118,7 @@ function Dashboard() {
   const behavior = data?.behavior ?? [];
   const programs = data?.programs ?? [];
   const calendar = data?.calendar ?? [];
+  const feedback = data?.feedback ?? [];
 
   const activeCases = cases.filter((c) => c.case_status !== "مغلقة");
   const todayAbsence = attendance.filter((a) => a.adate === day);
@@ -108,6 +128,15 @@ function Dashboard() {
     .slice(0, 6);
   const overdue = activeCases.filter((c) => c.followup_at && String(c.followup_at) <= day);
   const donePrograms = programs.filter((p) => p.exec_status === "مكتمل");
+  const newFeedback = feedback.filter((item: any) => item.status === "جديد");
+  const assignedToCounselor = feedback.filter(
+    (item: any) =>
+      (item.assigned_to || "الموجه الطلابي") === "الموجه الطلابي" && item.status !== "تم الرد",
+  );
+  const latePlanTasks = (data?.planTasks ?? []).filter(
+    (task) => task.due_date && String(task.due_date) < day && task.exec_status !== "مكتمل",
+  );
+  const missingEvidence = (data?.planTasks ?? []).filter((task) => task.doc_status === "ناقص");
 
   const stats = [
     {
@@ -164,6 +193,15 @@ function Dashboard() {
       iconColor: "text-amber-700",
       badge: "مكتمل",
     },
+    {
+      label: "رسائل جديدة",
+      value: newFeedback.length,
+      icon: Inbox,
+      to: "/messages" as const,
+      gradient: "from-violet-500/14 via-card to-primary/10",
+      iconColor: "text-violet-700",
+      badge: "واردة",
+    },
   ];
 
   const domainData = Object.entries(
@@ -196,6 +234,34 @@ function Dashboard() {
     { label: "رصد مواظبة", to: "/attendance" as const, icon: ClipboardList },
     { label: "إحالة جديدة", to: "/referrals" as const, icon: Zap },
     { label: "تقرير رسمي", to: "/reports" as const, icon: FileText },
+    { label: "صندوق الرسائل", to: "/messages" as const, icon: Inbox },
+  ];
+
+  const quickReport = [
+    {
+      label: "رسائل للموجه",
+      value: assignedToCounselor.length,
+      hint: "تحتاج فرزًا أو ردًا",
+      to: "/messages" as const,
+      icon: Inbox,
+      tone: "text-violet-700 bg-violet-500/10",
+    },
+    {
+      label: "مهام متأخرة",
+      value: latePlanTasks.length,
+      hint: "تجاوزت موعد التنفيذ",
+      to: "/plan" as const,
+      icon: Clock,
+      tone: "text-rose-700 bg-rose-500/10",
+    },
+    {
+      label: "توثيق ناقص",
+      value: missingEvidence.length,
+      hint: "يحتاج إرفاق شاهد",
+      to: "/plan" as const,
+      icon: FileWarning,
+      tone: "text-amber-700 bg-amber-500/10",
+    },
   ];
 
   return (
@@ -233,7 +299,7 @@ function Dashboard() {
       </div>
 
       {/* 2. Quick Action Buttons - أزرار سريعة متناسقة وموزعة بالتساوي */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -250,6 +316,41 @@ function Dashboard() {
           );
         })}
       </div>
+
+      <section className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-black">ملخص العمل السريع</h2>
+            <p className="text-xs text-muted-foreground">
+              تنبيهات حية من السجلات والرسائل داخل المنصة.
+            </p>
+          </div>
+          <Link to="/messages" className="text-xs font-bold text-primary hover:underline">
+            عرض مركز الرسائل
+          </Link>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {quickReport.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.label}
+                to={item.to}
+                className="group rounded-2xl border bg-background/70 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`rounded-xl p-2 ${item.tone}`}>
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="text-2xl font-black">{isLoading ? "—" : item.value}</span>
+                </div>
+                <p className="mt-3 text-sm font-bold">{item.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       {/* 3. Stat Grid - بطاقات الإحصائيات */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

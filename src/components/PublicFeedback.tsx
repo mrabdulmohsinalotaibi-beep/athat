@@ -96,7 +96,8 @@ export function PublicFeedback({ token }: { token: string }) {
         >
           <div className="mb-6 rounded-2xl bg-accent/60 p-4 text-sm leading-7 text-accent-foreground">
             نرحب برأيك ومقترحاتك حول خدمات التوجيه الطلابي. جميع الحقول اختيارية عدا نص المشاركة،
-            ولن يتم عرض ردك للزوار الآخرين.
+            ولن يتم عرض ردك للزوار الآخرين. تصل المشاركة إلى الموجه الطلابي، ويجري توجيهها للجهة
+            المختصة داخل المدرسة عند الحاجة.
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">

@@ -23,6 +23,7 @@ import { Route as AuthenticatedEvidencesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedInterviewsRouteImport } from './routes/_authenticated/interviews'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -104,6 +105,11 @@ const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProgramsRoute = AuthenticatedProgramsRouteImport.update({
   id: '/programs',
   path: '/programs',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/_authenticated/interviews': typeof AuthenticatedInterviewsRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/interviews'
     | '/messages'
     | '/plan'
+    | '/profile'
     | '/programs'
     | '/referrals'
     | '/reports'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/interviews'
     | '/messages'
     | '/plan'
+    | '/profile'
     | '/programs'
     | '/referrals'
     | '/reports'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/_authenticated/interviews'
     | '/_authenticated/messages'
     | '/_authenticated/plan'
+    | '/_authenticated/profile'
     | '/_authenticated/programs'
     | '/_authenticated/referrals'
     | '/_authenticated/reports'
@@ -411,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/programs': {
       id: '/_authenticated/programs'
       path: '/programs'
@@ -488,6 +507,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInterviewsRoute: typeof AuthenticatedInterviewsRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -509,6 +529,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInterviewsRoute: AuthenticatedInterviewsRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
