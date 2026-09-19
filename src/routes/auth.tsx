@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { arabicAuthError } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,26 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState<"" | "form" | "demo">("");
+  const [busy, setBusy] = useState<"" | "form" | "demo" | "google">("");
+
+  async function googleSignIn() {
+    setError("");
+    setBusy("google");
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) throw new Error(result.error.message ?? "تعذر الدخول عبر Google");
+      if (result.redirected) return;
+      goToDashboard();
+    } catch (err) {
+      const message = arabicAuthError((err as Error).message);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setBusy("");
+    }
+  }
 
   function goToDashboard() {
     if (next) {
@@ -234,6 +254,16 @@ function AuthPage() {
         </div>
 
         <div className="space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={googleSignIn}
+            disabled={busy !== ""}
+          >
+            {busy === "google" && <Loader2 className="size-4 animate-spin" />}
+            المتابعة عبر Google
+          </Button>
           <Button variant="ghost" className="w-full" onClick={demoSignIn} disabled={busy !== ""}>
             {busy === "demo" && <Loader2 className="size-4 animate-spin" />}
             دخول تجريبي بدون تسجيل
