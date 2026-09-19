@@ -18,11 +18,18 @@ export function arabicAuthError(message: string): string {
     return "تسجيل الدخول عبر Google غير مفعّل بعد. يجب إضافة بيانات Google OAuth في إعدادات Supabase.";
   if (m.includes("missing oauth secret"))
     return "تسجيل الدخول عبر Google غير مكتمل الإعداد. أضف Google Client ID وClient Secret في Supabase.";
+  if (m.includes("sms provider") || m.includes("sms is not enabled"))
+    return "إرسال رمز الجوال غير مكتمل الإعداد في خدمة الرسائل النصية. تواصل مع إدارة المنصة.";
+  if (m.includes("otp expired") || m.includes("token has expired"))
+    return "انتهت صلاحية رمز التحقق. اطلب رمزًا جديدًا وحاول مرة أخرى.";
+  if (m.includes("invalid otp") || m.includes("token is invalid"))
+    return "رمز التحقق غير صحيح. تأكد من الأرقام ثم حاول مرة أخرى.";
+  if (m.includes("phone") && m.includes("invalid"))
+    return "رقم الجوال غير صحيح. اكتب رقمًا سعوديًا بصيغة 05XXXXXXXX.";
   if (m.includes("network") || m.includes("failed to fetch"))
     return "تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مجدداً.";
   if (m.includes("weak password")) return "كلمة المرور ضعيفة، اختر كلمة أقوى.";
 
-  // الإضافات الجديدة المقترحة لتغطية حالات الروابط والصلاحيات:
   if (m.includes("expired") || m.includes("token has expired"))
     return "انتهت صلاحية الرابط أو رمز التحقق، يرجى طلب رابط جديد.";
   if (m.includes("same password") || m.includes("different from the old password"))

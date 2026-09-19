@@ -1,21 +1,31 @@
 import { useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { ArrowRight, Loader2, Mail, MessageSquareText, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
-import { arabicAuthError } from "@/lib/auth-errors";
+import { Copyright } from "@/components/Copyright";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copyright } from "@/components/Copyright";
+import { supabase } from "@/integrations/supabase/client";
+import { arabicAuthError } from "@/lib/auth-errors";
+import { normalizeSaudiPhone } from "@/lib/whatsapp";
 
 const DEMO_EMAIL = "demo@thaat.sa";
 const DEMO_PASSWORD = "Thaat-Demo-2026";
 
+type Channel = "email" | "phone";
+type EmailMode = "signin" | "signup";
+type PhoneStep = "phone" | "verify";
+type BusyState = "" | "email" | "phone" | "verify" | "demo";
+
 function safeNext(value: unknown): string {
   return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : "";
+}
+
+function toSaudiE164(value: string): string {
+  const normalized = normalizeSaudiPhone(value);
+  return /^9665\d{8}$/.test(normalized) ? `+${normalized}` : "";
 }
 
 export const Route = createFileRoute("/auth")({
@@ -33,8 +43,7 @@ export const Route = createFileRoute("/auth")({
       { title: "تسجيل الدخول | منصة الذات" },
       {
         name: "description",
-        content:
-          "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو جرّب الحساب التجريبي.",
+        content: "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو رمز الجوال.",
       },
       { property: "og:title", content: "تسجيل الدخول | منصة الذات" },
       { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة الذات." },
@@ -48,21 +57,72 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [channel, setChannel] = useState<Channel>("email");
+  const [emailMode, setEmailMode] = useState<EmailMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [verifiedPhone, setVerifiedPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [phoneStep, setPhoneStep] = useState<PhoneStep>("phone");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState<"" | "form" | "demo" | "google">("");
+  const [busy, setBusy] = useState<BusyState>("");
 
-  async function googleSignIn() {
+  function goToDashboard() {
+    if (next) {
+      window.location.replace(next);
+      return;
+    }
+    navigate({ to: "/dashboard", replace: true });
+  }
+
+  function selectChannel(nextChannel: Channel) {
+    setChannel(nextChannel);
     setError("");
-    setBusy("google");
+    if (nextChannel === "phone") {
+      setPhoneStep("phone");
+      setOtp("");
+    }
+  }
+
+  async function signInWithEmail(mail: string, pass: string) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: mail.trim(),
+      password: pass,
+    });
+    return signInError;
+  }
+
+  async function onEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setBusy("email");
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) throw new Error(result.error.message ?? "تعذر الدخول عبر Google");
-      if (result.redirected) return;
+      if (emailMode === "signup") {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            emailRedirectTo:
+              window.location.origin + "/auth" + (next ? `?next=${encodeURIComponent(next)}` : ""),
+          },
+        });
+        if (signUpError) throw signUpError;
+
+        if (data.session) {
+          toast.success("تم إنشاء الحساب وتسجيل الدخول بنجاح");
+          goToDashboard();
+          return;
+        }
+
+        toast.info("تم إنشاء الحساب. فعّله عبر الرابط المرسل إلى بريدك ثم سجّل الدخول.");
+        setEmailMode("signin");
+        return;
+      }
+
+      const signInError = await signInWithEmail(email, password);
+      if (signInError) throw signInError;
+      toast.success("مرحباً بك");
       goToDashboard();
     } catch (err) {
       const message = arabicAuthError((err as Error).message);
@@ -73,58 +133,57 @@ function AuthPage() {
     }
   }
 
-  function goToDashboard() {
-    if (next) {
-      window.location.replace(next);
+  async function sendPhoneCode() {
+    setError("");
+    const e164 = toSaudiE164(phone);
+    if (!e164) {
+      const message = "أدخل رقم جوال سعودي صحيحًا، مثل 05XXXXXXXX أو +9665XXXXXXXX.";
+      setError(message);
+      toast.error(message);
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+
+    setBusy("phone");
+    try {
+      const { error: otpError } = await supabase.auth.signInWithOtp({ phone: e164 });
+      if (otpError) throw otpError;
+      setVerifiedPhone(e164);
+      setPhoneStep("verify");
+      toast.success("تم إرسال رمز التحقق برسالة نصية إلى جوالك.");
+    } catch (err) {
+      const message = arabicAuthError((err as Error).message);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setBusy("");
+    }
   }
 
-  async function signInWith(mail: string, pass: string) {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: mail,
-      password: pass,
-    });
-    return signInError;
+  async function requestPhoneCode(e: React.FormEvent) {
+    e.preventDefault();
+    await sendPhoneCode();
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function verifyPhoneCode(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setBusy("form");
+    const token = otp.replace(/\D/g, "");
+    if (token.length < 6) {
+      const message = "أدخل رمز التحقق المكوّن من 6 أرقام.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
+
+    setBusy("verify");
     try {
-      if (mode === "signup") {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo:
-              window.location.origin + "/auth" + (next ? `?next=${encodeURIComponent(next)}` : ""),
-          },
-        });
-        if (signUpError) throw signUpError;
-
-        if (data.session) {
-          toast.success("تم إنشاء الحساب بنجاح");
-          goToDashboard();
-          return;
-        }
-        // No session returned: try signing in directly, otherwise ask for confirmation.
-        const signInError = await signInWith(email, password);
-        if (!signInError) {
-          toast.success("تم إنشاء الحساب بنجاح");
-          goToDashboard();
-          return;
-        }
-        toast.info("تم إنشاء الحساب. فعّله عبر الرابط المرسل إلى بريدك ثم سجّل الدخول.");
-        setMode("signin");
-        return;
-      }
-
-      const signInError = await signInWith(email, password);
-      if (signInError) throw signInError;
-      toast.success("مرحباً بك");
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        phone: verifiedPhone,
+        token,
+        type: "sms",
+      });
+      if (verifyError) throw verifyError;
+      toast.success("تم التحقق من رقم الجوال وتسجيل الدخول.");
       goToDashboard();
     } catch (err) {
       const message = arabicAuthError((err as Error).message);
@@ -139,16 +198,17 @@ function AuthPage() {
     setError("");
     setBusy("demo");
     try {
-      let signInError = await signInWith(DEMO_EMAIL, DEMO_PASSWORD);
+      let signInError = await signInWithEmail(DEMO_EMAIL, DEMO_PASSWORD);
       if (signInError) {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: DEMO_EMAIL,
           password: DEMO_PASSWORD,
         });
-        if (signUpError && !signUpError.message.toLowerCase().includes("already"))
+        if (signUpError && !signUpError.message.toLowerCase().includes("already")) {
           throw signUpError;
+        }
         if (!data?.session) {
-          signInError = await signInWith(DEMO_EMAIL, DEMO_PASSWORD);
+          signInError = await signInWithEmail(DEMO_EMAIL, DEMO_PASSWORD);
           if (signInError) throw signInError;
         }
       }
@@ -179,23 +239,21 @@ function AuthPage() {
         <div className="mt-6 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-sm">
           <button
             type="button"
-            onClick={() => {
-              setMode("signin");
-              setError("");
-            }}
-            className={`rounded-md py-2 font-medium transition-colors ${mode === "signin" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+            onClick={() => selectChannel("email")}
+            className={`flex items-center justify-center gap-1.5 rounded-md py-2 font-medium transition-colors ${
+              channel === "email" ? "bg-card shadow-sm" : "text-muted-foreground"
+            }`}
           >
-            تسجيل الدخول
+            <Mail className="size-4" /> البريد الإلكتروني
           </button>
           <button
             type="button"
-            onClick={() => {
-              setMode("signup");
-              setError("");
-            }}
-            className={`rounded-md py-2 font-medium transition-colors ${mode === "signup" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+            onClick={() => selectChannel("phone")}
+            className={`flex items-center justify-center gap-1.5 rounded-md py-2 font-medium transition-colors ${
+              channel === "phone" ? "bg-card shadow-sm" : "text-muted-foreground"
+            }`}
           >
-            حساب جديد
+            <MessageSquareText className="size-4" /> رقم الجوال
           </button>
         </div>
 
@@ -208,68 +266,172 @@ function AuthPage() {
           </p>
         )}
 
-        <form onSubmit={onSubmit} className="mt-5 space-y-4">
-          <div>
-            <Label htmlFor="email" className="mb-1.5 block">
-              البريد الإلكتروني
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              dir="ltr"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="password" className="mb-1.5 block">
-              كلمة المرور
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
-              required
-              minLength={6}
-              dir="ltr"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {mode === "signup" && (
-              <p className="mt-1 text-xs text-muted-foreground">6 أحرف على الأقل.</p>
-            )}
-          </div>
-          <Button type="submit" className="w-full" disabled={busy !== ""}>
-            {busy === "form" && <Loader2 className="size-4 animate-spin" />}
-            {mode === "signin" ? "دخول" : "إنشاء الحساب"}
-          </Button>
-        </form>
+        {channel === "email" ? (
+          <>
+            <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-secondary/70 p-1 text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailMode("signin");
+                  setError("");
+                }}
+                className={`rounded-md py-2 font-medium transition-colors ${
+                  emailMode === "signin" ? "bg-card shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                تسجيل الدخول
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailMode("signup");
+                  setError("");
+                }}
+                className={`rounded-md py-2 font-medium transition-colors ${
+                  emailMode === "signup" ? "bg-card shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                حساب جديد
+              </button>
+            </div>
+
+            <form onSubmit={onEmailSubmit} className="mt-5 space-y-4">
+              <div>
+                <Label htmlFor="email" className="mb-1.5 block">
+                  البريد الإلكتروني
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  dir="ltr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="password" className="mb-1.5 block">
+                  كلمة المرور
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete={emailMode === "signin" ? "current-password" : "new-password"}
+                  required
+                  minLength={6}
+                  dir="ltr"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {emailMode === "signup" && (
+                  <p className="mt-1 text-xs text-muted-foreground">6 أحرف على الأقل.</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={busy !== ""}>
+                {busy === "email" && <Loader2 className="size-4 animate-spin" />}
+                {emailMode === "signin"
+                  ? "دخول بالبريد الإلكتروني"
+                  : "إنشاء حساب بالبريد الإلكتروني"}
+              </Button>
+            </form>
+          </>
+        ) : phoneStep === "phone" ? (
+          <form onSubmit={requestPhoneCode} className="mt-5 space-y-4">
+            <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 font-medium text-foreground">
+                <ShieldCheck className="size-4 text-primary" /> دخول آمن برمز التحقق
+              </div>
+              <p className="mt-1">
+                سنرسل رمزًا من 6 أرقام إلى رقم الجوال للتحقق والدخول أو إنشاء حساب جديد.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="phone" className="mb-1.5 block">
+                رقم الجوال السعودي
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                required
+                dir="ltr"
+                placeholder="05XXXXXXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                اكتب الرقم بصيغة 05XXXXXXXX أو +9665XXXXXXXX.
+              </p>
+            </div>
+            <Button type="submit" className="w-full" disabled={busy !== ""}>
+              {busy === "phone" && <Loader2 className="size-4 animate-spin" />}
+              إرسال رمز التحقق
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={verifyPhoneCode} className="mt-5 space-y-4">
+            <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-sm text-muted-foreground">
+              تم إرسال رمز تحقق إلى{" "}
+              <span dir="ltr" className="font-semibold text-foreground">
+                {verifiedPhone}
+              </span>
+            </div>
+            <div>
+              <Label htmlFor="otp" className="mb-1.5 block">
+                رمز التحقق
+              </Label>
+              <Input
+                id="otp"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                maxLength={6}
+                dir="ltr"
+                placeholder="000000"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={busy !== ""}>
+              {busy === "verify" && <Loader2 className="size-4 animate-spin" />}
+              تحقق وتسجيل الدخول
+            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setPhoneStep("phone");
+                  setOtp("");
+                  setError("");
+                }}
+                disabled={busy !== ""}
+              >
+                <ArrowRight className="size-4" /> تعديل الرقم
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={sendPhoneCode}
+                disabled={busy !== ""}
+              >
+                إعادة الإرسال
+              </Button>
+            </div>
+          </form>
+        )}
 
         <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          أو
-          <span className="h-px flex-1 bg-border" />
+          <span className="h-px flex-1 bg-border" /> أو <span className="h-px flex-1 bg-border" />
         </div>
 
-        <div className="space-y-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={googleSignIn}
-            disabled={busy !== ""}
-          >
-            {busy === "google" && <Loader2 className="size-4 animate-spin" />}
-            المتابعة عبر Google
-          </Button>
-          <Button variant="ghost" className="w-full" onClick={demoSignIn} disabled={busy !== ""}>
-            {busy === "demo" && <Loader2 className="size-4 animate-spin" />}
-            دخول تجريبي بدون تسجيل
-          </Button>
-        </div>
-
+        <Button variant="ghost" className="w-full" onClick={demoSignIn} disabled={busy !== ""}>
+          {busy === "demo" && <Loader2 className="size-4 animate-spin" />}
+          دخول تجريبي بدون تسجيل
+        </Button>
         <p className="mt-4 text-center text-xs text-muted-foreground">
           الدخول التجريبي يفتح حساباً مشتركاً للتجربة فقط، لا تُدخل فيه بيانات طلاب حقيقية.
         </p>
