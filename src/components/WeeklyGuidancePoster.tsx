@@ -81,10 +81,10 @@ export function WeeklyGuidancePoster() {
   const posterRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [topic, setTopic] = useState<WeeklyTopic>("الانضباط");
-  const [title, setTitle] = useState("الانضباط");
-  const [intro, setIntro] = useState(WEEKLY_TEMPLATES["الانضباط"].intro);
-  const [body, setBody] = useState(WEEKLY_TEMPLATES["الانضباط"].body);
-  const [reminder, setReminder] = useState(WEEKLY_TEMPLATES["الانضباط"].reminder);
+  const [title, setTitle] = useState<string>("الانضباط");
+  const [intro, setIntro] = useState<string>(WEEKLY_TEMPLATES["الانضباط"].intro);
+  const [body, setBody] = useState<string>(WEEKLY_TEMPLATES["الانضباط"].body);
+  const [reminder, setReminder] = useState<string>(WEEKLY_TEMPLATES["الانضباط"].reminder);
 
   const watermarkStyle = useMemo(
     () => ({
