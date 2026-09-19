@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Loader2, Mail, MessageSquareText, ShieldCheck } from "lucide-react";
+import { ArrowRight, KeyRound, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 import { Copyright } from "@/components/Copyright";
@@ -9,29 +9,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicAuthError } from "@/lib/auth-errors";
-import { normalizeSaudiPhone } from "@/lib/whatsapp";
 
-const DEMO_EMAIL = "demo@thaat.sa";
-const DEMO_PASSWORD = "Thaat-Demo-2026";
-
-type Channel = "email" | "phone";
-type EmailMode = "signin" | "signup";
-type PhoneStep = "phone" | "verify";
-type BusyState = "" | "email" | "phone" | "verify" | "demo";
+type ScreenMode = "signin" | "signup" | "recover" | "reset";
+type BusyState = "" | "email" | "recover" | "reset";
 
 function safeNext(value: unknown): string {
   return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : "";
 }
 
-function toSaudiE164(value: string): string {
-  const normalized = normalizeSaudiPhone(value);
-  return /^9665\d{8}$/.test(normalized) ? `+${normalized}` : "";
-}
-
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s["next"]) }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: safeNext(s["next"]),
+    reset: s["reset"] === "1",
+  }),
   beforeLoad: async ({ search }) => {
+    // A password-recovery link creates a temporary session that must stay on this
+    // page long enough for the user to choose a new password.
+    if (search.reset) return;
+
     const { data } = await supabase.auth.getUser();
     if (data.user) {
       if (search.next) throw redirect({ href: search.next });
@@ -43,7 +39,7 @@ export const Route = createFileRoute("/auth")({
       { title: "تسجيل الدخول | منصة الذات" },
       {
         name: "description",
-        content: "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو رمز الجوال.",
+        content: "تسجيل الدخول واستعادة كلمة المرور في منصة الذات للموجه الطلابي.",
       },
       { property: "og:title", content: "تسجيل الدخول | منصة الذات" },
       { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة الذات." },
@@ -56,17 +52,16 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { next } = Route.useSearch();
-  const [channel, setChannel] = useState<Channel>("email");
-  const [emailMode, setEmailMode] = useState<EmailMode>("signin");
+  const { next, reset } = Route.useSearch();
+  const [screen, setScreen] = useState<ScreenMode>(reset ? "reset" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [verifiedPhone, setVerifiedPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [phoneStep, setPhoneStep] = useState<PhoneStep>("phone");
+  const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<BusyState>("");
+  const [recoverySent, setRecoverySent] = useState(false);
+
+  const isAccountScreen = screen === "signin" || screen === "signup";
 
   function goToDashboard() {
     if (next) {
@@ -76,35 +71,26 @@ function AuthPage() {
     navigate({ to: "/dashboard", replace: true });
   }
 
-  function selectChannel(nextChannel: Channel) {
-    setChannel(nextChannel);
+  function showScreen(nextScreen: ScreenMode) {
+    setScreen(nextScreen);
     setError("");
-    if (nextChannel === "phone") {
-      setPhoneStep("phone");
-      setOtp("");
-    }
-  }
-
-  async function signInWithEmail(mail: string, pass: string) {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: mail.trim(),
-      password: pass,
-    });
-    return signInError;
+    setPassword("");
+    setConfirmation("");
+    if (nextScreen !== "recover") setRecoverySent(false);
   }
 
   async function onEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setBusy("email");
+
     try {
-      if (emailMode === "signup") {
+      if (screen === "signup") {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo:
-              window.location.origin + "/auth" + (next ? `?next=${encodeURIComponent(next)}` : ""),
+            emailRedirectTo: `${window.location.origin}/auth`,
           },
         });
         if (signUpError) throw signUpError;
@@ -115,75 +101,18 @@ function AuthPage() {
           return;
         }
 
-        toast.info("تم إنشاء الحساب. فعّله عبر الرابط المرسل إلى بريدك ثم سجّل الدخول.");
-        setEmailMode("signin");
+        toast.success("تم إنشاء الحساب. تحقق من بريدك لتأكيده ثم سجّل الدخول.");
+        showScreen("signin");
         return;
       }
 
-      const signInError = await signInWithEmail(email, password);
-      if (signInError) throw signInError;
-      toast.success("مرحباً بك");
-      goToDashboard();
-    } catch (err) {
-      const message = arabicAuthError((err as Error).message);
-      setError(message);
-      toast.error(message);
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function sendPhoneCode() {
-    setError("");
-    const e164 = toSaudiE164(phone);
-    if (!e164) {
-      const message = "أدخل رقم جوال سعودي صحيحًا، مثل 05XXXXXXXX أو +9665XXXXXXXX.";
-      setError(message);
-      toast.error(message);
-      return;
-    }
-
-    setBusy("phone");
-    try {
-      const { error: otpError } = await supabase.auth.signInWithOtp({ phone: e164 });
-      if (otpError) throw otpError;
-      setVerifiedPhone(e164);
-      setPhoneStep("verify");
-      toast.success("تم إرسال رمز التحقق برسالة نصية إلى جوالك.");
-    } catch (err) {
-      const message = arabicAuthError((err as Error).message);
-      setError(message);
-      toast.error(message);
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function requestPhoneCode(e: React.FormEvent) {
-    e.preventDefault();
-    await sendPhoneCode();
-  }
-
-  async function verifyPhoneCode(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    const token = otp.replace(/\D/g, "");
-    if (token.length < 6) {
-      const message = "أدخل رمز التحقق المكوّن من 6 أرقام.";
-      setError(message);
-      toast.error(message);
-      return;
-    }
-
-    setBusy("verify");
-    try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        phone: verifiedPhone,
-        token,
-        type: "sms",
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
-      if (verifyError) throw verifyError;
-      toast.success("تم التحقق من رقم الجوال وتسجيل الدخول.");
+      if (signInError) throw signInError;
+
+      toast.success("مرحباً بك في منصة الذات");
       goToDashboard();
     } catch (err) {
       const message = arabicAuthError((err as Error).message);
@@ -194,26 +123,58 @@ function AuthPage() {
     }
   }
 
-  async function demoSignIn() {
+  async function sendRecoveryEmail(e: React.FormEvent) {
+    e.preventDefault();
     setError("");
-    setBusy("demo");
+    setBusy("recover");
+
     try {
-      let signInError = await signInWithEmail(DEMO_EMAIL, DEMO_PASSWORD);
-      if (signInError) {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: DEMO_EMAIL,
-          password: DEMO_PASSWORD,
-        });
-        if (signUpError && !signUpError.message.toLowerCase().includes("already")) {
-          throw signUpError;
-        }
-        if (!data?.session) {
-          signInError = await signInWithEmail(DEMO_EMAIL, DEMO_PASSWORD);
-          if (signInError) throw signInError;
-        }
+      const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth?reset=1`,
+      });
+      if (recoveryError) throw recoveryError;
+
+      // The neutral wording avoids revealing whether a particular email has an account.
+      setRecoverySent(true);
+      toast.success("تم إرسال تعليمات الاستعادة إذا كان البريد مسجلاً في المنصة.");
+    } catch (err) {
+      const message = arabicAuthError((err as Error).message);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function setNewPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (password.length < 8) {
+      const message = "استخدم كلمة مرور من 8 أحرف على الأقل.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
+    if (password !== confirmation) {
+      const message = "تأكيد كلمة المرور لا يطابق كلمة المرور الجديدة.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
+
+    setBusy("reset");
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("recovery session missing");
       }
-      toast.success("تم الدخول بالحساب التجريبي");
-      goToDashboard();
+
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
+
+      toast.success("تم تحديث كلمة المرور بنجاح.");
+      navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       const message = arabicAuthError((err as Error).message);
       setError(message);
@@ -236,59 +197,32 @@ function AuthPage() {
           <p className="mt-1 text-sm text-muted-foreground">منصة الموجه الطلابي</p>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => selectChannel("email")}
-            className={`flex items-center justify-center gap-1.5 rounded-md py-2 font-medium transition-colors ${
-              channel === "email" ? "bg-card shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            <Mail className="size-4" /> البريد الإلكتروني
-          </button>
-          <button
-            type="button"
-            onClick={() => selectChannel("phone")}
-            className={`flex items-center justify-center gap-1.5 rounded-md py-2 font-medium transition-colors ${
-              channel === "phone" ? "bg-card shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            <MessageSquareText className="size-4" /> رقم الجوال
-          </button>
-        </div>
-
         {error && (
           <p
             role="alert"
-            className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
             {error}
           </p>
         )}
 
-        {channel === "email" ? (
+        {isAccountScreen && (
           <>
-            <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-secondary/70 p-1 text-sm">
+            <div className="mt-6 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-sm">
               <button
                 type="button"
-                onClick={() => {
-                  setEmailMode("signin");
-                  setError("");
-                }}
+                onClick={() => showScreen("signin")}
                 className={`rounded-md py-2 font-medium transition-colors ${
-                  emailMode === "signin" ? "bg-card shadow-sm" : "text-muted-foreground"
+                  screen === "signin" ? "bg-card shadow-sm" : "text-muted-foreground"
                 }`}
               >
                 تسجيل الدخول
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setEmailMode("signup");
-                  setError("");
-                }}
+                onClick={() => showScreen("signup")}
                 className={`rounded-md py-2 font-medium transition-colors ${
-                  emailMode === "signup" ? "bg-card shadow-sm" : "text-muted-foreground"
+                  screen === "signup" ? "bg-card shadow-sm" : "text-muted-foreground"
                 }`}
               >
                 حساب جديد
@@ -311,130 +245,144 @@ function AuthPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="password" className="mb-1.5 block">
-                  كلمة المرور
-                </Label>
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <Label htmlFor="password">كلمة المرور</Label>
+                  {screen === "signin" && (
+                    <button
+                      type="button"
+                      onClick={() => showScreen("recover")}
+                      className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      نسيت كلمة المرور؟
+                    </button>
+                  )}
+                </div>
                 <Input
                   id="password"
                   type="password"
-                  autoComplete={emailMode === "signin" ? "current-password" : "new-password"}
+                  autoComplete={screen === "signin" ? "current-password" : "new-password"}
                   required
-                  minLength={6}
+                  minLength={screen === "signup" ? 8 : 6}
                   dir="ltr"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                {emailMode === "signup" && (
-                  <p className="mt-1 text-xs text-muted-foreground">6 أحرف على الأقل.</p>
+                {screen === "signup" && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    استخدم 8 أحرف على الأقل لحماية حسابك.
+                  </p>
                 )}
               </div>
               <Button type="submit" className="w-full" disabled={busy !== ""}>
                 {busy === "email" && <Loader2 className="size-4 animate-spin" />}
-                {emailMode === "signin"
-                  ? "دخول بالبريد الإلكتروني"
-                  : "إنشاء حساب بالبريد الإلكتروني"}
+                {screen === "signin" ? "دخول بالبريد الإلكتروني" : "إنشاء حساب بالبريد الإلكتروني"}
               </Button>
             </form>
           </>
-        ) : phoneStep === "phone" ? (
-          <form onSubmit={requestPhoneCode} className="mt-5 space-y-4">
-            <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2 font-medium text-foreground">
-                <ShieldCheck className="size-4 text-primary" /> دخول آمن برمز التحقق
-              </div>
-              <p className="mt-1">
-                سنرسل رمزًا من 6 أرقام إلى رقم الجوال للتحقق والدخول أو إنشاء حساب جديد.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="phone" className="mb-1.5 block">
-                رقم الجوال السعودي
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                required
-                dir="ltr"
-                placeholder="05XXXXXXXX"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                اكتب الرقم بصيغة 05XXXXXXXX أو +9665XXXXXXXX.
-              </p>
-            </div>
-            <Button type="submit" className="w-full" disabled={busy !== ""}>
-              {busy === "phone" && <Loader2 className="size-4 animate-spin" />}
-              إرسال رمز التحقق
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={verifyPhoneCode} className="mt-5 space-y-4">
-            <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-sm text-muted-foreground">
-              تم إرسال رمز تحقق إلى{" "}
-              <span dir="ltr" className="font-semibold text-foreground">
-                {verifiedPhone}
-              </span>
-            </div>
-            <div>
-              <Label htmlFor="otp" className="mb-1.5 block">
-                رمز التحقق
-              </Label>
-              <Input
-                id="otp"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                required
-                maxLength={6}
-                dir="ltr"
-                placeholder="000000"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={busy !== ""}>
-              {busy === "verify" && <Loader2 className="size-4 animate-spin" />}
-              تحقق وتسجيل الدخول
-            </Button>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setPhoneStep("phone");
-                  setOtp("");
-                  setError("");
-                }}
-                disabled={busy !== ""}
-              >
-                <ArrowRight className="size-4" /> تعديل الرقم
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={sendPhoneCode}
-                disabled={busy !== ""}
-              >
-                إعادة الإرسال
-              </Button>
-            </div>
-          </form>
         )}
 
-        <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" /> أو <span className="h-px flex-1 bg-border" />
-        </div>
+        {screen === "recover" && (
+          <>
+            <div className="mt-6 rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <KeyRound className="size-4 text-primary" /> استعادة كلمة المرور
+              </div>
+              <p className="mt-1">
+                أدخل بريدك الإلكتروني وسنرسل رابطًا آمنًا لاختيار كلمة مرور جديدة.
+              </p>
+            </div>
+            <form onSubmit={sendRecoveryEmail} className="mt-5 space-y-4">
+              <div>
+                <Label htmlFor="recovery-email" className="mb-1.5 block">
+                  البريد الإلكتروني
+                </Label>
+                <Input
+                  id="recovery-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  dir="ltr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={busy !== "" || recoverySent}>
+                {busy === "recover" && <Loader2 className="size-4 animate-spin" />}
+                {recoverySent ? "تم إرسال الرابط" : "إرسال رابط الاستعادة"}
+              </Button>
+            </form>
+            {recoverySent && (
+              <p className="mt-3 rounded-lg bg-secondary px-3 py-2 text-center text-sm text-muted-foreground">
+                تفقد البريد الوارد والبريد غير الهام، ثم افتح الرابط من نفس المتصفح.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => showScreen("signin")}
+              className="mt-5 flex w-full items-center justify-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              <ArrowRight className="size-4" /> العودة إلى تسجيل الدخول
+            </button>
+          </>
+        )}
 
-        <Button variant="ghost" className="w-full" onClick={demoSignIn} disabled={busy !== ""}>
-          {busy === "demo" && <Loader2 className="size-4 animate-spin" />}
-          دخول تجريبي بدون تسجيل
-        </Button>
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          الدخول التجريبي يفتح حساباً مشتركاً للتجربة فقط، لا تُدخل فيه بيانات طلاب حقيقية.
-        </p>
+        {screen === "reset" && (
+          <>
+            <div className="mt-6 rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <KeyRound className="size-4 text-primary" /> تعيين كلمة مرور جديدة
+              </div>
+              <p className="mt-1">اختر كلمة مرور جديدة لا تقل عن 8 أحرف، ثم أكمل الدخول.</p>
+            </div>
+            <form onSubmit={setNewPassword} className="mt-5 space-y-4">
+              <div>
+                <Label htmlFor="new-password" className="mb-1.5 block">
+                  كلمة المرور الجديدة
+                </Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  dir="ltr"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="password-confirmation" className="mb-1.5 block">
+                  تأكيد كلمة المرور الجديدة
+                </Label>
+                <Input
+                  id="password-confirmation"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  dir="ltr"
+                  value={confirmation}
+                  onChange={(e) => setConfirmation(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={busy !== ""}>
+                {busy === "reset" && <Loader2 className="size-4 animate-spin" />}
+                حفظ كلمة المرور والدخول
+              </Button>
+            </form>
+            <button
+              type="button"
+              onClick={() => window.location.assign("/auth")}
+              className="mt-5 flex w-full items-center justify-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              <ArrowRight className="size-4" /> طلب رابط استعادة جديد
+            </button>
+          </>
+        )}
+
+        <div className="mt-6 border-t pt-4 text-center text-xs text-muted-foreground">
+          الدخول متاح بالبريد الإلكتروني وكلمة المرور فقط لضمان استقرار الخدمة.
+        </div>
       </div>
       <Copyright className="mt-6" />
     </div>
