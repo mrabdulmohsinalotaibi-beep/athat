@@ -15,6 +15,7 @@ import {
   Send,
   Square,
   Star,
+  Trash2,
   UserCog,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -209,6 +210,21 @@ export default function MessagesDashboard() {
       },
       "تم حفظ الرد والإجراء",
     );
+  }
+
+  // دالة الحذف الجديدة المضافة
+  async function deleteMessage(id: string) {
+    if (!window.confirm("هل أنت متأكد من حذف هذه المشاركة نهائياً؟")) return;
+    
+    const { error } = await (supabase as any).from("feedback_messages").delete().eq("id", id);
+    if (error) {
+      toast.error(`تعذّر حذف الرسالة: ${error.message}`);
+      return;
+    }
+    
+    await queryClient.invalidateQueries({ queryKey: ["feedback_messages"] });
+    setSelectedIds((current) => current.filter((selectedId) => selectedId !== id));
+    toast.success("تم حذف المشاركة بنجاح");
   }
 
   async function copyLink() {
@@ -632,6 +648,16 @@ export default function MessagesDashboard() {
                           disabled={!selectedIds.includes(item.id)}
                         >
                           <Printer className="size-4" />
+                        </Button>
+                        {/* زر الحذف المضاف */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                          onClick={() => void deleteMessage(item.id)}
+                          title="حذف المشاركة"
+                        >
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                       <details className="mt-2 min-w-56 text-xs">
