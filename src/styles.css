@@ -1,4 +1,4 @@
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
 @import "@fontsource-variable/cairo";
@@ -7,6 +7,7 @@
 
 @theme inline {
   --font-sans: "Cairo Variable", system-ui, sans-serif;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -14,6 +15,7 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -33,7 +35,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -62,7 +63,9 @@
 }
 
 :root {
+  color-scheme: light;
   --radius: 0.5rem;
+
   --background: oklch(0.97837 0.001065 197.1387);
   --foreground: oklch(0.2 0.008 25);
   --card: oklch(1 0 0);
@@ -105,6 +108,7 @@
 }
 
 :root[data-theme="royal"] {
+  color-scheme: dark;
   --primary: oklch(0.36 0.095 255);
   --accent: oklch(0.93 0.025 250);
   --accent-foreground: oklch(0.36 0.095 255);
@@ -124,6 +128,7 @@
 }
 
 :root[data-theme="sage"] {
+  color-scheme: dark;
   --primary: oklch(0.43 0.09 158);
   --accent: oklch(0.93 0.035 150);
   --accent-foreground: oklch(0.34 0.075 158);
@@ -143,6 +148,7 @@
 }
 
 :root[data-theme="amber"] {
+  color-scheme: dark;
   --primary: oklch(0.52 0.12 65);
   --accent: oklch(0.94 0.04 78);
   --accent-foreground: oklch(0.39 0.085 58);
@@ -162,7 +168,7 @@
 }
 
 .dark {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 @layer base {
@@ -170,13 +176,19 @@
     border-color: var(--color-border);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
+    min-height: 100vh;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     letter-spacing: 0;
     background-image: none;
     overflow-x: hidden;
+    text-rendering: optimizeLegibility;
   }
 
   h1,
@@ -281,14 +293,17 @@
     size: A4 portrait;
     margin: 10mm;
   }
+
   .no-print {
     display: none !important;
   }
+
   body {
     background: #fff;
     background-image: none;
     font-size: 11pt;
   }
+
   .print-area {
     background: #fff !important;
     color: #252124 !important;
@@ -296,35 +311,43 @@
     border: none !important;
     padding: 0 !important;
   }
+
   .print-area table {
     width: 100% !important;
     font-size: 9.5pt;
   }
+
   .print-area th,
   .print-area td {
     vertical-align: top;
     padding: 2.4mm !important;
   }
+
   .print-area thead tr,
   .print-area .report-summary {
     background: #f3f4f6 !important;
   }
+
   .print-area th,
   .print-area td {
     border-color: #b8bcc2 !important;
   }
+
   .official-letterhead {
     margin-inline: 2mm;
   }
+
   .official-letterhead h2 {
     font-size: 15pt;
   }
+
   .print-area section,
   .print-area tr,
   .report-signatures,
   .report-summary {
     break-inside: avoid;
   }
+
   .print-area .break-before-page {
     break-before: page;
   }
@@ -335,6 +358,7 @@
   body:has(.single-print-sheet) [data-state="open"].fixed.inset-0 {
     display: none !important;
   }
+
   .single-print-sheet {
     position: static !important;
     inset: auto !important;
