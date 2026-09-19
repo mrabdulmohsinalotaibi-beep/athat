@@ -6,13 +6,18 @@ export function arabicAuthError(message: string): string {
   if (m.includes("email not confirmed")) return "لم يتم تأكيد البريد الإلكتروني بعد. تفقّد بريدك.";
   if (m.includes("user already registered") || m.includes("already been registered"))
     return "هذا البريد مسجّل مسبقاً. استخدم تسجيل الدخول بدلاً من إنشاء حساب.";
-  if (m.includes("password should be at least")) return "كلمة المرور قصيرة جداً، استخدم 6 أحرف على الأقل.";
-  if (m.includes("unable to validate email") || m.includes("invalid email")) return "صيغة البريد الإلكتروني غير صحيحة.";
-  if (m.includes("rate limit") || m.includes("too many")) return "تم تجاوز عدد المحاولات المسموح، حاول بعد قليل.";
+  if (m.includes("password should be at least"))
+    return "كلمة المرور قصيرة جداً، استخدم 6 أحرف على الأقل.";
+  if (m.includes("unable to validate email") || m.includes("invalid email"))
+    return "صيغة البريد الإلكتروني غير صحيحة.";
+  if (m.includes("rate limit") || m.includes("too many"))
+    return "تم تجاوز عدد المحاولات المسموح، حاول بعد قليل.";
   if (m.includes("signups not allowed") || m.includes("signup is disabled"))
     return "تسجيل الحسابات الجديدة غير متاح حالياً.";
   if (m.includes("provider is not enabled") || m.includes("unsupported provider"))
-    return "طريقة تسجيل الدخول هذه غير مفعلة حالياً.";
+    return "تسجيل الدخول عبر Google غير مفعّل بعد. يجب إضافة بيانات Google OAuth في إعدادات Supabase.";
+  if (m.includes("missing oauth secret"))
+    return "تسجيل الدخول عبر Google غير مكتمل الإعداد. أضف Google Client ID وClient Secret في Supabase.";
   if (m.includes("network") || m.includes("failed to fetch"))
     return "تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مجدداً.";
   if (m.includes("weak password")) return "كلمة المرور ضعيفة، اختر كلمة أقوى.";

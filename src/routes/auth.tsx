@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { arabicAuthError } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,14 +119,16 @@ function AuthPage() {
     setError("");
     setBusy("google");
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: next
-          ? window.location.origin + "/auth?next=" + encodeURIComponent(next)
-          : window.location.origin,
+      // The Lovable OAuth broker only exists on Lovable-hosted URLs. Using
+      // Supabase directly keeps Google login functional on athat.app.
+      const redirectTo = next
+        ? `${window.location.origin}/auth?next=${encodeURIComponent(next)}`
+        : `${window.location.origin}/auth`;
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
       });
-      if (result.error) throw result.error;
-      if (result.redirected) return;
-      goToDashboard();
+      if (oauthError) throw oauthError;
     } catch (err) {
       const message = arabicAuthError((err as Error).message ?? "");
       setError(message);
