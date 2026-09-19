@@ -9,7 +9,6 @@ import { arabicAuthError } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import platformLogo from "@/assets/althaat-logo.png.asset.json";
 import { Copyright } from "@/components/Copyright";
 
 const DEMO_EMAIL = "demo@thaat.sa";
@@ -34,7 +33,8 @@ export const Route = createFileRoute("/auth")({
       { title: "تسجيل الدخول | منصة الذات" },
       {
         name: "description",
-        content: "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو حساب Google أو جرّب الحساب التجريبي.",
+        content:
+          "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو حساب Google أو جرّب الحساب التجريبي.",
       },
       { property: "og:title", content: "تسجيل الدخول | منصة الذات" },
       { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة الذات." },
@@ -169,7 +169,11 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-secondary/40 px-4 py-8">
       <div className="w-full max-w-md rounded-2xl border bg-card p-5 shadow-sm sm:p-8">
         <div className="text-center">
-          <img src={platformLogo.url} alt="شعار منصة الذات" className="mx-auto size-24 object-contain" />
+          <img
+            src="/IMG_3331.png"
+            alt="شعار منصة الذات"
+            className="mx-auto size-24 object-contain"
+          />
           <p className="mt-2 text-3xl font-extrabold text-primary">الذات</p>
           <p className="mt-1 text-sm text-muted-foreground">منصة الموجه الطلابي</p>
         </div>
@@ -252,7 +256,12 @@ function AuthPage() {
         </div>
 
         <div className="space-y-2">
-          <Button variant="outline" className="w-full" onClick={googleSignIn} disabled={busy !== ""}>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={googleSignIn}
+            disabled={busy !== ""}
+          >
             {busy === "google" && <Loader2 className="size-4 animate-spin" />}
             المتابعة بحساب Google
           </Button>
