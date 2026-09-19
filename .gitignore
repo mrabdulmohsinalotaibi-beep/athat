@@ -20,6 +20,9 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Local environment configuration — use .env.example as the committed template.
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
