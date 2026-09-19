@@ -124,11 +124,16 @@ function AuthPage() {
       const redirectTo = next
         ? `${window.location.origin}/auth?next=${encodeURIComponent(next)}`
         : `${window.location.origin}/auth`;
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      // Request the authorization URL first without navigating. This keeps an
+      // incomplete Google provider configuration from sending the user to a
+      // raw backend error page.
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: { redirectTo, skipBrowserRedirect: true },
       });
       if (oauthError) throw oauthError;
+      if (!data.url) throw new Error("تعذّر بدء تسجيل الدخول عبر Google.");
+      window.location.assign(data.url);
     } catch (err) {
       const message = arabicAuthError((err as Error).message ?? "");
       setError(message);
