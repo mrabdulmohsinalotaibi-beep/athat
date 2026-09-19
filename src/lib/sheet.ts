@@ -28,14 +28,14 @@ export function exportToExcel(
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   worksheet["!dir"] = "rtl";
-  worksheet["!autofilter"] = data.length
-    ? {
-        ref: XLSX.utils.encode_range({
-          s: { r: 0, c: 0 },
-          e: { r: data.length, c: Math.max(fields.length - 1, 0) },
-        }),
-      }
-    : undefined;
+  if (data.length) {
+    worksheet["!autofilter"] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: data.length, c: Math.max(fields.length - 1, 0) },
+      }),
+    };
+  }
 
   const headers = fields.map((field) => field.label);
   worksheet["!cols"] = headers.map((header) => {

@@ -33,7 +33,7 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو حساب Google أو جرّب الحساب التجريبي.",
+          "سجّل الدخول إلى منصة الذات للموجه الطلابي بالبريد الإلكتروني أو جرّب الحساب التجريبي.",
       },
       { property: "og:title", content: "تسجيل الدخول | منصة الذات" },
       { property: "og:description", content: "الدخول إلى سجلات الموجه الطلابي في منصة الذات." },
@@ -51,7 +51,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState<"" | "form" | "google" | "demo">("");
+  const [busy, setBusy] = useState<"" | "form" | "demo">("");
 
   function goToDashboard() {
     if (next) {
@@ -108,34 +108,6 @@ function AuthPage() {
       goToDashboard();
     } catch (err) {
       const message = arabicAuthError((err as Error).message);
-      setError(message);
-      toast.error(message);
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function googleSignIn() {
-    setError("");
-    setBusy("google");
-    try {
-      // The Lovable OAuth broker only exists on Lovable-hosted URLs. Using
-      // Supabase directly keeps Google login functional on athat.app.
-      const redirectTo = next
-        ? `${window.location.origin}/auth?next=${encodeURIComponent(next)}`
-        : `${window.location.origin}/auth`;
-      // Request the authorization URL first without navigating. This keeps an
-      // incomplete Google provider configuration from sending the user to a
-      // raw backend error page.
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo, skipBrowserRedirect: true },
-      });
-      if (oauthError) throw oauthError;
-      if (!data.url) throw new Error("تعذّر بدء تسجيل الدخول عبر Google.");
-      window.location.assign(data.url);
-    } catch (err) {
-      const message = arabicAuthError((err as Error).message ?? "");
       setError(message);
       toast.error(message);
     } finally {
@@ -262,15 +234,6 @@ function AuthPage() {
         </div>
 
         <div className="space-y-2">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={googleSignIn}
-            disabled={busy !== ""}
-          >
-            {busy === "google" && <Loader2 className="size-4 animate-spin" />}
-            المتابعة بحساب Google
-          </Button>
           <Button variant="ghost" className="w-full" onClick={demoSignIn} disabled={busy !== ""}>
             {busy === "demo" && <Loader2 className="size-4 animate-spin" />}
             دخول تجريبي بدون تسجيل
