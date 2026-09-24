@@ -201,7 +201,7 @@ export function RecordPage({
         });
       // Preserve a stable relationship for new student-linked records. Legacy
       // records without this column remain visible by their old name/number.
-      if (config.key !== "students" && values.student_id) payload.student_id = values.student_id;
+      if (config.key !== "students" && values["student_id"]) payload["student_id"] = values["student_id"];
       if (values.id) {
         const { error } = await supabase
           .from(config.table as never)
@@ -588,7 +588,7 @@ export function RecordPage({
                   values[f.name] = data.get(f.name) as string;
                 });
               const selectedStudentId = data.get("student_id");
-              if (selectedStudentId) values.student_id = String(selectedStudentId);
+              if (selectedStudentId) values["student_id"] = String(selectedStudentId);
               save.mutate(values);
             }}
           >
@@ -641,7 +641,7 @@ export function RecordPage({
                         <input
                           type="hidden"
                           name="student_id"
-                          value={auto.student_id ?? String(editing?.student_id ?? "")}
+                          value={auto["student_id"] ?? String(editing?.["student_id"] ?? "")}
                           readOnly
                         />
                       </div>

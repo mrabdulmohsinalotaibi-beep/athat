@@ -82,7 +82,7 @@ export function UserProfilePage() {
 
   const displayName =
     profile?.full_name ||
-    String(user?.user_metadata?.full_name || user?.user_metadata?.name || "الموجه الطلابي");
+    String(user?.user_metadata?.["full_name"] || user?.user_metadata?.["name"] || "الموجه الطلابي");
   const avatarUrl = useMemo(() => {
     if (!profile?.avatar_path) return "";
     return supabase.storage.from("user-avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
@@ -139,7 +139,7 @@ export function UserProfilePage() {
 
       const { error: profileError } = await (supabase as any).from("user_profiles").upsert({
         id: user.id,
-        full_name: profile?.full_name || String(user.user_metadata?.full_name || "") || null,
+        full_name: profile?.full_name || String(user.user_metadata?.["full_name"] || "") || null,
         avatar_path: path,
       });
       if (profileError) throw profileError;
