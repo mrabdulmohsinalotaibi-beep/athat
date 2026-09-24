@@ -91,8 +91,8 @@ export function StudentProfileDialog({
         ];
         const unique = new Map(merged.map((row) => [row.id, row]));
         const rows = Array.from(unique.values()).sort((a, b) => {
-          const dateA = String(a[section.dateField] ?? a.created_at ?? "");
-          const dateB = String(b[section.dateField] ?? b.created_at ?? "");
+          const dateA = String(a[section.dateField] ?? a["created_at"] ?? "");
+          const dateB = String(b[section.dateField] ?? b["created_at"] ?? "");
           return dateB.localeCompare(dateA, "ar");
         });
 
