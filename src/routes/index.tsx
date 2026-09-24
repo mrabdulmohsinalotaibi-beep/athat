@@ -93,11 +93,31 @@ function Landing() {
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
-    const { data } = supabase.auth.onAuthStateChange((_event, session) =>
-      setSignedIn(Boolean(session)),
-    );
-    return () => data.subscription.unsubscribe();
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+
+    try {
+      void supabase.auth
+        .getSession()
+        .then(({ data }) => {
+          if (active) setSignedIn(Boolean(data.session));
+        })
+        .catch(() => {
+          if (active) setSignedIn(false);
+        });
+
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (active) setSignedIn(Boolean(session));
+      });
+      unsubscribe = () => data.subscription.unsubscribe();
+    } catch {
+      setSignedIn(false);
+    }
+
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
   }, []);
 
   const ctaTo = signedIn ? "/dashboard" : "/auth";
