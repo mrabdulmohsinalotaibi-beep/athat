@@ -31,7 +31,7 @@ function hasRecoveryCallback(): boolean {
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { next: string; reset?: boolean } => ({
     next: safeNext(s["next"]),
     reset: s["reset"] === "1" || s["recovery"] === "1",
   }),
