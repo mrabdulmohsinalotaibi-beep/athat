@@ -510,7 +510,7 @@ export default function MessagesDashboard() {
     const suggested = normalizeSaudiPhone(
       preferredContact ||
         (items.length === 1
-          ? items[0].sender_contact
+          ? (items[0]?.sender_contact ?? "")
           : ""),
     );
 
