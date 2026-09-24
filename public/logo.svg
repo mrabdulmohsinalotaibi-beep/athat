@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720" role="img" aria-labelledby="title desc">
+  <title id="title">شعار منصة الذات</title>
+  <desc id="desc">خلفية داكنة مع كلمة الذات باللون الكريمي.</desc>
+  <rect width="720" height="720" rx="32" fill="#2f2f2f"/>
+  <g fill="#f2efe9">
+    <text
+      x="360"
+      y="430"
+      text-anchor="middle"
+      direction="rtl"
+      unicode-bidi="plaintext"
+      font-size="300"
+      font-weight="800"
+      font-family="'Noto Naskh Arabic', 'Amiri', 'Tahoma', sans-serif"
+      style="letter-spacing:-18px;"
+    >الذات</text>
+  </g>
+</svg>

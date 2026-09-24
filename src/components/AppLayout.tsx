@@ -99,14 +99,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className="app-shell flex min-h-screen bg-background">
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-transform lg:static lg:translate-x-0",
+          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-transform lg:translate-x-0",
           open ? "translate-x-0" : "translate-x-full lg:translate-x-0",
         )}
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center p-0.5">
-              <img src="/IMG_3331.png" alt="شعار منصة الذات" className="size-full object-contain" />
+              <img src="/logo.svg" alt="شعار منصة الذات" className="size-full object-contain" />
             </div>
             <div>
               <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
@@ -219,7 +219,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Menu className="size-5" />
               </Button>
               <img
-                src="/IMG_3331.png"
+                src="/logo.svg"
                 alt="شعار منصة الذات"
                 className="hidden size-12 object-contain sm:block"
               />
@@ -254,3 +254,4 @@ export function AppLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+

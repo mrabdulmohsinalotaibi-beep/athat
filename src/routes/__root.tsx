@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      
+
       // --- إعدادات تحويل الموقع إلى تطبيق (PWA) ---
       { name: "theme-color", content: "#ffffff" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -94,11 +94,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
-      
+      { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
+
       // --- روابط التثبيت والأيقونات للتطبيق ---
       { rel: "manifest", href: "/manifest.json" },
-      { rel: "apple-touch-icon", href: "/IMG_3331.png" },
+      { rel: "apple-touch-icon", href: "/logo.svg" },
     ],
   }),
   shellComponent: RootShell,
@@ -150,3 +150,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
