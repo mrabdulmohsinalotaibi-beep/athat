@@ -26,6 +26,7 @@ export type Database = {
           id: string
           notes: string | null
           seq: string | null
+          student_id: string | null
           student_name: string | null
           student_no: string | null
           updated_at: string
@@ -42,6 +43,7 @@ export type Database = {
           id?: string
           notes?: string | null
           seq?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           updated_at?: string
@@ -58,12 +60,21 @@ export type Database = {
           id?: string
           notes?: string | null
           seq?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       behavior: {
         Row: {
@@ -78,6 +89,7 @@ export type Database = {
           referral_source: string | null
           result: string | null
           seq: string | null
+          student_id: string | null
           student_name: string | null
           student_no: string | null
           updated_at: string
@@ -95,6 +107,7 @@ export type Database = {
           referral_source?: string | null
           result?: string | null
           seq?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           updated_at?: string
@@ -112,12 +125,21 @@ export type Database = {
           referral_source?: string | null
           result?: string | null
           seq?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "behavior_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_events: {
         Row: {
@@ -234,6 +256,7 @@ export type Database = {
           opened_at: string | null
           priority: string | null
           referral_source: string | null
+          student_id: string | null
           student_name: string | null
           student_no: string | null
           summary: string | null
@@ -255,6 +278,7 @@ export type Database = {
           opened_at?: string | null
           priority?: string | null
           referral_source?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           summary?: string | null
@@ -276,13 +300,22 @@ export type Database = {
           opened_at?: string | null
           priority?: string | null
           referral_source?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           summary?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "counseling_cases_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       evidences: {
         Row: {
@@ -347,6 +380,63 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_messages: {
+        Row: {
+          assigned_channel: string | null
+          assigned_to: string
+          category: string
+          created_at: string
+          id: string
+          internal_notes: string | null
+          message: string
+          responded_at: string | null
+          response_note: string | null
+          satisfaction: number | null
+          sender_contact: string | null
+          sender_name: string
+          sender_role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_channel?: string | null
+          assigned_to?: string
+          category?: string
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          message: string
+          responded_at?: string | null
+          response_note?: string | null
+          satisfaction?: number | null
+          sender_contact?: string | null
+          sender_name: string
+          sender_role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          assigned_channel?: string | null
+          assigned_to?: string
+          category?: string
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          message?: string
+          responded_at?: string | null
+          response_note?: string | null
+          satisfaction?: number | null
+          sender_contact?: string | null
+          sender_name?: string
+          sender_role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       interviews: {
         Row: {
           channel: string | null
@@ -361,6 +451,7 @@ export type Database = {
           recommendations: string | null
           result: string | null
           seq: string | null
+          student_id: string | null
           student_name: string | null
           student_no: string | null
           topic: string | null
@@ -380,6 +471,7 @@ export type Database = {
           recommendations?: string | null
           result?: string | null
           seq?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           topic?: string | null
@@ -399,13 +491,22 @@ export type Database = {
           recommendations?: string | null
           result?: string | null
           seq?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           topic?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "interviews_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lookups: {
         Row: {
@@ -577,6 +678,7 @@ export type Database = {
           reply_date: string | null
           result: string | null
           status: string | null
+          student_id: string | null
           student_name: string | null
           student_no: string | null
           updated_at: string
@@ -595,6 +697,7 @@ export type Database = {
           reply_date?: string | null
           result?: string | null
           status?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           updated_at?: string
@@ -613,12 +716,21 @@ export type Database = {
           reply_date?: string | null
           result?: string | null
           status?: string | null
+          student_id?: string | null
           student_name?: string | null
           student_no?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "referrals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -680,6 +792,7 @@ export type Database = {
           logo_url: string | null
           principal_name: string | null
           principal_signature: string | null
+          public_feedback_token: string
           school_name: string | null
           semester: string | null
           theme: string
@@ -697,6 +810,7 @@ export type Database = {
           logo_url?: string | null
           principal_name?: string | null
           principal_signature?: string | null
+          public_feedback_token?: string
           school_name?: string | null
           semester?: string | null
           theme?: string
@@ -714,6 +828,7 @@ export type Database = {
           logo_url?: string | null
           principal_name?: string | null
           principal_signature?: string | null
+          public_feedback_token?: string
           school_name?: string | null
           semester?: string | null
           theme?: string
@@ -821,12 +936,59 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          avatar_path: string | null
+          bio: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          job_title: string
+          phone: string | null
+          school_role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_path?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          job_title?: string
+          phone?: string | null
+          school_role?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_path?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          job_title?: string
+          phone?: string | null
+          school_role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      submit_public_feedback: {
+        Args: {
+          p_category: string
+          p_message: string
+          p_satisfaction: number
+          p_sender_contact: string
+          p_sender_name: string
+          p_sender_role: string
+          p_token: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
