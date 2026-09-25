@@ -44,7 +44,7 @@ import { GuidanceTemplates } from "@/components/GuidanceTemplates";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "لوحة التحكم | منصة الذات" },
+      { title: "لوحة التحكم | ذات | THAT" },
       { name: "description", content: "مؤشرات وإحصائيات أعمال الموجه الطلابي والتنبيهات العاجلة." },
       { property: "og:title", content: "لوحة التحكم | منصة الذات" },
       {
@@ -108,7 +108,13 @@ function useDashboard() {
   });
 }
 
-const COLORS = ["#7f1d1d", "#b45309", "#0f766e", "#9f1239", "#475569"];
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 function Dashboard() {
   const { data: school } = useSchool();
@@ -453,7 +459,7 @@ function Dashboard() {
                   label
                 >
                   {domainData.map((entry, index) => (
-                    <Cell key={entry.name} fill={COLORS[index % COLORS.length] ?? "#6366f1"} />
+                    <Cell key={entry.name} fill={COLORS[index % COLORS.length] ?? "var(--chart-1)"} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -476,7 +482,7 @@ function Dashboard() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#7f1d1d" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="value" fill="var(--chart-3)" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

@@ -5,7 +5,7 @@ import { PublicFeedback } from "@/components/PublicFeedback";
 export const Route = createFileRoute("/feedback/$token")({
   head: () => ({
     meta: [
-      { title: "نموذج الآراء والرسائل | منصة الذات" },
+      { title: "نموذج الآراء والرسائل | ذات | THAT" },
       { name: "description", content: "نموذج آمن لمشاركة الآراء والمقترحات مع الموجه الطلابي." },
     ],
   }),

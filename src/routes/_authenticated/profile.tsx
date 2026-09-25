@@ -5,7 +5,7 @@ import { UserProfilePage } from "@/components/UserProfilePage";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "حسابي | منصة الذات" },
+      { title: "حسابي | ذات | THAT" },
       { name: "description", content: "إدارة الملف الشخصي وكلمة المرور في منصة الذات." },
     ],
   }),

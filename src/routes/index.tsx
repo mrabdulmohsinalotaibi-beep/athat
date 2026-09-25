@@ -21,13 +21,13 @@ import { Copyright } from "@/components/Copyright";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "الذات | المنصة الرقمية للموجه الطلابي" },
+      { title: "ذات | THAT — المنصة الرقمية للموجه الطلابي" },
       {
         name: "description",
         content:
           "الذات منصة متكاملة لإدارة أعمال وسجلات الموجه الطلابي: متابعة الحالات الإرشادية، الخطة التشغيلية، المقابلات، المواظبة والسلوك، مع استخراج تقارير رسمية وشواهد منظمة.",
       },
-      { property: "og:title", content: "الذات | المنصة الرقمية للموجه الطلابي" },
+      { property: "og:title", content: "ذات | THAT — المنصة الرقمية للموجه الطلابي" },
       {
         property: "og:description",
         content: "منصة إلكترونية ذكية لتسهيل أعمال الموجه الطلابي واستخراج التقارير الرسمية بنقرة زر.",
@@ -40,12 +40,17 @@ export const Route = createFileRoute("/")({
     links: [
       {
         rel: "icon",
+        type: "image/x-icon",
+        href: "/favicon.ico",
+      },
+      {
+        rel: "icon",
         type: "image/png",
-        href: "/brand-logo.png",
+        href: "/favicon.png",
       },
       {
         rel: "apple-touch-icon",
-        href: "/brand-logo.png",
+        href: "/apple-touch-icon.png",
       },
     ],
   }),
@@ -134,11 +139,11 @@ function Landing() {
           <div className="flex items-center gap-3">
             <img 
               src="/brand-logo.png"
-              alt="شعار منصة الذات" 
+              alt="شعار ذات | THAT" 
               className="size-11 object-contain transition-transform hover:scale-105" 
             />
             <div>
-              <p className="text-xl font-black tracking-tight text-primary sm:text-2xl">الذات</p>
+               <p className="text-xl font-black tracking-tight text-primary sm:text-2xl">ذات | THAT</p>
               <p className="text-[10px] font-medium text-muted-foreground sm:text-xs">منصة الموجه الطلابي</p>
             </div>
           </div>

@@ -10,14 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignaturePad } from "@/components/SignaturePad";
-import { ThemePicker } from "@/components/ThemePicker";
-import { useTheme } from "@/lib/theme";
 import { LOOKUP_CATEGORIES, lookupCategoryLabel } from "@/lib/lookups";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "الإعدادات | منصة الذات" },
+      { title: "الإعدادات | ذات | THAT" },
       { name: "description", content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة الذات." },
       { property: "og:title", content: "الإعدادات | منصة الذات" },
       { property: "og:description", content: "بيانات المدرسة والعام الدراسي والقوائم المرجعية." },
@@ -43,22 +41,12 @@ function SettingsPage() {
   const [counselorSignature, setCounselorSignature] = useState<string | null>(null);
   const [principalSignature, setPrincipalSignature] = useState<string | null>(null);
   const [editingLookup, setEditingLookup] = useState<{ id: string; value: string } | null>(null);
-  const { theme } = useTheme();
-
-  async function persistTheme(nextTheme: "thaat" | "royal" | "sage" | "amber") {
-    if (!school?.id) return;
-    const { error } = await supabase.from("school_settings").update({ theme: nextTheme }).eq("id", school.id);
-    if (error) toast.error("تعذّر حفظ الثيم");
-    else queryClient.invalidateQueries({ queryKey: ["school_settings"] });
-  }
-
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
       const payload = {
         ...values,
-        theme,
-        show_counselor_on_documents: values.show_counselor_on_documents !== "false",
-        show_principal_on_documents: values.show_principal_on_documents !== "false",
+        show_counselor_on_documents: values["show_counselor_on_documents"] !== "false",
+        show_principal_on_documents: values["show_principal_on_documents"] !== "false",
         counselor_signature: counselorSignature ?? school?.counselor_signature ?? null,
         principal_signature: principalSignature ?? school?.principal_signature ?? null,
       };
@@ -131,12 +119,6 @@ function SettingsPage() {
       <h1 className="text-2xl font-extrabold">الإعدادات</h1>
 
       <section className="rounded-xl border bg-card p-5 shadow-sm">
-        <h2 className="mb-1 font-bold">ألوان المنصة</h2>
-        <p className="mb-4 text-xs text-muted-foreground">اختر اللوحة الأنسب لك؛ يتغير المظهر فوراً ويُحفظ مع بيانات المدرسة.</p>
-        <ThemePicker onChange={persistTheme} />
-      </section>
-
-      <section className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-4 font-bold">بيانات المدرسة والموجه</h2>
         <form
           className="grid gap-4 sm:grid-cols-2"
@@ -147,8 +129,8 @@ function SettingsPage() {
             SCHOOL_FIELDS.forEach((f) => {
               values[f.name] = String(data.get(f.name) ?? "");
             });
-            values.show_counselor_on_documents = data.get("show_counselor_on_documents") ? "true" : "false";
-            values.show_principal_on_documents = data.get("show_principal_on_documents") ? "true" : "false";
+            values["show_counselor_on_documents"] = data.get("show_counselor_on_documents") ? "true" : "false";
+            values["show_principal_on_documents"] = data.get("show_principal_on_documents") ? "true" : "false";
             saveSchool.mutate(values);
           }}
         >

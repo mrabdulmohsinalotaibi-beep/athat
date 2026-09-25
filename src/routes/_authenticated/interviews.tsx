@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/interviews")({
   head: () => ({
     meta: [
-      { title: "المقابلات والتواصل | منصة الذات" },
+      { title: "المقابلات والتواصل | ذات | THAT" },
       { name: "description", content: "مقابلات الطلاب وأولياء الأمور والمعلمين ونتائجها." },
       { property: "og:title", content: "المقابلات والتواصل | منصة الذات" },
       { property: "og:description", content: "مقابلات الطلاب وأولياء الأمور والمعلمين ونتائجها." },

@@ -29,7 +29,6 @@ import { useSchool } from "@/lib/school";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
-import { isAppTheme, useTheme } from "@/lib/theme";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
 const NAV = [
@@ -74,12 +73,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
     "الخطط والبرامج",
   ]);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { setTheme } = useTheme();
-
-  useEffect(() => {
-    if (school?.theme && isAppTheme(school.theme)) setTheme(school.theme);
-  }, [school?.theme, setTheme]);
-
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -107,10 +100,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center p-0.5">
-              <img src="/brand-logo.png" alt="شعار منصة الذات" className="size-full object-contain" />
+              <img src="/brand-logo.png" alt="شعار ذات | THAT" className="size-full object-contain" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
+              <p className="text-2xl font-extrabold text-sidebar-primary">ذات | THAT</p>
               <p className="mt-1 text-xs text-sidebar-foreground/70">منصة الموجه الطلابي</p>
             </div>
           </div>
@@ -221,7 +214,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Button>
               <img
                 src="/brand-logo.png"
-                alt="شعار منصة الذات"
+                alt="شعار ذات | THAT"
                 className="hidden size-12 object-contain sm:block"
               />
               <div>

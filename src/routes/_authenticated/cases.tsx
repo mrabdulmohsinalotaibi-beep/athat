@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/cases")({
   head: () => ({
     meta: [
-      { title: "الحالات الإرشادية | منصة الذات" },
+      { title: "الحالات الإرشادية | ذات | THAT" },
       { name: "description", content: "دراسة الحالة والمتابعة الفردية وخطط التدخل الإرشادي." },
       { property: "og:title", content: "الحالات الإرشادية | منصة الذات" },
       { property: "og:description", content: "دراسة الحالة والمتابعة الفردية وخطط التدخل الإرشادي." },

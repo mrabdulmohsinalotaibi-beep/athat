@@ -40,7 +40,7 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
     meta: [
-      { title: "البرامج والأنشطة | منصة الذات" },
+      { title: "البرامج والأنشطة | ذات | THAT" },
       {
         name: "description",
         content: "إنشاء وتوثيق البرامج والأنشطة الإرشادية في مستندات A4 جاهزة للطباعة.",

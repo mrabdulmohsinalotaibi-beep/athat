@@ -53,7 +53,7 @@ import {
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
-      { title: "التقارير والإحصائيات | منصة الذات" },
+      { title: "التقارير والإحصائيات | ذات | THAT" },
       {
         name: "description",
         content:
