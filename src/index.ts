@@ -10,7 +10,6 @@ export { RecordPrintDialog } from "./components/RecordPrintDialog";
 export { SignaturePad } from "./components/SignaturePad";
 export { StudentCombobox } from "./components/StudentCombobox";
 export { StudentsPage } from "./components/StudentsPage";
-export { ThemePicker } from "./components/ThemePicker";
 export { WhatsAppButton } from "./components/WhatsAppButton";
 export { 
   AlertDialog, AlertDialogPortal, AlertDialogOverlay, AlertDialogTrigger, 
@@ -34,4 +33,3 @@ export { Label } from "./components/ui/label";
 export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./components/ui/popover";
 export { Textarea } from "./components/ui/textarea";
 export { Constants } from "./integrations/supabase/types";
-export { ThemeProvider } from "./lib/theme";

@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/subscription")({
   head: () => ({ meta: [
-    { title: "الاشتراك والترقية | منصة الذات" },
+    { title: "الاشتراك والترقية | ذات | THAT" },
     { name: "description", content: "جميع الخصائص متاحة حالياً للجميع، وقريباً تفعيل نظام الاشتراكات والترقية." },
     { property: "og:title", content: "الاشتراك والترقية | منصة الذات" },
     { property: "og:description", content: "جميع خصائص منصة الذات مفتوحة للجميع مؤقتاً." },

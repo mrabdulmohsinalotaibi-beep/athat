@@ -48,7 +48,7 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول | منصة الذات" },
+      { title: "تسجيل الدخول | ذات | THAT" },
       {
         name: "description",
         content: "تسجيل الدخول واستعادة كلمة المرور في منصة الذات للموجه الطلابي.",
@@ -246,10 +246,10 @@ function AuthPage() {
         <div className="text-center">
           <img
             src="/brand-logo.png"
-            alt="شعار منصة الذات"
+             alt="شعار ذات | THAT"
             className="mx-auto size-24 object-contain"
           />
-          <p className="mt-2 text-3xl font-extrabold text-primary">الذات</p>
+           <p className="mt-2 text-3xl font-extrabold text-primary">ذات | THAT</p>
           <p className="mt-1 text-sm text-muted-foreground">منصة الموجه الطلابي</p>
         </div>
 

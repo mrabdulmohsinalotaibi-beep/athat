@@ -1,7 +1,7 @@
 {
-  "short_name": "الذات",
-  "name": "الذات - منصة الموجه الطلابي",
-  "description": "منصة متخصصة لدعم ومساعدة الموجه الطلابي في إدارة مهامه",
+  "short_name": "ذات | THAT",
+  "name": "ذات | THAT - منصة الموجه الطلابي",
+  "description": "ذات | THAT — مساحة عربية لإدارة أعمال وسجلات الموجه الطلابي",
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -14,19 +14,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/brand-logo.png",
-      "sizes": "3000x3000",
-      "type": "image/png"
     }
   ],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#008080",
+  "background_color": "#111d35",
+  "theme_color": "#111d35",
   "dir": "rtl",
   "lang": "ar"
 }

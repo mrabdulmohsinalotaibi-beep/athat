@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/attendance")({
   head: () => ({
     meta: [
-      { title: "الحضور والمواظبة | منصة الذات" },
+      { title: "الحضور والمواظبة | ذات | THAT" },
       { name: "description", content: "رصد الغياب والتأخر والإجراءات الإرشادية المتخذة." },
       { property: "og:title", content: "الحضور والمواظبة | منصة الذات" },
       { property: "og:description", content: "رصد الغياب والتأخر والإجراءات الإرشادية المتخذة." },

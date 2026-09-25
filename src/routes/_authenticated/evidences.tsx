@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/evidences")({
   head: () => ({
     meta: [
-      { title: "الشواهد والتوثيق | منصة الذات" },
+      { title: "الشواهد والتوثيق | ذات | THAT" },
       { name: "description", content: "رفع وتصفح شواهد البرامج: صور ومقاطع فيديو ومستندات مرتبطة بالأنشطة الإرشادية." },
       { property: "og:title", content: "الشواهد والتوثيق | منصة الذات" },
       {

@@ -17,7 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
 function isSupabaseConfigured(): boolean {
   return Boolean(import.meta.env["VITE_SUPABASE_URL"] && import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"]);
 }
-import { ThemeProvider } from "@/lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -62,22 +61,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "الذات | منصة الموجه الطلابي" },
+      { title: "ذات | THAT — منصة الموجه الطلابي" },
       { name: "description", content: "منصة الذات لإدارة أعمال الموجه الطلابي وسجلاته الإرشادية إلكترونياً." },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/brand-logo.png" },
       { name: "twitter:image", content: "/brand-logo.png" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#ffffff" },
+      { name: "theme-color", content: "#111d35" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "الذات" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/brand-logo.png", type: "image/png" },
+      { rel: "icon", href: "/favicon.ico" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "manifest", href: "/manifest.json" },
-      { rel: "apple-touch-icon", href: "/brand-logo.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -112,5 +112,5 @@ function RootComponent() {
     }
   }, []);
 
-  return <QueryClientProvider client={queryClient}><ThemeProvider><Outlet /><Toaster position="top-center" richColors /></ThemeProvider></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><Outlet /><Toaster position="top-center" richColors /></QueryClientProvider>;
 }
