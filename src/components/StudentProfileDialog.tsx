@@ -319,7 +319,7 @@ export function StudentProfileDialog({
                         <Icon className="size-4 text-primary" />
                         {config.title} ({rows.length})
                         <span className="text-xs font-normal text-muted-foreground flex items-center gap-1 mr-2">
-                          <ArrowDownUp className="size-3" /> مرتب أبجديّاً
+                          <ArrowDownUp className="size-3" /> الأحدث أولاً
                         </span>
                       </span>
                     </AccordionTrigger>
