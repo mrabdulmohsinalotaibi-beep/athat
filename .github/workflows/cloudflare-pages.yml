@@ -39,7 +39,7 @@ jobs:
       - name: Verify Pages output
         run: |
           # Nitro emits the Pages worker inside the .output directory.
-          test -d .output/_worker.js
+          test -f .output/_worker.js
           test -f .output/_routes.json
           test -d .output/public
           echo "Cloudflare Pages output is ready. Cloudflare Git integration publishes main automatically."
