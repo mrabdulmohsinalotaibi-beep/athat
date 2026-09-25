@@ -1,26 +1,17 @@
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import { defineConfig } from "vite";
-import viteReact from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import { nitro } from "nitro/vite";
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
-  server: {
-    host: "0.0.0.0",
-    port: 3000,
+  vite: {
+    server: {
+      host: "0.0.0.0",
+      port: 3000,
+    },
   },
-  resolve: {
-    tsconfigPaths: true,
+  tanstackStart: {
+    srcDirectory: "src",
+    server: { entry: "server" },
   },
-  plugins: [
-    tailwindcss(),
-    tanstackStart({
-      srcDirectory: "src",
-      server: { entry: "server" },
-    }),
-    viteReact(),
-    nitro({
-      preset: "cloudflare-pages",
-    }),
-  ],
+  // External Cloudflare Pages builds can still select their own preset through
+  // NITRO_PRESET. Lovable builds pin the deployable module layout automatically.
+  nitro: true,
 });
