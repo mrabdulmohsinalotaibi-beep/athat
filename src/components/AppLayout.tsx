@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { isAppTheme, useTheme } from "@/lib/theme";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 const NAV = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
@@ -231,6 +232,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <GlobalSearch />
               <div className="hidden text-xs text-muted-foreground sm:block">
                 <p>الموجه الطلابي: {school?.counselor_name || "—"}</p>
                 <p>
