@@ -57,7 +57,7 @@
   --color-theme-soft: var(--accent);
   --color-theme-thaat: #307870;
   --color-theme-royal: oklch(0.36 0.095 255);
-  --color-theme-sage: oklch(0.43 0.09 158);
+  --color-theme-sage: #7e2320;
   --color-theme-amber: oklch(0.52 0.12 65);
 
   --color-paper: var(--paper);
