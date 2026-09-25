@@ -38,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { CaseCenter } from "@/components/CaseCenter";
+import { DailyWorkLog } from "@/components/DailyWorkLog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -383,6 +384,8 @@ function Dashboard() {
       </div>
 
       <CaseCenter />
+
+      <DailyWorkLog />
 
       {/* 4. KPI Performance Meter - قسم مؤشرات الأداء */}
       <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
