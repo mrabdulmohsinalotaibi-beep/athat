@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/referrals")({
   head: () => ({
     meta: [
-      { title: "سجل الإحالات | ذات | THAT" },
+      { title: "سجل الإحالات | الذات" },
       { name: "description", content: "إحالة الطلاب إلى الجهات المختصة ومتابعة الردود." },
       { property: "og:title", content: "سجل الإحالات | منصة الذات" },
       { property: "og:description", content: "إحالة الطلاب إلى الجهات المختصة ومتابعة الردود." },

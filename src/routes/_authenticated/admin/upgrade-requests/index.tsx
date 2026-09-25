@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/admin/upgrade-requests/")({
   head: () => ({ meta: [
-    { title: "إدارة طلبات الترقية | ذات | THAT" },
+    { title: "إدارة طلبات الترقية | الذات" },
     { name: "description", content: "مراجعة وإدارة طلبات الترقية لباقة الموجه المحترف." },
   ] }),
   component: AdminUpgradeRequestsPage,

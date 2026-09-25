@@ -44,7 +44,7 @@ import { GuidanceTemplates } from "@/components/GuidanceTemplates";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "لوحة التحكم | ذات | THAT" },
+      { title: "لوحة التحكم | الذات" },
       { name: "description", content: "مؤشرات وإحصائيات أعمال الموجه الطلابي والتنبيهات العاجلة." },
       { property: "og:title", content: "لوحة التحكم | منصة الذات" },
       {

@@ -6,7 +6,7 @@ export const Route = createFileRoute("/_authenticated/weekly-poster")({
   head: () => ({
     meta: [
       {
-        title: "لوحة التوجيه الطلابي الأسبوعية | ذات | THAT",
+        title: "لوحة التوجيه الطلابي الأسبوعية | الذات",
       },
       {
         name: "description",

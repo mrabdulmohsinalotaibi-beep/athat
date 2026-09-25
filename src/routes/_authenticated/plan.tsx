@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/plan")({
   head: () => ({
     meta: [
-      { title: "الخطة التشغيلية | ذات | THAT" },
+      { title: "الخطة التشغيلية | الذات" },
       { name: "description", content: "أهداف ومهام الخطة التشغيلية للتوجيه الطلابي ومؤشرات التحقق." },
       { property: "og:title", content: "الخطة التشغيلية | منصة الذات" },
       { property: "og:description", content: "أهداف ومهام الخطة التشغيلية للتوجيه الطلابي ومؤشرات التحقق." },

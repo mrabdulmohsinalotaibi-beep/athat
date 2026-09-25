@@ -377,7 +377,7 @@ export function RecordPage({
         )}
       </div>
 
-      <div ref={printRef} className="print-area rounded-xl border bg-card p-4 shadow-sm">
+      <div className="no-print screen-only-document print-area rounded-xl border bg-card p-4 shadow-sm">
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
@@ -579,9 +579,52 @@ export function RecordPage({
             </Button>
           </div>
         )}
-        <div className="hidden print:block">
-          <OfficialFooter school={school} />
-        </div>
+      </div>
+
+      <div
+        ref={printRef}
+        data-testid="print-all-records"
+        className="print-area print-only-document rounded-xl border bg-paper p-4 text-paper-foreground shadow-sm"
+      >
+        <OfficialHeader school={school} title={config.title} />
+        <table className="mt-4 w-full text-right text-sm">
+          <thead>
+            <tr className="border-b bg-muted/60 text-xs">
+              {listFields.map((field) => (
+                <th key={field.name} className="p-2 font-bold">
+                  {field.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && (
+              <tr>
+                <td colSpan={listFields.length} className="p-6 text-center">
+                  جارٍ التحميل...
+                </td>
+              </tr>
+            )}
+            {!isLoading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={listFields.length} className="p-6 text-center">
+                  لا توجد سجلات بعد.
+                </td>
+              </tr>
+            )}
+            {!isLoading &&
+              filtered.map((row) => (
+                <tr key={row.id} className="border-b last:border-0">
+                  {listFields.map((field) => (
+                    <td key={field.name} className="p-2 align-top">
+                      {displayRecordValue(row[field.name])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+          </tbody>
+        </table>
+        <OfficialFooter school={school} />
       </div>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
