@@ -267,7 +267,7 @@ function Dashboard() {
   return (
     <div className="dashboard-shell space-y-6 dir-rtl">
       {/* 1. Hero Card - ترويسة الصفحة */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-[oklch(0.29_0.09_25)] p-6 text-primary-foreground shadow-xl shadow-primary/20 sm:p-8">
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-[#1f504b] p-6 text-primary-foreground shadow-xl shadow-primary/20 sm:p-8">
         <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
         <div className="absolute right-1/2 top-0 size-72 translate-x-1/2 rounded-full border border-amber-300/15" />

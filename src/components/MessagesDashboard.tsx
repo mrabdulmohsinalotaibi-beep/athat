@@ -613,7 +613,7 @@ export default function MessagesDashboard() {
 
   return (
     <div className="space-y-6" dir="rtl">
-      <section className="no-print rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-[oklch(0.29_0.09_25)] p-6 text-primary-foreground shadow-xl shadow-primary/15">
+      <section className="no-print rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-[#1f504b] p-6 text-primary-foreground shadow-xl shadow-primary/15">
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
             <div className="flex items-center gap-2 text-amber-200">

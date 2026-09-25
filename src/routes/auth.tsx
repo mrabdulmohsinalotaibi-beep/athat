@@ -245,7 +245,7 @@ function AuthPage() {
       <div className="w-full max-w-md rounded-2xl border bg-card p-5 shadow-sm sm:p-8">
         <div className="text-center">
           <img
-            src="/IMG_3331.png"
+            src="/brand-logo.png"
             alt="شعار منصة الذات"
             className="mx-auto size-24 object-contain"
           />

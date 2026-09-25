@@ -33,17 +33,19 @@ export const Route = createFileRoute("/")({
         content: "منصة إلكترونية ذكية لتسهيل أعمال الموجه الطلابي واستخراج التقارير الرسمية بنقرة زر.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/brand-logo.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/brand-logo.png" },
     ],
     links: [
       {
         rel: "icon",
         type: "image/png",
-        href: "/IMG_3331.png",
+        href: "/brand-logo.png",
       },
       {
         rel: "apple-touch-icon",
-        href: "/IMG_3331.png",
+        href: "/brand-logo.png",
       },
     ],
   }),
@@ -131,7 +133,7 @@ function Landing() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-8">
           <div className="flex items-center gap-3">
             <img 
-              src="/IMG_3331.png" 
+              src="/brand-logo.png"
               alt="شعار منصة الذات" 
               className="size-11 object-contain transition-transform hover:scale-105" 
             />

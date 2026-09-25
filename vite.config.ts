@@ -14,6 +14,7 @@ export default defineConfig({
     server: {
       host: "0.0.0.0",
       port: 3000,
+      allowedHosts: ["5173-ivf1p6isf8wtpgcca1e3y-4463b23e.sg2.manus.computer"],
     },
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(publicBackend.url),

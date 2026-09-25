@@ -187,7 +187,7 @@ export function UserProfilePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6" dir="rtl">
-      <section className="overflow-hidden rounded-[2rem] border border-primary/15 bg-gradient-to-l from-primary via-primary/95 to-[oklch(0.29_0.09_25)] p-6 text-primary-foreground shadow-xl shadow-primary/15 sm:p-8">
+      <section className="overflow-hidden rounded-[2rem] border border-primary/15 bg-gradient-to-l from-primary via-primary/95 to-[#1f504b] p-6 text-primary-foreground shadow-xl shadow-primary/15 sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <div className="relative self-start">
             <Avatar className="size-24 border-4 border-white/35 bg-white/15 text-2xl font-black text-white shadow-xl">

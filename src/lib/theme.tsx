@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export const THEMES = [
-  { id: "thaat", name: "العنابي (الذات)", primary: "#7E2320" },
+  { id: "thaat", name: "التركوازي (الذات)", primary: "#307870" },
   { id: "royal", name: "الكحلي الملكي", primary: "#1F3A52" },
   { id: "sage", name: "الأخضر الهادئ", primary: "#2F6B52" },
   { id: "amber", name: "العنبري الدافئ", primary: "#8A5A16" },
