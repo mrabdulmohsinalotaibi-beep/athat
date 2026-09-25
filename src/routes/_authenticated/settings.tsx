@@ -54,7 +54,14 @@ function SettingsPage() {
 
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
-      const payload = { ...values, theme, counselor_signature: counselorSignature ?? school?.counselor_signature ?? null, principal_signature: principalSignature ?? school?.principal_signature ?? null };
+      const payload = {
+        ...values,
+        theme,
+        show_counselor_on_documents: values.show_counselor_on_documents !== "false",
+        show_principal_on_documents: values.show_principal_on_documents !== "false",
+        counselor_signature: counselorSignature ?? school?.counselor_signature ?? null,
+        principal_signature: principalSignature ?? school?.principal_signature ?? null,
+      };
       if (school?.id) {
         const { error } = await supabase.from("school_settings").update(payload as never).eq("id", school.id);
         if (error) throw error;
@@ -140,6 +147,8 @@ function SettingsPage() {
             SCHOOL_FIELDS.forEach((f) => {
               values[f.name] = String(data.get(f.name) ?? "");
             });
+            values.show_counselor_on_documents = data.get("show_counselor_on_documents") ? "true" : "false";
+            values.show_principal_on_documents = data.get("show_principal_on_documents") ? "true" : "false";
             saveSchool.mutate(values);
           }}
         >
@@ -159,6 +168,16 @@ function SettingsPage() {
             <div className="mb-5 grid gap-5 sm:grid-cols-2">
               <SignaturePad label="توقيع الموجه الطلابي" value={counselorSignature ?? school?.counselor_signature ?? ""} onChange={setCounselorSignature} />
               <SignaturePad label="توقيع مدير المدرسة" value={principalSignature ?? school?.principal_signature ?? ""} onChange={setPrincipalSignature} />
+            </div>
+            <div className="mb-5 grid gap-3 rounded-lg border border-dashed p-3 sm:grid-cols-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="show_counselor_on_documents" defaultChecked={school?.show_counselor_on_documents !== false} />
+                إظهار اسم وتوقيع الموجه في المستندات
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="show_principal_on_documents" defaultChecked={school?.show_principal_on_documents !== false} />
+                إظهار اسم وتوقيع المدير في المستندات
+              </label>
             </div>
             <Button type="submit" disabled={saveSchool.isPending}>
               حفظ البيانات

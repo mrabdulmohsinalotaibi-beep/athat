@@ -1413,8 +1413,8 @@ function ReportsPage() {
       <style>{`
         @media print {
           @page {
-            size: A4;
-            margin: 10mm;
+            size: A4 portrait;
+            margin: 12mm;
           }
 
           html,
@@ -1433,9 +1433,10 @@ function ReportsPage() {
 
           .print-area {
             display: block !important;
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
+            width: 190mm !important;
+            max-width: 190mm !important;
+            min-height: 273mm !important;
+            margin: 0 auto !important;
             padding: 0 !important;
             border: 0 !important;
             border-radius: 0 !important;

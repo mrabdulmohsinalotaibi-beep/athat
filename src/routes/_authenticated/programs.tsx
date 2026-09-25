@@ -62,6 +62,7 @@ type ProgramRow = {
   indicator?: string | null;
   start_date?: string | null;
   end_date?: string | null;
+  plan_task_id?: string | null;
   exec_status?: string | null;
   beneficiaries?: number | null;
   required_evidence?: string | null;
@@ -283,6 +284,7 @@ function emptyDraft(): ProgramDraft {
     indicator: "",
     start_date: today(),
     end_date: today(),
+    plan_task_id: "",
     exec_status: "لم يبدأ",
     beneficiaries: null,
     required_evidence: "صور، ملفات PDF، فيديو تنفيذي",
@@ -321,6 +323,18 @@ function ProgramsPage() {
     },
   });
 
+  const { data: planTasks = [] } = useQuery({
+    queryKey: ["plan-tasks-options"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plan_tasks")
+        .select("id, seq, task, term")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const ministryNames = useMemo(() => new Set<string>(MINISTRY_PROGRAMS.map((p) => p[1])), []);
 
   const save = useMutation({
@@ -336,6 +350,7 @@ function ProgramsPage() {
         indicator: draft.indicator || null,
         start_date: draft.start_date || null,
         end_date: draft.end_date || null,
+        plan_task_id: draft.plan_task_id || null,
         exec_status: draft.exec_status || "لم يبدأ",
         beneficiaries:
           draft.beneficiaries == null || String(draft.beneficiaries).trim() === ""
@@ -768,6 +783,7 @@ function ProgramsPage() {
                     <DocCell label="تاريخ البداية" value={value(editing?.start_date)} />
                     <DocCell label="تاريخ النهاية" value={value(editing?.end_date)} />
                     <DocCell label="عدد المستفيدين" value={value(editing?.beneficiaries)} />
+                    <DocCell label="مهمة الخطة المرتبطة" value={value(planTasks.find((task) => task.id === editing?.plan_task_id)?.task) || "غير مرتبط"} />
                     <DocCell label="الشواهد المطلوبة" value={value(editing?.required_evidence)} />
                   </div>
                 </div>
@@ -796,16 +812,6 @@ function ProgramsPage() {
                     </div>
                   )}
                 </DocSection>
-                <div className="mt-8 grid grid-cols-2 gap-10 text-center text-sm">
-                  <div>
-                    <div className="mb-12 font-bold">اسم الموجه الطلابي</div>
-                    <div>{school?.counselor_name || "........................"}</div>
-                  </div>
-                  <div>
-                    <div className="mb-12 font-bold">مدير المدرسة</div>
-                    <div>{school?.principal_name || "........................"}</div>
-                  </div>
-                </div>
                 <OfficialFooter school={school} />
               </div>
             </div>
@@ -869,6 +875,21 @@ function ProgramsPage() {
                   }))
                 }
               />
+              <div>
+                <Label className="mb-1.5 block">مهمة الخطة المرتبطة</Label>
+                <select
+                  value={value(editing?.plan_task_id)}
+                  onChange={(e) => setEditing((x) => ({ ...(x ?? emptyDraft()), plan_task_id: e.target.value }))}
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">— بدون ربط —</option>
+                  {planTasks.map((task) => (
+                    <option key={task.id} value={task.id}>
+                      {task.seq ? `${task.seq} - ` : ""}{task.task || "مهمة بدون عنوان"}{task.term ? ` (${task.term})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div>
               <Label className="mb-1.5 block">الهدف</Label>

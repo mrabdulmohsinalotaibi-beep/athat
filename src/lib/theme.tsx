@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 export const THEMES = [
   { id: "thaat", name: "التركوازي (الذات)", primary: "#307870" },
   { id: "royal", name: "الكحلي الملكي", primary: "#1F3A52" },
-  { id: "sage", name: "الأخضر الهادئ", primary: "#2F6B52" },
+  { id: "sage", name: "العنابي الرسمي", primary: "#7e2320" },
   { id: "amber", name: "العنبري الدافئ", primary: "#8A5A16" },
 ] as const;
 

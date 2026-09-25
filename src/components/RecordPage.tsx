@@ -138,6 +138,23 @@ export function RecordPage({
     toast.success("تمت إضافة الخيار للقائمة");
   }
 
+  async function removeOption(category: string, label: string, value: string) {
+    const item = lookups.find((entry) => entry.category === category && entry.value === value);
+    if (!item?.id) {
+      toast.info("يمكن حذف الخيارات المضافة من الإعدادات فقط");
+      return;
+    }
+    if (!window.confirm(`هل تريد حذف الخيار «${value}» من قائمة ${label}؟`)) return;
+    const { error } = await supabase.from("lookups").delete().eq("id", item.id);
+    if (error) {
+      toast.error(`تعذّر حذف الخيار: ${error.message}`);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["lookups"] });
+    setAuto((current) => ({ ...current, [config.fields.find((field) => field.lookupCategory === category)?.name ?? ""]: "" }));
+    toast.success("تم حذف الخيار من القائمة");
+  }
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: [config.table],
     queryFn: async () => {
@@ -691,6 +708,18 @@ export function RecordPage({
                             onClick={() => addOption(f.lookupCategory ?? "", f.label)}
                           >
                             <Plus className="size-4" />
+                          </Button>
+                        )}
+                        {f.lookupCategory && current && lookups.some((item) => item.category === f.lookupCategory && item.value === current) && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            title={`حذف الخيار من ${f.label}`}
+                            aria-label={`حذف الخيار من ${f.label}`}
+                            onClick={() => removeOption(f.lookupCategory ?? "", f.label, current)}
+                          >
+                            <Trash2 className="size-4 text-destructive" />
                           </Button>
                         )}
                       </div>

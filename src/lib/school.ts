@@ -11,6 +11,8 @@ export interface SchoolSettings {
   semester?: string | null;
   counselor_signature?: string | null;
   principal_signature?: string | null;
+  show_counselor_on_documents?: boolean | null;
+  show_principal_on_documents?: boolean | null;
   public_feedback_token?: string | null;
   theme?: string | null;
 }

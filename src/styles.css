@@ -134,22 +134,22 @@
 
 :root[data-theme="sage"] {
   color-scheme: dark;
-  --primary: oklch(0.43 0.09 158);
-  --accent: oklch(0.93 0.035 150);
-  --accent-foreground: oklch(0.34 0.075 158);
-  --ring: oklch(0.43 0.09 158);
-  --chart-1: oklch(0.43 0.09 158);
-  --chart-2: oklch(0.6 0.1 145);
-  --chart-3: oklch(0.48 0.055 195);
-  --chart-4: oklch(0.7 0.09 80);
-  --chart-5: oklch(0.58 0.045 120);
-  --sidebar: oklch(0.982 0.01 150);
-  --sidebar-foreground: oklch(0.25 0.025 158);
-  --sidebar-primary: oklch(0.43 0.09 158);
-  --sidebar-accent: oklch(0.93 0.035 150);
-  --sidebar-accent-foreground: oklch(0.34 0.075 158);
-  --sidebar-border: oklch(0.87 0.02 150);
-  --sidebar-ring: oklch(0.43 0.09 158);
+  --primary: #7e2320;
+  --accent: #f3e2e1;
+  --accent-foreground: #651c1a;
+  --ring: #7e2320;
+  --chart-1: #7e2320;
+  --chart-2: #a34843;
+  --chart-3: #5d1917;
+  --chart-4: #c97970;
+  --chart-5: #3f1211;
+  --sidebar: #fff8f7;
+  --sidebar-foreground: #3f1211;
+  --sidebar-primary: #7e2320;
+  --sidebar-accent: #f3e2e1;
+  --sidebar-accent-foreground: #651c1a;
+  --sidebar-border: #e8c9c6;
+  --sidebar-ring: #7e2320;
 }
 
 :root[data-theme="amber"] {
@@ -296,7 +296,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 12mm;
   }
 
   .no-print {
@@ -310,6 +310,10 @@
   }
 
   .print-area {
+    width: 190mm !important;
+    max-width: 190mm !important;
+    min-height: 273mm;
+    margin-inline: auto !important;
     background: #fff !important;
     color: #252124 !important;
     box-shadow: none !important;
@@ -344,6 +348,14 @@
 
   .official-letterhead h2 {
     font-size: 15pt;
+  }
+
+  .program-a4 {
+    width: 190mm !important;
+    max-width: 190mm !important;
+    min-height: 273mm !important;
+    margin-inline: auto !important;
+    box-shadow: none !important;
   }
 
   .print-area section,

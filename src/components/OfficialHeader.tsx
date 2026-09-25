@@ -61,9 +61,13 @@ export function OfficialHeader({
 }
 
 export function OfficialFooter({ school }: { school?: SchoolSettings | null | undefined }) {
+  const showCounselor = school?.show_counselor_on_documents !== false;
+  const showPrincipal = school?.show_principal_on_documents !== false;
+  const visibleSignatures = Number(showCounselor) + Number(showPrincipal);
+
   return (
-    <div className="report-signatures mt-8 grid grid-cols-2 gap-12 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground">
-      <div className="flex min-h-28 flex-col items-center text-center">
+    <div className="report-signatures mt-8 grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground" style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}>
+      {showCounselor && <div className="flex min-h-28 flex-col items-center text-center">
         <p>الموجه الطلابي</p>
         {school?.counselor_signature ? (
           <img
@@ -75,8 +79,8 @@ export function OfficialFooter({ school }: { school?: SchoolSettings | null | un
           <div className="h-16" />
         )}
         <p>{school?.counselor_name || "................."}</p>
-      </div>
-      <div className="flex min-h-28 flex-col items-center text-center">
+      </div>}
+      {showPrincipal && <div className="flex min-h-28 flex-col items-center text-center">
         <p>مدير المدرسة</p>
         {school?.principal_signature ? (
           <img
@@ -88,8 +92,8 @@ export function OfficialFooter({ school }: { school?: SchoolSettings | null | un
           <div className="h-16" />
         )}
         <p>{school?.principal_name || "................."}</p>
-      </div>
-      <Copyright className="col-span-full mt-2 border-t pt-3 font-normal" />
+      </div>}
+      <Copyright className="col-span-full mt-2 border-t pt-2 text-right text-[9px] font-normal" />
     </div>
   );
 }
