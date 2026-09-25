@@ -234,7 +234,7 @@ export function WeeklyGuidancePoster() {
             </div>
           </div>
           <div
-            className="relative mt-8 flex min-h-[720px] flex-col justify-between overflow-hidden rounded-sm border-2 border-[#c9b48a] p-10"
+            className="relative mt-8 flex min-h-[720px] flex-col justify-between rounded-sm border-2 border-[#c9b48a] p-10"
             style={watermarkStyle}
           >
             <div className="relative my-auto flex flex-col items-center justify-center gap-8 text-center">

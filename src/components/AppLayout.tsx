@@ -100,10 +100,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center p-0.5">
-              <img src="/brand-logo.png" alt="شعار ذات | THAT" className="size-full object-contain" />
+              <img src="/brand-logo.png" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-sidebar-primary">ذات | THAT</p>
+              <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
               <p className="mt-1 text-xs text-sidebar-foreground/70">منصة الموجه الطلابي</p>
             </div>
           </div>
@@ -214,7 +214,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Button>
               <img
                 src="/brand-logo.png"
-                alt="شعار ذات | THAT"
+                alt="شعار الذات"
                 className="hidden size-12 object-contain sm:block"
               />
               <div>

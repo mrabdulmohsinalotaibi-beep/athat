@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/committees")({
   head: () => ({
     meta: [
-      { title: "اللجان والاجتماعات | ذات | THAT" },
+      { title: "اللجان والاجتماعات | الذات" },
       { name: "description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },
       { property: "og:title", content: "اللجان والاجتماعات | منصة الذات" },
       { property: "og:description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },

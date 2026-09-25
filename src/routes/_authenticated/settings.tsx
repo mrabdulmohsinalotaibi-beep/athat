@@ -15,7 +15,7 @@ import { LOOKUP_CATEGORIES, lookupCategoryLabel } from "@/lib/lookups";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "الإعدادات | ذات | THAT" },
+      { title: "الإعدادات | الذات" },
       { name: "description", content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة الذات." },
       { property: "og:title", content: "الإعدادات | منصة الذات" },
       { property: "og:description", content: "بيانات المدرسة والعام الدراسي والقوائم المرجعية." },

@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({
     meta: [
-      { title: "التقويم والمتابعة | ذات | THAT" },
+      { title: "التقويم والمتابعة | الذات" },
       { name: "description", content: "المواعيد والمهام القادمة للموجه الطلابي." },
       { property: "og:title", content: "التقويم والمتابعة | منصة الذات" },
       { property: "og:description", content: "المواعيد والمهام القادمة للموجه الطلابي." },

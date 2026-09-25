@@ -61,7 +61,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ذات | THAT — منصة الموجه الطلابي" },
+      { title: "الذات — منصة الموجه الطلابي" },
       { name: "description", content: "منصة الذات لإدارة أعمال الموجه الطلابي وسجلاته الإرشادية إلكترونياً." },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/brand-logo.png" },

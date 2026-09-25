@@ -53,7 +53,7 @@ import {
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
-      { title: "التقارير والإحصائيات | ذات | THAT" },
+      { title: "التقارير والإحصائيات | الذات" },
       {
         name: "description",
         content:
@@ -978,7 +978,7 @@ function ReportsPage() {
 
       <div
         ref={printRef}
-        className="print-area overflow-hidden rounded-3xl border border-paper-border bg-paper text-paper-foreground shadow-sm"
+        className="print-area min-h-[297mm] overflow-hidden rounded-3xl border border-paper-border bg-paper text-paper-foreground shadow-sm"
       >
         <div className="p-6 sm:p-8">
           <OfficialHeader
@@ -1406,74 +1406,6 @@ function ReportsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* =========================================================
-          PRINT CSS
-      ========================================================= */}
-
-      <style>{`
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 12mm;
-          }
-
-          html,
-          body {
-            background: white !important;
-          }
-
-          body {
-            print-color-adjust: exact !important;
-            -webkit-print-color-adjust: exact !important;
-          }
-
-          .no-print {
-            display: none !important;
-          }
-
-          .print-area {
-            display: block !important;
-            width: 190mm !important;
-            max-width: 190mm !important;
-            min-height: 273mm !important;
-            margin: 0 auto !important;
-            padding: 0 !important;
-            border: 0 !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            overflow: visible !important;
-            background: white !important;
-          }
-
-          .print-area > div {
-            padding: 0 !important;
-          }
-
-          table {
-            page-break-inside: auto;
-          }
-
-          tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-          }
-
-          section {
-            page-break-inside: avoid;
-          }
-
-          img {
-            print-color-adjust: exact !important;
-            -webkit-print-color-adjust: exact !important;
-          }
-        }
-
-        @media screen {
-          .print-area {
-            min-height: 297mm;
-          }
-        }
-      `}</style>
     </div>
   );
 }

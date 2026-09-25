@@ -5,7 +5,7 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/behavior")({
   head: () => ({
     meta: [
-      { title: "السلوك والمتابعة | ذات | THAT" },
+      { title: "السلوك والمتابعة | الذات" },
       { name: "description", content: "رصد المخالفات السلوكية والإجراءات ونتائج المتابعة." },
       { property: "og:title", content: "السلوك والمتابعة | منصة الذات" },
       { property: "og:description", content: "رصد المخالفات السلوكية والإجراءات ونتائج المتابعة." },

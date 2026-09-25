@@ -225,43 +225,112 @@
   }
 }
 
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 12mm;
-  }
+.print-only-document {
+  display: none;
+}
 
-  .no-print {
-    display: none !important;
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    background-image: none !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
   }
 
   body {
-    background: #fff;
-    background-image: none;
-    font-size: 11pt;
+    font-size: 10pt;
   }
 
-  .print-area {
-    width: 190mm !important;
-    max-width: 190mm !important;
-    min-height: 273mm;
-    margin-inline: auto !important;
+  #root,
+  .app-shell,
+  .app-shell > div,
+  .app-shell main {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  #root,
+  .app-shell,
+  .app-shell > div {
+    display: block !important;
+  }
+
+  .app-shell main,
+  .app-shell main > * {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print,
+  .screen-only-document {
+    display: none !important;
+  }
+
+  .print-only-document {
+    display: block !important;
+  }
+
+  .print-area,
+  .program-a4 {
+    display: block !important;
+    box-sizing: border-box !important;
+    width: 186mm !important;
+    max-width: 186mm !important;
+    min-width: 0 !important;
+    min-height: 273mm !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
     background: #fff !important;
     color: #252124 !important;
     box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
+    transform: none !important;
+  }
+
+  .print-area .overflow-x-auto,
+  .print-area .overflow-hidden,
+  .program-a4 .overflow-hidden {
+    overflow: visible !important;
   }
 
   .print-area table {
     width: 100% !important;
-    font-size: 9.5pt;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 8.5pt;
   }
 
   .print-area th,
   .print-area td {
+    padding: 2mm !important;
     vertical-align: top;
-    padding: 2.4mm !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    border-color: #b8bcc2 !important;
+  }
+
+  .print-area thead {
+    display: table-header-group;
+  }
+
+  .print-area tfoot {
+    display: table-footer-group;
   }
 
   .print-area thead tr,
@@ -269,9 +338,46 @@
     background: #f3f4f6 !important;
   }
 
-  .print-area th,
-  .print-area td {
-    border-color: #b8bcc2 !important;
+  .print-area tr,
+  .print-area img,
+  .print-area figure,
+  .print-area .break-inside-avoid,
+  .print-area [data-pdf-keep-together],
+  .print-area .report-signatures,
+  .print-area .report-summary,
+  .print-area .official-letterhead,
+  .program-a4 tr,
+  .program-a4 img,
+  .program-a4 figure,
+  .program-a4 .break-inside-avoid,
+  .program-a4 [data-pdf-keep-together],
+  .program-a4 .official-letterhead {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-area h1,
+  .print-area h2,
+  .print-area h3,
+  .program-a4 h1,
+  .program-a4 h2,
+  .program-a4 h3 {
+    break-after: avoid-page;
+  }
+
+  .print-area .break-before-page,
+  .program-a4 .break-before-page,
+  .print-area [data-pdf-break-before],
+  .program-a4 [data-pdf-break-before] {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .print-area img,
+  .print-area svg,
+  .program-a4 img,
+  .program-a4 svg {
+    max-width: 100%;
   }
 
   .official-letterhead {
@@ -282,27 +388,6 @@
     font-size: 15pt;
   }
 
-  .program-a4 {
-    width: 190mm !important;
-    max-width: 190mm !important;
-    min-height: 273mm !important;
-    margin-inline: auto !important;
-    box-shadow: none !important;
-  }
-
-  .print-area section,
-  .print-area tr,
-  .report-signatures,
-  .report-summary {
-    break-inside: avoid;
-  }
-
-  .print-area .break-before-page {
-    break-before: page;
-  }
-}
-
-@media print {
   body:has(.single-print-sheet) .app-shell,
   body:has(.single-print-sheet) [data-state="open"].fixed.inset-0 {
     display: none !important;
@@ -312,8 +397,8 @@
     position: static !important;
     inset: auto !important;
     transform: none !important;
-    width: auto !important;
-    max-width: none !important;
+    width: 186mm !important;
+    max-width: 186mm !important;
     max-height: none !important;
     overflow: visible !important;
     border: none !important;
