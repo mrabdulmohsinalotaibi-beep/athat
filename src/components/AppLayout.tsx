@@ -75,6 +75,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
     "الخطط والبرامج",
   ]);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -210,6 +214,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 variant="ghost"
                 size="icon"
                 className="lg:hidden"
+                aria-label="فتح قائمة المساحة"
                 onClick={() => setOpen(true)}
               >
                 <Menu className="size-5" />
