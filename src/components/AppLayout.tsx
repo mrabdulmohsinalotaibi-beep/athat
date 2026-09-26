@@ -99,7 +99,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-14 items-center justify-center p-0.5">
+            <div className="brand-mark-well flex size-14 shrink-0 items-center justify-center rounded-xl p-1">
               <img src="/brand-logo.png" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
@@ -215,7 +215,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <img
                 src="/brand-logo.png"
                 alt="شعار الذات"
-                className="hidden size-12 object-contain sm:block"
+                className="brand-mark-well hidden size-12 rounded-xl p-0.5 object-contain sm:block"
               />
               <div>
                 <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>

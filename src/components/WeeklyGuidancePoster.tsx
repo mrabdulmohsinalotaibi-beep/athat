@@ -72,7 +72,7 @@ type WeeklyTopic = keyof typeof WEEKLY_TEMPLATES;
 
 function watermarkBackground(text: string) {
   const safe = text.replace(/[<>&]/g, "");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="380" height="200"><text x="10" y="70" font-family="Cairo, sans-serif" font-size="24" font-weight="700" fill="#7f1d1d" fill-opacity="0.055" transform="rotate(-18 190 70)">${safe} ${safe}</text><text x="-60" y="170" font-family="Cairo, sans-serif" font-size="24" font-weight="700" fill="#7f1d1d" fill-opacity="0.055" transform="rotate(-18 190 170)">${safe} ${safe}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="380" height="200"><text x="10" y="70" font-family="Cairo, sans-serif" font-size="24" font-weight="700" fill="#80583a" fill-opacity="0.055" transform="rotate(-18 190 70)">${safe} ${safe}</text><text x="-60" y="170" font-family="Cairo, sans-serif" font-size="24" font-weight="700" fill="#80583a" fill-opacity="0.055" transform="rotate(-18 190 170)">${safe} ${safe}</text></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
@@ -203,7 +203,7 @@ export function WeeklyGuidancePoster() {
         <div
           ref={posterRef}
           dir="rtl"
-          className="mx-auto bg-white text-[#1f2937]"
+          className="mx-auto bg-[#fffdf8] text-[#30261f]"
           style={{
             width: 794,
             minHeight: 1123,
@@ -211,7 +211,7 @@ export function WeeklyGuidancePoster() {
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
           }}
         >
-          <div className="grid grid-cols-3 items-center rounded-[28px] border-b-4 border-[#c58a22] bg-[#fbf7ef] px-8 py-4">
+          <div className="grid grid-cols-3 items-center rounded-[28px] border-b-4 border-[#c69f70] bg-[#faf4e9] px-8 py-4">
             <div className="text-right text-sm font-bold leading-7">
               <p>المملكة العربية السعودية</p>
               <p>وزارة التعليم</p>
@@ -228,31 +228,31 @@ export function WeeklyGuidancePoster() {
             </div>
           </div>
           <div className="mt-8 flex justify-center">
-            <div className="flex items-center gap-3 rounded-xl border border-[#c9b48a] bg-[#fbf7ef] px-8 py-3 shadow-[3px_3px_0_rgba(127,29,29,0.14)]">
-              <span className="size-3 rounded-full bg-[#7f1d1d]" />
+            <div className="flex items-center gap-3 rounded-xl border border-[#c69f70] bg-[#faf4e9] px-8 py-3 shadow-[3px_3px_0_rgba(48,38,31,0.14)]">
+              <span className="size-3 rounded-full bg-[#80583a]" />
               <h2 className="text-2xl font-extrabold">التوجيه الطلابي</h2>
             </div>
           </div>
           <div
-            className="relative mt-8 flex min-h-[720px] flex-col justify-between rounded-sm border-2 border-[#c9b48a] p-10"
+            className="relative mt-8 flex min-h-[720px] flex-col justify-between rounded-sm border-2 border-[#c69f70] p-10"
             style={watermarkStyle}
           >
             <div className="relative my-auto flex flex-col items-center justify-center gap-8 text-center">
               <div className="max-w-xl">
                 <p className="text-xl font-bold leading-10">{intro}</p>
                 {title && (
-                  <p className="mt-2 text-2xl font-extrabold text-[#7f1d1d]">&quot;{title}&quot;</p>
+                  <p className="mt-2 text-2xl font-extrabold text-[#80583a]">&quot;{title}&quot;</p>
                 )}
               </div>
               {body && <p className="max-w-xl text-lg leading-9">{body}</p>}
               {reminder && (
                 <div className="mt-4 max-w-xl text-lg font-extrabold leading-9">
-                  <p className="text-[#7f1d1d]">تذكّر دائمًا:</p>
+                  <p className="text-[#80583a]">تذكّر دائمًا:</p>
                   <p>{reminder}</p>
                 </div>
               )}
             </div>
-            <div className="relative mt-8 flex items-center justify-between border-t border-[#c9b48a]/40 pt-3 text-xs font-medium text-gray-500">
+            <div className="relative mt-8 flex items-center justify-between border-t border-[#c69f70]/40 pt-3 text-xs font-medium text-[#76685a]">
               <span>الموجه الطلابي: {school?.counselor_name || "—"}</span>
               <span>منصة الذات للتوجيه الطلابي</span>
             </div>

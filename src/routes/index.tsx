@@ -137,10 +137,10 @@ function Landing() {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-8">
           <div className="flex items-center gap-3">
-            <img 
+            <img
               src="/brand-logo.png"
               alt="شعار الذات"
-              className="size-11 object-contain transition-transform hover:scale-105" 
+              className="brand-mark-well size-12 rounded-xl p-0.5 object-contain transition-transform hover:scale-105"
             />
             <div>
                <p className="text-xl font-black tracking-tight text-primary sm:text-2xl">الذات</p>
