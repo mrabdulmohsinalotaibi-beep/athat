@@ -450,3 +450,154 @@
     padding: 0 !important;
   }
 }
+
+
+/* Responsive layout layer: shared by the public site and the private workspace. */
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+.app-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.app-shell > div,
+.app-shell main,
+.app-shell footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-shell main {
+  overflow-wrap: anywhere;
+}
+
+.app-shell main .overflow-x-auto {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.app-shell main table {
+  max-width: 100%;
+}
+
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+[data-radix-popper-content-wrapper] {
+  max-width: calc(100vw - 1rem);
+}
+
+@media (max-width: 1023px) {
+  .app-shell > aside {
+    width: min(88vw, 18rem);
+  }
+
+  .app-shell main {
+    padding: 1rem;
+  }
+
+  .app-shell main > * {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .app-shell main {
+    padding: 0.75rem;
+  }
+
+  .app-shell footer {
+    padding-inline: 0.75rem;
+  }
+
+  .app-shell main .overflow-x-auto {
+    width: calc(100% + 1.5rem);
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+  }
+
+  .app-shell main [data-slot="card"],
+  .app-shell main .rounded-2xl,
+  .app-shell main .rounded-3xl {
+    max-width: 100%;
+  }
+
+  .app-shell main h1 {
+    font-size: clamp(1.5rem, 7vw, 2.25rem);
+    line-height: 1.3;
+  }
+
+  .app-shell main h2 {
+    font-size: clamp(1.2rem, 5.5vw, 1.75rem);
+    line-height: 1.4;
+  }
+
+  .app-shell main [data-slot="dialog-content"] {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .app-shell main form {
+    max-width: 100%;
+  }
+
+  .app-shell main .grid {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 479px) {
+  .app-shell header > div {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  .app-shell header p {
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-shell main .flex-wrap {
+    row-gap: 0.625rem;
+  }
+}
