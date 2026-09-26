@@ -24,23 +24,23 @@ export function renderErrorPage(options: ErrorPageOptions = {}): string {
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        --bg-color: #f8fafc;
-        --card-bg: #ffffff;
-        --text-primary: #0f172a;
-        --text-secondary: #475569;
-        --primary-color: #0f766e;
-        --primary-hover: #0d9488;
-        --border-color: #e2e8f0;
+        --bg-color: #f7f4ef;
+        --card-bg: #fffcf8;
+        --text-primary: #30261f;
+        --text-secondary: #76685a;
+        --primary-color: #80583a;
+        --primary-hover: #68472f;
+        --border-color: #e4d9cc;
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg-color: #0f172a;
-          --card-bg: #1e293b;
-          --text-primary: #f8fafc;
-          --text-secondary: #94a3b8;
-          --primary-color: #14b8a6;
-          --primary-hover: #2dd4bf;
-          --border-color: #334155;
+          --bg-color: #1b1714;
+          --card-bg: #26201b;
+          --text-primary: #f4eade;
+          --text-secondary: #c0ad98;
+          --primary-color: #d1a774;
+          --primary-hover: #e2be92;
+          --border-color: #4a3a2e;
         }
       }
       * { box-sizing: border-box; }

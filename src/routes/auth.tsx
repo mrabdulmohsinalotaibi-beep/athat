@@ -246,10 +246,10 @@ function AuthPage() {
         <div className="text-center">
           <img
             src="/brand-logo.png"
-             alt="شعار الذات"
-            className="mx-auto size-24 object-contain"
+            alt="شعار الذات"
+            className="brand-mark-well mx-auto size-24 rounded-2xl p-2 object-contain"
           />
-           <p className="mt-2 text-3xl font-extrabold text-primary">الذات</p>
+          <p className="mt-2 text-3xl font-extrabold text-primary">الذات</p>
           <p className="mt-1 text-sm text-muted-foreground">منصة الموجه الطلابي</p>
         </div>
 
