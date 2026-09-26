@@ -45,7 +45,7 @@ export function formatPostDate(value: string | null | undefined): string {
   return new Date(value).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
 }
 
-export async function fetchPublicPosts(opts: { userId?: string; limit?: number } = {}) {
+export async function fetchPublicPosts(opts: { userId?: string | undefined; limit?: number | undefined } = {}) {
   let q = supabase
     .from("posts")
     .select(PUBLIC_POST_FIELDS)

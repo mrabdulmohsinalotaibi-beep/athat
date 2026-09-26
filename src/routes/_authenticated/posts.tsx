@@ -140,12 +140,12 @@ function PublicLinkCard() {
   const current = value ?? row?.public_slug ?? "";
   const url = row?.public_slug ? `${typeof window !== "undefined" ? window.location.origin : ""}/c/${row.public_slug}` : "";
 
-  async function saveSlug() {
+  async function saveSlug(): Promise<void> {
     const slug = current.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
-    if (slug.length < 3) return toast.error("استخدم 3 أحرف إنجليزية أو أرقام على الأقل");
-    if (!row?.id) return toast.error("أكمل بيانات المدرسة من الإعدادات أولاً");
+    if (slug.length < 3) { toast.error("استخدم 3 أحرف إنجليزية أو أرقام على الأقل"); return; }
+    if (!row?.id) { toast.error("أكمل بيانات المدرسة من الإعدادات أولاً"); return; }
     const { error } = await supabase.from("school_settings").update({ public_slug: slug }).eq("id", row.id);
-    if (error) return toast.error(error.code === "23505" ? "هذا الرابط مستخدم، جرّب اسماً آخر" : error.message);
+    if (error) { toast.error(error.code === "23505" ? "هذا الرابط مستخدم، جرّب اسماً آخر" : error.message); return; }
     toast.success("تم حفظ رابط صفحتك العامة");
     setValue(null);
     qc.invalidateQueries({ queryKey: ["my-public-slug"] });
