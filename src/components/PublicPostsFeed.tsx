@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Newspaper, Sparkles } from "lucide-react";
 import { fetchPublicPosts, type PublicPost } from "@/lib/posts";
 import { PostCard } from "@/components/PostCard";
