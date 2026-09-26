@@ -33,9 +33,9 @@ function PostPage() {
 
   function shareOnWhatsApp() {
     if (!post) return;
-    const url = window.location.origin + "/posts/" + encodeURIComponent(post.slug);
+    const url = "https://athat.app/posts/" + encodeURIComponent(post.slug);
     const message = post.title + "\\n\\n" + (post.excerpt ? post.excerpt + "\\n\\n" : "") + url + "\\n\\nمن منصة الذات";
-    window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank", "noopener,noreferrer");
+    window.location.assign("https://api.whatsapp.com/send?text=" + encodeURIComponent(message));
   }
 
   return (
@@ -77,10 +77,6 @@ function PostPage() {
             <div className="mx-auto max-w-3xl">
               {post.excerpt && <p className="mt-10 border-r-4 border-accent pr-5 text-lg font-bold leading-9 text-foreground/80">{post.excerpt}</p>}
               <div className="mt-8 whitespace-pre-line text-base leading-9 text-foreground/90 sm:text-lg">{post.body}</div>
-              <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-2xl border border-primary/15 bg-primary/5 p-5 text-center sm:flex-row sm:text-right">
-                <div><p className="font-bold">هل وجدت هذا المنشور مفيدًا؟</p><p className="mt-1 text-sm text-muted-foreground">شاركه مع زميل قد يستفيد منه.</p></div>
-                <Button type="button" variant="outline" onClick={shareOnWhatsApp} className="gap-2 border-[#25D366]/40 text-[#128C7E] hover:bg-[#25D366]/10 hover:text-[#128C7E]"><MessageCircle className="size-4" /> مشاركة واتساب</Button>
-              </div>
             </div>
           </article>
         )}
