@@ -23,6 +23,7 @@ import { Route as AuthenticatedEvidencesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedInterviewsRouteImport } from './routes/_authenticated/interviews'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
+import { Route as AuthenticatedPostsRouteImport } from './routes/_authenticated/posts'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
@@ -107,6 +108,11 @@ const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPostsRoute = AuthenticatedPostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
+  '/posts': typeof AuthenticatedPostsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
+  '/posts': typeof AuthenticatedPostsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/interviews': typeof AuthenticatedInterviewsRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
+  '/_authenticated/posts': typeof AuthenticatedPostsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/interviews'
     | '/messages'
     | '/plan'
+    | '/posts'
     | '/profile'
     | '/programs'
     | '/referrals'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/interviews'
     | '/messages'
     | '/plan'
+    | '/posts'
     | '/profile'
     | '/programs'
     | '/referrals'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/interviews'
     | '/_authenticated/messages'
     | '/_authenticated/plan'
+    | '/_authenticated/posts'
     | '/_authenticated/profile'
     | '/_authenticated/programs'
     | '/_authenticated/referrals'
@@ -449,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/posts': {
+      id: '/_authenticated/posts'
+      path: '/posts'
+      fullPath: '/posts'
+      preLoaderRoute: typeof AuthenticatedPostsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -547,6 +566,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInterviewsRoute: typeof AuthenticatedInterviewsRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
+  AuthenticatedPostsRoute: typeof AuthenticatedPostsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
@@ -569,6 +589,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInterviewsRoute: AuthenticatedInterviewsRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
+  AuthenticatedPostsRoute: AuthenticatedPostsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
