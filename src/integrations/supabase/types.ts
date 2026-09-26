@@ -595,6 +595,54 @@ export type Database = {
         }
         Relationships: []
       }
+      posts: {
+        Row: {
+          author_name: string | null
+          body: string
+          cover_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          is_public: boolean
+          kind: string
+          published_at: string | null
+          slug: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          body?: string
+          cover_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_public?: boolean
+          kind?: string
+          published_at?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          author_name?: string | null
+          body?: string
+          cover_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_public?: boolean
+          kind?: string
+          published_at?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           beneficiaries: number | null
@@ -793,6 +841,7 @@ export type Database = {
           principal_name: string | null
           principal_signature: string | null
           public_feedback_token: string
+          public_slug: string | null
           school_name: string | null
           semester: string | null
           theme: string
@@ -811,6 +860,7 @@ export type Database = {
           principal_name?: string | null
           principal_signature?: string | null
           public_feedback_token?: string
+          public_slug?: string | null
           school_name?: string | null
           semester?: string | null
           theme?: string
@@ -829,6 +879,7 @@ export type Database = {
           principal_name?: string | null
           principal_signature?: string | null
           public_feedback_token?: string
+          public_slug?: string | null
           school_name?: string | null
           semester?: string | null
           theme?: string
@@ -977,6 +1028,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_school: {
+        Args: { p_slug: string }
+        Returns: {
+          education_dept: string
+          logo_url: string
+          school_name: string
+          user_id: string
+        }[]
+      }
       submit_public_feedback: {
         Args: {
           p_category: string
