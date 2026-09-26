@@ -124,7 +124,7 @@ function Landing() {
 
           <div className="hidden items-center gap-3 sm:flex">
             <Button asChild variant="ghost" className="font-semibold">
-              <Link to="/auth" search={{ next: "" }}>دخول المرشد</Link>
+              <Link to="/auth" search={{ next: "" }}>دخول الموجه الطلابي</Link>
             </Button>
             <Button asChild className="gap-2 font-bold shadow-md shadow-primary/15">
               <Link to={ctaTo}>{ctaLabel}<ArrowLeft className="size-4" /></Link>
@@ -150,7 +150,7 @@ function Landing() {
               <a href="#journal" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-3 hover:bg-primary/10">المجلة</a>
               <a href="#about" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-3 hover:bg-primary/10">عن الذات</a>
               <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border/50 pt-3">
-                <Button asChild variant="outline"><Link to="/auth" search={{ next: "" }}>دخول المرشد</Link></Button>
+                <Button asChild variant="outline"><Link to="/auth" search={{ next: "" }}>دخول الموجه الطلابي</Link></Button>
                 <Button asChild><Link to={ctaTo}>{ctaLabel}</Link></Button>
               </div>
             </nav>
@@ -289,7 +289,7 @@ function Landing() {
           <div className="flex justify-center gap-5 sm:justify-start">
             <a href="#home" className="transition-colors hover:text-primary">الرئيسية</a>
             <a href="#journal" className="transition-colors hover:text-primary">المجلة</a>
-            <Link to="/auth" search={{ next: "" }} className="transition-colors hover:text-primary">دخول المرشد</Link>
+            <Link to="/auth" search={{ next: "" }} className="transition-colors hover:text-primary">دخول الموجه الطلابي</Link>
           </div>
         </div>
       </footer>
