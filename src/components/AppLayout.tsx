@@ -23,6 +23,7 @@ import {
   Sparkles,
   Inbox,
   UserRound,
+  Newspaper,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -56,6 +57,7 @@ const NAV = [
     ],
   },
   { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
+  { to: "/posts", label: "المنشورات العامة", icon: Newspaper },
   { to: "/weekly-poster", label: "التوجيه الطلابي الأسبوعي", icon: Sparkles },
   { to: "/messages", label: "الآراء والرسائل", icon: Inbox },
   { to: "/reports", label: "التقارير والإحصائيات", icon: Printer },

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
+import { PublicPostsFeed } from "@/components/PublicPostsFeed";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -234,6 +235,12 @@ function Landing() {
             </div>
           </div>
         </section>
+
+        <PublicPostsFeed
+          limit={12}
+          title="أحدث المقالات والأخبار"
+          subtitle="منشورات الموجهين الطلابيين العامة: أخبار وإعلانات ومقالات ونصائح إرشادية."
+        />
 
         {/* شبكة المميزات الاحترافية / Features Section */}
         <section className="border-t border-border/40 bg-muted/20 py-20">

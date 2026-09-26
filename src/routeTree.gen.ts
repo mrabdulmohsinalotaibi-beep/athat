@@ -31,7 +31,9 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWeeklyPosterRouteImport } from './routes/_authenticated/weekly-poster'
+import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as FeedbackTokenRouteImport } from './routes/feedback.$token'
+import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
 import { Route as AuthenticatedAdminUpgradeRequestsIndexRouteImport } from './routes/_authenticated/admin/upgrade-requests/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -147,9 +149,19 @@ const AuthenticatedWeeklyPosterRoute =
     path: '/weekly-poster',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const CSlugRoute = CSlugRouteImport.update({
+  id: '/c/$slug',
+  path: '/c/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeedbackTokenRoute = FeedbackTokenRouteImport.update({
   id: '/feedback/$token',
   path: '/feedback/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostsSlugRoute = PostsSlugRouteImport.update({
+  id: '/posts/$slug',
+  path: '/posts/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminUpgradeRequestsIndexRoute =
@@ -181,7 +193,9 @@ export interface FileRoutesByFullPath {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
+  '/posts/$slug': typeof PostsSlugRoute
   '/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -206,7 +220,9 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
+  '/posts/$slug': typeof PostsSlugRoute
   '/admin/upgrade-requests': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesById {
@@ -233,7 +249,9 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
+  '/posts/$slug': typeof PostsSlugRoute
   '/_authenticated/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -260,7 +278,9 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
+    | '/c/$slug'
     | '/feedback/$token'
+    | '/posts/$slug'
     | '/admin/upgrade-requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -285,7 +305,9 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
+    | '/c/$slug'
     | '/feedback/$token'
+    | '/posts/$slug'
     | '/admin/upgrade-requests'
   id:
     | '__root__'
@@ -311,7 +333,9 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/subscription'
     | '/_authenticated/weekly-poster'
+    | '/c/$slug'
     | '/feedback/$token'
+    | '/posts/$slug'
     | '/_authenticated/admin/upgrade-requests/'
   fileRoutesById: FileRoutesById
 }
@@ -320,7 +344,9 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   LoginRoute: typeof LoginRoute
+  CSlugRoute: typeof CSlugRoute
   FeedbackTokenRoute: typeof FeedbackTokenRoute
+  PostsSlugRoute: typeof PostsSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -479,11 +505,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWeeklyPosterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/c/$slug': {
+      id: '/c/$slug'
+      path: '/c/$slug'
+      fullPath: '/c/$slug'
+      preLoaderRoute: typeof CSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/feedback/$token': {
       id: '/feedback/$token'
       path: '/feedback/$token'
       fullPath: '/feedback/$token'
       preLoaderRoute: typeof FeedbackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/posts/$slug': {
+      id: '/posts/$slug'
+      path: '/posts/$slug'
+      fullPath: '/posts/$slug'
+      preLoaderRoute: typeof PostsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/upgrade-requests/': {
@@ -549,7 +589,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   LoginRoute: LoginRoute,
+  CSlugRoute: CSlugRoute,
   FeedbackTokenRoute: FeedbackTokenRoute,
+  PostsSlugRoute: PostsSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
