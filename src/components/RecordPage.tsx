@@ -318,6 +318,45 @@ export function RecordPage({
     setSmartPromptOpen(true);
   }
 
+  async function handleRewrite(fieldName: string, fieldLabel: string) {
+    if (smartFilling) return;
+
+    const current = auto[fieldName] ?? String(editing?.[fieldName] ?? "");
+    if (!current.trim()) {
+      toast.info("اكتب النص أولًا ثم استخدم تحسين الصياغة.");
+      return;
+    }
+
+    setSmartFilling(true);
+    try {
+      const result = await generateSmartFill({
+        data: {
+          recordType: config.key,
+          recordTitle: config.title,
+          brief: current.trim(),
+          mode: "rewrite",
+          targetField: fieldName,
+          schoolName: school?.school_name ?? "",
+          fields: [{ name: fieldName, label: fieldLabel, type: "textarea" }],
+          values: { [fieldName]: current.trim() },
+        },
+      });
+
+      const rewritten = result.suggestions?.[fieldName]?.trim();
+      if (!rewritten) {
+        toast.info("لم يتم إنتاج صياغة بديلة.");
+        return;
+      }
+
+      setAuto((a) => ({ ...a, [fieldName]: rewritten }));
+      toast.success("تم تحسين الصياغة — راجع النص قبل الحفظ.");
+    } catch (error) {
+      toast.error((error as Error).message || "تعذّر تحسين الصياغة.");
+    } finally {
+      setSmartFilling(false);
+    }
+  }
+
   async function handleSmartFill() {
     if (smartFilling) return;
 
@@ -775,9 +814,30 @@ export function RecordPage({
                 const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
                 return (
                   <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
-                    <Label htmlFor={f.name} className="mb-1.5 block text-xs">
-                      {f.label}
-                    </Label>
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <Label htmlFor={f.name} className="text-xs">
+                        {f.label}
+                      </Label>
+                      {(f.type === "text" || f.type === "textarea") &&
+                        current.trim() && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleRewrite(f.name, f.label)}
+                            disabled={smartFilling}
+                            title="تحسين صياغة هذا الحقل بواسطة DeepSeek"
+                          >
+                            {smartFilling ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : (
+                              <Sparkles className="size-3.5" />
+                            )}
+                            تحسين الصياغة
+                          </Button>
+                        )}
+                    </div>
                     {f.student ? (
                       <div className="flex items-center gap-2">
                         <div className="flex-1">
