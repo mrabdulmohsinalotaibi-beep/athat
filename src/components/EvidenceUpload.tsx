@@ -33,6 +33,20 @@ function typeLabel(kind: string) {
   return kind === "image" ? "صورة" : kind === "video" ? "مقطع فيديو" : "مستند";
 }
 
+function mimeForFile(file: File) {
+  if (file.type) return file.type;
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  const map: Record<string, string> = {
+    jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif",
+    mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm",
+    pdf: "application/pdf", doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  };
+  return map[ext ?? ""] ?? "";
+}
+
 export function EvidenceUploadDialog({
   open,
   onOpenChange,
@@ -80,6 +94,11 @@ export function EvidenceUploadDialog({
       toast.error("حجم الملف يتجاوز 50 ميجابايت");
       return;
     }
+    const contentType = mimeForFile(file);
+    if (!contentType) {
+      toast.error("نوع الملف غير مدعوم. اختر صورة أو فيديو أو PDF أو Word أو Excel.");
+      return;
+    }
     setBusy(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -88,7 +107,7 @@ export function EvidenceUploadDialog({
       const safe = file.name.replace(/[^\w.\-\u0600-\u06FF]/g, "_");
       const path = `${uid}/${Date.now()}-${safe}`;
       const { error: upErr } = await supabase.storage.from("evidences").upload(path, file, {
-        ...(file.type ? { contentType: file.type } : {}),
+        contentType,
         upsert: false,
       });
       if (upErr) throw upErr;
@@ -104,7 +123,7 @@ export function EvidenceUploadDialog({
         description: description || null,
         file_path: path,
         file_name: file.name,
-        mime_type: file.type || null,
+        mime_type: contentType,
       } as never);
       if (error) throw error;
 
