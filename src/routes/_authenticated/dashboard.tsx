@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatHijriDate } from "@/lib/date";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -520,7 +521,7 @@ function Dashboard() {
                   </span>
                   <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-rose-500">
                     <Clock className="size-3.5" />
-                    <span>{String(c.followup_at)}</span>
+                    <span>{formatHijriDate(c.followup_at)}</span>
                   </div>
                 </div>
               ))}
@@ -554,7 +555,7 @@ function Dashboard() {
                 >
                   <span className="font-extrabold text-foreground">{e.title || e.etype}</span>
                   <span className="font-mono text-[11px] font-bold text-muted-foreground">
-                    {String(e.edate)}
+                    {formatHijriDate(e.edate)}
                   </span>
                 </div>
               ))}
