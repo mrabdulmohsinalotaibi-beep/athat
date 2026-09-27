@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { displayRecordValue } from "@/lib/display";
+import { formatHijriDate } from "@/lib/date";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -162,7 +163,7 @@ export function EvidenceUploadDialog({
             </div>
             <div>
               <Label className="mb-1.5 block text-xs">تاريخ الشاهد</Label>
-              <Input type="date" value={edate} onChange={(e) => setEdate(e.target.value)} />
+              <div className="relative">\n                <Input type="date" value={edate} onChange={(e) => setEdate(e.target.value)} className="text-transparent caret-transparent" aria-label="تاريخ الشاهد" />\n                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground">{formatHijriDate(edate)}</span>\n              </div>
             </div>
           </div>
           <div>
@@ -270,7 +271,7 @@ export function EvidenceGallery() {
               <p className="truncate text-sm font-bold">{String(it.name ?? "—")}</p>
               <p className="truncate text-[11px] text-muted-foreground">
                 {String(it.linked_type ?? "")} {it.linked_ref ? `· ${displayRecordValue(it.linked_ref)}` : ""} ·{" "}
-                {String(it.edate ?? "")}
+                {it.edate ? formatHijriDate(String(it.edate)) : "—"}
               </p>
               <div className="flex gap-1 pt-1">
                 <Button
