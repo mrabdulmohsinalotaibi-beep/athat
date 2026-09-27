@@ -119,7 +119,7 @@ export default function MessagesDashboard() {
   const [rotatingLink, setRotatingLink] = useState(false);
   const [includeInternal, setIncludeInternal] = useState(true);
 
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: messages = [], isLoading, isError } = useQuery({
     queryKey: ["feedback_messages"],
 
     queryFn: async () => {
@@ -303,14 +303,8 @@ export default function MessagesDashboard() {
       id,
       {
         response_note: trimmedResponse || null,
-        ...(trimmedResponse
-          ? {
-              status: "تم الرد",
-              responded_at: new Date().toISOString(),
-            }
-          : {}),
       },
-      "تم حفظ الرد والإجراء",
+      "تم حفظ مسودة الرد والإجراء",
     );
   }
 
@@ -507,12 +501,8 @@ export default function MessagesDashboard() {
       return;
     }
 
-    const suggested = normalizeSaudiPhone(
-      preferredContact ||
-        (items.length === 1
-          ? (items[0]?.sender_contact ?? "")
-          : ""),
-    );
+    const contact = preferredContact || (items.length === 1 ? items[0]?.sender_contact : "");
+    const suggested = contact && !isEmail(contact) ? normalizeSaudiPhone(contact) : "";
 
     const phone = window.prompt(
       "رقم الجوال المستلم بصيغة 05XXXXXXXX (اتركه فارغاً لاختيار محادثة داخل واتساب):",
@@ -541,7 +531,7 @@ export default function MessagesDashboard() {
     }
 
     const suggested = isEmail(preferredContact)
-      ? preferredContact!
+      ? (preferredContact ?? "")
       : "";
 
     const email = window.prompt(
@@ -573,6 +563,7 @@ export default function MessagesDashboard() {
 
   async function replyToBeneficiary(
     item: FeedbackMessage,
+    channel?: "whatsapp" | "email",
   ) {
     const note = window.prompt(
       "اكتب الرد أو الإجراء المراد إرساله للمستفيد:",
@@ -589,52 +580,59 @@ export default function MessagesDashboard() {
       item.id,
       {
         response_note: trimmedNote,
-        status: "تم الرد",
-        responded_at: new Date().toISOString(),
       },
-      "تم حفظ الرد",
+      "تم حفظ مسودة الرد",
     );
 
     if (!saved) {
       return;
     }
 
-    const updatedItem = {
-      ...item,
-      response_note: trimmedNote,
-    };
+    const responseText = [
+      "السلام عليكم ورحمة الله وبركاته",
+      `من ${school?.school_name || "التوجيه الطلابي"}`,
+      item.sender_name ? `الأستاذ/ة ${item.sender_name}،` : "",
+      trimmedNote,
+    ].filter(Boolean).join("\n\n");
 
-    if (isEmail(item.sender_contact)) {
-      sendEmail([updatedItem], item.sender_contact);
+    if (channel === "email" || (!channel && isEmail(item.sender_contact))) {
+      const email = isEmail(item.sender_contact) ? item.sender_contact?.trim() : window.prompt("البريد الإلكتروني للمستفيد:");
+      if (!email) return;
+      window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`رد من ${school?.school_name || "التوجيه الطلابي"}`)}&body=${encodeURIComponent(responseText)}`;
     } else {
-      void sendWhatsApp([updatedItem], item.sender_contact);
+      const suggested = item.sender_contact && !isEmail(item.sender_contact)
+        ? normalizeSaudiPhone(item.sender_contact) : "";
+      const phone = suggested || window.prompt("رقم جوال المستفيد (اتركه فارغاً لاختيار المحادثة):", "");
+      if (phone === null) return;
+      shareOnWhatsApp(responseText, phone);
     }
+    toast.info("يُفتح تطبيق التواصل لإرسال الرد؛ حدّث الحالة إلى «تم الرد» بعد التأكد من الإرسال.");
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <section className="no-print rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-primary/75 p-6 text-primary-foreground shadow-xl shadow-primary/15">
-        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+    <div className="min-w-0 space-y-6" dir="rtl">
+      <section className="no-print border-b border-border pb-6">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
-            <div className="flex items-center gap-2 text-amber-200">
+            <div className="flex items-center gap-2 text-primary">
               <MessageSquareText className="size-5" />
               <span className="text-xs font-bold">
                 مركز تواصل المستفيدين
               </span>
             </div>
 
-            <h1 className="mt-2 text-2xl font-black">
+            <h1 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">
               الآراء والرسائل
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-primary-foreground/75">
-              استبانة موحّدة للطالب وولي الأمر والمعلم؛ تُستلم هنا، وتُوجّه للجهة المسؤولة، ثم تُطبع أو تُصدّر أو يُرسل الرد منها.
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
+              مشاركات المستفيدين والردود والمتابعة في مكان واحد.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <Button
-              variant="secondary"
+              variant="outline"
               onClick={copyLink}
               disabled={!publicLink}
             >
@@ -643,7 +641,7 @@ export default function MessagesDashboard() {
             </Button>
 
             <Button
-              variant="secondary"
+              variant="outline"
               onClick={shareFormLink}
               disabled={!publicLink}
             >
@@ -652,7 +650,7 @@ export default function MessagesDashboard() {
             </Button>
 
             <Button
-              variant="secondary"
+              variant="outline"
               onClick={rotateLink}
               disabled={!publicLink || rotatingLink}
             >
@@ -665,14 +663,14 @@ export default function MessagesDashboard() {
         </div>
 
         {publicLink && (
-          <div className="mt-5 flex flex-col gap-4 rounded-xl bg-black/15 p-3 text-xs sm:flex-row sm:items-center">
+          <div className="mt-5 flex flex-col gap-4 border-t border-border pt-5 text-xs sm:flex-row sm:items-center">
             <img
-              className="size-28 rounded-lg bg-white p-2"
+              className="size-24 shrink-0 rounded-md border border-border bg-card p-2"
               src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(publicLink)}`}
               alt="رمز QR للاستبانة"
             />
 
-            <div className="min-w-0">
+            <div className="min-w-0 text-foreground">
               <div className="flex items-center gap-2 font-bold">
                 <QrCode className="size-4" />
                 رمز QR ورابط الاستبانة
@@ -682,8 +680,8 @@ export default function MessagesDashboard() {
                 {publicLink}
               </span>
 
-              <p className="mt-2 text-primary-foreground/70">
-                شارك الرابط كما تشارك نموذج Forms؛ تبقى الردود داخل المنصة فقط.
+              <p className="mt-2 text-muted-foreground">
+                شارك الرابط مع المستفيدين؛ الردود لا تظهر للزوار.
               </p>
             </div>
           </div>
@@ -731,9 +729,9 @@ export default function MessagesDashboard() {
         />
       </section>
 
-      <section className="no-print rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
+      <section className="no-print border-y border-border py-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="grid flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div>
               <Label htmlFor="feedback-search">
                 بحث
@@ -816,7 +814,7 @@ export default function MessagesDashboard() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 lg:max-w-lg">
             <Button
               variant="outline"
               onClick={exportCsv}
@@ -874,11 +872,11 @@ export default function MessagesDashboard() {
         </div>
       </section>
 
-      <section className="no-print overflow-hidden rounded-3xl border border-primary/12 bg-card shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3 text-sm">
+      <section className="no-print min-w-0 overflow-hidden rounded-md border border-border bg-card shadow-sm">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-muted/30 px-4 py-3 text-sm sm:px-5">
           <span>
             <strong>{filtered.length}</strong>{" "}
-            مشاركة مطابقة — حدّدها للطباعة أو التصدير أو الإرسال.
+            مشاركة مطابقة {selected.length ? `· ${selected.length} محددة` : ""}
           </span>
 
           <Button
@@ -891,13 +889,47 @@ export default function MessagesDashboard() {
           </Button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {isLoading ? <p className="py-10 text-center text-muted-foreground">جارٍ تحميل الردود...</p>
+            : isError ? <p className="py-10 text-center text-destructive">تعذّر تحميل المشاركات. حاول تحديث الصفحة.</p>
+            : filtered.length === 0 ? <p className="py-10 text-center text-muted-foreground">لا توجد مشاركات مطابقة حتى الآن.</p>
+            : filtered.map((item) => (
+              <article key={item.id} className="min-w-0 rounded-md border border-border p-4">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2"><strong className="break-words">{item.sender_name}</strong><span className="rounded-sm bg-accent px-2 py-0.5 text-xs text-accent-foreground">{item.category}</span></div>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.sender_role} · {new Date(item.created_at).toLocaleDateString("ar-SA")}</p>
+                  </div>
+                  <Button type="button" size="icon" variant="ghost" onClick={() => toggle(item.id)} aria-label={selectedIds.includes(item.id) ? "إلغاء تحديد المشاركة" : "تحديد المشاركة"}>
+                    {selectedIds.includes(item.id) ? <CheckSquare className="text-primary" /> : <Square />}
+                  </Button>
+                </div>
+                <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{item.message}</p>
+                {item.sender_contact && <p className="mt-2 break-all text-xs text-muted-foreground">{item.sender_contact}</p>}
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <select aria-label="حالة المشاركة" value={item.status} onChange={(event) => void updateStatus(item.id, event.target.value)} className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs">{STATUSES.map((value) => <option key={value}>{value}</option>)}</select>
+                  <select aria-label="الجهة المسؤولة" value={item.assigned_to || "الموجه الطلابي"} onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")} className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs">{ASSIGNEES.map((value) => <option key={value}>{value}</option>)}</select>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "whatsapp")}><MessageCircle /> رد واتساب</Button>
+                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "email")}><Mail /> بريد</Button>
+                  <Button size="icon" variant="ghost" className="mr-auto text-destructive" onClick={() => void deleteMessage(item.id)} title="حذف المشاركة" aria-label="حذف المشاركة"><Trash2 /></Button>
+                </div>
+                <details className="mt-3 border-t border-border pt-3 text-sm">
+                  <summary className="cursor-pointer text-primary">الرد والملاحظات الداخلية</summary>
+                  <Label className="mt-3 block">الرد أو الإجراء</Label><Textarea key={`${item.id}-response`} defaultValue={item.response_note || ""} onBlur={(event) => { if (event.target.value.trim() !== (item.response_note || "").trim()) void updateResponse(item.id, event.target.value); }} className="mt-1" />
+                  <Label className="mt-3 block">ملاحظة داخلية</Label><Textarea key={`${item.id}-notes`} defaultValue={item.internal_notes || ""} onBlur={(event) => { if (event.target.value.trim() !== (item.internal_notes || "").trim()) void updateNotes(item.id, event.target.value); }} className="mt-1" />
+                </details>
+              </article>
+            ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[1140px] text-right text-sm">
             <thead className="bg-muted/50 text-xs">
               <tr>
                 <th className="p-4">
-                  <button
-                    type="button"
+                   <Button
+                     type="button" variant="ghost" size="icon"
                     onClick={toggleAllVisible}
                     title="تحديد كل النتائج"
                   >
@@ -906,7 +938,7 @@ export default function MessagesDashboard() {
                     ) : (
                       <Square className="text-muted-foreground" />
                     )}
-                  </button>
+                   </Button>
                 </th>
 
                 <th className="p-4">المشارك</th>
@@ -930,6 +962,8 @@ export default function MessagesDashboard() {
                     جارٍ تحميل الردود...
                   </td>
                 </tr>
+              ) : isError ? (
+                <tr><td colSpan={9} className="p-10 text-center text-destructive">تعذّر تحميل المشاركات. حاول تحديث الصفحة.</td></tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td
@@ -946,8 +980,8 @@ export default function MessagesDashboard() {
                     className="border-t border-border/60 align-top"
                   >
                     <td className="p-4">
-                      <button
-                        type="button"
+                      <Button
+                        type="button" variant="ghost" size="icon"
                         aria-label="تحديد المشاركة"
                         onClick={() => toggle(item.id)}
                       >
@@ -956,7 +990,7 @@ export default function MessagesDashboard() {
                         ) : (
                           <Square className="text-muted-foreground" />
                         )}
-                      </button>
+                      </Button>
                     </td>
 
                     <td className="p-4 font-bold">
@@ -1051,12 +1085,14 @@ export default function MessagesDashboard() {
                           size="sm"
                           variant="outline"
                           onClick={() =>
-                            void replyToBeneficiary(item)
+                            void replyToBeneficiary(item, "whatsapp")
                           }
                         >
                           <Send className="size-4" />
-                          رد
+                          واتساب
                         </Button>
+
+                        <Button size="icon" variant="outline" onClick={() => void replyToBeneficiary(item, "email")} title="الرد بالبريد" aria-label="الرد بالبريد"><Mail /></Button>
 
                         <Button
                           size="sm"
@@ -1074,7 +1110,7 @@ export default function MessagesDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                          className="text-destructive"
                           onClick={() =>
                             void deleteMessage(item.id)
                           }
@@ -1100,12 +1136,10 @@ export default function MessagesDashboard() {
                           }
                           className="mt-1 min-h-16 text-xs"
                           placeholder="الرد أو الإجراء المتخذ"
-                          onBlur={(event) =>
-                            void updateResponse(
+                           onBlur={(event) => { if (event.target.value.trim() !== (item.response_note || "").trim()) void updateResponse(
                               item.id,
                               event.target.value,
-                            )
-                          }
+                             ); }}
                         />
 
                         <Label className="mt-2 block text-[11px]">
@@ -1118,12 +1152,10 @@ export default function MessagesDashboard() {
                           }
                           className="mt-1 min-h-16 text-xs"
                           placeholder="ملاحظة خاصة بالموجه"
-                          onBlur={(event) =>
-                            void updateNotes(
+                           onBlur={(event) => { if (event.target.value.trim() !== (item.internal_notes || "").trim()) void updateNotes(
                               item.id,
                               event.target.value,
-                            )
-                          }
+                             ); }}
                         />
                       </details>
                     </td>
@@ -1253,16 +1285,16 @@ function SummaryCard({
   tone?: "primary" | "amber" | "rose";
   icon?: ReactNode;
 }) {
-  const toneClass =
+    const toneClass =
     tone === "amber"
       ? "border-amber-300/40 bg-amber-50/60 text-amber-800"
       : tone === "rose"
         ? "border-rose-300/40 bg-rose-50/60 text-rose-800"
-        : "border-primary/12 bg-card text-primary";
+      : "border-border bg-card text-primary";
 
   return (
     <article
-      className={`rounded-2xl border p-4 shadow-sm ${toneClass}`}
+      className={`rounded-md border p-4 shadow-sm ${toneClass}`}
     >
       <p className="text-xs font-semibold">
         {label}
