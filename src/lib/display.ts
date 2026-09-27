@@ -1,3 +1,5 @@
+import { formatHijriDate } from "@/lib/date";
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SHORT_ID_PATTERN = /^[A-Z0-9]{3,8}-\d{3,8}$/i; // مثل: TASK-102 أو CASE-5541
 
@@ -32,11 +34,7 @@ export function displayRecordValue(value: unknown): string {
     try {
       const date = new Date(text);
       if (!isNaN(date.getTime())) {
-        return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }).format(date);
+        return formatHijriDate(date);
       }
     } catch {
       return text;
