@@ -24,7 +24,10 @@ export function useSchool() {
       const { data, error } = await supabase
         .from("school_settings")
         .select("*")
-        .order("created_at", { ascending: true })
+        // نجلب آخر صف تم تعديله فعلياً (وليس أقدم صف تم إنشاؤه)،
+        // حتى تظهر آخر بيانات محفوظة في كل الصفحات فوراً بعد الحفظ،
+        // بما في ذلك صفحات الطباعة (اسم المدرسة، المدير، إدارة التعليم، الفصل الدراسي...).
+        .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
