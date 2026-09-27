@@ -64,6 +64,10 @@ export const generateSmartFill = createServerFn({ method: "POST" })
       throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
     }
 
+    if (data.mode === "rewrite" && !data.targetField) {
+      throw new Error("لم يتم تحديد الحقل المطلوب تحسين صياغته.");
+    }
+
     const allowedFields =
       data.mode === "rewrite"
         ? data.fields.filter((field) => field.name === data.targetField)
@@ -72,13 +76,24 @@ export const generateSmartFill = createServerFn({ method: "POST" })
       return { suggestions: {} };
     }
 
-    if (data.mode === "rewrite" && !data.targetField) {
-      throw new Error("لم يتم تحديد الحقل المطلوب تحسين صياغته.");
-    }
-
-    const contextEntries = Object.entries(data.values)
-      .filter(([, value]) => value.trim())
-      .slice(0, 40);
+    const sensitiveFieldPattern =
+      /(^|_)(id|student_id|national_id|phone|mobile|email|guardian_phone)($|_)/i;
+    const allowedContextNames = new Set(
+      data.fields
+        .filter((field) => field.type === "text" || field.type === "textarea")
+        .map((field) => field.name),
+    );
+    const contextEntries =
+      data.mode === "rewrite"
+        ? []
+        : Object.entries(data.values)
+            .filter(
+              ([name, value]) =>
+                allowedContextNames.has(name) &&
+                !sensitiveFieldPattern.test(name) &&
+                value.trim(),
+            )
+            .slice(0, 30);
 
     const userPrompt = JSON.stringify(
       {
