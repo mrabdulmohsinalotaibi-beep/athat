@@ -9,7 +9,6 @@ import {
   Download,
   FileDown,
   Plus,
-  Printer,
   Search,
   Send,
   Sparkles,
@@ -471,9 +470,6 @@ export function RecordPage({
           >
             <Download className="size-4" /> تصدير Excel
           </Button>
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="size-4" /> طباعة
-          </Button>
           <Button variant="outline" onClick={exportPdf} disabled={exportingPdf}>
             <FileDown className="size-4" /> {exportingPdf ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
           </Button>
@@ -650,10 +646,10 @@ export function RecordPage({
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="طباعة رسمية / PDF"
+                        title="حفظ PDF رسمي"
                         onClick={() => setPrintFor(row)}
                       >
-                        <Printer className="size-4" />
+                        <FileDown className="size-4" />
                       </Button>
                       {config.key === "referrals" && (
                         <Button

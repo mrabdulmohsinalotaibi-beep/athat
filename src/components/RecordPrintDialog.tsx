@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { FileDown, Printer } from "lucide-react";
+import { FileDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { useSchool } from "@/lib/school";
@@ -35,23 +35,6 @@ export function RecordPrintDialog({
   const shortFields = filled.filter((item) => !LONG_FIELDS.has(item.field.name) && item.field.type !== "textarea");
   const longFields = filled.filter((item) => LONG_FIELDS.has(item.field.name) || item.field.type === "textarea");
   const title = `${config.singular} — ${config.title}`;
-
-  function printRecord() {
-    if (!sheetRef.current) return;
-
-    const className = "printing-record";
-    const cleanup = () => {
-      document.body.classList.remove(className);
-      window.removeEventListener("afterprint", cleanup);
-    };
-
-    document.body.classList.add(className);
-    window.addEventListener("afterprint", cleanup, { once: true });
-    window.print();
-
-    // Some embedded browsers do not fire afterprint reliably.
-    window.setTimeout(cleanup, 1500);
-  }
 
   async function exportPdf() {
     if (!sheetRef.current || busy) return;
@@ -214,7 +197,7 @@ export function RecordPrintDialog({
 
       <DialogContent dir="rtl" className="record-print-dialog single-print-sheet max-h-[92vh] max-w-3xl overflow-y-auto">
         <DialogHeader className="no-print">
-          <DialogTitle>طباعة رسمية / PDF</DialogTitle>
+          <DialogTitle>حفظ PDF رسمي</DialogTitle>
         </DialogHeader>
 
         <div ref={sheetRef} className="print-area rounded-lg border bg-paper p-5 text-paper-foreground">
@@ -244,9 +227,6 @@ export function RecordPrintDialog({
         <DialogFooter className="no-print gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             إغلاق
-          </Button>
-          <Button variant="outline" onClick={printRecord}>
-            <Printer className="size-4" /> طباعة
           </Button>
           <Button onClick={exportPdf} disabled={busy}>
             <FileDown className="size-4" /> {busy ? "جارٍ تجهيز PDF..." : "تصدير PDF"}

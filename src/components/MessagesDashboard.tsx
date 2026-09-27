@@ -9,7 +9,6 @@ import {
   Mail,
   MessageCircle,
   MessageSquareText,
-  Printer,
   QrCode,
   RotateCcw,
   Send,
@@ -472,23 +471,22 @@ export default function MessagesDashboard() {
     );
   }
 
-  async function exportPdf() {
-    if (
-      !printRef.current ||
-      !selected.length ||
-      exporting
-    ) {
+  async function exportVariantPdf(internal: boolean) {
+    if (!selected.length || exporting) {
       return;
     }
 
+    setIncludeInternal(internal);
     setExporting(true);
 
     try {
+      // إعطاء الواجهة فرصة لإعادة العرض بحسب النوع المطلوب (مشاركة / داخلي) قبل الالتقاط.
+      await new Promise((resolve) => window.setTimeout(resolve, 150));
+      if (!printRef.current) return;
+
       await elementToPdf(
         printRef.current,
-        includeInternal
-          ? "تقرير داخلي للآراء والرسائل"
-          : "تقرير الآراء والرسائل",
+        internal ? "تقرير داخلي للآراء والرسائل" : "تقرير الآراء والرسائل",
       );
 
       toast.success("تم حفظ التقرير بصيغة PDF");
@@ -499,25 +497,24 @@ export default function MessagesDashboard() {
     }
   }
 
-  function printSelected(internal: boolean) {
-    if (!selected.length) {
-      return;
-    }
+  async function exportAllPdf() {
+    if (exporting) return;
 
-    setIncludeInternal(internal);
-
-    window.setTimeout(() => {
-      window.print();
-    }, 150);
-  }
-
-  function printAll() {
     setSelectedIds(filtered.map((item) => item.id));
     setIncludeInternal(true);
+    setExporting(true);
 
-    window.setTimeout(() => {
-      window.print();
-    }, 150);
+    try {
+      await new Promise((resolve) => window.setTimeout(resolve, 150));
+      if (!printRef.current) return;
+
+      await elementToPdf(printRef.current, "تقرير قائمة نتائج الآراء والرسائل");
+      toast.success("تم حفظ التقرير بصيغة PDF");
+    } catch {
+      toast.error("تعذّر حفظ ملف PDF.");
+    } finally {
+      setExporting(false);
+    }
   }
 
   async function replyToBeneficiary(
@@ -793,14 +790,11 @@ export default function MessagesDashboard() {
             <Button variant="outline" onClick={() => sendEmail()} disabled={!selected.length}>
               <Mail className="size-4" /> بريد
             </Button>
-            <Button variant="outline" onClick={() => printSelected(false)} disabled={!selected.length}>
-              <Printer className="size-4" /> طباعة مشاركة
+            <Button variant="outline" onClick={() => exportVariantPdf(false)} disabled={!selected.length || exporting}>
+              <FileDown className="size-4" /> حفظ PDF (مشاركة)
             </Button>
-            <Button variant="outline" onClick={() => printSelected(true)} disabled={!selected.length}>
-              <Printer className="size-4" /> طباعة داخلية
-            </Button>
-            <Button onClick={exportPdf} disabled={!selected.length || exporting}>
-              <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF"}
+            <Button onClick={() => exportVariantPdf(true)} disabled={!selected.length || exporting}>
+              <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF (داخلي)"}
             </Button>
           </div>
         </div>
@@ -811,8 +805,8 @@ export default function MessagesDashboard() {
           <span>
             <strong>{filtered.length}</strong> مشاركة مطابقة {selected.length ? `· ${selected.length} محددة` : ""}
           </span>
-          <Button size="sm" variant="ghost" onClick={printAll}>
-            <Printer className="size-4" /> طباعة قائمة النتائج
+          <Button size="sm" variant="ghost" onClick={exportAllPdf} disabled={exporting}>
+            <FileDown className="size-4" /> حفظ PDF لقائمة النتائج
           </Button>
         </div>
 

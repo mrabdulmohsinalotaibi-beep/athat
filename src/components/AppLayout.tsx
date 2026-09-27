@@ -14,10 +14,10 @@ import {
   Gavel,
   Globe2,
   FolderCheck,
+  FileText,
   Settings,
   LogOut,
   Menu,
-  Printer,
   ChevronDown,
   FolderKanban,
   Crown,
@@ -62,7 +62,7 @@ const NAV = [
   { to: "/integrations", label: "مدرستي ونور", icon: Globe2 },
   { to: "/weekly-poster", label: "التوجيه الطلابي الأسبوعي", icon: Sparkles },
   { to: "/messages", label: "الآراء والرسائل", icon: Inbox },
-  { to: "/reports", label: "التقارير والإحصائيات", icon: Printer },
+  { to: "/reports", label: "التقارير والإحصائيات", icon: FileText },
   { to: "/subscription", label: "الاشتراك والترقية", icon: Crown },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ] as const;
@@ -103,13 +103,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* القائمة الجانبية */}
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-transform lg:translate-x-0",
-          open ? "translate-x-0" : "translate-x-full lg:translate-x-0",
+          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300",
+          open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="brand-mark-well flex size-14 shrink-0 items-center justify-center rounded-xl p-1">
+            <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-1">
               <img src="/brand-logo.png" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
@@ -208,7 +208,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           type="button"
           variant="ghost"
           aria-label="إغلاق القائمة"
-          className="fixed inset-0 z-30 h-auto w-auto rounded-none bg-foreground/40 p-0 hover:bg-foreground/40 lg:hidden"
+          className="fixed inset-0 z-30 h-auto w-auto rounded-none bg-foreground/40 p-0 backdrop-blur-[1px] hover:bg-foreground/40"
           onClick={() => setOpen(false)}
         />
       )}
@@ -221,8 +221,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden"
-                aria-label="فتح قائمة المساحة"
+                aria-label="فتح القائمة الجانبية"
                 onClick={() => setOpen(true)}
               >
                 <Menu className="size-5" />
@@ -230,7 +229,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <img
                 src="/brand-logo.png"
                 alt="شعار الذات"
-                className="brand-mark-well hidden size-12 rounded-xl p-0.5 object-contain sm:block"
+                className="brand-mark-well hidden size-14 rounded-xl p-0.5 object-contain sm:block"
               />
               <div>
                 <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
