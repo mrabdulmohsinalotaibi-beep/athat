@@ -20,6 +20,7 @@ import { Route as AuthenticatedCasesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCommitteesRouteImport } from './routes/_authenticated/committees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEvidencesRouteImport } from './routes/_authenticated/evidences'
+import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedInterviewsRouteImport } from './routes/_authenticated/interviews'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
@@ -91,6 +92,12 @@ const AuthenticatedEvidencesRoute = AuthenticatedEvidencesRouteImport.update({
   path: '/evidences',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIntegrationsRoute =
+  AuthenticatedIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInterviewsRoute = AuthenticatedInterviewsRouteImport.update({
   id: '/interviews',
   path: '/interviews',
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/committees': typeof AuthenticatedCommitteesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/evidences': typeof AuthenticatedEvidencesRoute
+  '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
@@ -216,6 +224,7 @@ export interface FileRoutesByTo {
   '/committees': typeof AuthenticatedCommitteesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/evidences': typeof AuthenticatedEvidencesRoute
+  '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
@@ -246,6 +255,7 @@ export interface FileRoutesById {
   '/_authenticated/committees': typeof AuthenticatedCommitteesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/evidences': typeof AuthenticatedEvidencesRoute
+  '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
   '/_authenticated/interviews': typeof AuthenticatedInterviewsRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/committees'
     | '/dashboard'
     | '/evidences'
+    | '/integrations'
     | '/interviews'
     | '/messages'
     | '/plan'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/committees'
     | '/dashboard'
     | '/evidences'
+    | '/integrations'
     | '/interviews'
     | '/messages'
     | '/plan'
@@ -333,6 +345,7 @@ export interface FileRouteTypes {
     | '/_authenticated/committees'
     | '/_authenticated/dashboard'
     | '/_authenticated/evidences'
+    | '/_authenticated/integrations'
     | '/_authenticated/interviews'
     | '/_authenticated/messages'
     | '/_authenticated/plan'
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/evidences'
       fullPath: '/evidences'
       preLoaderRoute: typeof AuthenticatedEvidencesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/integrations': {
+      id: '/_authenticated/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AuthenticatedIntegrationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/interviews': {
@@ -563,6 +583,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCommitteesRoute: typeof AuthenticatedCommitteesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEvidencesRoute: typeof AuthenticatedEvidencesRoute
+  AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
   AuthenticatedInterviewsRoute: typeof AuthenticatedInterviewsRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
@@ -586,6 +607,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCommitteesRoute: AuthenticatedCommitteesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEvidencesRoute: AuthenticatedEvidencesRoute,
+  AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
   AuthenticatedInterviewsRoute: AuthenticatedInterviewsRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
