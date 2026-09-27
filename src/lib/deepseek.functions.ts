@@ -12,6 +12,7 @@ const fieldSchema = z.object({
 const inputSchema = z.object({
   recordType: z.string().min(1).max(100),
   recordTitle: z.string().min(1).max(200),
+  brief: z.string().min(2).max(2000),
   fields: z.array(fieldSchema).min(1).max(40),
   values: z.record(z.string(), z.string().max(4000)).default({}),
   schoolName: z.string().max(200).optional(),
@@ -28,9 +29,12 @@ const SYSTEM_PROMPT = `أنت مساعد مهني لمنصة "الذات" للت
 - لا تختلق واقعة أو تشخيصًا أو سببًا أو نتيجة أو تاريخًا أو رقمًا أو اسمًا.
 - لا تحوّل الاحتمال إلى حقيقة.
 - اعتمد فقط على البيانات المقدمة في الطلب.
-- إذا كانت المعلومات غير كافية لاقتراح نص مهني دقيق، أعد قيمة فارغة لذلك الحقل.
+- اعتبر "المختصر" الذي يكتبه الموجه المصدر الأساسي للمحتوى، ثم وزّع معناه على الحقول النصية الناقصة بصورة مترابطة.
+- يمكنك تحويل المختصر إلى صياغة رسمية وتوسيع المعنى تربويًا، لكن لا تضف واقعة أو تشخيصًا أو نتيجة محددة أو رقمًا أو تاريخًا أو اسمًا غير موجود في البيانات.
+- إذا كان الحقل توصية أو إجراءً تربويًا، يمكنك اقتراح إجراء عام مناسب مشتق من المختصر، على أن يكون واضحًا أنه توصية وليس واقعة حدثت.
+- إذا كان الحقل يحتاج معلومة واقعية غير موجودة ولا يمكن صياغته بأمان، أعد قيمة فارغة لذلك الحقل.
 - لا تقترح قيمًا لحقول الاختيار أو الأرقام أو التواريخ؛ المطلوب فقط الحقول النصية المرسلة.
-- استخدم صياغة تربوية رسمية، مختصرة، قابلة للمراجعة من الموجه الطلابي.
+- استخدم صياغة تربوية رسمية، عملية، واضحة ومختصرة، قابلة للمراجعة من الموجه الطلابي.
 - لا تستخدم لغة لوم أو وصم للطالب.
 - لا تضع عبارات مثل "حسب علمي" أو "ربما" داخل النص المقترح إلا إذا كانت ضرورية لحفظ عدم اليقين.
 - أعد JSON فقط بالشكل: {"suggestions":{"field_name":"النص المقترح"}}.
@@ -73,6 +77,7 @@ export const generateSmartFill = createServerFn({ method: "POST" })
         نوع_السجل: data.recordTitle,
         المفتاح_البرمجي: data.recordType,
         المدرسة: data.schoolName || "",
+        المختصر_الذي_كتبه_الموجه: data.brief.trim(),
         الحقول_المطلوب_اقتراحها: allowedFields,
         البيانات_المعبأة_حاليًا: Object.fromEntries(contextEntries),
       },
@@ -100,7 +105,18 @@ export const generateSmartFill = createServerFn({ method: "POST" })
     if (!response.ok) {
       const message = await response.text().catch(() => "");
       console.error("[DeepSeek] request failed", response.status, message);
-      throw new Error("تعذّر الاتصال بخدمة DeepSeek. تحقق من إعداد المفتاح وحاول مرة أخرى.");
+
+      if (response.status === 401 || response.status === 403) {
+        throw new Error("مفتاح DeepSeek غير صحيح أو غير متاح للخدمة. تأكد من إضافة DEEPSEEK_API_KEY في Cloudflare ثم أعد نشر الموقع.");
+      }
+      if (response.status === 402) {
+        throw new Error("حساب DeepSeek لا يملك رصيدًا كافيًا لاستخدام واجهة API.");
+      }
+      if (response.status === 429) {
+        throw new Error("تم تجاوز حد طلبات DeepSeek مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى.");
+      }
+
+      throw new Error("تعذّر الاتصال بخدمة DeepSeek. تأكد من DEEPSEEK_API_KEY وإعادة نشر الموقع بعد إضافته.");
     }
 
     const payload = (await response.json()) as {
