@@ -340,7 +340,13 @@ function ProgramsPage() {
 
   const save = useMutation({
     mutationFn: async (draft: ProgramDraft) => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        throw new Error("يجب تسجيل الدخول قبل حفظ البرنامج.");
+      }
+
       const payload = {
+        user_id: authData.user.id,
         program_no: draft.program_no || null,
         name: draft.name || null,
         ptype: draft.ptype || null,
@@ -411,9 +417,17 @@ function ProgramsPage() {
           .from("evidences")
           .upload(path, file, { contentType: file.type || undefined, upsert: false });
         if (uploadError) throw uploadError;
+        const mimeType = file.type || ({
+          pdf: "application/pdf",
+          doc: "application/msword",
+          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          xls: "application/vnd.ms-excel",
+          xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        } as Record<string, string>)[file.name.split(".").pop()?.toLowerCase() ?? ""] || null;
+
         const { error } = await supabase.from("evidences").insert({
           name: file.name,
-          etype: file.type.startsWith("image/") ? "صورة" : "مستند",
+          etype: (mimeType || "").startsWith("image/") ? "صورة" : "مستند",
           linked_type: "برنامج",
           linked_ref: recordId,
           edate: today(),
@@ -421,7 +435,7 @@ function ProgramsPage() {
           description: recordTitle,
           file_path: path,
           file_name: file.name,
-          mime_type: file.type || null,
+          mime_type: mimeType,
         } as never);
         if (error) throw error;
       }
