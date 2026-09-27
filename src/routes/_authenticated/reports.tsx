@@ -5,7 +5,6 @@ import {
   CheckSquare,
   FileDown,
   FileText,
-  Printer,
   RotateCcw,
   Square,
 } from "lucide-react";
@@ -85,7 +84,6 @@ function ReportsPage() {
   const [selectedKeys, setSelectedKeys] = useState<string[]>(
     reportableRecords.map((record) => record.key),
   );
-  const [isPrinting, setIsPrinting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -173,19 +171,6 @@ function ReportsPage() {
     toast.success("تمت إعادة ضبط التقرير.");
   }
 
-  function printOfficialReport() {
-    if (!printRef.current || isPrinting) return;
-    setIsPrinting(true);
-    document.body.classList.add("printing-record");
-    window.setTimeout(() => {
-      window.print();
-      window.setTimeout(() => {
-        document.body.classList.remove("printing-record");
-        setIsPrinting(false);
-      }, 800);
-    }, 100);
-  }
-
   async function exportOfficialPdf() {
     if (!printRef.current || isExporting) return;
     setIsExporting(true);
@@ -219,21 +204,17 @@ function ReportsPage() {
           <div>
             <div className="flex items-center gap-2 text-primary">
               <FileText className="size-5" />
-              <span className="text-xs font-bold">الطباعة الرسمية</span>
+              <span className="text-xs font-bold">الإصدار الرسمي PDF</span>
             </div>
             <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير</h1>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم اطبع التقرير بالكليشة الرسمية وتوقيع الموجه الطلابي ومدير المدرسة.
+              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم احفظ التقرير بصيغة PDF بالكليشة الرسمية وتوقيع الموجه الطلابي ومدير المدرسة.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={printOfficialReport} disabled={isPrinting || isLoading}>
-              <Printer className="size-4" />
-              {isPrinting ? "جارٍ فتح الطباعة..." : "طباعة التقرير الرسمي"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => void exportOfficialPdf()} disabled={isExporting || isLoading}>
+            <Button type="button" onClick={() => void exportOfficialPdf()} disabled={isExporting || isLoading}>
               <FileDown className="size-4" />
-              {isExporting ? "جارٍ إنشاء PDF..." : "حفظ PDF"}
+              {isExporting ? "جارٍ إنشاء PDF..." : "حفظ PDF للتقرير الرسمي"}
             </Button>
             <Button type="button" variant="ghost" onClick={reset}>
               <RotateCcw className="size-4" />

@@ -11,7 +11,6 @@ import {
   Loader2,
   Pencil,
   Plus,
-  Printer,
   Trash2,
   Upload,
   X,
@@ -377,6 +376,8 @@ function ProgramsPage() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
   const printRef = useRef<HTMLDivElement>(null);
+  const listPrintRef = useRef<HTMLDivElement>(null);
+  const [listPdfBusy, setListPdfBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -559,6 +560,19 @@ function ProgramsPage() {
     }));
   }
 
+  async function exportListPdf() {
+    if (!listPrintRef.current || listPdfBusy) return;
+    setListPdfBusy(true);
+    try {
+      await elementToPdf(listPrintRef.current, "كشف البرامج والأنشطة الإرشادية");
+      toast.success("تم حفظ كشف البرامج بصيغة PDF");
+    } catch (error) {
+      toast.error(`تعذّر تصدير PDF: ${(error as Error).message}`);
+    } finally {
+      setListPdfBusy(false);
+    }
+  }
+
   async function exportCurrentPdf() {
     if (!printRef.current || pdfBusy) return;
     setPdfBusy(true);
@@ -687,8 +701,8 @@ function ProgramsPage() {
           <Button variant="outline" onClick={importMinistryPrograms} disabled={isLoading || programsFailed}>
             <CalendarRange className="size-4" /> الخطة الوزارية 1448هـ
           </Button>
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="size-4" /> طباعة القائمة
+          <Button variant="outline" onClick={exportListPdf} disabled={listPdfBusy}>
+            <FileDown className="size-4" /> {listPdfBusy ? "جارٍ تجهيز PDF..." : "حفظ PDF للقائمة"}
           </Button>
           <Button variant="destructive" onClick={deleteAll} disabled={deleteBusy || isLoading || programsFailed}>
             <Trash2 className="size-4" /> حذف الكل
@@ -709,8 +723,8 @@ function ProgramsPage() {
         />
       </div>
 
-      <div className="print-area overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="hidden print:block print:p-6">
+      <div ref={listPrintRef} className="print-area overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div className="p-4 pb-0 print:p-6">
           <OfficialHeader
             school={school}
             title="كشف البرامج والأنشطة الإرشادية"
@@ -790,10 +804,10 @@ function ProgramsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="طباعة رسمية"
+                        title="حفظ PDF رسمي"
                         onClick={() => setPrintFor(row)}
                       >
-                        <Printer className="size-4" />
+                        <FileDown className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
