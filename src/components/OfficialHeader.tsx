@@ -65,13 +65,19 @@ export function OfficialHeader({
   );
 }
 
-export function OfficialFooter({ school }: { school?: SchoolSettings | null | undefined }) {
+export function OfficialFooter({
+  school,
+  repeatEveryPage = true,
+}: {
+  school?: SchoolSettings | null | undefined;
+  repeatEveryPage?: boolean;
+}) {
   const showCounselor = school?.show_counselor_on_documents !== false;
   const showPrincipal = school?.show_principal_on_documents !== false;
   const visibleSignatures = Number(showCounselor) + Number(showPrincipal);
 
   return (
-    <div className="report-signatures print-repeat-footer mt-8 grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground" style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}>
+    <div className={`report-signatures mt-8 ${repeatEveryPage ? "print-repeat-footer" : ""} grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground" style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}>
       {showCounselor && <div className="flex min-h-28 flex-col items-center text-center">
         <p>الموجه الطلابي</p>
         {school?.counselor_signature ? (
