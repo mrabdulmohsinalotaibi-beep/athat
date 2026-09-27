@@ -21,6 +21,13 @@ export function OfficialHeader({
   period?: string;
 }) {
   return (
+    <>
+      <style>{`
+        @media print {
+          .print-repeat-header { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: #fff !important; }
+          .print-repeat-footer { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: #fff !important; }
+        }
+      `}</style>
     <div className="official-letterhead print-repeat-header border-b-2 border-paper-border bg-paper text-paper-foreground pb-4">
       <div className="grid grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] items-stretch gap-6 px-6 text-[11px] font-semibold">
         <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
@@ -54,6 +61,7 @@ export function OfficialHeader({
       </div>
       <h2 className="mt-4 text-center text-lg font-extrabold">{title}</h2>
     </div>
+    </>
   );
 }
 
