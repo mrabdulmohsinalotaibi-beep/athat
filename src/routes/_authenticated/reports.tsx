@@ -165,8 +165,7 @@ function useReportData(selected: string[]) {
         configs.map(async (record) => {
           const result = await supabase
             .from(record.table)
-            .select("*")
-            .order("created_at", { ascending: false });
+            .select("*");
           return { key: record.key, ...result };
         }),
       );
@@ -193,6 +192,10 @@ function ReportsPage() {
   const { data: school } = useSchool();
   const printRef = useRef<HTMLDivElement>(null);
 
+  const [selected, setSelected] = useState<string[]>(DEFAULT_SELECTED);
+  const [reportSections, setReportSections] = useState<ReportSectionsState>(DEFAULT_SECTIONS);
+  const [reportNarrative, setReportNarrative] = useState("");
+  const [period, setPeriod] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
@@ -205,11 +208,6 @@ function ReportsPage() {
     });
     return filtered;
   }, [rawSections, fromDate, toDate]);
-
-  const [selected, setSelected] = useState<string[]>(DEFAULT_SELECTED);
-  const [reportSections, setReportSections] = useState<ReportSectionsState>(DEFAULT_SECTIONS);
-  const [reportNarrative, setReportNarrative] = useState("");
-  const [period, setPeriod] = useState("");
 
   const [exporting, setExporting] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -476,6 +474,26 @@ function ReportsPage() {
           منطقة الطباعة الرسمية (A4)
       ========================================================= */}
       <div ref={printRef} className="reports-print-sheet print-area hidden bg-paper p-6 text-paper-foreground print:block">
+        <style>{`
+          @media print {
+            .reports-print-sheet {
+              display: block !important;
+              padding: 42mm 12mm 48mm !important;
+              width: 100% !important;
+              background: #fff !important;
+              box-shadow: none !important;
+            }
+            .reports-print-sheet .overflow-x-auto { overflow: visible !important; }
+            .reports-print-sheet section,
+            .reports-print-sheet tr,
+            .reports-print-sheet h2,
+            .reports-print-sheet p,
+            .reports-print-sheet img {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+          }
+        `}</style>
         <style>{`
           @media print {
             .reports-print-sheet {
