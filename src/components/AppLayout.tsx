@@ -81,6 +81,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -99,6 +100,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell flex min-h-screen bg-background">
+      {/* القائمة الجانبية */}
       <aside
         className={cn(
           "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-transform lg:translate-x-0",
@@ -137,16 +139,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       active && "text-sidebar-primary",
                     )}
                   >
-                    <Icon className="size-4" />
+                    <Icon className="size-4 shrink-0" />
                     <span className="flex-1 text-right">{item.label}</span>
                     <ChevronDown
-                      className={cn("size-4 transition-transform", isOpen && "rotate-180")}
+                      className={cn("size-4 shrink-0 transition-transform", isOpen && "rotate-180")}
                     />
                   </Button>
                   {isOpen && (
                     <div className="mr-5 space-y-1 border-r border-sidebar-border pr-2">
                       {item.children.map((child) => {
                         const ChildIcon = child.icon;
+                        const isChildActive = pathname === child.to;
                         return (
                           <Link
                             key={child.to}
@@ -154,12 +157,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                             onClick={() => setOpen(false)}
                             className={cn(
                               "flex items-center gap-2 rounded-md px-3 py-2 text-xs hover:bg-sidebar-accent",
-                              pathname === child.to &&
+                              isChildActive &&
                                 "bg-sidebar-accent font-semibold text-sidebar-primary",
                             )}
                           >
-                            <ChildIcon className="size-3.5" />
-                            {child.label}
+                            <ChildIcon className="size-3.5 shrink-0" />
+                            <span>{child.label}</span>
                           </Link>
                         );
                       })}
@@ -168,6 +171,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 </div>
               );
             }
+            const isActive = pathname === item.to;
             return (
               <Link
                 key={item.to}
@@ -175,12 +179,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm hover:bg-sidebar-accent",
-                  pathname === item.to &&
+                  isActive &&
                     "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary",
                 )}
               >
-                <Icon className="size-4" />
-                {item.label}
+                <Icon className="size-4 shrink-0" />
+                <span>{item.label}</span>
               </Link>
             );
           })}
@@ -191,13 +195,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
             onClick={signOut}
             className="w-full justify-start text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
           >
-            <LogOut className="size-4" />
-            تسجيل الخروج
+            <LogOut className="size-4 shrink-0" />
+            <span>تسجيل الخروج</span>
           </Button>
           <Copyright className="mt-3 px-2 text-sidebar-foreground/55" />
         </div>
       </aside>
 
+      {/* طبقة التعتيم للخلفية عند فتح القائمة في الشاشات الصغيرة */}
       {open && (
         <Button
           type="button"
@@ -208,6 +213,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         />
       )}
 
+      {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-20 border-b bg-card/90 shadow-sm backdrop-blur-xl">
           <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
@@ -243,14 +249,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </div>
               <Button asChild variant="outline" size="sm" className="gap-2">
                 <Link to="/profile" title="حسابي الشخصي">
-                  <UserRound className="size-4" />
+                  <UserRound className="size-4 shrink-0" />
                   <span className="hidden sm:inline">حسابي</span>
                 </Link>
               </Button>
             </div>
           </div>
         </header>
+        
         <main className="min-w-0 flex-1 p-4 lg:p-8">{children}</main>
+        
         <footer className="no-print border-t px-4 py-4">
           <Copyright />
         </footer>
