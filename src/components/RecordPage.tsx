@@ -90,6 +90,8 @@ export function RecordPage({
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
   const [smartFilling, setSmartFilling] = useState(false);
+  const [smartPromptOpen, setSmartPromptOpen] = useState(false);
+  const [smartPrompt, setSmartPrompt] = useState("");
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
@@ -297,8 +299,33 @@ export function RecordPage({
     }
   }
 
+  function openSmartFill() {
+    if (smartFilling) return;
+
+    const fillableFields = config.fields.filter(
+      (field) =>
+        !field.generated &&
+        (field.type === "text" || field.type === "textarea") &&
+        !(auto[field.name] ?? String(editing?.[field.name] ?? "")).trim(),
+    );
+
+    if (!fillableFields.length) {
+      toast.info("جميع الحقول النصية مكتملة بالفعل.");
+      return;
+    }
+
+    setSmartPrompt("");
+    setSmartPromptOpen(true);
+  }
+
   async function handleSmartFill() {
     if (smartFilling) return;
+
+    const brief = smartPrompt.trim();
+    if (brief.length < 2) {
+      toast.error("اكتب مختصرًا بسيطًا عن الحالة أو الموضوع أولًا.");
+      return;
+    }
 
     const currentValues: Record<string, string> = {};
     config.fields
@@ -316,6 +343,7 @@ export function RecordPage({
     );
 
     if (!fillableFields.length) {
+      setSmartPromptOpen(false);
       toast.info("جميع الحقول النصية مكتملة بالفعل.");
       return;
     }
@@ -326,6 +354,7 @@ export function RecordPage({
         data: {
           recordType: config.key,
           recordTitle: config.title,
+          brief,
           schoolName: school?.school_name ?? "",
           fields: fillableFields.map((field) => ({
             name: field.name,
@@ -344,11 +373,12 @@ export function RecordPage({
       );
 
       if (!Object.keys(usable).length) {
-        toast.info("لم تتوفر معلومات كافية لاقتراح تعبئة آمنة.");
+        toast.info("لم تتوفر معلومات كافية للتعبئة. جرّب كتابة مختصر أوضح.");
         return;
       }
 
       setAuto((current) => ({ ...current, ...usable }));
+      setSmartPromptOpen(false);
       toast.success(`تمت تعبئة ${Object.keys(usable).length} حقول بالذكاء الاصطناعي — راجعها قبل الحفظ.`);
     } catch (error) {
       toast.error((error as Error).message || "تعذّرت التعبئة الذكية.");
@@ -708,9 +738,9 @@ export function RecordPage({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleSmartFill}
+                onClick={openSmartFill}
                 disabled={smartFilling}
-                title="اقتراح تعبئة للحقول النصية الناقصة بواسطة DeepSeek"
+                title="اكتب مختصرًا وسيقوم DeepSeek بتعبئة بقية الحقول النصية"
               >
                 {smartFilling ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -895,6 +925,58 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={smartPromptOpen}
+        onOpenChange={(open) => {
+          if (!smartFilling) setSmartPromptOpen(open);
+        }}
+      >
+        <DialogContent dir="rtl" className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>التعبئة الذكية</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label htmlFor="smart-fill-brief">
+              اكتب مختصرًا عن الحالة أو الموضوع
+            </Label>
+            <Textarea
+              id="smart-fill-brief"
+              value={smartPrompt}
+              onChange={(e) => setSmartPrompt(e.target.value)}
+              placeholder="مثال: طالب يتكرر تأخره الصباحي، وتمت مناقشة أسباب التأخر معه، ويحتاج إلى متابعة خلال الفترة القادمة."
+              rows={5}
+              autoFocus
+              disabled={smartFilling}
+            />
+            <p className="text-xs text-muted-foreground">
+              سيستخدم الذكاء الاصطناعي هذا المختصر مع بيانات النموذج لكتابة الحقول النصية الناقصة فقط. لن يغيّر الحقول التي أدخلتها بنفسك.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSmartPromptOpen(false)}
+              disabled={smartFilling}
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSmartFill}
+              disabled={smartFilling || smartPrompt.trim().length < 2}
+            >
+              {smartFilling ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              {smartFilling ? "جارٍ التوليد..." : "تعبئة النموذج"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <RecordAttachmentsDialog
         open={attachFor !== null}
         onOpenChange={(open) => !open && setAttachFor(null)}
