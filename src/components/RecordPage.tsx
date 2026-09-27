@@ -25,6 +25,7 @@ import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 import { elementToPdf } from "@/lib/pdf";
 import { displayRecordValue } from "@/lib/display";
+import { formatHijriDate } from "@/lib/date";
 import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import type { RecordConfig } from "@/lib/records";
@@ -775,12 +776,27 @@ export function RecordPage({
                             </Button>
                           )}
                       </div>
+                    ) : f.type === "date" ? (
+                      <div className="relative">
+                        <Input
+                          key={current}
+                          id={f.name}
+                          name={f.name}
+                          type="date"
+                          defaultValue={current}
+                          className="text-transparent caret-transparent"
+                          aria-label={f.label}
+                        />
+                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground">
+                          {current ? formatHijriDate(current) : "اختر التاريخ"}
+                        </span>
+                      </div>
                     ) : (
                       <Input
                         key={current}
                         id={f.name}
                         name={f.name}
-                        type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+                        type={f.type === "number" ? "number" : "text"}
                         defaultValue={current}
                       />
                     )}
