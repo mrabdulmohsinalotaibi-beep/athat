@@ -118,6 +118,7 @@ export function WeeklyGuidancePoster() {
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-[minmax(0,360px)_1fr]" dir="rtl">
+      {/* لوحة التحكم الجانبية */}
       <section className="no-print h-fit rounded-3xl border border-primary/12 bg-card p-5 shadow-sm lg:sticky lg:top-24">
         <div className="mb-5 flex items-center gap-2">
           <div className="rounded-xl bg-primary/10 p-2 text-primary">
@@ -130,6 +131,7 @@ export function WeeklyGuidancePoster() {
             </p>
           </div>
         </div>
+
         <div className="space-y-4">
           <div>
             <Label htmlFor="weekly-topic">قالب الموضوع</Label>
@@ -140,10 +142,13 @@ export function WeeklyGuidancePoster() {
               className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               {Object.keys(WEEKLY_TEMPLATES).map((item) => (
-                <option key={item}>{item}</option>
+                <option key={item} value={item}>
+                  {item}
+                </option>
               ))}
             </select>
           </div>
+
           <div>
             <Label htmlFor="weekly-title">العنوان المخصص</Label>
             <Input
@@ -153,6 +158,7 @@ export function WeeklyGuidancePoster() {
               className="mt-1 font-bold"
             />
           </div>
+
           <div>
             <Label htmlFor="weekly-intro">التمهيد</Label>
             <Textarea
@@ -163,6 +169,7 @@ export function WeeklyGuidancePoster() {
               className="mt-1"
             />
           </div>
+
           <div>
             <Label htmlFor="weekly-body">الرسالة الإرشادية</Label>
             <Textarea
@@ -173,6 +180,7 @@ export function WeeklyGuidancePoster() {
               className="mt-1"
             />
           </div>
+
           <div>
             <Label htmlFor="weekly-reminder">تذكّر دائمًا</Label>
             <Textarea
@@ -184,33 +192,37 @@ export function WeeklyGuidancePoster() {
             />
           </div>
         </div>
+
         <div className="mt-5 grid gap-2">
-          <Button onClick={() => applyTemplate(topic)} variant="secondary">
-            <BookOpenCheck className="size-4" /> إعادة تطبيق القالب
+          <Button onClick={() => applyTemplate(topic)} variant="secondary" className="w-full">
+            <BookOpenCheck className="size-4 ml-2" /> إعادة تطبيق القالب
           </Button>
-          <Button onClick={downloadPdf} disabled={exporting}>
+          <Button onClick={downloadPdf} disabled={exporting} className="w-full">
             {exporting ? (
-              <Loader2 className="size-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin ml-2" />
             ) : (
-              <FileDown className="size-4" />
-            )}{" "}
+              <FileDown className="size-4 ml-2" />
+            )}
             حفظ PDF
           </Button>
         </div>
       </section>
 
-      <div className="overflow-auto rounded-3xl border bg-muted/30 p-4">
+      {/* معاينة البوستر الطباعي */}
+      <div className="overflow-auto rounded-3xl border bg-muted/30 p-4 flex justify-center">
         <div
           ref={posterRef}
           dir="rtl"
-          className="mx-auto bg-[#fffdf8] text-[#30261f]"
+          className="bg-[#fffdf8] text-[#30261f] shrink-0"
           style={{
             width: 794,
             minHeight: 1123,
             padding: 40,
             fontFamily: "'Cairo Variable', Cairo, sans-serif",
+            boxSizing: "border-box",
           }}
         >
+          {/* ترويسة البوستر */}
           <div className="grid grid-cols-3 items-center rounded-[28px] border-b-4 border-[#c69f70] bg-[#faf4e9] px-8 py-4">
             <div className="text-right text-sm font-bold leading-7">
               <p>المملكة العربية السعودية</p>
@@ -227,12 +239,16 @@ export function WeeklyGuidancePoster() {
               <p>{new Date().toLocaleDateString("ar-SA")}</p>
             </div>
           </div>
+
+          {/* شارة التوجيه الطلابي الرئيسية */}
           <div className="mt-8 flex justify-center">
             <div className="flex items-center gap-3 rounded-xl border border-[#c69f70] bg-[#faf4e9] px-8 py-3 shadow-[3px_3px_0_rgba(48,38,31,0.14)]">
               <span className="size-3 rounded-full bg-[#80583a]" />
               <h2 className="text-2xl font-extrabold">التوجيه الطلابي</h2>
             </div>
           </div>
+
+          {/* المحتوى الداخلي للبوستر مع العلامة المائية */}
           <div
             className="relative mt-8 flex min-h-[720px] flex-col justify-between rounded-sm border-2 border-[#c69f70] p-10"
             style={watermarkStyle}
@@ -241,7 +257,9 @@ export function WeeklyGuidancePoster() {
               <div className="max-w-xl">
                 <p className="text-xl font-bold leading-10">{intro}</p>
                 {title && (
-                  <p className="mt-2 text-2xl font-extrabold text-[#80583a]">&quot;{title}&quot;</p>
+                  <p className="mt-2 text-2xl font-extrabold text-[#80583a]">
+                    &quot;{title}&quot;
+                  </p>
                 )}
               </div>
               {body && <p className="max-w-xl text-lg leading-9">{body}</p>}
@@ -252,6 +270,8 @@ export function WeeklyGuidancePoster() {
                 </div>
               )}
             </div>
+
+            {/* تذييل البوستر */}
             <div className="relative mt-8 flex items-center justify-between border-t border-[#c69f70]/40 pt-3 text-xs font-medium text-[#76685a]">
               <span>الموجه الطلابي: {school?.counselor_name || "—"}</span>
               <span>منصة الذات للتوجيه الطلابي</span>
