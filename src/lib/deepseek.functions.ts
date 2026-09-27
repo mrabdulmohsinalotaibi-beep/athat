@@ -146,18 +146,26 @@ export const generateSmartFill = createServerFn({ method: "POST" })
 
     const payload = (await response.json()) as {
       choices?: Array<{ message?: { content?: string | null } }>;
+      error?: { message?: string };
     };
     const rawContent = payload.choices?.[0]?.message?.content?.trim();
 
     if (!rawContent) {
-      throw new Error("لم تُرجع خدمة DeepSeek اقتراحات.");
+      throw new Error(payload.error?.message || "لم تُرجع خدمة DeepSeek اقتراحات.");
     }
+
+    // DeepSeek normally returns strict JSON with response_format=json_object,
+    // but some deployments may still wrap it in a markdown code fence.
+    const normalizedContent = rawContent
+      .replace(/^\s*```(?:json)?\s*/i, "")
+      .replace(/\s*```\s*$/i, "")
+      .trim();
 
     let parsed: unknown;
     try {
-      parsed = JSON.parse(rawContent);
+      parsed = JSON.parse(normalizedContent);
     } catch {
-      throw new Error("تعذّر قراءة استجابة DeepSeek.");
+      throw new Error("تعذّر قراءة استجابة الذكاء الاصطناعي. حاول مرة أخرى.");
     }
 
     const suggestions = cleanSuggestions(
