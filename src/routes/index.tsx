@@ -98,6 +98,17 @@ function Landing() {
               >
                 <Link to="/services">الخدمات الإرشادية</Link>
               </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="secondary"
+                className="h-12 gap-2 px-7 text-base font-bold"
+              >
+                <Link to="/auth" search={{ next: "" }}>
+                  دخول الموجه الطلابي
+                  <ChevronLeft className="size-5" />
+                </Link>
+              </Button>
             </div>
           </div>
 
