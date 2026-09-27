@@ -168,6 +168,43 @@ function choosePageEnd(
   return crossingZone ? Math.floor(crossingZone.top) : target;
 }
 
+async function renderRepeatPart(
+  source: HTMLElement | null,
+  host: HTMLElement,
+  widthMm: number,
+): Promise<HTMLCanvasElement | null> {
+  if (!source) return null;
+
+  const clone = source.cloneNode(true) as HTMLElement;
+  clone.classList.remove("fixed");
+  clone.style.setProperty("position", "static", "important");
+  clone.style.setProperty("top", "auto", "important");
+  clone.style.setProperty("bottom", "auto", "important");
+  clone.style.setProperty("left", "auto", "important");
+  clone.style.setProperty("right", "auto", "important");
+  clone.style.setProperty("width", `${widthMm}mm`, "important");
+  clone.style.setProperty("max-width", `${widthMm}mm`, "important");
+  clone.style.setProperty("margin", "0", "important");
+  clone.style.setProperty("box-sizing", "border-box", "important");
+  clone.style.setProperty("background", "#ffffff", "important");
+  host.appendChild(clone);
+
+  try {
+    await waitForDocumentAssets(clone);
+    await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+    return await toCanvas(clone, {
+      backgroundColor: "#ffffff",
+      cacheBust: true,
+      pixelRatio: Math.min(2, Math.max(1.5, window.devicePixelRatio || 1)),
+      width: Math.max(clone.scrollWidth, 1),
+      height: Math.max(clone.scrollHeight, 1),
+      style: { background: "#ffffff", boxShadow: "none", overflow: "visible" },
+    });
+  } finally {
+    clone.remove();
+  }
+}
+
 /** Builds consistent A4 pages and moves cuts away from headings, rows, and short content blocks. */
 async function createPdf(element: HTMLElement) {
   const captureHost = document.createElement("div");
@@ -183,8 +220,14 @@ async function createPdf(element: HTMLElement) {
     "z-index:-1",
   ].join(";");
 
+  const repeatHeaderSource = element.querySelector<HTMLElement>(".print-repeat-header");
+  const repeatFooterSource = element.querySelector<HTMLElement>(".print-repeat-footer");
+
   const capture = element.cloneNode(true) as HTMLElement;
   capture.classList.add("pdf-capture");
+
+  // Header/footer are rendered separately so they can be repeated on every PDF page.
+  capture.querySelectorAll(".print-repeat-header, .print-repeat-footer").forEach((node) => node.remove());
   capture.classList.remove("hidden");
   capture.removeAttribute("hidden");
   capture.style.setProperty("display", "block", "important");
@@ -216,7 +259,13 @@ async function createPdf(element: HTMLElement) {
   captureHost.appendChild(capture);
   document.body.appendChild(captureHost);
 
+  let repeatHeaderCanvas: HTMLCanvasElement | null = null;
+  let repeatFooterCanvas: HTMLCanvasElement | null = null;
+
   try {
+    repeatHeaderCanvas = await renderRepeatPart(repeatHeaderSource, captureHost, CONTENT_WIDTH_MM);
+    repeatFooterCanvas = await renderRepeatPart(repeatFooterSource, captureHost, CONTENT_WIDTH_MM);
+
     await waitForDocumentAssets(capture);
     await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 
@@ -243,13 +292,23 @@ async function createPdf(element: HTMLElement) {
     const pageHeight = pdf.internal.pageSize.getHeight();
     const contentWidth = pageWidth - PAGE_MARGIN_MM * 2;
     const contentHeight = pageHeight - PAGE_MARGIN_MM * 2;
-    const pagePixelHeight = Math.floor((canvas.width * contentHeight) / contentWidth);
-    const markers = getPageMarkers(capture, canvas, pagePixelHeight);
+    const repeatHeaderHeightPx = repeatHeaderCanvas
+      ? Math.floor((repeatHeaderCanvas.height * canvas.width) / Math.max(repeatHeaderCanvas.width, 1))
+      : 0;
+    const repeatFooterHeightPx = repeatFooterCanvas
+      ? Math.floor((repeatFooterCanvas.height * canvas.width) / Math.max(repeatFooterCanvas.width, 1))
+      : 0;
+    const fullPagePixelHeight = Math.floor((canvas.width * contentHeight) / contentWidth);
+    const contentPagePixelHeight = Math.max(
+      1,
+      fullPagePixelHeight - repeatHeaderHeightPx - repeatFooterHeightPx,
+    );
+    const markers = getPageMarkers(capture, canvas, contentPagePixelHeight);
     let sourceY = 0;
     let pageIndex = 0;
 
     while (sourceY < canvas.height) {
-      const pageEnd = choosePageEnd(sourceY, pagePixelHeight, canvas.height, markers);
+      const pageEnd = choosePageEnd(sourceY, contentPagePixelHeight, canvas.height, markers);
       const sliceHeight = Math.max(1, Math.min(canvas.height - sourceY, pageEnd - sourceY));
       const pageCanvas = document.createElement("canvas");
       pageCanvas.width = canvas.width;
@@ -272,20 +331,46 @@ async function createPdf(element: HTMLElement) {
       );
 
       const renderedHeight = Math.min(
-        contentHeight,
+        contentHeight - (repeatHeaderHeightPx + repeatFooterHeightPx) * contentWidth / canvas.width,
         (sliceHeight * contentWidth) / canvas.width,
       );
+      const headerHeightMm = (repeatHeaderHeightPx * contentWidth) / canvas.width;
+      const footerHeightMm = (repeatFooterHeightPx * contentWidth) / canvas.width;
+
       if (pageIndex > 0) pdf.addPage();
+
+      if (repeatHeaderCanvas) {
+        pdf.addImage(
+          repeatHeaderCanvas.toDataURL("image/png"),
+          "PNG",
+          PAGE_MARGIN_MM,
+          PAGE_MARGIN_MM,
+          contentWidth,
+          headerHeightMm,
+        );
+      }
+
       pdf.addImage(
         pageCanvas.toDataURL("image/jpeg", 0.94),
         "JPEG",
         PAGE_MARGIN_MM,
-        PAGE_MARGIN_MM,
+        PAGE_MARGIN_MM + headerHeightMm,
         contentWidth,
         renderedHeight,
         undefined,
         "FAST",
       );
+
+      if (repeatFooterCanvas) {
+        pdf.addImage(
+          repeatFooterCanvas.toDataURL("image/png"),
+          "PNG",
+          PAGE_MARGIN_MM,
+          pageHeight - PAGE_MARGIN_MM - footerHeightMm,
+          contentWidth,
+          footerHeightMm,
+        );
+      }
       pdf.setFontSize(8);
       pdf.setTextColor(110, 110, 110);
       pdf.text(`صفحة ${pageIndex + 1}`, pageWidth - PAGE_MARGIN_MM, pageHeight - 5, {
