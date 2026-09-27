@@ -46,6 +46,30 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    // Cloudflare Workers exposes secrets/bindings through the fetch env object.
+    // TanStack Start server functions in this project read server settings from
+    // process.env, so bridge the relevant non-public bindings for each request.
+    if (env && typeof env === "object") {
+      const bindings = env as Record<string, unknown>;
+      const processEnv = (globalThis as typeof globalThis & {
+        process?: { env?: Record<string, string | undefined> };
+      }).process?.env;
+      if (processEnv) {
+        for (const key of [
+          "DEEPSEEK_API_KEY",
+          "DEEPSEEK_MODEL",
+          "SUPABASE_URL",
+          "SUPABASE_PUBLISHABLE_KEY",
+          "SUPABASE_SERVICE_ROLE_KEY",
+          "LOVABLE_CRON_SECRET",
+          "LOVABLE_CRON_SECRET_PREVIOUS",
+        ]) {
+          const value = bindings[key];
+          if (typeof value === "string" && value) processEnv[key] = value;
+        }
+      }
+    }
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
