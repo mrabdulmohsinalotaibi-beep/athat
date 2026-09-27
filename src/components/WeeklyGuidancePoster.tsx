@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { elementToPdf } from "@/lib/pdf";
 import { useSchool } from "@/lib/school";
+import { formatHijriDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -236,7 +237,7 @@ export function WeeklyGuidancePoster() {
             <div className="text-left text-xs font-semibold leading-6">
               <p>العام الدراسي: {school?.academic_year || "—"}</p>
               <p>{school?.semester || "الفصل الدراسي"}</p>
-              <p>{new Date().toLocaleDateString("ar-SA")}</p>
+              <p>{formatHijriDate(new Date())}</p>
             </div>
           </div>
 
