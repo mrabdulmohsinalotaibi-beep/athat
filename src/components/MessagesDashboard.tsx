@@ -9,7 +9,6 @@ import {
   Mail,
   MessageCircle,
   MessageSquareText,
-  Search,
   Printer,
   QrCode,
   RotateCcw,
@@ -304,14 +303,8 @@ export default function MessagesDashboard() {
       id,
       {
         response_note: trimmedResponse || null,
-        ...(trimmedResponse
-          ? {
-              status: "تم الرد",
-              responded_at: new Date().toISOString(),
-            }
-          : {}),
       },
-      "تم حفظ الرد والإجراء",
+      "تم حفظ مسودة الرد والإجراء",
     );
   }
 
@@ -1297,11 +1290,11 @@ function SummaryCard({
       ? "border-amber-300/40 bg-amber-50/60 text-amber-800"
       : tone === "rose"
         ? "border-rose-300/40 bg-rose-50/60 text-rose-800"
-        : "border-primary/12 bg-card text-primary";
+      : "border-border bg-card text-primary";
 
   return (
     <article
-      className={`rounded-2xl border p-4 shadow-sm ${toneClass}`}
+      className={`rounded-md border p-4 shadow-sm ${toneClass}`}
     >
       <p className="text-xs font-semibold">
         {label}
