@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 
 import { Copyright } from "@/components/Copyright";
-import { PublicPostsFeed } from "@/components/PublicPostsFeed";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,7 +35,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "الذات مساحة مهنية للمرشدين والمرشدات لتنظيم العمل الإرشادي، متابعة الحالات، وبناء أثر واضح في كل يوم.",
+          "الذات مساحة مهنية للموجهين والموجهات لتنظيم العمل التوجيهي، متابعة الحالات، وبناء أثر واضح في كل يوم.",
       },
       { property: "og:title", content: "الذات — مساحتك المهنية للإنجاز الإرشادي" },
       {
@@ -165,7 +164,7 @@ function Landing() {
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:py-28">
             <div className="max-w-2xl">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-bold text-primary">
-                <Sparkles className="size-3.5" /> مساحة مهنية للمرشدين والمرشدات
+                <Sparkles className="size-3.5" /> مساحة مهنية للموجهين والموجهات
               </div>
               <h1 className="max-w-2xl text-4xl font-black leading-[1.18] tracking-tight sm:text-6xl">
                 رتّب عملك،
@@ -216,12 +215,7 @@ function Landing() {
         </section>
 
         <section id="journal" className="scroll-mt-20">
-          <PublicPostsFeed
-            limit={6}
-            title="منشورات تستحق وقتك"
-            subtitle="مقالات وأخبار وتجارب يشاركها الموجهون والموجهات مع المجتمع المهني.
-            "
-          />
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 sm:py-24"><div className="rounded-3xl border border-dashed border-primary/25 bg-primary/5 p-10 text-center"><LockKeyhole className="mx-auto size-8 text-primary" /><h2 className="mt-4 text-2xl font-black">مدونات الموجهين الخاصة</h2><p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">لا تظهر المنشورات في الصفحة العامة. ينشر كل موجه رابط مدونته الخاصة بنفسه لمن يختار مشاركته معه.</p></div></div>
         </section>
 
         <section id="services" className="scroll-mt-20 border-y border-border/50 bg-muted/20 py-20 sm:py-24">

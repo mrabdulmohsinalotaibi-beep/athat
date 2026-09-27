@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Eye, Globe, Lock, Pencil, Plus, Trash2 } from "lucide-react";
+import { Globe, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,8 @@ import { useSchool } from "@/lib/school";
 export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
     meta: [
-      { title: "المنشورات العامة | منصة الذات" },
-      { name: "description", content: "إدارة المقالات والأخبار والإعلانات المنشورة للعامة." },
+      { title: "مدونة الموجه | منصة الذات" },
+      { name: "description", content: "إدارة منشورات الموجه الخاصة ومشاركتها عبر رابط شخصي." },
     ],
   }),
   component: PostsManager,
@@ -72,8 +72,8 @@ function PostsManager() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black">المنشورات العامة</h1>
-          <p className="text-sm text-muted-foreground">ما تضع عليه «منشور للعامة» يظهر في الصفحة الرئيسية وصفحتك العامة.</p>
+          <h1 className="text-2xl font-black">مدونة الموجه</h1>
+          <p className="text-sm text-muted-foreground">انشر ما تختاره في مدونتك الخاصة وشارك رابطها مع من تسمح له بالاطلاع.</p>
         </div>
         <Button onClick={() => setDraft({ ...EMPTY })} className="gap-2"><Plus className="size-4" />منشور جديد</Button>
       </div>
@@ -115,7 +115,6 @@ function PostsManager() {
               <p className="mt-1 font-bold">{p.title}</p>
             </div>
             <div className="flex gap-2">
-              {p.is_public && <Button asChild size="icon" variant="ghost" title="عرض"><Link to="/posts/$slug" params={{ slug: p.slug }}><Eye className="size-4" /></Link></Button>}
               <Button size="icon" variant="ghost" title="تعديل" onClick={() => setDraft({ id: p.id, title: p.title, kind: p.kind, excerpt: p.excerpt ?? "", body: p.body, cover_url: p.cover_url ?? "", is_public: p.is_public, published_at: p.published_at })}><Pencil className="size-4" /></Button>
               <Button size="icon" variant="ghost" title="حذف" onClick={() => { if (confirm("حذف المنشور نهائياً؟")) remove.mutate(p.id); }}><Trash2 className="size-4 text-destructive" /></Button>
             </div>
@@ -127,38 +126,26 @@ function PostsManager() {
 }
 
 function PublicLinkCard() {
-  const qc = useQueryClient();
   const { data: row } = useQuery({
     queryKey: ["my-public-slug"],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      const { data } = await supabase.from("school_settings").select("id,public_slug").eq("user_id", u.user?.id ?? "").order("created_at").limit(1).maybeSingle();
+      const { data } = await (supabase as any).from("school_settings").select("id,private_blog_token").eq("user_id", u.user?.id ?? "").order("created_at").limit(1).maybeSingle();
       return data;
     },
   });
-  const [value, setValue] = useState<string | null>(null);
-  const current = value ?? row?.public_slug ?? "";
-  const url = row?.public_slug ? `${typeof window !== "undefined" ? window.location.origin : ""}/c/${row.public_slug}` : "";
-
-  async function saveSlug(): Promise<void> {
-    const slug = current.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
-    if (slug.length < 3) { toast.error("استخدم 3 أحرف إنجليزية أو أرقام على الأقل"); return; }
-    if (!row?.id) { toast.error("أكمل بيانات المدرسة من الإعدادات أولاً"); return; }
-    const { error } = await supabase.from("school_settings").update({ public_slug: slug }).eq("id", row.id);
-    if (error) { toast.error(error.code === "23505" ? "هذا الرابط مستخدم، جرّب اسماً آخر" : error.message); return; }
-    toast.success("تم حفظ رابط صفحتك العامة");
-    setValue(null);
-    qc.invalidateQueries({ queryKey: ["my-public-slug"] });
-  }
+  const current = row?.private_blog_token ?? "";
+  const url = row?.private_blog_token ? `${typeof window !== "undefined" ? window.location.origin : ""}/blog/${row.private_blog_token}` : "";
 
   return (
     <div className="rounded-2xl border bg-card p-5">
-      <p className="font-bold">رابط صفحتك العامة</p>
+      <p className="font-bold">رابط مدونتك الخاصة</p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span dir="ltr" className="text-sm text-muted-foreground">/c/</span>
-        <Input dir="ltr" className="max-w-xs" placeholder="my-school" value={current} onChange={(e) => setValue(e.target.value)} />
-        <Button variant="outline" onClick={saveSlug}>حفظ الرابط</Button>
+        <span dir="ltr" className="text-sm text-muted-foreground">/blog/</span>
+        <Input dir="ltr" className="max-w-xs" placeholder="سيظهر بعد تطبيق الهجرة" value={current} readOnly />
+        <Button variant="outline" disabled={!url} onClick={() => { void navigator.clipboard.writeText(url); toast.success("تم نسخ رابط المدونة الخاصة"); }}>نسخ الرابط</Button>
       </div>
+      <p className="mt-2 text-xs text-muted-foreground">لا تظهر منشوراتك في الصفحة الرئيسية؛ لا يراها الزوار إلا من خلال هذا الرابط ومنشوراتك التي اخترت نشرها.</p>
       {url && <a href={url} target="_blank" rel="noreferrer" dir="ltr" className="mt-2 block text-sm text-primary underline">{url}</a>}
     </div>
   );

@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PublicPostsFeed } from "@/components/PublicPostsFeed";
 import { Copyright } from "@/components/Copyright";
 
 export const Route = createFileRoute("/c/$slug")({
@@ -51,7 +50,7 @@ function SchoolPage() {
             <h1 className="text-3xl font-black">{school.school_name || "صفحة الموجه الطلابي"}</h1>
             {school.education_dept && <p className="mt-2 text-muted-foreground">{school.education_dept}</p>}
           </section>
-          <PublicPostsFeed userId={school.user_id} title="منشورات الموجه الطلابي" />
+          <section className="mx-auto max-w-3xl px-4 py-16 text-center"><p className="rounded-3xl border border-dashed border-primary/25 bg-primary/5 p-10 text-sm leading-7 text-muted-foreground">مدونات الموجهين أصبحت خاصة، ولا تظهر هنا. يشارك الموجه رابط مدونته الخاصة مباشرة مع من يسمح له بالاطلاع.</p></section>
         </>
       )}
       <footer className="border-t py-6 text-center text-xs text-muted-foreground"><Copyright /></footer>

@@ -33,6 +33,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWeeklyPosterRouteImport } from './routes/_authenticated/weekly-poster'
+import { Route as BlogTokenRouteImport } from './routes/blog.$token'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as FeedbackTokenRouteImport } from './routes/feedback.$token'
 import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
@@ -162,6 +163,11 @@ const AuthenticatedWeeklyPosterRoute =
     path: '/weekly-poster',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const BlogTokenRoute = BlogTokenRouteImport.update({
+  id: '/blog/$token',
+  path: '/blog/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CSlugRoute = CSlugRouteImport.update({
   id: '/c/$slug',
   path: '/c/$slug',
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
+  '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
+    | '/blog/$token'
     | '/c/$slug'
     | '/feedback/$token'
     | '/posts/$slug'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/subscription'
     | '/weekly-poster'
+    | '/blog/$token'
     | '/c/$slug'
     | '/feedback/$token'
     | '/posts/$slug'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/subscription'
     | '/_authenticated/weekly-poster'
+    | '/blog/$token'
     | '/c/$slug'
     | '/feedback/$token'
     | '/posts/$slug'
@@ -369,6 +381,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   LoginRoute: typeof LoginRoute
+  BlogTokenRoute: typeof BlogTokenRoute
   CSlugRoute: typeof CSlugRoute
   FeedbackTokenRoute: typeof FeedbackTokenRoute
   PostsSlugRoute: typeof PostsSlugRoute
@@ -544,6 +557,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWeeklyPosterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/blog/$token': {
+      id: '/blog/$token'
+      path: '/blog/$token'
+      fullPath: '/blog/$token'
+      preLoaderRoute: typeof BlogTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/c/$slug': {
       id: '/c/$slug'
       path: '/c/$slug'
@@ -632,6 +652,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   LoginRoute: LoginRoute,
+  BlogTokenRoute: BlogTokenRoute,
   CSlugRoute: CSlugRoute,
   FeedbackTokenRoute: FeedbackTokenRoute,
   PostsSlugRoute: PostsSlugRoute,
