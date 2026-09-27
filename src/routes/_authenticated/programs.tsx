@@ -399,15 +399,17 @@ function ProgramsPage() {
   }
 
   async function uploadFiles(recordId: string, recordTitle: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول قبل رفع الشواهد.");
     if (!pendingFiles.length) return;
     try {
       for (const file of pendingFiles) {
         if (file.size > 50 * 1024 * 1024) throw new Error(`الملف ${file.name} يتجاوز 50 ميجابايت.`);
         const safe = file.name.replace(/[^\w\-.\u0600-\u06FF ]/g, "_");
-        const path = `programs/${recordId}/${Date.now()}-${safe}`;
+        const path = `${user.id}/programs/${recordId}/${Date.now()}-${safe}`;
         const { error: uploadError } = await supabase.storage
           .from("evidences")
-          .upload(path, file, { ...(file.type ? { contentType: file.type } : {}), upsert: false });
+          .upload(path, file, { contentType: file.type || undefined, upsert: false });
         if (uploadError) throw uploadError;
         const { error } = await supabase.from("evidences").insert({
           name: file.name,
