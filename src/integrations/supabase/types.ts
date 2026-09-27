@@ -538,6 +538,51 @@ export type Database = {
         }
         Relationships: []
       }
+      noor_export_jobs: {
+        Row: {
+          created_at: string
+          id: string
+          last_error: string | null
+          noor_reference: string | null
+          pause_reason: string | null
+          payload: Json
+          source_id: string
+          source_table: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          noor_reference?: string | null
+          pause_reason?: string | null
+          payload?: Json
+          source_id: string
+          source_table: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          noor_reference?: string | null
+          pause_reason?: string | null
+          payload?: Json
+          source_id?: string
+          source_table?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plan_tasks: {
         Row: {
           created_at: string
@@ -840,6 +885,7 @@ export type Database = {
           logo_url: string | null
           principal_name: string | null
           principal_signature: string | null
+          private_blog_token: string
           public_feedback_token: string
           public_slug: string | null
           school_name: string | null
@@ -859,6 +905,7 @@ export type Database = {
           logo_url?: string | null
           principal_name?: string | null
           principal_signature?: string | null
+          private_blog_token?: string
           public_feedback_token?: string
           public_slug?: string | null
           school_name?: string | null
@@ -878,6 +925,7 @@ export type Database = {
           logo_url?: string | null
           principal_name?: string | null
           principal_signature?: string | null
+          private_blog_token?: string
           public_feedback_token?: string
           public_slug?: string | null
           school_name?: string | null
@@ -1028,6 +1076,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_private_counselor_blog: {
+        Args: { p_token: string }
+        Returns: {
+          author_name: string
+          body: string
+          counselor_name: string
+          cover_url: string
+          created_at: string
+          excerpt: string
+          kind: string
+          published_at: string
+          school_name: string
+          slug: string
+          title: string
+        }[]
+      }
       get_public_school: {
         Args: { p_slug: string }
         Returns: {
