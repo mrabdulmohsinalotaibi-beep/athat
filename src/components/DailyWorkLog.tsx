@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { formatHijriDate } from "@/lib/date";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -104,7 +105,7 @@ export function DailyWorkLog() {
           التاريخ
           <div className="relative mt-1.5">
             <CalendarDays className="pointer-events-none absolute right-3 top-2.5 size-4 text-muted-foreground" />
-            <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="pr-9" />
+            <div className="relative">\n              <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="pr-9 text-transparent caret-transparent" aria-label="التاريخ" />\n              <span className="pointer-events-none absolute inset-y-0 right-10 flex items-center text-sm font-semibold text-foreground">{formatHijriDate(date)}</span>\n            </div>
           </div>
         </label>
         {[
@@ -154,7 +155,7 @@ export function DailyWorkLog() {
           <div className="flex flex-wrap gap-2">
             {recent.map((item) => (
               <span key={item.id} className="rounded-xl border bg-background/70 px-3 py-2 text-[11px] font-semibold">
-                {item.report_date || "بدون تاريخ"}
+                {item.report_date ? formatHijriDate(item.report_date) : "بدون تاريخ"}
               </span>
             ))}
           </div>
