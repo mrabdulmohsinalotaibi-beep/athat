@@ -51,6 +51,28 @@ export function RecordPrintDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* تنسيقات الطباعة الخاصة بـ A4 */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+          .no-print {
+            display: none !important;
+          }
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          .print-area {
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
+
       <DialogContent dir="rtl" className="single-print-sheet max-h-[92vh] max-w-3xl overflow-y-auto">
         <DialogHeader className="no-print">
           <DialogTitle>طباعة رسمية / PDF</DialogTitle>
@@ -71,7 +93,7 @@ export function RecordPrintDialog({
           </table>
 
           {longFields.map((item) => (
-            <section key={item.field.name} className="mt-4">
+            <section key={item.field.name} className="mt-4 break-inside-avoid">
               <h3 className="report-summary border border-paper-border bg-paper-muted p-2 text-[12px] font-bold">{item.field.label}</h3>
               <p className="whitespace-pre-wrap border border-t-0 border-paper-border p-3 text-[12px] leading-7">{item.value}</p>
             </section>
