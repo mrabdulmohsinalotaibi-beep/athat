@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -297,6 +297,82 @@ function value(v: unknown) {
   return String(v ?? "");
 }
 
+type FieldProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options?: readonly string[];
+  type?: "text" | "date" | "number";
+};
+
+function Stat({ title, value }: { title: string; value: number }) {
+  return (
+    <div className="rounded-xl border bg-card p-4 shadow-sm">
+      <p className="text-sm text-muted-foreground">{title}</p>
+      <p className="mt-1 text-2xl font-extrabold">{value}</p>
+    </div>
+  );
+}
+
+function DocCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-b border-l border-black p-3">
+      <p className="mb-1 text-xs text-gray-600">{label}</p>
+      <p className="min-h-6 whitespace-pre-wrap font-semibold">{value || "—"}</p>
+    </div>
+  );
+}
+
+function DocSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mt-4 border border-black p-3">
+      <h3 className="mb-2 border-b border-black pb-1 font-bold">{title}</h3>
+      <div>{children}</div>
+    </section>
+  );
+}
+
+function EvidenceGrid({ attachments }: { attachments: Attachment[] }) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {attachments.map((attachment) => (
+        <div key={attachment.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+          {attachment.mime_type?.startsWith("image/") ? (
+            <ImageIcon className="size-4 shrink-0" />
+          ) : (
+            <FileText className="size-4 shrink-0" />
+          )}
+          <span className="truncate">{attachment.name || attachment.file_name || "مرفق"}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, options, type = "text" }: FieldProps) {
+  return (
+    <div>
+      <Label className="mb-1.5 block">{label}</Label>
+      {options ? (
+        <select
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+        >
+          <option value="">— اختر —</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+      )}
+    </div>
+  );
+}
+
 function ProgramsPage() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
@@ -312,7 +388,7 @@ function ProgramsPage() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<Attachment[]>([]);
 
-  const { data: programs = [], isLoading } = useQuery({
+  const { data: programs = [], isLoading, isError: programsFailed } = useQuery({
     queryKey: ["programs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -608,13 +684,13 @@ function ProgramsPage() {
           <Button onClick={openNew}>
             <Plus className="size-4" /> إضافة برنامج
           </Button>
-          <Button variant="outline" onClick={importMinistryPrograms}>
+          <Button variant="outline" onClick={importMinistryPrograms} disabled={isLoading || programsFailed}>
             <CalendarRange className="size-4" /> الخطة الوزارية 1448هـ
           </Button>
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="size-4" /> طباعة القائمة
           </Button>
-          <Button variant="destructive" onClick={deleteAll} disabled={deleteBusy}>
+          <Button variant="destructive" onClick={deleteAll} disabled={deleteBusy || isLoading || programsFailed}>
             <Trash2 className="size-4" /> حذف الكل
           </Button>
         </div>
@@ -665,14 +741,21 @@ function ProgramsPage() {
                   </td>
                 </tr>
               )}
-              {!isLoading && !programs.length && (
+              {programsFailed && (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-destructive">
+                    تعذّر تحميل البرامج حالياً. تحقّق من الاتصال بقاعدة البيانات ثم أعد المحاولة.
+                  </td>
+                </tr>
+              )}
+              {!isLoading && !programsFailed && !programs.length && (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground">
                     لا توجد برامج بعد. ابدأ بإضافة برنامج أو استيراد الخطة الوزارية.
                   </td>
                 </tr>
               )}
-              {programs.map((row) => (
+              {!programsFailed && programs.map((row) => (
                 <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="p-3 font-bold">{row.name || "—"}</td>
                   <td className="p-3">{row.ptype || "—"}</td>
