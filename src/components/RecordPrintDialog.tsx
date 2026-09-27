@@ -151,7 +151,7 @@ export function RecordPrintDialog({
           body.printing-record .record-print-dialog .print-area tr,
           body.printing-record .record-print-dialog .print-area .break-inside-avoid,
           body.printing-record .record-print-dialog .print-area .report-signatures,
-          body.printing-record .record-print-dialog .print-area .official-letterhead {
+          body.printing-record .record-print-dialog .print-area .official-letterhead:not(.print-repeat-header) {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
