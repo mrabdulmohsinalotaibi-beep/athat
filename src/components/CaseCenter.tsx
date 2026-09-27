@@ -1,3 +1,4 @@
+import { formatHijriDate } from "@/lib/date";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -200,7 +201,7 @@ export function CaseCenter() {
                           isOverdue(item) ? "text-rose-600" : "text-muted-foreground",
                         )}>
                           <CalendarClock className="size-3" />
-                          متابعة {item.followup_at}
+                          متابعة {formatHijriDate(item.followup_at)}
                         </p>
                       )}
                       <div className="mt-3 flex items-center justify-between gap-2">
