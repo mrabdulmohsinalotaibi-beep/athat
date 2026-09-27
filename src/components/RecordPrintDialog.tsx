@@ -36,6 +36,23 @@ export function RecordPrintDialog({
   const longFields = filled.filter((item) => LONG_FIELDS.has(item.field.name) || item.field.type === "textarea");
   const title = `${config.singular} — ${config.title}`;
 
+  function printRecord() {
+    if (!sheetRef.current) return;
+
+    const className = "printing-record";
+    const cleanup = () => {
+      document.body.classList.remove(className);
+      window.removeEventListener("afterprint", cleanup);
+    };
+
+    document.body.classList.add(className);
+    window.addEventListener("afterprint", cleanup, { once: true });
+    window.print();
+
+    // Some embedded browsers do not fire afterprint reliably.
+    window.setTimeout(cleanup, 1500);
+  }
+
   async function exportPdf() {
     if (!sheetRef.current || busy) return;
     setBusy(true);
@@ -51,29 +68,110 @@ export function RecordPrintDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* تنسيقات الطباعة الخاصة بـ A4 */}
+      {/* تنسيقات الطباعة محصورة في هذا المكوّن ولا تؤثر على بقية الموقع */}
       <style>{`
         @media print {
           @page {
-            size: A4;
-            margin: 10mm;
+            size: A4 portrait;
+            margin: 12mm;
           }
-          .no-print {
+
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+          }
+
+          body.printing-record > * {
+            visibility: hidden !important;
+          }
+
+          body.printing-record .record-print-dialog {
+            visibility: visible !important;
+          }
+
+          body.printing-record .record-print-dialog *,
+          body.printing-record .record-print-dialog {
+            box-sizing: border-box !important;
+          }
+
+          body.printing-record .record-print-dialog {
+            position: static !important;
+            inset: auto !important;
+            width: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            transform: none !important;
+          }
+
+          body.printing-record .record-print-dialog .no-print {
             display: none !important;
           }
-          body {
-            background: white !important;
-            color: black !important;
-          }
-          .print-area {
-            border: none !important;
+
+          body.printing-record .record-print-dialog .print-area {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            margin: 0 !important;
             padding: 0 !important;
+            overflow: visible !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: #fff !important;
+            color: #000 !important;
             box-shadow: none !important;
+          }
+
+          body.printing-record .record-print-dialog .print-area table {
+            width: 100% !important;
+            max-width: 100% !important;
+            table-layout: fixed !important;
+            border-collapse: collapse !important;
+          }
+
+          body.printing-record .record-print-dialog .print-area th,
+          body.printing-record .record-print-dialog .print-area td {
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+            word-break: normal !important;
+            vertical-align: top !important;
+          }
+
+          body.printing-record .record-print-dialog .print-area tr,
+          body.printing-record .record-print-dialog .print-area .break-inside-avoid,
+          body.printing-record .record-print-dialog .print-area .report-signatures,
+          body.printing-record .record-print-dialog .print-area .official-letterhead {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          body.printing-record .record-print-dialog .print-area h1,
+          body.printing-record .record-print-dialog .print-area h2,
+          body.printing-record .record-print-dialog .print-area h3 {
+            break-after: avoid-page !important;
+            page-break-after: avoid !important;
+          }
+
+          body.printing-record .record-print-dialog .print-area img {
+            max-width: 100% !important;
+            height: auto !important;
+            object-fit: contain !important;
           }
         }
       `}</style>
 
-      <DialogContent dir="rtl" className="single-print-sheet max-h-[92vh] max-w-3xl overflow-y-auto">
+      <DialogContent dir="rtl" className="record-print-dialog single-print-sheet max-h-[92vh] max-w-3xl overflow-y-auto">
         <DialogHeader className="no-print">
           <DialogTitle>طباعة رسمية / PDF</DialogTitle>
         </DialogHeader>
@@ -106,7 +204,7 @@ export function RecordPrintDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             إغلاق
           </Button>
-          <Button variant="outline" onClick={() => window.print()}>
+          <Button variant="outline" onClick={printRecord}>
             <Printer className="size-4" /> طباعة
           </Button>
           <Button onClick={exportPdf} disabled={busy}>
