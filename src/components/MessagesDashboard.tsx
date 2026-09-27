@@ -947,7 +947,7 @@ export default function MessagesDashboard() {
 
       {/* قسم الطباعة والتصدير المخفي المتوافق مع A4 */}
       <div ref={printRef} className="print-only bg-white text-black p-6 space-y-4" dir="rtl">
-        <OfficialHeader />
+        <OfficialHeader school={school} title={includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"} />
         <div className="text-center my-4">
           <h2 className="text-lg font-bold">
             {includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"}
@@ -986,7 +986,7 @@ export default function MessagesDashboard() {
           ))}
         </div>
 
-        <OfficialFooter />
+        <OfficialFooter school={school} />
       </div>
     </div>
   );
