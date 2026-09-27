@@ -77,7 +77,12 @@ export function OfficialFooter({
   const visibleSignatures = Number(showCounselor) + Number(showPrincipal);
 
   return (
-    <div className={`report-signatures mt-8 ${repeatEveryPage ? "print-repeat-footer" : ""} grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground" style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}>
+    <div
+      className={`report-signatures mt-8 ${repeatEveryPage ? "print-repeat-footer" : ""} grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground`}
+      style={{
+        gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))`,
+      }}
+    >
       {showCounselor && <div className="flex min-h-28 flex-col items-center text-center">
         <p>الموجه الطلابي</p>
         {school?.counselor_signature ? (
