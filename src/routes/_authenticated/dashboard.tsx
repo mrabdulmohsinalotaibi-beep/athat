@@ -74,6 +74,7 @@ function useDashboard() {
         calendar,
         planTasks,
         interviews,
+        publicRequests,
         feedback,
       ] = await Promise.all([
         supabase.from("students").select("id, stage, created_at"),
@@ -90,6 +91,7 @@ function useDashboard() {
           .from("plan_tasks")
           .select("id, exec_status, due_date, doc_status, task, created_at"),
         supabase.from("interviews").select("id, itype"),
+        supabase.from("public_requests").select("id, kind, status, urgency, created_at"),
         (supabase as any)
           .from("feedback_messages")
           .select("id, sender_name, category, status, assigned_to, created_at"),
@@ -103,6 +105,7 @@ function useDashboard() {
         calendar: calendar.data ?? [],
         planTasks: planTasks.data ?? [],
         interviews: interviews.data ?? [],
+        publicRequests: publicRequests.data ?? [],
         feedback: feedback.data ?? [],
       };
     },
@@ -139,6 +142,14 @@ function Dashboard() {
   const overdue = activeCases.filter((c) => c.followup_at && String(c.followup_at) <= day);
   const donePrograms = programs.filter((p) => p.exec_status === "مكتمل");
   const newFeedback = feedback.filter((item: any) => item.status === "جديد");
+  const publicRequests = data?.publicRequests ?? [];
+  const newRequests = publicRequests.filter((item) => item.status === "جديد");
+  const urgentRequests = publicRequests.filter(
+    (item) => item.urgency === "عاجل" && item.status !== "مغلق",
+  );
+  const incomingReferrals = publicRequests.filter(
+    (item) => item.kind === "إحالة طالب" && item.status === "جديد",
+  );
   const assignedToCounselor = feedback.filter(
     (item: any) =>
       (item.assigned_to || "الموجه الطلابي") === "الموجه الطلابي" && item.status !== "تم الرد",
@@ -204,6 +215,24 @@ function Dashboard() {
       badge: "مكتمل",
     },
     {
+      label: "طلبات جديدة",
+      value: newRequests.length,
+      icon: Inbox,
+      to: "/requests" as const,
+      gradient: "from-emerald-500/14 via-card to-primary/10",
+      iconColor: "text-emerald-700",
+      badge: "استمارات",
+    },
+    {
+      label: "إحالات واردة",
+      value: incomingReferrals.length,
+      icon: Zap,
+      to: "/requests" as const,
+      gradient: "from-sky-500/14 via-card to-primary/10",
+      iconColor: "text-sky-700",
+      badge: "معلمون",
+    },
+    {
       label: "رسائل جديدة",
       value: newFeedback.length,
       icon: Inbox,
@@ -244,10 +273,18 @@ function Dashboard() {
     { label: "رصد مواظبة", to: "/attendance" as const, icon: ClipboardList },
     { label: "إحالة جديدة", to: "/referrals" as const, icon: Zap },
     { label: "تقرير رسمي", to: "/reports" as const, icon: FileText },
-    { label: "صندوق الرسائل", to: "/messages" as const, icon: Inbox },
+    { label: "صندوق الطلبات", to: "/requests" as const, icon: Inbox },
   ];
 
   const quickReport = [
+    {
+      label: "طلبات عاجلة",
+      value: urgentRequests.length,
+      hint: "من الاستمارات العامة",
+      to: "/requests" as const,
+      icon: AlertTriangle,
+      tone: "text-rose-700 bg-rose-500/10",
+    },
     {
       label: "رسائل للموجه",
       value: assignedToCounselor.length,
@@ -460,7 +497,10 @@ function Dashboard() {
                   label
                 >
                   {domainData.map((entry, index) => (
-                    <Cell key={entry.name} fill={COLORS[index % COLORS.length] ?? "var(--chart-1)"} />
+                    <Cell
+                      key={entry.name}
+                      fill={COLORS[index % COLORS.length] ?? "var(--chart-1)"}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />

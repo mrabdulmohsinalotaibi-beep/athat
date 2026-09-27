@@ -11,8 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as ServicesRouteImport } from './routes/services'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedBehaviorRouteImport } from './routes/_authenticated/behavior'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
@@ -29,13 +33,19 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
+import { Route as AuthenticatedToolkitRouteImport } from './routes/_authenticated/toolkit'
 import { Route as AuthenticatedWeeklyPosterRouteImport } from './routes/_authenticated/weekly-poster'
 import { Route as BlogTokenRouteImport } from './routes/blog.$token'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as FeedbackTokenRouteImport } from './routes/feedback.$token'
+import { Route as FormsIndexRouteImport } from './routes/forms.index'
+import { Route as FormsConsultationRouteImport } from './routes/forms.consultation'
+import { Route as FormsReferralRouteImport } from './routes/forms.referral'
+import { Route as FormsReportRouteImport } from './routes/forms.report'
 import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
 import { Route as AuthenticatedAdminUpgradeRequestsIndexRouteImport } from './routes/_authenticated/admin/upgrade-requests/index'
 
@@ -48,14 +58,34 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
@@ -141,6 +171,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRequestsRoute = AuthenticatedRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -157,6 +192,11 @@ const AuthenticatedSubscriptionRoute =
     path: '/subscription',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedToolkitRoute = AuthenticatedToolkitRouteImport.update({
+  id: '/toolkit',
+  path: '/toolkit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWeeklyPosterRoute =
   AuthenticatedWeeklyPosterRouteImport.update({
     id: '/weekly-poster',
@@ -178,6 +218,26 @@ const FeedbackTokenRoute = FeedbackTokenRouteImport.update({
   path: '/feedback/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FormsIndexRoute = FormsIndexRouteImport.update({
+  id: '/forms/',
+  path: '/forms/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FormsConsultationRoute = FormsConsultationRouteImport.update({
+  id: '/forms/consultation',
+  path: '/forms/consultation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FormsReferralRoute = FormsReferralRouteImport.update({
+  id: '/forms/referral',
+  path: '/forms/referral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FormsReportRoute = FormsReportRouteImport.update({
+  id: '/forms/report',
+  path: '/forms/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PostsSlugRoute = PostsSlugRouteImport.update({
   id: '/posts/$slug',
   path: '/posts/$slug',
@@ -192,8 +252,12 @@ const AuthenticatedAdminUpgradeRequestsIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/resources': typeof ResourcesRoute
+  '/services': typeof ServicesRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/behavior': typeof AuthenticatedBehaviorRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -210,20 +274,30 @@ export interface FileRoutesByFullPath {
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/toolkit': typeof AuthenticatedToolkitRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
   '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
+  '/forms/consultation': typeof FormsConsultationRoute
+  '/forms/referral': typeof FormsReferralRoute
+  '/forms/report': typeof FormsReportRoute
   '/posts/$slug': typeof PostsSlugRoute
+  '/forms/': typeof FormsIndexRoute
   '/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/resources': typeof ResourcesRoute
+  '/services': typeof ServicesRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/behavior': typeof AuthenticatedBehaviorRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -240,22 +314,32 @@ export interface FileRoutesByTo {
   '/programs': typeof AuthenticatedProgramsRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/toolkit': typeof AuthenticatedToolkitRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
   '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
+  '/forms/consultation': typeof FormsConsultationRoute
+  '/forms/referral': typeof FormsReferralRoute
+  '/forms/report': typeof FormsReportRoute
   '/posts/$slug': typeof PostsSlugRoute
+  '/forms': typeof FormsIndexRoute
   '/admin/upgrade-requests': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/resources': typeof ResourcesRoute
+  '/services': typeof ServicesRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/behavior': typeof AuthenticatedBehaviorRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
@@ -272,22 +356,32 @@ export interface FileRoutesById {
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/requests': typeof AuthenticatedRequestsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
+  '/_authenticated/toolkit': typeof AuthenticatedToolkitRoute
   '/_authenticated/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
   '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
   '/feedback/$token': typeof FeedbackTokenRoute
+  '/forms/consultation': typeof FormsConsultationRoute
+  '/forms/referral': typeof FormsReferralRoute
+  '/forms/report': typeof FormsReportRoute
   '/posts/$slug': typeof PostsSlugRoute
+  '/forms/': typeof FormsIndexRoute
   '/_authenticated/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/auth'
+    | '/contact'
     | '/login'
+    | '/resources'
+    | '/services'
     | '/attendance'
     | '/behavior'
     | '/calendar'
@@ -304,20 +398,30 @@ export interface FileRouteTypes {
     | '/programs'
     | '/referrals'
     | '/reports'
+    | '/requests'
     | '/settings'
     | '/students'
     | '/subscription'
+    | '/toolkit'
     | '/weekly-poster'
     | '/blog/$token'
     | '/c/$slug'
     | '/feedback/$token'
+    | '/forms/consultation'
+    | '/forms/referral'
+    | '/forms/report'
     | '/posts/$slug'
+    | '/forms/'
     | '/admin/upgrade-requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
+    | '/contact'
     | '/login'
+    | '/resources'
+    | '/services'
     | '/attendance'
     | '/behavior'
     | '/calendar'
@@ -334,21 +438,31 @@ export interface FileRouteTypes {
     | '/programs'
     | '/referrals'
     | '/reports'
+    | '/requests'
     | '/settings'
     | '/students'
     | '/subscription'
+    | '/toolkit'
     | '/weekly-poster'
     | '/blog/$token'
     | '/c/$slug'
     | '/feedback/$token'
+    | '/forms/consultation'
+    | '/forms/referral'
+    | '/forms/report'
     | '/posts/$slug'
+    | '/forms'
     | '/admin/upgrade-requests'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/auth'
+    | '/contact'
     | '/login'
+    | '/resources'
+    | '/services'
     | '/_authenticated/attendance'
     | '/_authenticated/behavior'
     | '/_authenticated/calendar'
@@ -365,26 +479,40 @@ export interface FileRouteTypes {
     | '/_authenticated/programs'
     | '/_authenticated/referrals'
     | '/_authenticated/reports'
+    | '/_authenticated/requests'
     | '/_authenticated/settings'
     | '/_authenticated/students'
     | '/_authenticated/subscription'
+    | '/_authenticated/toolkit'
     | '/_authenticated/weekly-poster'
     | '/blog/$token'
     | '/c/$slug'
     | '/feedback/$token'
+    | '/forms/consultation'
+    | '/forms/referral'
+    | '/forms/report'
     | '/posts/$slug'
+    | '/forms/'
     | '/_authenticated/admin/upgrade-requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
+  ResourcesRoute: typeof ResourcesRoute
+  ServicesRoute: typeof ServicesRoute
   BlogTokenRoute: typeof BlogTokenRoute
   CSlugRoute: typeof CSlugRoute
   FeedbackTokenRoute: typeof FeedbackTokenRoute
+  FormsConsultationRoute: typeof FormsConsultationRoute
+  FormsReferralRoute: typeof FormsReferralRoute
+  FormsReportRoute: typeof FormsReportRoute
   PostsSlugRoute: typeof PostsSlugRoute
+  FormsIndexRoute: typeof FormsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -403,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -410,11 +545,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/attendance': {
@@ -529,6 +685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/requests': {
+      id: '/_authenticated/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof AuthenticatedRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -548,6 +711,13 @@ declare module '@tanstack/react-router' {
       path: '/subscription'
       fullPath: '/subscription'
       preLoaderRoute: typeof AuthenticatedSubscriptionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/toolkit': {
+      id: '/_authenticated/toolkit'
+      path: '/toolkit'
+      fullPath: '/toolkit'
+      preLoaderRoute: typeof AuthenticatedToolkitRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/weekly-poster': {
@@ -576,6 +746,34 @@ declare module '@tanstack/react-router' {
       path: '/feedback/$token'
       fullPath: '/feedback/$token'
       preLoaderRoute: typeof FeedbackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forms/': {
+      id: '/forms/'
+      path: '/forms'
+      fullPath: '/forms/'
+      preLoaderRoute: typeof FormsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forms/consultation': {
+      id: '/forms/consultation'
+      path: '/forms/consultation'
+      fullPath: '/forms/consultation'
+      preLoaderRoute: typeof FormsConsultationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forms/referral': {
+      id: '/forms/referral'
+      path: '/forms/referral'
+      fullPath: '/forms/referral'
+      preLoaderRoute: typeof FormsReferralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forms/report': {
+      id: '/forms/report'
+      path: '/forms/report'
+      fullPath: '/forms/report'
+      preLoaderRoute: typeof FormsReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/posts/$slug': {
@@ -612,9 +810,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
+  AuthenticatedToolkitRoute: typeof AuthenticatedToolkitRoute
   AuthenticatedWeeklyPosterRoute: typeof AuthenticatedWeeklyPosterRoute
   AuthenticatedAdminUpgradeRequestsIndexRoute: typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
@@ -636,9 +836,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
+  AuthenticatedToolkitRoute: AuthenticatedToolkitRoute,
   AuthenticatedWeeklyPosterRoute: AuthenticatedWeeklyPosterRoute,
   AuthenticatedAdminUpgradeRequestsIndexRoute:
     AuthenticatedAdminUpgradeRequestsIndexRoute,
@@ -650,12 +852,20 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
+  ResourcesRoute: ResourcesRoute,
+  ServicesRoute: ServicesRoute,
   BlogTokenRoute: BlogTokenRoute,
   CSlugRoute: CSlugRoute,
   FeedbackTokenRoute: FeedbackTokenRoute,
+  FormsConsultationRoute: FormsConsultationRoute,
+  FormsReferralRoute: FormsReferralRoute,
+  FormsReportRoute: FormsReportRoute,
   PostsSlugRoute: PostsSlugRoute,
+  FormsIndexRoute: FormsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
