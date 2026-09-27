@@ -571,7 +571,7 @@ function ProgramsPage() {
     }
     const { error } = await supabase.from("programs").insert(payload as never);
     if (error) {
-      toast.error(`تعذّر الاستيراد: `);
+      toast.error(`تعذّر الاستيراد: ${error.message}`);
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["programs"] });
@@ -783,7 +783,14 @@ function ProgramsPage() {
                     <DocCell label="تاريخ البداية" value={value(editing?.start_date)} />
                     <DocCell label="تاريخ النهاية" value={value(editing?.end_date)} />
                     <DocCell label="عدد المستفيدين" value={value(editing?.beneficiaries)} />
-                    <DocCell label="مهمة الخطة المرتبطة" value={value(planTasks.find((task) => task.id === editing?.plan_task_id)?.task) || "غير مرتبط"} />
+                    <DocCell
+                      label="مهمة الخطة المرتبطة"
+                      value={
+                        value(
+                          planTasks.find((task) => task.id === editing?.plan_task_id)?.task
+                        ) || "غير مرتبط"
+                      }
+                    />
                     <DocCell label="الشواهد المطلوبة" value={value(editing?.required_evidence)} />
                   </div>
                 </div>
@@ -879,317 +886,24 @@ function ProgramsPage() {
                 <Label className="mb-1.5 block">مهمة الخطة المرتبطة</Label>
                 <select
                   value={value(editing?.plan_task_id)}
-                  onChange={(e) => setEditing((x) => ({ ...(x ?? emptyDraft()), plan_task_id: e.target.value }))}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  onChange={(e) =>
+                    setEditing((x) => ({ ...(x ?? emptyDraft()), plan_task_id: e.target.value }))
+                  }
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                 >
-                  <option value="">— بدون ربط —</option>
+                  <option value="">— اختر المهمة المرتبطة بالخطة —</option>
                   {planTasks.map((task) => (
                     <option key={task.id} value={task.id}>
-                      {task.seq ? `${task.seq} - ` : ""}{task.task || "مهمة بدون عنوان"}{task.term ? ` (${task.term})` : ""}
+                      {task.seq ? `#${task.seq} - ` : ""}
+                      {task.task}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
-            <div>
-              <Label className="mb-1.5 block">الهدف</Label>
-              <Textarea
-                rows={4}
-                value={value(editing?.goal)}
-                onChange={(e) =>
-                  setEditing((x) => ({ ...(x ?? emptyDraft()), goal: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <Label className="mb-1.5 block">المؤشر / معيار النجاح</Label>
-              <Textarea
-                rows={3}
-                value={value(editing?.indicator)}
-                onChange={(e) =>
-                  setEditing((x) => ({ ...(x ?? emptyDraft()), indicator: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <Label className="mb-1.5 block">ملاحظات التنفيذ والنتائج والتوصيات</Label>
-              <Textarea
-                rows={7}
-                value={value(editing?.notes)}
-                onChange={(e) =>
-                  setEditing((x) => ({ ...(x ?? emptyDraft()), notes: e.target.value }))
-                }
-              />
-            </div>
-
-            <div className="rounded-xl border border-dashed p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-bold">الشواهد والصور</p>
-                  <p className="text-xs text-muted-foreground">
-                    ارفع عدة صور وملفات حتى 50MB للملف، وسترتبط مباشرة بهذا البرنامج.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="size-4" /> إضافة ملفات
-                </Button>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.mov,.webm"
-                className="hidden"
-                onChange={(e) =>
-                  setPendingFiles((x) => [...x, ...Array.from(e.target.files ?? [])])
-                }
-              />
-              {!!pendingFiles.length && (
-                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                  {pendingFiles.map((file, i) => (
-                    <div
-                      key={`${file.name}-${i}`}
-                      className="flex items-center gap-2 rounded-lg border p-2 text-xs"
-                    >
-                      <FileIcon type={file.type} />
-                      <span className="min-w-0 flex-1 truncate">{file.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => setPendingFiles((x) => x.filter((_, n) => n !== i))}
-                      >
-                        <X className="size-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {!!uploadedAttachments.length && (
-                <p className="mt-3 text-xs font-bold text-emerald-700">
-                  تم ربط {uploadedAttachments.length} شاهد/ملف بهذا البرنامج.
-                </p>
-              )}
-            </div>
           </div>
-
-          <DialogFooter className="no-print sticky bottom-0 border-t bg-background px-5 py-3">
-            <Button variant="outline" onClick={() => setPreviewOpen(true)} disabled={!editing}>
-              <FileText className="size-4" /> معاينة A4
-            </Button>
-            <Button variant="outline" onClick={exportCurrentPdf} disabled={pdfBusy || !editing}>
-              <FileDown className="size-4" /> {pdfBusy ? "جارٍ إنشاء PDF..." : "حفظ PDF"}
-            </Button>
-            <Button variant="outline" onClick={() => setEditorOpen(false)}>
-              إغلاق
-            </Button>
-            <Button
-              onClick={() => editing && save.mutate(editing)}
-              disabled={save.isPending || !editing?.name?.trim()}
-            >
-              <Check className="size-4" /> {save.isPending ? "جارٍ الحفظ..." : "حفظ البرنامج"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent dir="rtl" className="max-h-[96vh] max-w-[1000px] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>معاينة مستند البرنامج — A4</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-center overflow-auto bg-muted/40 p-4">
-            <div
-              className="program-a4 w-full max-w-[210mm] bg-white shadow-xl"
-              style={{ padding: "15mm", fontFamily: "Cairo, Arial, sans-serif" }}
-            >
-              <OfficialHeader school={school} title="سجل تنفيذ برنامج / نشاط إرشادي" />
-              <div className="mt-4 border-2 border-black p-4 text-center text-xl font-extrabold">
-                {value(editing?.name)}
-              </div>
-              <DocSection title="بيانات البرنامج">
-                <div className="grid grid-cols-2 text-sm">
-                  <DocCell label="النوع" value={value(editing?.ptype)} />
-                  <DocCell label="المجال" value={value(editing?.domain)} />
-                  <DocCell label="الفئة" value={value(editing?.target_group)} />
-                  <DocCell label="الحالة" value={value(editing?.exec_status)} />
-                  <DocCell label="البداية" value={value(editing?.start_date)} />
-                  <DocCell label="النهاية" value={value(editing?.end_date)} />
-                </div>
-              </DocSection>
-              <DocSection title="الهدف">
-                <p className="whitespace-pre-wrap leading-7">{value(editing?.goal)}</p>
-              </DocSection>
-              <DocSection title="المؤشر">
-                <p className="whitespace-pre-wrap leading-7">{value(editing?.indicator)}</p>
-              </DocSection>
-              <DocSection title="الإجراءات والنتائج والتوصيات">
-                <p className="whitespace-pre-wrap leading-7">{value(editing?.notes)}</p>
-              </DocSection>
-              {uploadedAttachments.length > 0 && (
-                <DocSection title="الشواهد والصور">
-                  <EvidenceGrid attachments={uploadedAttachments} />
-                </DocSection>
-              )}
-              <OfficialFooter school={school} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              إغلاق
-            </Button>
-            <Button onClick={exportCurrentPdf}>
-              <FileDown className="size-4" /> حفظ PDF
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <RecordAttachmentsDialog
-        open={attachFor !== null}
-        onOpenChange={(open) => !open && setAttachFor(null)}
-        recordId={attachFor?.id ?? null}
-        recordTitle={value(attachFor?.name)}
-        linkedType="برنامج"
-      />
-      <RecordPrintDialog
-        open={printFor !== null}
-        onOpenChange={(open) => !open && setPrintFor(null)}
-        config={{
-          key: "programs",
-          table: "programs",
-          title: "البرامج والأنشطة",
-          singular: "برنامج",
-          fields: [
-            { name: "program_no", label: "رقم البرنامج" },
-            { name: "name", label: "اسم البرنامج" },
-            { name: "ptype", label: "النوع" },
-            { name: "domain", label: "المجال" },
-            { name: "target_group", label: "الفئة المستهدفة" },
-            { name: "term", label: "الفصل الدراسي" },
-            { name: "goal", label: "الهدف", type: "textarea" },
-            { name: "indicator", label: "المؤشر" },
-            { name: "start_date", label: "تاريخ البداية", type: "date" },
-            { name: "end_date", label: "تاريخ النهاية", type: "date" },
-            { name: "exec_status", label: "حالة التنفيذ" },
-            { name: "beneficiaries", label: "عدد المستفيدين", type: "number" },
-            { name: "required_evidence", label: "الشواهد المطلوبة" },
-            { name: "notes", label: "الملاحظات", type: "textarea" },
-          ],
-        }}
-        row={printFor as never}
-      />
-    </div>
-  );
-}
-
-function Stat({ title, value: v }: { title: string; value: number }) {
-  return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <p className="text-xs text-muted-foreground">{title}</p>
-      <p className="mt-1 text-2xl font-extrabold">{v}</p>
-    </div>
-  );
-}
-function DocCell({ label, value: v }: { label: string; value: string }) {
-  return (
-    <div className="border-b border-l border-black p-2 last:border-l-0">
-      <span className="font-bold">{label}: </span>
-      {v || "—"}
-    </div>
-  );
-}
-function DocSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mt-4 break-inside-avoid">
-      <h3 className="mb-2 border border-black bg-gray-100 p-2 text-center text-base font-extrabold">
-        {title}
-      </h3>
-      <div className="border border-t-0 border-black p-3 text-sm">{children}</div>
-    </section>
-  );
-}
-function Field({
-  label,
-  value: v,
-  onChange,
-  options,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options?: string[];
-  type?: string;
-}) {
-  return (
-    <div>
-      <Label className="mb-1.5 block text-xs">{label}</Label>
-      {options ? (
-        <select
-          value={v}
-          onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-full rounded-md border bg-background px-2 text-sm"
-        >
-          <option value="">—</option>
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <Input type={type} value={v} onChange={(e) => onChange(e.target.value)} />
-      )}
-    </div>
-  );
-}
-function FileIcon({ type }: { type: string }) {
-  return type.startsWith("image/") ? (
-    <ImageIcon className="size-4 shrink-0 text-primary" />
-  ) : (
-    <FileText className="size-4 shrink-0 text-primary" />
-  );
-}
-function EvidenceGrid({ attachments }: { attachments: Attachment[] }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {attachments.slice(0, 8).map((a) => (
-        <EvidenceItem key={a.id} attachment={a} />
-      ))}
-    </div>
-  );
-}
-function EvidenceItem({ attachment }: { attachment: Attachment }) {
-  const [url, setUrl] = useState<string | null>(null);
-  const image = (attachment.mime_type || "").startsWith("image/");
-  useEffect(() => {
-    let active = true;
-    if (attachment.file_path)
-      supabase.storage
-        .from("evidences")
-        .createSignedUrl(attachment.file_path, 3600)
-        .then(({ data }) => {
-          if (active) setUrl(data?.signedUrl ?? null);
-        });
-    return () => {
-      active = false;
-    };
-  }, [attachment.file_path]);
-  return (
-    <div className="break-inside-avoid overflow-hidden border border-black bg-white">
-      {image && url ? (
-        <img src={url} alt={attachment.name} className="h-36 w-full object-cover" />
-      ) : (
-        <div className="flex h-36 items-center justify-center bg-gray-50">
-          <FileText className="size-10" />
-        </div>
-      )}
-      <div className="border-t border-black p-2 text-center text-xs font-bold">
-        {attachment.name}
-      </div>
     </div>
   );
 }
