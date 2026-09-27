@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, X } from "lucide-react";
+import { LogIn, Menu, X } from "lucide-react";
 
 import { Copyright } from "@/components/Copyright";
 import { Button } from "@/components/ui/button";
@@ -71,11 +71,17 @@ export function PublicLayout({
             <Button
               asChild
               variant="outline"
-              size="sm"
-              className="hidden font-semibold sm:inline-flex"
+              size="icon"
+              className="h-9 w-9 font-semibold sm:w-auto sm:px-3"
             >
-              <Link to="/auth" search={{ next: "/dashboard" }}>
-                دخول الموجه الطلابي
+              <Link
+                to="/auth"
+                search={{ next: "/dashboard" }}
+                aria-label="دخول الموجه الطلابي"
+                title="دخول الموجه الطلابي"
+              >
+                <LogIn className="size-4 shrink-0" aria-hidden="true" />
+                <span className="hidden sm:inline">دخول الموجه الطلابي</span>
               </Link>
             </Button>
             <Button
