@@ -163,6 +163,47 @@ export function RecordPrintDialog({
             page-break-after: avoid !important;
           }
 
+          /* Reserve physical space for the fixed official header/footer.
+             Without this, the first/last lines of every printed page can sit
+             underneath the letterhead or signatures. */
+          body.printing-record .record-print-dialog .print-area {
+            padding-top: 40mm !important;
+            padding-bottom: 46mm !important;
+          }
+
+          body.printing-record .record-print-dialog .print-repeat-header {
+            position: fixed !important;
+            top: 12mm !important;
+            left: 12mm !important;
+            right: 12mm !important;
+            width: auto !important;
+            height: 34mm !important;
+            overflow: hidden !important;
+            z-index: 9999 !important;
+            background: #fff !important;
+          }
+
+          body.printing-record .record-print-dialog .print-repeat-footer {
+            position: fixed !important;
+            left: 12mm !important;
+            right: 12mm !important;
+            bottom: 7mm !important;
+            width: auto !important;
+            height: 39mm !important;
+            overflow: hidden !important;
+            z-index: 9999 !important;
+            background: #fff !important;
+          }
+
+          body.printing-record .record-print-dialog .print-area table {
+            margin-top: 0 !important;
+          }
+
+          body.printing-record .record-print-dialog .print-area section {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
           body.printing-record .record-print-dialog .print-area img {
             max-width: 100% !important;
             height: auto !important;
