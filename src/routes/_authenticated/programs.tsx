@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
+import { formatHijriDate } from "@/lib/date";
 import { elementToPdf } from "@/lib/pdf";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
@@ -780,8 +781,8 @@ function ProgramsPage() {
                     <DocCell label="المجال" value={value(editing?.domain)} />
                     <DocCell label="الفئة المستهدفة" value={value(editing?.target_group)} />
                     <DocCell label="حالة التنفيذ" value={value(editing?.exec_status)} />
-                    <DocCell label="تاريخ البداية" value={value(editing?.start_date)} />
-                    <DocCell label="تاريخ النهاية" value={value(editing?.end_date)} />
+                    <DocCell label="تاريخ البداية" value={formatHijriDate(editing?.start_date)} />
+                    <DocCell label="تاريخ النهاية" value={formatHijriDate(editing?.end_date)} />
                     <DocCell label="عدد المستفيدين" value={value(editing?.beneficiaries)} />
                     <DocCell
                       label="مهمة الخطة المرتبطة"
