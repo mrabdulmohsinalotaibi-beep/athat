@@ -94,7 +94,7 @@ function deliveryText(
       [
         `${index + 1}. ${item.category} — ${item.sender_role}`,
         `المرسل: ${item.sender_name || "مستفيد"}`,
-        `التاريخ: ${new Date(item.created_at).toLocaleDateString("ar-SA")}`,
+        `التاريخ: ${formatHijriDate(item.created_at)}`,
         `المشاركة: ${item.message}`,
         item.response_note
           ? `الرد/الإجراء: ${item.response_note}`
@@ -437,7 +437,7 @@ export default function MessagesDashboard() {
       item.message,
       item.response_note ?? "",
       item.internal_notes ?? "",
-      new Date(item.created_at).toLocaleString("ar-SA"),
+      formatHijriDateTime(item.created_at),
     ]);
 
     const csv = [
@@ -825,7 +825,7 @@ export default function MessagesDashboard() {
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2"><strong className="break-words">{item.sender_name}</strong><span className="rounded-sm bg-accent px-2 py-0.5 text-xs text-accent-foreground">{item.category}</span></div>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.sender_role} · {new Date(item.created_at).toLocaleDateString("ar-SA")}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.sender_role} · {formatHijriDate(item.created_at)}</p>
                   </div>
                   <Button type="button" size="icon" variant="ghost" onClick={() => toggle(item.id)} aria-label={selectedIds.includes(item.id) ? "إلغاء تحديد المشاركة" : "تحديد المشاركة"}>
                     {selectedIds.includes(item.id) ? <CheckSquare className="text-primary" /> : <Square />}
@@ -916,7 +916,7 @@ export default function MessagesDashboard() {
                       {messageExcerpt(item.message)}
                     </td>
                     <td className="p-4 text-xs text-muted-foreground">
-                      {new Date(item.created_at).toLocaleDateString("ar-SA")}
+                      {formatHijriDate(item.created_at)}
                     </td>
                     <td className="p-4">
                       <select
@@ -952,7 +952,7 @@ export default function MessagesDashboard() {
           <h2 className="text-lg font-bold">
             {includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"}
           </h2>
-          <p className="text-xs text-gray-500 mt-1">تاريخ الاستخراج: {new Date().toLocaleDateString("ar-SA")}</p>
+          <p className="text-xs text-gray-500 mt-1">تاريخ الاستخراج: {formatHijriDate(new Date())}</p>
         </div>
 
         <div className="space-y-6">
@@ -960,7 +960,7 @@ export default function MessagesDashboard() {
             <div key={item.id} className="page-break border border-gray-300 rounded-lg p-4 space-y-2 text-sm bg-white">
               <div className="flex justify-between border-b pb-2 font-bold">
                 <span>#{index + 1} - {item.category} ({item.sender_role})</span>
-                <span>التاريخ: {new Date(item.created_at).toLocaleDateString("ar-SA")}</span>
+                <span>التاريخ: {formatHijriDate(item.created_at)}</span>
               </div>
               <div>
                 <span className="font-semibold">المرسل: </span>
