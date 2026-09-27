@@ -2,22 +2,11 @@ import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  BarChart3,
   CheckSquare,
   FileDown,
   FileText,
   Printer,
   RotateCcw,
-  Share2,
   Square,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -28,20 +17,11 @@ import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { RECORDS, type FieldDef } from "@/lib/records";
 import { displayRecordValue } from "@/lib/display";
 import { elementToPdf } from "@/lib/pdf";
-import { shareOnWhatsApp } from "@/lib/whatsapp";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -57,36 +37,6 @@ export const Route = createFileRoute("/_authenticated/reports")({
 });
 
 /* =========================================================
-   أقسام التقرير القابلة للتفعيل/الإخفاء
-========================================================= */
-type ReportSectionsState = {
-  kpis: boolean;
-  details: boolean;
-  evidence: boolean;
-  analysis: boolean;
-  signatures: boolean;
-};
-
-const DEFAULT_SECTIONS: ReportSectionsState = {
-  kpis: true,
-  details: true,
-  evidence: true,
-  analysis: true,
-  signatures: true,
-};
-
-const SECTION_TOGGLES: { key: keyof ReportSectionsState; label: string }[] = [
-  { key: "kpis", label: "مؤشرات الأداء" },
-  { key: "details", label: "تفاصيل السجلات" },
-  { key: "evidence", label: "الشواهد والصور" },
-  { key: "analysis", label: "التحليل والتوصيات" },
-  { key: "signatures", label: "التوقيعات" },
-];
-
-// السجلات المُدرجة افتراضياً ضمن قسم "تفاصيل السجلات"
-const DEFAULT_SELECTED = ["cases", "plan", "interviews", "attendance"];
-
-/* =========================================================
    تحويل حقول السجل إلى أعمدة جدول التقرير
    (فقط الحقول المعلّمة بـ list: true تظهر في جدول التقرير)
 ========================================================= */
@@ -94,12 +44,6 @@ function reportColumns(fields: FieldDef[]) {
   return fields
     .filter((field) => field.list)
     .map((field) => ({ key: field.name, label: field.label, type: field.type }));
-}
-
-function recordByKey(key: string) {
-  const config = RECORDS.find((record) => record.key === key);
-  if (!config) throw new Error(`سجل غير معروف: ${key}`);
-  return { ...config, columns: reportColumns(config.fields) };
 }
 
 /* =========================================================
@@ -122,72 +66,6 @@ function dateFieldForRecord(key: string) {
   return fields[key];
 }
 
-function filterRowsByDate(
-  key: string,
-  rows: Record<string, unknown>[],
-  from: string,
-  to: string,
-) {
-  if (!from && !to) return rows;
-  const field = dateFieldForRecord(key);
-  if (!field) return rows;
-
-  return rows.filter((row) => {
-    const raw = row[field];
-    if (!raw) return false;
-    const value = String(raw).slice(0, 10);
-    if (from && value < from) return false;
-    if (to && value > to) return false;
-    return true;
-  });
-}
-
-
-function useReportData(selected: string[]) {
-  const queryKeys = Array.from(new Set([
-    "students",
-    "cases",
-    "plan",
-    "interviews",
-    "attendance",
-    "evidences",
-    ...selected,
-  ]));
-
-  return useQuery({
-    queryKey: ["reports-data", queryKeys],
-    queryFn: async () => {
-      const configs = queryKeys
-        .map((key) => RECORDS.find((record) => record.key === key))
-        .filter((record): record is (typeof RECORDS)[number] => Boolean(record));
-
-      const results = await Promise.all(
-        configs.map(async (record) => {
-          const result = await supabase
-            .from(record.table)
-            .select("*");
-          return { key: record.key, ...result };
-        }),
-      );
-
-      const sections: Record<string, Record<string, unknown>[]> = {};
-      const errors: string[] = [];
-
-      results.forEach(({ key, data, error }) => {
-        if (error) {
-          errors.push(`${key}: ${error.message}`);
-          sections[key] = [];
-          return;
-        }
-        sections[key] = (data ?? []) as Record<string, unknown>[];
-      });
-
-      return { sections, errors };
-    },
-    staleTime: 30_000,
-  });
-}
-
 function ReportsPage() {
   const { data: school } = useSchool();
   const printRef = useRef<HTMLDivElement>(null);
@@ -197,8 +75,10 @@ function ReportsPage() {
     [],
   );
 
+  const [reportMode, setReportMode] = useState<"single" | "combined">("single");
+  const [selectedSingleKey, setSelectedSingleKey] = useState("cases");
   const [period, setPeriod] = useState("");
-  const [reportTitle, setReportTitle] = useState("التقرير الشامل للتوجيه الطلابي");
+  const [reportTitle, setReportTitle] = useState("التقرير الرسمي للتوجيه الطلابي");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [narrative, setNarrative] = useState("");
@@ -265,11 +145,6 @@ function ReportsPage() {
     }));
   }, [filteredSections]);
 
-  const totalRows = reportableRecords.reduce(
-    (sum, record) => sum + (filteredSections[record.key]?.length ?? 0),
-    0,
-  );
-
   function toggleRecord(key: string) {
     setSelectedKeys((current) =>
       current.includes(key)
@@ -287,7 +162,9 @@ function ReportsPage() {
   }
 
   function reset() {
-    setReportTitle("التقرير الشامل للتوجيه الطلابي");
+    setReportMode("single");
+    setSelectedSingleKey("cases");
+    setReportTitle("التقرير الرسمي للتوجيه الطلابي");
     setPeriod("");
     setFromDate("");
     setToDate("");
@@ -323,8 +200,16 @@ function ReportsPage() {
     }
   }
 
+  const activeSelectedKeys =
+    reportMode === "single" ? [selectedSingleKey] : selectedKeys;
+
   const selectedRecords = reportableRecords.filter((record) =>
-    selectedKeys.includes(record.key),
+    activeSelectedKeys.includes(record.key),
+  );
+
+  const totalRows = selectedRecords.reduce(
+    (sum, record) => sum + (filteredSections[record.key]?.length ?? 0),
+    0,
   );
 
   return (
@@ -334,12 +219,11 @@ function ReportsPage() {
           <div>
             <div className="flex items-center gap-2 text-primary">
               <FileText className="size-5" />
-              <span className="text-xs font-bold">مركز الوثائق الرسمية</span>
+              <span className="text-xs font-bold">الطباعة الرسمية</span>
             </div>
-            <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير الرسمية</h1>
+            <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير</h1>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-              هذه هي نافذة الطباعة الرسمية الموحدة للمنصة. جميع السجلات متاحة في تقرير واحد،
-              مع الكليشة الرسمية وتوقيع الموجه الطلابي ومدير المدرسة.
+              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم اطبع التقرير بالكليشة الرسمية وتوقيع الموجه الطلابي ومدير المدرسة.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -360,77 +244,106 @@ function ReportsPage() {
       </section>
 
       <section className="no-print rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)]">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="official-report-title">عنوان التقرير</Label>
-              <Input id="official-report-title" className="mt-1.5" value={reportTitle} onChange={(e) => setReportTitle(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="official-report-period">الفترة / المناسبة</Label>
-              <Input id="official-report-period" className="mt-1.5" value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="مثال: الفصل الدراسي الأول 1447هـ" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="official-from">من تاريخ</Label>
-                <Input id="official-from" className="mt-1.5" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="official-to">إلى تاريخ</Label>
-                <Input id="official-to" className="mt-1.5" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-              </div>
-            </div>
-            {fromDate && toDate && fromDate > toDate && (
-              <p className="text-xs text-destructive">تاريخ البداية يجب أن يسبق تاريخ النهاية.</p>
-            )}
-            <div>
-              <Label htmlFor="official-narrative">التحليل والملاحظات والتوصيات</Label>
-              <Textarea id="official-narrative" className="mt-1.5" rows={5} value={narrative} onChange={(e) => setNarrative(e.target.value)} placeholder="اكتب التحليل المهني أو الملاحظات أو التوصيات التي تريد ظهورها في التقرير الرسمي..." />
+        <div className="space-y-5">
+          <div>
+            <Label>نوع التقرير</Label>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setReportMode("single")}
+                className={`rounded-xl border p-4 text-right transition ${reportMode === "single" ? "border-primary bg-primary/5" : "border-border hover:bg-muted"}`}
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className={`size-5 ${reportMode === "single" ? "text-primary" : ""}`} />
+                  <div>
+                    <p className="font-bold">تقرير منفرد</p>
+                    <p className="mt-1 text-xs text-muted-foreground">اختر سجلًا واحدًا واطبعه مباشرة.</p>
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportMode("combined")}
+                className={`rounded-xl border p-4 text-right transition ${reportMode === "combined" ? "border-primary bg-primary/5" : "border-border hover:bg-muted"}`}
+              >
+                <div className="flex items-center gap-3">
+                  <CheckSquare className={`size-5 ${reportMode === "combined" ? "text-primary" : ""}`} />
+                  <div>
+                    <p className="font-bold">تقرير مجمع</p>
+                    <p className="mt-1 text-xs text-muted-foreground">اجمع أكثر من سجل في تقرير رسمي واحد.</p>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between gap-3">
-              <Label>السجلات المضمنة في التقرير</Label>
-              <div className="flex gap-1">
-                <Button type="button" size="sm" variant="ghost" onClick={selectAll}>تحديد الكل</Button>
-                <Button type="button" size="sm" variant="ghost" onClick={clearAll}>إلغاء الكل</Button>
+          {reportMode === "single" ? (
+            <div>
+              <Label htmlFor="single-report-record">السجل المطلوب طباعته</Label>
+              <select
+                id="single-report-record"
+                value={selectedSingleKey}
+                onChange={(event) => setSelectedSingleKey(event.target.value)}
+                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {reportableRecords.map((record) => (
+                  <option key={record.key} value={record.key}>
+                    {record.title} ({filteredSections[record.key]?.length ?? 0} سجل)
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <Label>السجلات التي ستظهر في التقرير</Label>
+                <div className="flex gap-1">
+                  <Button type="button" size="sm" variant="ghost" onClick={selectAll}>الكل</Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={clearAll}>مسح</Button>
+                </div>
+              </div>
+              <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2 lg:grid-cols-3">
+                {reportableRecords.map((record) => {
+                  const active = selectedKeys.includes(record.key);
+                  const count = filteredSections[record.key]?.length ?? 0;
+                  return (
+                    <button
+                      key={record.key}
+                      type="button"
+                      onClick={() => toggleRecord(record.key)}
+                      className={`flex items-center justify-between gap-2 rounded-lg border p-3 text-right text-xs transition hover:bg-muted ${active ? "border-primary bg-primary/5" : "border-border"}`}
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        {active ? <CheckSquare className="size-4 text-primary" /> : <Square className="size-4" />}
+                        {record.title}
+                      </span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{count}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className="mt-2 grid max-h-80 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2">
-              {reportableRecords.map((record) => {
-                const active = selectedKeys.includes(record.key);
-                const count = filteredSections[record.key]?.length ?? 0;
-                return (
-                  <button key={record.key} type="button" onClick={() => toggleRecord(record.key)} className={`flex items-center justify-between gap-2 rounded-xl border p-3 text-right text-xs transition hover:bg-muted ${active ? "border-primary bg-primary/5" : "border-border"}`}>
-                    <span className="flex items-center gap-2 font-semibold">
-                      {active ? <CheckSquare className="size-4 text-primary" /> : <Square className="size-4" />}
-                      {record.title}
-                    </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <PrintStat label="السجلات" value={selectedRecords.length} />
-              <PrintStat label="إجمالي الصفوف" value={totalRows} />
-              <PrintStat label="الطلاب" value={filteredSections.students?.length ?? 0} />
-              <PrintStat label="الشواهد" value={filteredSections.evidences?.length ?? 0} />
-            </div>
-            {isLoading && <p className="mt-3 text-xs text-muted-foreground">جارٍ تحميل جميع السجلات...</p>}
-            {isError && (
-              <div className="mt-3 flex items-center gap-3 text-xs text-destructive">
-                <span>تعذّر تحميل بيانات التقرير.</span>
-                <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>إعادة المحاولة</Button>
-              </div>
-            )}
-            {data?.errors.length ? (
-              <p className="mt-3 text-xs text-amber-700">
-                تعذر الوصول إلى: {data.errors.map((error) => error.key).join("، ")}
-              </p>
-            ) : null}
+          )}
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <PrintStat label="السجلات المختارة" value={selectedRecords.length} />
+            <PrintStat label="إجمالي الصفوف" value={totalRows} />
+            <PrintStat label="الطلاب" value={filteredSections.students?.length ?? 0} />
+            <PrintStat label="الشواهد" value={filteredSections.evidences?.length ?? 0} />
           </div>
+
+          {isLoading && <p className="text-xs text-muted-foreground">جارٍ تحميل السجلات...</p>}
+          {isError && (
+            <div className="flex items-center gap-3 text-xs text-destructive">
+              <span>تعذّر تحميل بيانات التقرير.</span>
+              <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>إعادة المحاولة</Button>
+            </div>
+          )}
+          {data?.errors.length ? (
+            <p className="text-xs text-amber-700">
+              تعذر الوصول إلى: {data.errors.map((error) => error.key).join("، ")}
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -549,11 +462,3 @@ function PrintStat({
   );
 }
 
-function EmptyChart() {
-  return (
-    <div className="flex h-[280px] w-full flex-col items-center justify-center rounded-xl border border-dashed text-muted-foreground">
-      <BarChart3 className="mb-2 size-8 opacity-40" />
-      <p className="text-xs">لا توجد بيانات كافية لعرض الرسم البياني</p>
-    </div>
-  );
-}
