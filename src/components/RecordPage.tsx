@@ -151,7 +151,10 @@ export function RecordPage({
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["lookups"] });
-    setAuto((current) => ({ ...current, [config.fields.find((field) => field.lookupCategory === category)?.name ?? ""]: "" }));
+    setAuto((current) => ({
+      ...current,
+      [config.fields.find((field) => field.lookupCategory === category)?.name ?? ""]: "",
+    }));
     toast.success("تم حذف الخيار من القائمة");
   }
 
@@ -216,9 +219,8 @@ export function RecordPage({
           if (f.type === "number") payload[f.name] = raw === "" || raw == null ? null : Number(raw);
           else payload[f.name] = raw === "" ? null : (raw ?? null);
         });
-      // Preserve a stable relationship for new student-linked records. Legacy
-      // records without this column remain visible by their old name/number.
-      if (config.key !== "students" && values["student_id"]) payload["student_id"] = values["student_id"];
+      if (config.key !== "students" && values["student_id"])
+        payload["student_id"] = values["student_id"];
       if (values.id) {
         const { error } = await supabase
           .from(config.table as never)
@@ -259,7 +261,6 @@ export function RecordPage({
     try {
       const sheetRows = await readExcel(file);
       const importFields = config.fields.filter((field) => !field.generated);
-      const headers = Array.from(new Set(sheetRows.flatMap((row) => Object.keys(row))));
 
       const payloads = sheetRows
         .map((sheetRow) => {
@@ -322,7 +323,11 @@ export function RecordPage({
           </Button>
           {toolbarExtra}
           {!hideImport && (
-            <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={importing}>
+            <Button
+              variant="outline"
+              onClick={() => fileRef.current?.click()}
+              disabled={importing}
+            >
               <Upload className="size-4" /> استيراد Excel
             </Button>
           )}
@@ -753,18 +758,22 @@ export function RecordPage({
                             <Plus className="size-4" />
                           </Button>
                         )}
-                        {f.lookupCategory && current && lookups.some((item) => item.category === f.lookupCategory && item.value === current) && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            title={`حذف الخيار من ${f.label}`}
-                            aria-label={`حذف الخيار من ${f.label}`}
-                            onClick={() => removeOption(f.lookupCategory ?? "", f.label, current)}
-                          >
-                            <Trash2 className="size-4 text-destructive" />
-                          </Button>
-                        )}
+                        {f.lookupCategory &&
+                          current &&
+                          lookups.some(
+                            (item) => item.category === f.lookupCategory && item.value === current,
+                          ) && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              title={`حذف الخيار من ${f.label}`}
+                              aria-label={`حذف الخيار من ${f.label}`}
+                              onClick={() => removeOption(f.lookupCategory ?? "", f.label, current)}
+                            >
+                              <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                          )}
                       </div>
                     ) : (
                       <Input
