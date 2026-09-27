@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { formatHijriDate } from "@/lib/date";
 
 export const POST_KINDS = {
   article: "مقال",
@@ -42,7 +43,7 @@ export function makeSlug(title: string): string {
 
 export function formatPostDate(value: string | null | undefined): string {
   if (!value) return "";
-  return new Date(value).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
+  return formatHijriDate(value);
 }
 
 export async function fetchPublicPosts(opts: { userId?: string | undefined; limit?: number | undefined } = {}) {
