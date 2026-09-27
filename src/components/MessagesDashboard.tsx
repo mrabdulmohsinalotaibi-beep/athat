@@ -28,6 +28,7 @@ import { normalizeSaudiPhone, shareOnWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatHijriDate, formatHijriDateTime } from "@/lib/date";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Textarea } from "@/components/ui/textarea";
 
