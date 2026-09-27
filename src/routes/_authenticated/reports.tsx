@@ -527,7 +527,7 @@ function ReportsPage() {
             </div>
           </section>
 
-          <OfficialFooter school={school} />
+          <OfficialFooter school={school} repeatEveryPage={false} />
         </main>
       </div>
     </div>
