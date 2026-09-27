@@ -104,7 +104,7 @@ function Landing() {
                 variant="secondary"
                 className="h-12 gap-2 px-7 text-base font-bold"
               >
-                <Link to="/auth" search={{ next: "" }}>
+                <Link to="/auth" search={{ next: "/dashboard" }}>
                   دخول الموجه الطلابي
                   <ChevronLeft className="size-5" />
                 </Link>
@@ -226,7 +226,7 @@ function Landing() {
               variant="secondary"
               className="mt-8 h-12 gap-2 px-8 font-bold text-primary shadow-lg"
             >
-              <Link to="/auth" search={{ next: "" }}>
+              <Link to="/auth" search={{ next: "/dashboard" }}>
                 دخول الموجه الطلابي
                 <ChevronLeft className="size-5" />
               </Link>
