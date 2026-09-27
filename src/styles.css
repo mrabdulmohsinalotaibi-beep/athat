@@ -275,7 +275,7 @@
 
 @page {
   size: A4 portrait;
-  margin: 12mm;
+  margin: 10mm;
 }
 
 @media print {
@@ -318,7 +318,8 @@
   }
 
   .no-print,
-  .screen-only-document {
+  .screen-only-document,
+  [data-state="open"].fixed.inset-0 {
     display: none !important;
   }
 
@@ -330,10 +331,10 @@
   .program-a4 {
     display: block !important;
     box-sizing: border-box !important;
-    width: 186mm !important;
-    max-width: 186mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 273mm !important;
+    min-height: auto !important;
     height: auto !important;
     max-height: none !important;
     margin: 0 auto !important;
@@ -432,8 +433,7 @@
     font-size: 15pt;
   }
 
-  body:has(.single-print-sheet) .app-shell,
-  body:has(.single-print-sheet) [data-state="open"].fixed.inset-0 {
+  body:has(.single-print-sheet) .app-shell {
     display: none !important;
   }
 
@@ -441,8 +441,8 @@
     position: static !important;
     inset: auto !important;
     transform: none !important;
-    width: 186mm !important;
-    max-width: 186mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
     max-height: none !important;
     overflow: visible !important;
     border: none !important;
@@ -451,8 +451,7 @@
   }
 }
 
-
-/* Responsive layout layer: shared by the public site and the private workspace. */
+/* Responsive layout layer */
 html {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
