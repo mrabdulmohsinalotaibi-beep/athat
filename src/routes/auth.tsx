@@ -13,19 +13,31 @@ import { arabicAuthError } from "@/lib/auth-errors";
 type ScreenMode = "signin" | "signup" | "recover" | "reset";
 type BusyState = "" | "email" | "recover" | "reset";
 
-function safeNext(value: unknown): string {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
-    ? value
-    : "/";
+/**
+ * تحقق صارم من عنوان URL للتوجيه الداخلي فقط.
+ * يمنع Open Redirect عبر: //evil.com، https:evil.com، /\evil.com، %0d، إلخ.
+ */
+function safeNext(url: unknown, origin: string): string {
+  if (typeof url !== "string" || url.length === 0) return "/";
+  try {
+    const parsed = new URL(url, origin);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "/";
+    if (parsed.origin !== origin) return "/";
+    return parsed.pathname + parsed.search + parsed.hash;
+  } catch {
+    return "/";
+  }
 }
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    next: safeNext(search.next),
-    mode: (search.mode as ScreenMode) || "signin",
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    return {
+      next: safeNext(search.next, origin),
+      mode: (search.mode as ScreenMode) || "signin",
+    };
+  },
   beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
@@ -75,11 +87,12 @@ function AuthPage() {
     }
     setBusy("email");
     try {
+      const origin = window.location.origin;
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}${next || "/"}`,
+          emailRedirectTo: `${origin}${next || "/"}`,
         },
       });
       if (error) throw error;
@@ -96,8 +109,9 @@ function AuthPage() {
     e.preventDefault();
     setBusy("recover");
     try {
+      const origin = window.location.origin;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?mode=reset`,
+        redirectTo: `${origin}/auth?mode=reset`,
       });
       if (error) throw error;
       toast.success("تم إرسال رابط استعادة كلمة المرور");
