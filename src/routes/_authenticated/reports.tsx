@@ -103,30 +103,89 @@ function recordByKey(key: string) {
 }
 
 /* =========================================================
-   جلب بيانات كل السجلات دفعة واحدة لبناء التقرير
+   أدوات التاريخ وجلب البيانات
 ========================================================= */
-function useReportData() {
+
+function dateFieldForRecord(key: string) {
+  const fields: Record<string, string> = {
+    cases: "opened_at",
+    plan: "due_date",
+    programs: "start_date",
+    interviews: "idate",
+    attendance: "adate",
+    behavior: "bdate",
+    referrals: "referral_date",
+    committees: "mdate",
+    evidences: "edate",
+    calendar: "edate",
+  };
+  return fields[key];
+}
+
+function filterRowsByDate(
+  key: string,
+  rows: Record<string, unknown>[],
+  from: string,
+  to: string,
+) {
+  if (!from && !to) return rows;
+  const field = dateFieldForRecord(key);
+  if (!field) return rows;
+
+  return rows.filter((row) => {
+    const raw = row[field];
+    if (!raw) return false;
+    const value = String(raw).slice(0, 10);
+    if (from && value < from) return false;
+    if (to && value > to) return false;
+    return true;
+  });
+}
+
+
+function useReportData(selected: string[]) {
+  const queryKeys = Array.from(new Set([
+    "students",
+    "cases",
+    "plan",
+    "interviews",
+    "attendance",
+    "evidences",
+    ...selected,
+  ]));
+
   return useQuery({
-    queryKey: ["reports-data"],
+    queryKey: ["reports-data", queryKeys],
     queryFn: async () => {
-      const tables = RECORDS.filter((record) => record.key !== "reports");
+      const configs = queryKeys
+        .map((key) => RECORDS.find((record) => record.key === key))
+        .filter((record): record is (typeof RECORDS)[number] => Boolean(record));
 
       const results = await Promise.all(
-        tables.map((record) =>
-          supabase.from(record.table).select("*").order("created_at", { ascending: false }),
-        ),
+        configs.map(async (record) => {
+          const result = await supabase
+            .from(record.table)
+            .select("*")
+            .order("created_at", { ascending: false });
+          return { key: record.key, ...result };
+        }),
       );
 
       const sections: Record<string, Record<string, unknown>[]> = {};
+      const errors: string[] = [];
 
-      tables.forEach((record, index) => {
-        const { data, error } = results[index];
-        if (error) throw error;
-        sections[record.key] = (data ?? []) as Record<string, unknown>[];
+      results.forEach(({ key, data, error }) => {
+        if (error) {
+          errors.push(`${key}: ${error.message}`);
+          sections[key] = [];
+          return;
+        }
+        sections[key] = (data ?? []) as Record<string, unknown>[];
       });
 
-      return sections;
+      return { sections, errors };
     },
+    staleTime: 30_000,
   });
 }
 
@@ -134,7 +193,18 @@ function ReportsPage() {
   const { data: school } = useSchool();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const { data: sections, isLoading, isError } = useReportData();
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  const { data: reportData, isLoading, isError, refetch } = useReportData(selected);
+  const rawSections = reportData?.sections ?? {};
+  const sections = useMemo(() => {
+    const filtered: Record<string, Record<string, unknown>[]> = {};
+    Object.entries(rawSections).forEach(([key, rows]) => {
+      filtered[key] = filterRowsByDate(key, rows, fromDate, toDate);
+    });
+    return filtered;
+  }, [rawSections, fromDate, toDate]);
 
   const [selected, setSelected] = useState<string[]>(DEFAULT_SELECTED);
   const [reportSections, setReportSections] = useState<ReportSectionsState>(DEFAULT_SECTIONS);
@@ -188,6 +258,8 @@ function ReportsPage() {
     setReportSections(DEFAULT_SECTIONS);
     setReportNarrative("");
     setPeriod("");
+    setFromDate("");
+    setToDate("");
     toast.success("تمت إعادة ضبط إعدادات التقرير.");
   }
 
@@ -301,6 +373,24 @@ function ReportsPage() {
               placeholder="مثال: الفصل الدراسي الأول 1447هـ"
             />
 
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="report-from" className="text-xs font-semibold text-muted-foreground">
+                  من تاريخ
+                </Label>
+                <Input id="report-from" type="date" className="mt-1.5" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="report-to" className="text-xs font-semibold text-muted-foreground">
+                  إلى تاريخ
+                </Label>
+                <Input id="report-to" type="date" className="mt-1.5" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              </div>
+            </div>
+            {fromDate && toDate && fromDate > toDate && (
+              <p className="mt-2 text-xs text-destructive">تاريخ البداية يجب أن يسبق تاريخ النهاية.</p>
+            )}
+
             <Label className="mt-4 block text-xs font-semibold text-muted-foreground">
               التحليل المهني والتوصيات
             </Label>
@@ -368,14 +458,44 @@ function ReportsPage() {
           <p className="mt-4 text-xs text-muted-foreground">جارٍ تحميل بيانات التقرير...</p>
         )}
         {isError && (
-          <p className="mt-4 text-xs text-destructive">تعذّر تحميل بعض بيانات التقرير.</p>
+          <div className="mt-4 flex items-center gap-3 text-xs text-destructive">
+            <span>تعذّر تحميل بيانات التقرير.</span>
+            <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
+              إعادة المحاولة
+            </Button>
+          </div>
         )}
+        {!isLoading && !isError && reportData?.errors.length ? (
+          <p className="mt-4 text-xs text-amber-700">
+            تم إنشاء التقرير مع تجاهل السجلات التي تعذر الوصول إليها.
+          </p>
+        ) : null}
       </section>
 
       {/* =========================================================
           منطقة الطباعة الرسمية (A4)
       ========================================================= */}
-      <div ref={printRef} className="print-area hidden bg-paper p-6 text-paper-foreground print:block">
+      <div ref={printRef} className="reports-print-sheet print-area hidden bg-paper p-6 text-paper-foreground print:block">
+        <style>{`
+          @media print {
+            .reports-print-sheet {
+              display: block !important;
+              padding: 42mm 12mm 48mm !important;
+              width: 100% !important;
+              background: #fff !important;
+              box-shadow: none !important;
+            }
+            .reports-print-sheet .overflow-x-auto { overflow: visible !important; }
+            .reports-print-sheet section,
+            .reports-print-sheet tr,
+            .reports-print-sheet h2,
+            .reports-print-sheet p,
+            .reports-print-sheet img {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+          }
+        `}</style>
         <OfficialHeader
           school={school}
           title="تقرير التوجيه الطلابي"
@@ -520,24 +640,18 @@ function ReportsPage() {
 
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                   {(sections?.["evidences"] ?? []).map((row, index) => {
-                    const preview = String(row["preview_url"] ?? "");
-                    const title = String(row["title"] ?? `شاهد ${index + 1}`);
-                    if (!preview) return null;
-
+                    const title = String(row["name"] ?? `شاهد ${index + 1}`);
                     return (
                       <div
-                        key={index}
-                        className="overflow-hidden rounded-xl border border-paper-border bg-paper-muted p-2 text-center"
+                        key={String(row.id ?? index)}
+                        className="rounded-xl border border-paper-border bg-paper-muted p-3"
                       >
-                        <div className="aspect-video w-full overflow-hidden rounded-lg bg-background">
-                          <img
-                            src={preview}
-                            alt={title}
-                            className="size-full object-cover"
-                          />
-                        </div>
-                        <p className="mt-1.5 truncate text-[11px] font-bold">
-                          {title}
+                        <p className="text-[11px] font-bold">{title}</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          النوع: {String(row["etype"] ?? "—")} · التاريخ: {String(row["edate"] ?? "—")}
+                        </p>
+                        <p className="mt-1 break-all text-[10px] text-muted-foreground">
+                          {String(row["description"] ?? row["file_url"] ?? "لا يوجد وصف أو رابط مرفق")}
                         </p>
                       </div>
                     );
