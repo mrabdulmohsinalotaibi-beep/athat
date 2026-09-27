@@ -12,6 +12,8 @@ import {
   Printer,
   Search,
   Send,
+  Sparkles,
+  Loader2,
   Trash2,
   Upload,
   Pencil,
@@ -28,6 +30,7 @@ import { displayRecordValue } from "@/lib/display";
 import { formatHijriDate } from "@/lib/date";
 import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
+import { generateSmartFill } from "@/lib/deepseek.functions";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import {
@@ -86,6 +89,7 @@ export function RecordPage({
   const pageSize = 20;
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
+  const [smartFilling, setSmartFilling] = useState(false);
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
@@ -290,6 +294,66 @@ export function RecordPage({
     } finally {
       setImporting(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function handleSmartFill() {
+    if (smartFilling) return;
+
+    const currentValues: Record<string, string> = {};
+    config.fields
+      .filter((field) => !field.generated)
+      .forEach((field) => {
+        const value = auto[field.name] ?? String(editing?.[field.name] ?? "");
+        if (value.trim()) currentValues[field.name] = value;
+      });
+
+    const fillableFields = config.fields.filter(
+      (field) =>
+        !field.generated &&
+        (field.type === "text" || field.type === "textarea") &&
+        !currentValues[field.name],
+    );
+
+    if (!fillableFields.length) {
+      toast.info("جميع الحقول النصية مكتملة بالفعل.");
+      return;
+    }
+
+    setSmartFilling(true);
+    try {
+      const result = await generateSmartFill({
+        data: {
+          recordType: config.key,
+          recordTitle: config.title,
+          schoolName: school?.school_name ?? "",
+          fields: fillableFields.map((field) => ({
+            name: field.name,
+            label: field.label,
+            type: field.type === "textarea" ? "textarea" : "text",
+          })),
+          values: currentValues,
+        },
+      });
+
+      const suggestions = result.suggestions ?? {};
+      const usable = Object.fromEntries(
+        Object.entries(suggestions).filter(
+          ([name, value]) => !currentValues[name] && value.trim(),
+        ),
+      );
+
+      if (!Object.keys(usable).length) {
+        toast.info("لم تتوفر معلومات كافية لاقتراح تعبئة آمنة.");
+        return;
+      }
+
+      setAuto((current) => ({ ...current, ...usable }));
+      toast.success(`تمت تعبئة ${Object.keys(usable).length} حقول بالذكاء الاصطناعي — راجعها قبل الحفظ.`);
+    } catch (error) {
+      toast.error((error as Error).message || "تعذّرت التعبئة الذكية.");
+    } finally {
+      setSmartFilling(false);
     }
   }
 
@@ -636,9 +700,26 @@ export function RecordPage({
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>
-              {editing?.id ? `تعديل ${config.singular}` : `إضافة ${config.singular}`}
-            </DialogTitle>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <DialogTitle>
+                {editing?.id ? `تعديل ${config.singular}` : `إضافة ${config.singular}`}
+              </DialogTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSmartFill}
+                disabled={smartFilling}
+                title="اقتراح تعبئة للحقول النصية الناقصة بواسطة DeepSeek"
+              >
+                {smartFilling ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
+                {smartFilling ? "جارٍ التوليد..." : "التعبئة الذكية"}
+              </Button>
+            </div>
           </DialogHeader>
           <form
             id="record-form"
