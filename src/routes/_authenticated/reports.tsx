@@ -192,161 +192,166 @@ function ReportsPage() {
   const { data: school } = useSchool();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const [selected, setSelected] = useState<string[]>(DEFAULT_SELECTED);
-  const [reportSections, setReportSections] = useState<ReportSectionsState>(DEFAULT_SECTIONS);
-  const [reportNarrative, setReportNarrative] = useState("");
+  const reportableRecords = useMemo(
+    () => RECORDS.filter((record) => record.key !== "reports"),
+    [],
+  );
+
   const [period, setPeriod] = useState("");
+  const [reportTitle, setReportTitle] = useState("التقرير الشامل للتوجيه الطلابي");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [narrative, setNarrative] = useState("");
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(
+    reportableRecords.map((record) => record.key),
+  );
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const { data: reportData, isLoading, isError, refetch } = useReportData(selected);
-  const rawSections = reportData?.sections ?? {};
-  const sections = useMemo(() => {
-    const filtered: Record<string, Record<string, unknown>[]> = {};
-    Object.entries(rawSections).forEach(([key, rows]) => {
-      filtered[key] = filterRowsByDate(key, rows, fromDate, toDate);
-    });
-    return filtered;
-  }, [rawSections, fromDate, toDate]);
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["official-reports-all-records"],
+    queryFn: async () => {
+      const results = await Promise.all(
+        reportableRecords.map(async (record) => {
+          const result = await supabase
+            .from(record.table)
+            .select("*");
+          return { key: record.key, data: result.data ?? [], error: result.error };
+        }),
+      );
+      return {
+        sections: Object.fromEntries(
+          results.map((item) => [item.key, item.data as Record<string, unknown>[]]),
+        ),
+        errors: results
+          .filter((item) => item.error)
+          .map((item) => ({ key: item.key, message: item.error?.message ?? "خطأ غير معروف" })),
+      };
+    },
+    staleTime: 30_000,
+  });
 
-  const [exporting, setExporting] = useState(false);
-  const [sharing, setSharing] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [sharePhone, setSharePhone] = useState("");
+  const sections = data?.sections ?? {};
 
-  /* ---------- حساب مؤشرات الأداء (KPIs) ---------- */
+  const filteredSections = useMemo(() => {
+    const output: Record<string, Record<string, unknown>[]> = {};
+    for (const record of reportableRecords) {
+      let rows = sections[record.key] ?? [];
+      const dateField = dateFieldForRecord(record.key);
+      if ((fromDate || toDate) && dateField) {
+        rows = rows.filter((row) => {
+          const value = String(row[dateField] ?? "").slice(0, 10);
+          return Boolean(value) && (!fromDate || value >= fromDate) && (!toDate || value <= toDate);
+        });
+      }
+      output[record.key] = rows;
+    }
+    return output;
+  }, [sections, reportableRecords, fromDate, toDate]);
+
   const kpis = useMemo(() => {
-    if (!sections) return [];
-
     const computed = computeKpis({
-      planTasks: sections.plan ?? [],
-      cases: sections.cases ?? [],
-      attendance: sections.attendance ?? [],
-      interviews: sections.interviews ?? [],
-      students: sections.students ?? [],
+      planTasks: filteredSections.plan ?? [],
+      cases: filteredSections.cases ?? [],
+      attendance: filteredSections.attendance ?? [],
+      interviews: filteredSections.interviews ?? [],
+      students: filteredSections.students ?? [],
     });
-
     return computed.map((kpi) => ({
       key: kpi.key,
       title: kpi.label,
       value: kpi.value,
       description: kpi.hint,
     }));
-  }, [sections]);
+  }, [filteredSections]);
 
-  const totalEvidence = (sections?.["evidences"] ?? []).length;
-
-  const chartData = useMemo(
-    () => kpis.map((kpi) => ({ name: kpi.title, value: kpi.value })),
-    [kpis],
+  const totalRows = reportableRecords.reduce(
+    (sum, record) => sum + (filteredSections[record.key]?.length ?? 0),
+    0,
   );
 
-  function toggleSelected(key: string) {
-    setSelected((current) =>
-      current.includes(key) ? current.filter((value) => value !== key) : [...current, key],
+  function toggleRecord(key: string) {
+    setSelectedKeys((current) =>
+      current.includes(key)
+        ? current.filter((item) => item !== key)
+        : [...current, key],
     );
   }
 
-  function toggleSection(key: keyof ReportSectionsState) {
-    setReportSections((current) => ({ ...current, [key]: !current[key] }));
+  function selectAll() {
+    setSelectedKeys(reportableRecords.map((record) => record.key));
   }
 
-  function resetForm() {
-    setSelected(DEFAULT_SELECTED);
-    setReportSections(DEFAULT_SECTIONS);
-    setReportNarrative("");
+  function clearAll() {
+    setSelectedKeys([]);
+  }
+
+  function reset() {
+    setReportTitle("التقرير الشامل للتوجيه الطلابي");
     setPeriod("");
     setFromDate("");
     setToDate("");
-    toast.success("تمت إعادة ضبط إعدادات التقرير.");
+    setNarrative("");
+    selectAll();
+    toast.success("تمت إعادة ضبط التقرير.");
   }
 
-  function printReport() {
-    window.print();
+  function printOfficialReport() {
+    if (!printRef.current || isPrinting) return;
+    setIsPrinting(true);
+    document.body.classList.add("printing-record");
+    window.setTimeout(() => {
+      window.print();
+      window.setTimeout(() => {
+        document.body.classList.remove("printing-record");
+        setIsPrinting(false);
+      }, 800);
+    }, 100);
   }
 
-  /* ---------- تصدير PDF ---------- */
-  async function exportPdf() {
-    if (!printRef.current || exporting) return;
-
-    setExporting(true);
-
+  async function exportOfficialPdf() {
+    if (!printRef.current || isExporting) return;
+    setIsExporting(true);
     try {
-      await elementToPdf(printRef.current, "تقرير التوجيه الطلابي");
-      toast.success("تم حفظ التقرير بصيغة PDF");
-    } catch {
-      toast.error("تعذّر حفظ ملف PDF.");
+      await elementToPdf(printRef.current, reportTitle || "تقرير_رسمي");
+      toast.success("تم إنشاء التقرير الرسمي بصيغة PDF.");
+    } catch (error) {
+      console.error(error);
+      toast.error("تعذّر إنشاء ملف PDF.");
     } finally {
-      setExporting(false);
+      setIsExporting(false);
     }
   }
 
-  /* ---------- مشاركة التقرير عبر واتساب ---------- */
-  async function sharePdf() {
-    if (!printRef.current || sharing) return;
-
-    setSharing(true);
-
-    try {
-      await elementToPdf(printRef.current, "تقرير التوجيه الطلابي");
-
-      shareOnWhatsApp(
-        [
-          "السلام عليكم ورحمة الله وبركاته",
-          `من ${school?.school_name || "التوجيه الطلابي"}`,
-          "تم تجهيز التقرير المطلوب بصيغة PDF وتنزيله على جهازك، يُرجى إرفاقه هنا قبل الإرسال.",
-        ].join("\n"),
-        sharePhone,
-      );
-
-      setShareOpen(false);
-      toast.success("تم تنزيل التقرير، وفُتح واتساب لإرسال الرسالة. أرفق ملف الـ PDF يدوياً.");
-    } catch {
-      toast.error("تعذّر تجهيز التقرير للمشاركة.");
-    } finally {
-      setSharing(false);
-    }
-  }
+  const selectedRecords = reportableRecords.filter((record) =>
+    selectedKeys.includes(record.key),
+  );
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
-      {/* =========================================================
-          الترويسة وأزرار الإجراءات
-      ========================================================= */}
       <section className="no-print border-b border-border pb-6">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <div className="flex items-center gap-2 text-primary">
               <FileText className="size-5" />
-              <span className="text-xs font-bold">مركز التقارير</span>
+              <span className="text-xs font-bold">مركز الوثائق الرسمية</span>
             </div>
-
-            <h1 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">
-              التقارير الرسمية
-            </h1>
-
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-              اختر السجلات والأقسام المطلوبة، ثم اطبع التقرير أو صدّره PDF أو شاركه عبر واتساب.
+            <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير الرسمية</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              هذه هي نافذة الطباعة الرسمية الموحدة للمنصة. جميع السجلات متاحة في تقرير واحد،
+              مع الكليشة الرسمية وتوقيع الموجه الطلابي ومدير المدرسة.
             </p>
           </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            <Button type="button" variant="outline" onClick={printReport}>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={printOfficialReport} disabled={isPrinting || isLoading}>
               <Printer className="size-4" />
-              طباعة
+              {isPrinting ? "جارٍ فتح الطباعة..." : "طباعة التقرير الرسمي"}
             </Button>
-
-            <Button type="button" variant="outline" onClick={() => void exportPdf()} disabled={exporting}>
+            <Button type="button" variant="outline" onClick={() => void exportOfficialPdf()} disabled={isExporting || isLoading}>
               <FileDown className="size-4" />
-              {exporting ? "جارٍ الحفظ..." : "حفظ PDF"}
+              {isExporting ? "جارٍ إنشاء PDF..." : "حفظ PDF"}
             </Button>
-
-            <Button type="button" onClick={() => setShareOpen(true)}>
-              <Share2 className="size-4" />
-              مشاركة واتساب
-            </Button>
-
-            <Button type="button" variant="ghost" onClick={resetForm}>
+            <Button type="button" variant="ghost" onClick={reset}>
               <RotateCcw className="size-4" />
               إعادة ضبط
             </Button>
@@ -354,397 +359,177 @@ function ReportsPage() {
         </div>
       </section>
 
-      {/* =========================================================
-          إعدادات التقرير: الفترة، التحليل، الأقسام، السجلات
-      ========================================================= */}
-      <section className="no-print border-b border-border pb-6">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div>
-            <Label htmlFor="report-period" className="text-xs font-semibold text-muted-foreground">
-              الفترة (تظهر في ترويسة التقرير)
-            </Label>
-            <Input
-              id="report-period"
-              className="mt-1.5"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              placeholder="مثال: الفصل الدراسي الأول 1447هـ"
-            />
-
-            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <section className="no-print rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)]">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="official-report-title">عنوان التقرير</Label>
+              <Input id="official-report-title" className="mt-1.5" value={reportTitle} onChange={(e) => setReportTitle(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="official-report-period">الفترة / المناسبة</Label>
+              <Input id="official-report-period" className="mt-1.5" value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="مثال: الفصل الدراسي الأول 1447هـ" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label htmlFor="report-from" className="text-xs font-semibold text-muted-foreground">
-                  من تاريخ
-                </Label>
-                <Input id="report-from" type="date" className="mt-1.5" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                <Label htmlFor="official-from">من تاريخ</Label>
+                <Input id="official-from" className="mt-1.5" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
               </div>
               <div>
-                <Label htmlFor="report-to" className="text-xs font-semibold text-muted-foreground">
-                  إلى تاريخ
-                </Label>
-                <Input id="report-to" type="date" className="mt-1.5" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                <Label htmlFor="official-to">إلى تاريخ</Label>
+                <Input id="official-to" className="mt-1.5" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
               </div>
             </div>
             {fromDate && toDate && fromDate > toDate && (
-              <p className="mt-2 text-xs text-destructive">تاريخ البداية يجب أن يسبق تاريخ النهاية.</p>
+              <p className="text-xs text-destructive">تاريخ البداية يجب أن يسبق تاريخ النهاية.</p>
             )}
-
-            <Label className="mt-4 block text-xs font-semibold text-muted-foreground">
-              التحليل المهني والتوصيات
-            </Label>
-            <Textarea
-              className="mt-1.5"
-              rows={5}
-              value={reportNarrative}
-              onChange={(e) => setReportNarrative(e.target.value)}
-              placeholder="اكتب تحليلك المهني وتوصياتك لهذه الفترة..."
-            />
+            <div>
+              <Label htmlFor="official-narrative">التحليل والملاحظات والتوصيات</Label>
+              <Textarea id="official-narrative" className="mt-1.5" rows={5} value={narrative} onChange={(e) => setNarrative(e.target.value)} placeholder="اكتب التحليل المهني أو الملاحظات أو التوصيات التي تريد ظهورها في التقرير الرسمي..." />
+            </div>
           </div>
 
           <div>
-            <Label className="text-xs font-semibold text-muted-foreground">أقسام التقرير</Label>
-            <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="أقسام التقرير">
-              {SECTION_TOGGLES.map((item) => {
-                const active = reportSections[item.key];
+            <div className="flex items-center justify-between gap-3">
+              <Label>السجلات المضمنة في التقرير</Label>
+              <div className="flex gap-1">
+                <Button type="button" size="sm" variant="ghost" onClick={selectAll}>تحديد الكل</Button>
+                <Button type="button" size="sm" variant="ghost" onClick={clearAll}>إلغاء الكل</Button>
+              </div>
+            </div>
+            <div className="mt-2 grid max-h-80 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2">
+              {reportableRecords.map((record) => {
+                const active = selectedKeys.includes(record.key);
+                const count = filteredSections[record.key]?.length ?? 0;
                 return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => toggleSection(item.key)}
-                    className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                    style={{
-                      background: active ? "hsl(var(--primary))" : "transparent",
-                      color: active ? "#ffffff" : undefined,
-                      borderColor: active ? "hsl(var(--primary))" : undefined,
-                    }}
-                  >
-                    {active ? <CheckSquare className="size-3.5" /> : <Square className="size-3.5" />}
-                    {item.label}
+                  <button key={record.key} type="button" onClick={() => toggleRecord(record.key)} className={`flex items-center justify-between gap-2 rounded-xl border p-3 text-right text-xs transition hover:bg-muted ${active ? "border-primary bg-primary/5" : "border-border"}`}>
+                    <span className="flex items-center gap-2 font-semibold">
+                      {active ? <CheckSquare className="size-4 text-primary" /> : <Square className="size-4" />}
+                      {record.title}
+                    </span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{count}</span>
                   </button>
                 );
               })}
             </div>
-
-            <Label className="mt-4 block text-xs font-semibold text-muted-foreground">
-              السجلات المُدرجة ضمن "تفاصيل السجلات"
-            </Label>
-            <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="السجلات المدرجة">
-              {RECORDS.filter((record) => record.key !== "reports").map((record) => {
-                const active = selected.includes(record.key);
-                return (
-                  <button
-                    key={record.key}
-                    type="button"
-                    onClick={() => toggleSelected(record.key)}
-                    className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                    style={{
-                      background: active ? "hsl(var(--primary))" : "transparent",
-                      color: active ? "#ffffff" : undefined,
-                      borderColor: active ? "hsl(var(--primary))" : undefined,
-                    }}
-                  >
-                    {active ? <CheckSquare className="size-3.5" /> : <Square className="size-3.5" />}
-                    {record.title}
-                  </button>
-                );
-              })}
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <PrintStat label="السجلات" value={selectedRecords.length} />
+              <PrintStat label="إجمالي الصفوف" value={totalRows} />
+              <PrintStat label="الطلاب" value={filteredSections.students?.length ?? 0} />
+              <PrintStat label="الشواهد" value={filteredSections.evidences?.length ?? 0} />
             </div>
+            {isLoading && <p className="mt-3 text-xs text-muted-foreground">جارٍ تحميل جميع السجلات...</p>}
+            {isError && (
+              <div className="mt-3 flex items-center gap-3 text-xs text-destructive">
+                <span>تعذّر تحميل بيانات التقرير.</span>
+                <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>إعادة المحاولة</Button>
+              </div>
+            )}
+            {data?.errors.length ? (
+              <p className="mt-3 text-xs text-amber-700">
+                تعذر الوصول إلى: {data.errors.map((error) => error.key).join("، ")}
+              </p>
+            ) : null}
           </div>
         </div>
-
-        {isLoading && (
-          <p className="mt-4 text-xs text-muted-foreground">جارٍ تحميل بيانات التقرير...</p>
-        )}
-        {isError && (
-          <div className="mt-4 flex items-center gap-3 text-xs text-destructive">
-            <span>تعذّر تحميل بيانات التقرير.</span>
-            <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
-              إعادة المحاولة
-            </Button>
-          </div>
-        )}
-        {!isLoading && !isError && reportData?.errors.length ? (
-          <p className="mt-4 text-xs text-amber-700">
-            تم إنشاء التقرير مع تجاهل السجلات التي تعذر الوصول إليها.
-          </p>
-        ) : null}
       </section>
 
-      {/* =========================================================
-          منطقة الطباعة الرسمية (A4)
-      ========================================================= */}
-      <div ref={printRef} className="reports-print-sheet print-area hidden bg-paper p-6 text-paper-foreground print:block">
-        <style>{`
-          @media print {
-            .reports-print-sheet {
-              display: block !important;
-              padding: 42mm 12mm 48mm !important;
-              width: 100% !important;
-              background: #fff !important;
-              box-shadow: none !important;
-            }
-            .reports-print-sheet .overflow-x-auto { overflow: visible !important; }
-            .reports-print-sheet section,
-            .reports-print-sheet tr,
-            .reports-print-sheet h2,
-            .reports-print-sheet p,
-            .reports-print-sheet img {
-              break-inside: avoid;
-              page-break-inside: avoid;
-            }
-          }
-        `}</style>
-        <style>{`
-          @media print {
-            .reports-print-sheet {
-              display: block !important;
-              padding: 42mm 12mm 48mm !important;
-              width: 100% !important;
-              background: #fff !important;
-              box-shadow: none !important;
-            }
-            .reports-print-sheet .overflow-x-auto { overflow: visible !important; }
-            .reports-print-sheet section,
-            .reports-print-sheet tr,
-            .reports-print-sheet h2,
-            .reports-print-sheet p,
-            .reports-print-sheet img {
-              break-inside: avoid;
-              page-break-inside: avoid;
-            }
-          }
-        `}</style>
+      <div ref={printRef} className="reports-print-sheet print-area hidden bg-paper text-paper-foreground print:block">
         <OfficialHeader
           school={school}
-          title="تقرير التوجيه الطلابي"
-          reportType="تقرير شامل"
+          title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"}
+          reportType="تقرير رسمي"
           period={period || undefined}
         />
 
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <PrintStat label="إجمالي الطلاب" value={(sections?.students ?? []).length} />
-          <PrintStat label="الحالات الإرشادية" value={(sections?.cases ?? []).length} />
-          <PrintStat label="المقابلات" value={(sections?.interviews ?? []).length} />
-          <PrintStat label="الشواهد" value={totalEvidence} />
-        </div>
-
-        {reportSections.kpis && (
-          <section className="mt-6 break-inside-avoid">
-            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
-              الأداء العام
-            </h2>
-
-            {chartData.length > 0 ? (
-              <div className="h-[220px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+        <main className="report-official-content">
+          <section className="report-cover block border-b border-paper-border pb-5 pt-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <PrintStat label="عدد السجلات" value={selectedRecords.length} />
+              <PrintStat label="إجمالي الصفوف" value={totalRows} />
+              <PrintStat label="عدد الطلاب" value={filteredSections.students?.length ?? 0} />
+              <PrintStat label="عدد الشواهد" value={filteredSections.evidences?.length ?? 0} />
+            </div>
+            <div className="mt-5 rounded-xl border border-paper-border bg-paper-muted p-4">
+              <div className="grid gap-2 sm:grid-cols-2 text-xs">
+                <p><strong>الفترة:</strong> {period || "—"}</p>
+                <p><strong>النطاق:</strong> {fromDate || "بداية البيانات"} إلى {toDate || "نهاية البيانات"}</p>
               </div>
-            ) : (
-              <EmptyChart />
-            )}
+            </div>
           </section>
-        )}
 
-        <div className="mt-5 space-y-4">
-          {/* KPIs */}
-
-          {reportSections.kpis &&
-            kpis.length > 0 && (
-              <section className="mt-7 break-inside-avoid">
-                <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
-                  مؤشرات الأداء (KPIs)
-                </h2>
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {kpis.map((kpi, idx) => {
-                    const isPercent = isPercentKpi(kpi.key);
-                    const formattedVal = isPercent
-                      ? `${kpi.value}%`
-                      : kpi.value;
-                    return (
-                      <div
-                        key={idx}
-                        className="rounded-xl border border-paper-border bg-paper-muted p-3.5 text-right"
-                      >
-                        <p className="text-xs text-muted-foreground">
-                          {kpi.title}
-                        </p>
-                        <p className="mt-1 text-xl font-black text-primary">
-                          {formattedVal}
-                        </p>
-                        {kpi.description && (
-                          <p className="mt-1 text-[11px] text-muted-foreground">
-                            {kpi.description}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
+          <section className="report-summary mt-6">
+            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">ملخص مؤشرات الأداء</h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {kpis.map((kpi) => (
+                <div key={kpi.key} className="rounded-xl border border-paper-border bg-paper-muted p-3">
+                  <p className="text-[11px] text-muted-foreground">{kpi.title}</p>
+                  <p className="mt-1 text-xl font-black text-primary">{isPercentKpi(kpi.key) ? `${kpi.value}%` : kpi.value}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{kpi.description}</p>
                 </div>
-              </section>
-            )}
+              ))}
+            </div>
+          </section>
 
-          {/* Record Details */}
-
-          {reportSections.details &&
-            selected.map((key) => {
-              const config = recordByKey(key);
-              const rows = sections?.[key] ?? [];
-
-              return (
-                <section key={key} className="mt-8">
-                  <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
-                    سجل: {config.title} ({rows.length})
-                  </h2>
-
-                  {rows.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse text-right text-xs">
+          {selectedRecords.map((record) => {
+            const rows = filteredSections[record.key] ?? [];
+            const columns = reportColumns(record.fields);
+            return (
+              <section key={record.key} className="report-record-section mt-8">
+                <div className="mb-3 flex items-end justify-between gap-3 border-b-2 border-paper-border pb-2">
+                  <h2 className="border-r-4 border-primary pr-3 text-base font-black">{record.title}</h2>
+                  <span className="text-xs font-bold text-muted-foreground">عدد السجلات: {rows.length}</span>
+                </div>
+                {columns.length ? (
+                  rows.length ? (
+                    <div className="report-table-wrap overflow-visible">
+                      <table className="w-full border-collapse text-right text-[9px] leading-5">
                         <thead>
                           <tr className="bg-paper-muted">
-                            {config.columns.map((col) => (
-                              <th
-                                key={col.key}
-                                className="border border-paper-border p-2 font-bold"
-                              >
-                                {col.label}
-                              </th>
+                            {columns.map((column) => (
+                              <th key={column.key} className="border border-paper-border p-1.5 font-bold">{column.label}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {rows.map((row, index) => (
-                            <tr key={index} className="border-b border-paper-border">
-                              {config.columns.map((col) => {
-                                const val = row[col.key];
-                                return (
-                                  <td
-                                    key={col.key}
-                                    className="border border-paper-border p-2 align-top text-xs"
-                                  >
-                                    {displayRecordValue(val, col.type)}
-                                  </td>
-                                );
-                              })}
+                            <tr key={String(row.id ?? index)}>
+                              {columns.map((column) => (
+                                <td key={column.key} className="border border-paper-border p-1.5 align-top break-words">
+                                  {displayRecordValue(row[column.key], column.type)}
+                                </td>
+                              ))}
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
                   ) : (
-                    <p className="rounded-xl border border-dashed border-paper-border p-4 text-center text-xs text-muted-foreground">
-                      لا توجد سجلات مطابقة للفترة المحددة.
-                    </p>
-                  )}
-                </section>
-              );
-            })}
-
-          {/* Evidence section */}
-
-          {reportSections.evidence &&
-            totalEvidence > 0 && (
-              <section className="mt-8 break-inside-avoid">
-                <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
-                  الشواهد والصور المرفقة ({totalEvidence})
-                </h2>
-
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                  {(sections?.["evidences"] ?? []).map((row, index) => {
-                    const title = String(row["name"] ?? `شاهد ${index + 1}`);
-                    return (
-                      <div
-                        key={String(row.id ?? index)}
-                        className="rounded-xl border border-paper-border bg-paper-muted p-3"
-                      >
-                        <p className="text-[11px] font-bold">{title}</p>
-                        <p className="mt-1 text-[10px] text-muted-foreground">
-                          النوع: {String(row["etype"] ?? "—")} · التاريخ: {String(row["edate"] ?? "—")}
-                        </p>
-                        <p className="mt-1 break-all text-[10px] text-muted-foreground">
-                          {String(row["description"] ?? row["file_url"] ?? "لا يوجد وصف أو رابط مرفق")}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
+                    <p className="rounded-lg border border-dashed border-paper-border p-3 text-center text-xs text-muted-foreground">لا توجد بيانات ضمن النطاق المحدد.</p>
+                  )
+                ) : (
+                  <p className="rounded-lg border border-dashed border-paper-border p-3 text-center text-xs text-muted-foreground">لا توجد حقول قابلة للعرض في هذا السجل.</p>
+                )}
               </section>
-            )}
+            );
+          })}
 
-          {/* Analysis & Recommendations */}
-
-          {reportSections.analysis && (
-            <section className="mt-8 break-inside-avoid rounded-xl border border-paper-border bg-paper-muted p-5">
-              <h2 className="mb-3 font-black">
-                التحليل المهني والتوصيات
-              </h2>
-              <p className="whitespace-pre-wrap text-sm leading-8">
-                {reportNarrative.trim() ||
-                  "لم يتم إدراج تحليل مهني أو توصيات إضافية."}
-              </p>
-            </section>
-          )}
-
-          {/* Signatures */}
-
-          {reportSections.signatures && (
-            <section className="mt-10 break-inside-avoid">
-              <OfficialFooter school={school} />
-            </section>
-          )}
-        </div>
-      </div>
-
-      {/* =========================================================
-          SHARE DIALOG
-      ========================================================= */}
-
-      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent dir="rtl" className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>مشاركة التقرير عبر واتساب</DialogTitle>
-            <DialogDescription>
-              أدخل رقم جوال ولي الأمر أو المسؤول (يبدأ بـ 05 أو 9665).
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div>
-              <Label className="mb-2 block text-xs font-bold">
-                رقم الجوال
-              </Label>
-              <Input
-                value={sharePhone}
-                onChange={(e) => setSharePhone(e.target.value)}
-                placeholder="05xxxxxxxx"
-                className="h-11 rounded-xl"
-              />
+          <section className="report-analysis mt-8 break-inside-avoid">
+            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">التحليل والملاحظات والتوصيات</h2>
+            <div className="min-h-32 rounded-xl border border-paper-border p-4">
+              <p className="whitespace-pre-wrap text-sm leading-8">{narrative.trim() || "لا توجد ملاحظات أو توصيات إضافية."}</p>
             </div>
-          </div>
+          </section>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShareOpen(false)}
-            >
-              إلغاء
-            </Button>
-            <Button
-              onClick={sharePdf}
-              className="bg-[#25D366] text-white hover:bg-[#1da851] gap-2"
-            >
-              <Share2 className="size-4" /> مشاركة التقرير
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <section className="report-approval mt-10 break-inside-avoid">
+            <div className="rounded-xl border border-paper-border bg-paper-muted p-4 text-center text-xs leading-7">
+              أُعد هذا التقرير من خلال منصة الذات للتوجيه الطلابي، وتمت مراجعته واعتماده من الجهة المختصة في المدرسة.
+            </div>
+          </section>
+
+          <OfficialFooter school={school} />
+        </main>
+      </div>
     </div>
   );
 }
