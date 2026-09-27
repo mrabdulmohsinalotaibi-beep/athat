@@ -1,13 +1,10 @@
 import type { SchoolSettings } from "@/lib/school";
 import moeLogo from "@/assets/moe-logo-official.png";
 import { Copyright } from "@/components/Copyright";
+import { formatHijriDate } from "@/lib/date";
 
 function todayDate() {
-  return new Date().toLocaleDateString("ar-SA-u-ca-gregory", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return formatHijriDate(new Date());
 }
 
 export function OfficialHeader({
@@ -24,7 +21,7 @@ export function OfficialHeader({
   period?: string;
 }) {
   return (
-    <div className="official-letterhead border-b-2 border-paper-border bg-paper text-paper-foreground pb-4">
+    <div className="official-letterhead print-repeat-header border-b-2 border-paper-border bg-paper text-paper-foreground pb-4">
       <div className="grid grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] items-stretch gap-6 px-6 text-[11px] font-semibold">
         <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
           <p>المملكة العربية السعودية</p>
@@ -66,7 +63,7 @@ export function OfficialFooter({ school }: { school?: SchoolSettings | null | un
   const visibleSignatures = Number(showCounselor) + Number(showPrincipal);
 
   return (
-    <div className="report-signatures mt-8 grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground" style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}>
+    <div className="report-signatures print-repeat-footer mt-8 grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground" style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}>
       {showCounselor && <div className="flex min-h-28 flex-col items-center text-center">
         <p>الموجه الطلابي</p>
         {school?.counselor_signature ? (
