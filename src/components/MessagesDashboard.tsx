@@ -105,6 +105,33 @@ function deliveryText(
   ].join("\n\n");
 }
 
+function SummaryCard({
+  label,
+  value,
+  hint,
+  tone = "default",
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  hint: string;
+  tone?: "default" | "amber" | "primary" | "rose";
+  icon?: ReactNode;
+}) {
+  return (
+    <div className="rounded-md border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-center justify-between text-muted-foreground">
+        <span className="text-xs font-medium">{label}</span>
+        {icon}
+      </div>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="text-2xl font-black text-foreground">{value}</span>
+      </div>
+      <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>
+    </div>
+  );
+}
+
 export default function MessagesDashboard() {
   const { data: school } = useSchool();
   const queryClient = useQueryClient();
@@ -121,7 +148,6 @@ export default function MessagesDashboard() {
 
   const { data: messages = [], isLoading, isError } = useQuery({
     queryKey: ["feedback_messages"],
-
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("feedback_messages")
@@ -493,74 +519,6 @@ export default function MessagesDashboard() {
     }, 150);
   }
 
-  async function sendWhatsApp(
-    items = selected,
-    preferredContact?: string | null,
-  ) {
-    if (!items.length) {
-      return;
-    }
-
-    const contact = preferredContact || (items.length === 1 ? items[0]?.sender_contact : "");
-    const suggested = contact && !isEmail(contact) ? normalizeSaudiPhone(contact) : "";
-
-    const phone = window.prompt(
-      "رقم الجوال المستلم بصيغة 05XXXXXXXX (اتركه فارغاً لاختيار محادثة داخل واتساب):",
-      suggested,
-    );
-
-    if (phone === null) {
-      return;
-    }
-
-    shareOnWhatsApp(
-      deliveryText(
-        items,
-        school?.school_name || "التوجيه الطلابي",
-      ),
-      phone,
-    );
-  }
-
-  function sendEmail(
-    items = selected,
-    preferredContact?: string | null,
-  ) {
-    if (!items.length) {
-      return;
-    }
-
-    const suggested = isEmail(preferredContact)
-      ? (preferredContact ?? "")
-      : "";
-
-    const email = window.prompt(
-      "البريد الإلكتروني المستلم:",
-      suggested,
-    );
-
-    if (!email?.trim()) {
-      return;
-    }
-
-    const subject = encodeURIComponent(
-      `رسالة من ${
-        school?.school_name || "التوجيه الطلابي"
-      }`,
-    );
-
-    const body = encodeURIComponent(
-      deliveryText(
-        items,
-        school?.school_name || "التوجيه الطلابي",
-      ),
-    );
-
-    window.location.href =
-      `mailto:${encodeURIComponent(email.trim())}` +
-      `?subject=${subject}&body=${body}`;
-  }
-
   async function replyToBeneficiary(
     item: FeedbackMessage,
     channel?: "whatsapp" | "email",
@@ -611,6 +569,33 @@ export default function MessagesDashboard() {
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
+      {/* تنسيقات الطباعة الخاصة بـ A4 */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .print-only {
+            display: block !important;
+          }
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          .page-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+        }
+        .print-only {
+          display: none;
+        }
+      `}</style>
+
       <section className="no-print border-b border-border pb-6">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
@@ -733,10 +718,7 @@ export default function MessagesDashboard() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div>
-              <Label htmlFor="feedback-search">
-                بحث
-              </Label>
-
+              <Label htmlFor="feedback-search"> بحث </Label>
               <Input
                 id="feedback-search"
                 className="mt-1"
@@ -749,10 +731,7 @@ export default function MessagesDashboard() {
             </div>
 
             <div>
-              <Label htmlFor="feedback-category-filter">
-                النوع
-              </Label>
-
+              <Label htmlFor="feedback-category-filter"> النوع </Label>
               <select
                 id="feedback-category-filter"
                 value={category}
@@ -762,7 +741,6 @@ export default function MessagesDashboard() {
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option>الكل</option>
-
                 {categories.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
@@ -770,10 +748,7 @@ export default function MessagesDashboard() {
             </div>
 
             <div>
-              <Label htmlFor="feedback-assignee-filter">
-                الجهة المسؤولة
-              </Label>
-
+              <Label htmlFor="feedback-assignee-filter"> الجهة المسؤولة </Label>
               <select
                 id="feedback-assignee-filter"
                 value={assignee}
@@ -783,7 +758,6 @@ export default function MessagesDashboard() {
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option>الكل</option>
-
                 {ASSIGNEES.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
@@ -791,10 +765,7 @@ export default function MessagesDashboard() {
             </div>
 
             <div>
-              <Label htmlFor="feedback-status-filter">
-                الحالة
-              </Label>
-
+              <Label htmlFor="feedback-status-filter"> الحالة </Label>
               <select
                 id="feedback-status-filter"
                 value={status}
@@ -804,69 +775,31 @@ export default function MessagesDashboard() {
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option>الكل</option>
-
                 {STATUSES.map((item) => (
-                  <option key={item}>
-                    {item}
-                  </option>
+                  <option key={item}>{item}</option>
                 ))}
               </select>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2 lg:max-w-lg">
-            <Button
-              variant="outline"
-              onClick={exportCsv}
-            >
-              <Download className="size-4" />
-              تصدير CSV
+            <Button variant="outline" onClick={exportCsv}>
+              <Download className="size-4" /> تصدير CSV
             </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => void sendWhatsApp()}
-              disabled={!selected.length}
-            >
-              <MessageCircle className="size-4" />
-              واتساب
+            <Button variant="outline" onClick={() => void sendWhatsApp()} disabled={!selected.length}>
+              <MessageCircle className="size-4" /> واتساب
             </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => sendEmail()}
-              disabled={!selected.length}
-            >
-              <Mail className="size-4" />
-              بريد
+            <Button variant="outline" onClick={() => sendEmail()} disabled={!selected.length}>
+              <Mail className="size-4" /> بريد
             </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => printSelected(false)}
-              disabled={!selected.length}
-            >
-              <Printer className="size-4" />
-              طباعة مشاركة
+            <Button variant="outline" onClick={() => printSelected(false)} disabled={!selected.length}>
+              <Printer className="size-4" /> طباعة مشاركة
             </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => printSelected(true)}
-              disabled={!selected.length}
-            >
-              <Printer className="size-4" />
-              طباعة داخلية
+            <Button variant="outline" onClick={() => printSelected(true)} disabled={!selected.length}>
+              <Printer className="size-4" /> طباعة داخلية
             </Button>
-
-            <Button
-              onClick={exportPdf}
-              disabled={!selected.length || exporting}
-            >
-              <FileDown className="size-4" />
-              {exporting
-                ? "جارٍ حفظ PDF..."
-                : "حفظ PDF"}
+            <Button onClick={exportPdf} disabled={!selected.length || exporting}>
+              <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF"}
             </Button>
           </div>
         </div>
@@ -875,17 +808,10 @@ export default function MessagesDashboard() {
       <section className="no-print min-w-0 overflow-hidden rounded-md border border-border bg-card shadow-sm">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-muted/30 px-4 py-3 text-sm sm:px-5">
           <span>
-            <strong>{filtered.length}</strong>{" "}
-            مشاركة مطابقة {selected.length ? `· ${selected.length} محددة` : ""}
+            <strong>{filtered.length}</strong> مشاركة مطابقة {selected.length ? `· ${selected.length} محددة` : ""}
           </span>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={printAll}
-          >
-            <Printer className="size-4" />
-            طباعة قائمة النتائج
+          <Button size="sm" variant="ghost" onClick={printAll}>
+            <Printer className="size-4" /> طباعة قائمة النتائج
           </Button>
         </div>
 
@@ -923,24 +849,16 @@ export default function MessagesDashboard() {
               </article>
             ))}
         </div>
+
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[1140px] text-right text-sm">
             <thead className="bg-muted/50 text-xs">
               <tr>
                 <th className="p-4">
-                   <Button
-                     type="button" variant="ghost" size="icon"
-                    onClick={toggleAllVisible}
-                    title="تحديد كل النتائج"
-                  >
-                    {allVisibleSelected ? (
-                      <CheckSquare className="text-primary" />
-                    ) : (
-                      <Square className="text-muted-foreground" />
-                    )}
+                   <Button type="button" variant="ghost" size="icon" onClick={toggleAllVisible} title="تحديد كل النتائج">
+                    {allVisibleSelected ? <CheckSquare className="text-primary" /> : <Square className="text-muted-foreground" />}
                    </Button>
                 </th>
-
                 <th className="p-4">المشارك</th>
                 <th className="p-4">التصنيف</th>
                 <th className="p-4">المسؤول</th>
@@ -951,213 +869,72 @@ export default function MessagesDashboard() {
                 <th className="p-4">إجراء</th>
               </tr>
             </thead>
-
             <tbody>
               {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="p-10 text-center text-muted-foreground"
-                  >
-                    جارٍ تحميل الردود...
-                  </td>
-                </tr>
+                <tr><td colSpan={9} className="p-10 text-center text-muted-foreground">جارٍ تحميل الردود...</td></tr>
               ) : isError ? (
                 <tr><td colSpan={9} className="p-10 text-center text-destructive">تعذّر تحميل المشاركات. حاول تحديث الصفحة.</td></tr>
               ) : filtered.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="p-10 text-center text-muted-foreground"
-                  >
-                    لا توجد مشاركات مطابقة حتى الآن.
-                  </td>
-                </tr>
+                <tr><td colSpan={9} className="p-10 text-center text-muted-foreground">لا توجد مشاركات مطابقة حتى الآن.</td></tr>
               ) : (
                 filtered.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-border/60 align-top"
-                  >
+                  <tr key={item.id} className="border-t border-border/60 align-top">
                     <td className="p-4">
-                      <Button
-                        type="button" variant="ghost" size="icon"
-                        aria-label="تحديد المشاركة"
-                        onClick={() => toggle(item.id)}
-                      >
-                        {selectedIds.includes(item.id) ? (
-                          <CheckSquare className="text-primary" />
-                        ) : (
-                          <Square className="text-muted-foreground" />
-                        )}
+                      <Button type="button" variant="ghost" size="icon" aria-label="تحديد المشاركة" onClick={() => toggle(item.id)}>
+                        {selectedIds.includes(item.id) ? <CheckSquare className="text-primary" /> : <Square className="text-muted-foreground" />}
                       </Button>
                     </td>
-
                     <td className="p-4 font-bold">
                       {item.sender_name}
-
                       <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                        {item.sender_role}
-                        {item.sender_contact
-                          ? ` · ${item.sender_contact}`
-                          : ""}
+                        {item.sender_role} {item.sender_contact ? ` · ${item.sender_contact}` : ""}
                       </span>
                     </td>
-
                     <td className="p-4">
                       <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
                         {item.category}
                       </span>
                     </td>
-
                     <td className="p-4">
                       <select
-                        value={
-                          item.assigned_to ||
-                          "الموجه الطلابي"
-                        }
-                        onChange={(event) =>
-                          void updateMessage(
-                            item.id,
-                            {
-                              assigned_to:
-                                event.target.value,
-                            },
-                            "تم توجيه الرسالة",
-                          )
-                        }
+                        value={item.assigned_to || "الموجه الطلابي"}
+                        onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")}
                         className="h-8 max-w-44 rounded-md border border-input bg-background px-2 text-xs"
                       >
-                        {ASSIGNEES.map((name) => (
-                          <option key={name}>
-                            {name}
-                          </option>
-                        ))}
+                        {ASSIGNEES.map((name) => <option key={name}>{name}</option>)}
                       </select>
                     </td>
-
                     <td className="p-4">
                       {item.satisfaction ? (
                         <span className="inline-flex items-center gap-1 text-amber-500">
-                          <Star className="size-4 fill-current" />
-                          {item.satisfaction}/5
+                          <Star className="size-4 fill-current" /> {item.satisfaction}/5
                         </span>
-                      ) : (
-                        "—"
-                      )}
+                      ) : "—"}
                     </td>
-
-                    <td
-                      className="max-w-sm p-4 leading-7"
-                      title={item.message}
-                    >
+                    <td className="max-w-sm p-4 leading-7" title={item.message}>
                       {messageExcerpt(item.message)}
                     </td>
-
                     <td className="p-4 text-xs text-muted-foreground">
-                      {new Date(
-                        item.created_at,
-                      ).toLocaleDateString("ar-SA")}
+                      {new Date(item.created_at).toLocaleDateString("ar-SA")}
                     </td>
-
                     <td className="p-4">
                       <select
                         value={item.status}
-                        onChange={(event) =>
-                          void updateStatus(
-                            item.id,
-                            event.target.value,
-                          )
-                        }
+                        onChange={(event) => void updateStatus(item.id, event.target.value)}
                         className="h-8 rounded-md border border-input bg-background px-2 text-xs"
                       >
-                        {STATUSES.map((itemStatus) => (
-                          <option key={itemStatus}>
-                            {itemStatus}
-                          </option>
-                        ))}
+                        {STATUSES.map((s) => <option key={s}>{s}</option>)}
                       </select>
                     </td>
-
                     <td className="p-4">
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            void replyToBeneficiary(item, "whatsapp")
-                          }
-                        >
+                      <div className="flex items-center gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => void replyToBeneficiary(item)} title="رد مباشر">
                           <Send className="size-4" />
-                          واتساب
                         </Button>
-
-                        <Button size="icon" variant="outline" onClick={() => void replyToBeneficiary(item, "email")} title="الرد بالبريد" aria-label="الرد بالبريد"><Mail /></Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            printSelected(true)
-                          }
-                          disabled={
-                            !selectedIds.includes(item.id)
-                          }
-                        >
-                          <Printer className="size-4" />
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive"
-                          onClick={() =>
-                            void deleteMessage(item.id)
-                          }
-                          title="حذف المشاركة"
-                        >
+                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => void deleteMessage(item.id)} title="حذف">
                           <Trash2 className="size-4" />
                         </Button>
                       </div>
-
-                      <details className="mt-2 min-w-56 text-xs">
-                        <summary className="flex cursor-pointer items-center gap-1 text-primary">
-                          <ChevronDown className="size-3" />
-                          الإجراء والملاحظات
-                        </summary>
-
-                        <Label className="mt-2 block text-[11px]">
-                          الرد أو الإجراء للمستفيد
-                        </Label>
-
-                        <Textarea
-                          defaultValue={
-                            item.response_note || ""
-                          }
-                          className="mt-1 min-h-16 text-xs"
-                          placeholder="الرد أو الإجراء المتخذ"
-                           onBlur={(event) => { if (event.target.value.trim() !== (item.response_note || "").trim()) void updateResponse(
-                              item.id,
-                              event.target.value,
-                             ); }}
-                        />
-
-                        <Label className="mt-2 block text-[11px]">
-                          ملاحظة داخلية
-                        </Label>
-
-                        <Textarea
-                          defaultValue={
-                            item.internal_notes || ""
-                          }
-                          className="mt-1 min-h-16 text-xs"
-                          placeholder="ملاحظة خاصة بالموجه"
-                           onBlur={(event) => { if (event.target.value.trim() !== (item.internal_notes || "").trim()) void updateNotes(
-                              item.id,
-                              event.target.value,
-                             ); }}
-                        />
-                      </details>
                     </td>
                   </tr>
                 ))
@@ -1167,149 +944,49 @@ export default function MessagesDashboard() {
         </div>
       </section>
 
-      <div
-        ref={printRef}
-        className="print-area hidden bg-paper p-6 text-paper-foreground print:block"
-      >
-        <OfficialHeader
-          school={school}
-          title={
-            includeInternal
-              ? "تقرير داخلي للآراء والرسائل"
-              : "تقرير الآراء والرسائل"
-          }
-          reportType="استبانة المستفيدين"
-        />
-
-        <div className="mt-5 rounded-lg border border-paper-border p-3 text-xs">
-          <strong>الفترة:</strong>{" "}
-          حتى {new Date().toLocaleDateString("ar-SA")}
-
-          <span className="mx-3">|</span>
-
-          <strong>عدد المشاركات:</strong>{" "}
-          {selected.length}
-
-          <span className="mx-3">|</span>
-
-          <strong>نوع النسخة:</strong>{" "}
-          {includeInternal ? "داخلية" : "مشاركة"}
+      {/* قسم الطباعة والتصدير المخفي المتوافق مع A4 */}
+      <div ref={printRef} className="print-only bg-white text-black p-6 space-y-4" dir="rtl">
+        <OfficialHeader />
+        <div className="text-center my-4">
+          <h2 className="text-lg font-bold">
+            {includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"}
+          </h2>
+          <p className="text-xs text-gray-500 mt-1">تاريخ الاستخراج: {new Date().toLocaleDateString("ar-SA")}</p>
         </div>
 
-        <div className="mt-5 space-y-4">
+        <div className="space-y-6">
           {selected.map((item, index) => (
-            <article
-              key={item.id}
-              className="break-inside-avoid rounded-xl border border-paper-border p-4"
-            >
-              <div className="flex items-start justify-between gap-4 border-b border-paper-border pb-2 text-xs font-bold">
-                <span>
-                  {index + 1}. {item.category} —{" "}
-                  {item.sender_role}
-                </span>
-
-                <span>
-                  {new Date(
-                    item.created_at,
-                  ).toLocaleDateString("ar-SA")}
-                </span>
+            <div key={item.id} className="page-break border border-gray-300 rounded-lg p-4 space-y-2 text-sm bg-white">
+              <div className="flex justify-between border-b pb-2 font-bold">
+                <span>#{index + 1} - {item.category} ({item.sender_role})</span>
+                <span>التاريخ: {new Date(item.created_at).toLocaleDateString("ar-SA")}</span>
               </div>
-
-              <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-                <p>
-                  <strong>المرسل:</strong>{" "}
-                  {item.sender_name}
-                </p>
-
-                <p>
-                  <strong>وسيلة التواصل:</strong>{" "}
-                  {item.sender_contact || "—"}
-                </p>
-
-                <p>
-                  <strong>الجهة المسؤولة:</strong>{" "}
-                  {item.assigned_to || "الموجه الطلابي"}
-                </p>
-
-                <p>
-                  <strong>الحالة:</strong>{" "}
-                  {item.status}
-                </p>
-
-                {item.satisfaction && (
-                  <p>
-                    <strong>التقييم:</strong>{" "}
-                    {item.satisfaction} من 5
-                  </p>
-                )}
+              <div>
+                <span className="font-semibold">المرسل: </span>
+                <span>{item.sender_name || "مستفيد"} {item.sender_contact ? `(${item.sender_contact})` : ""}</span>
               </div>
-
-              <p className="mt-3 whitespace-pre-wrap border-t border-paper-border pt-3 text-sm leading-8">
-                {item.message}
-              </p>
-
+              <div>
+                <span className="font-semibold">المشاركة: </span>
+                <p className="whitespace-pre-wrap mt-1 text-gray-800 leading-relaxed bg-gray-50 p-2 rounded">{item.message}</p>
+              </div>
               {item.response_note && (
-                <p className="mt-3 rounded-lg bg-muted/40 p-3 text-sm">
-                  <strong>الرد أو الإجراء:</strong>{" "}
-                  {item.response_note}
-                </p>
+                <div className="border-t pt-2">
+                  <span className="font-semibold text-blue-800">الرد أو الإجراء المتخذ: </span>
+                  <p className="whitespace-pre-wrap mt-1 text-gray-700">{item.response_note}</p>
+                </div>
               )}
-
-              {includeInternal &&
-                item.internal_notes && (
-                  <p className="mt-3 rounded-lg border border-amber-300/50 bg-amber-50 p-3 text-sm">
-                    <strong>ملاحظة داخلية:</strong>{" "}
-                    {item.internal_notes}
-                  </p>
-                )}
-            </article>
+              {includeInternal && item.internal_notes && (
+                <div className="border-t pt-2 text-xs bg-amber-50 p-2 rounded">
+                  <span className="font-semibold text-amber-900">ملاحظات داخلية: </span>
+                  <p className="whitespace-pre-wrap mt-1 text-amber-800">{item.internal_notes}</p>
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
-        <OfficialFooter school={school} />
+        <OfficialFooter />
       </div>
     </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  hint,
-  tone = "primary",
-  icon,
-}: {
-  label: string;
-  value: string | number;
-  hint: string;
-  tone?: "primary" | "amber" | "rose";
-  icon?: ReactNode;
-}) {
-    const toneClass =
-    tone === "amber"
-      ? "border-amber-300/40 bg-amber-50/60 text-amber-800"
-      : tone === "rose"
-        ? "border-rose-300/40 bg-rose-50/60 text-rose-800"
-      : "border-border bg-card text-primary";
-
-  return (
-    <article
-      className={`rounded-md border p-4 shadow-sm ${toneClass}`}
-    >
-      <p className="text-xs font-semibold">
-        {label}
-      </p>
-
-      <div className="mt-2 flex items-center gap-2">
-        <strong className="text-2xl font-black">
-          {value}
-        </strong>
-        {icon}
-      </div>
-
-      <p className="mt-1 text-xs opacity-75">
-        {hint}
-      </p>
-    </article>
   );
 }
