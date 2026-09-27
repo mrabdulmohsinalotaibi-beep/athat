@@ -64,11 +64,16 @@ export const generateSmartFill = createServerFn({ method: "POST" })
       throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
     }
 
-    const allowedFields = data.fields.filter(
-      (field) => !data.values[field.name]?.trim(),
-    );
+    const allowedFields =
+      data.mode === "rewrite"
+        ? data.fields.filter((field) => field.name === data.targetField)
+        : data.fields.filter((field) => !data.values[field.name]?.trim());
     if (!allowedFields.length) {
       return { suggestions: {} };
+    }
+
+    if (data.mode === "rewrite" && !data.targetField) {
+      throw new Error("لم يتم تحديد الحقل المطلوب تحسين صياغته.");
     }
 
     const contextEntries = Object.entries(data.values)
