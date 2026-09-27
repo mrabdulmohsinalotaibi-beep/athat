@@ -11,6 +11,7 @@ export { SignaturePad } from "./components/SignaturePad";
 export { StudentCombobox } from "./components/StudentCombobox";
 export { StudentsPage } from "./components/StudentsPage";
 export { WhatsAppButton } from "./components/WhatsAppButton";
+export { WeeklyGuidancePoster } from "./components/WeeklyGuidancePoster";
 export { 
   AlertDialog, AlertDialogPortal, AlertDialogOverlay, AlertDialogTrigger, 
   AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, 
