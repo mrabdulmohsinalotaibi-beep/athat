@@ -1,0 +1,181 @@
+import { useState, type ReactNode } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { Menu, X } from "lucide-react";
+
+import { Copyright } from "@/components/Copyright";
+import { Button } from "@/components/ui/button";
+import { useGuidanceProfile } from "@/lib/guidance";
+import { cn } from "@/lib/utils";
+
+const NAV = [
+  { to: "/", label: "الرئيسية" },
+  { to: "/about", label: "عن التوجيه الطلابي" },
+  { to: "/services", label: "الخدمات الإرشادية" },
+  { to: "/resources", label: "المكتبة الإرشادية" },
+  { to: "/forms", label: "الاستمارات" },
+  { to: "/contact", label: "تواصل معنا" },
+] as const;
+
+export function PublicLayout({
+  children,
+  title,
+  subtitle,
+}: {
+  children: ReactNode;
+  title?: string;
+  subtitle?: string;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { data: profile } = useGuidanceProfile();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  return (
+    <div dir="rtl" className="flex min-h-screen flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
+          <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
+            <img
+              src="/brand-logo.png"
+              alt="شعار الذات"
+              className="brand-mark-well size-11 rounded-xl object-contain"
+            />
+            <div>
+              <p className="text-lg font-black tracking-tight text-primary sm:text-xl">الذات</p>
+              <p className="text-[10px] font-medium text-muted-foreground sm:text-xs">
+                {profile?.school_name
+                  ? `التوجيه الطلابي · ${profile.school_name}`
+                  : "نظام الإرشاد المدرسي"}
+              </p>
+            </div>
+          </Link>
+
+          <nav
+            className="hidden items-center gap-5 text-sm font-semibold text-muted-foreground lg:flex"
+            aria-label="التنقل الرئيسي"
+          >
+            {NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  pathname === item.to && "text-primary",
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="hidden font-semibold sm:inline-flex"
+            >
+              <Link to="/auth" search={{ next: "" }}>
+                دخول الموجه الطلابي
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"}
+              onClick={() => setMenuOpen((value) => !value)}
+            >
+              {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </Button>
+          </div>
+        </div>
+
+        {menuOpen && (
+          <nav
+            className="border-t border-border/60 bg-background px-4 py-3 lg:hidden"
+            aria-label="قائمة الجوال"
+          >
+            <ul className="space-y-1 text-sm font-semibold">
+              {NAV.map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "block rounded-lg px-3 py-2 hover:bg-muted",
+                      pathname === item.to && "bg-primary/10 text-primary",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  to="/auth"
+                  search={{ next: "" }}
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-lg px-3 py-2 text-primary hover:bg-muted"
+                >
+                  دخول الموجه الطلابي
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        )}
+      </header>
+
+      {title && (
+        <section className="border-b border-border/60 bg-muted/30">
+          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-8 sm:py-14">
+            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{title}</h1>
+            {subtitle && (
+              <p className="mt-3 max-w-3xl text-sm leading-8 text-muted-foreground sm:text-base">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
+      <main className="flex-1">{children}</main>
+
+      <footer className="border-t border-border/60 bg-muted/20">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-3">
+          <div>
+            <p className="text-lg font-black text-primary">الذات</p>
+            <p className="mt-2 text-xs leading-7 text-muted-foreground">
+              نظام الإرشاد المدرسي لخدمات التوجيه الطلابي: صفحات تعريفية، استمارات تفاعلية، ولوحة
+              عمل خاصة بالموجه الطلابي.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-bold">روابط سريعة</p>
+            <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+              {NAV.slice(1).map((item) => (
+                <li key={item.to}>
+                  <Link to={item.to} className="transition-colors hover:text-primary">
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-bold">بيانات التواصل</p>
+            <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+              <li>{profile?.school_name || "اسم المدرسة"}</li>
+              <li>{profile?.education_dept || "إدارة التعليم"}</li>
+              {profile?.contact_phone && <li>هاتف: {profile.contact_phone}</li>}
+              {profile?.contact_email && <li>بريد: {profile.contact_email}</li>}
+              {profile?.office_hours && <li>أوقات المقابلات: {profile.office_hours}</li>}
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-border/60 px-4 py-4 text-center sm:px-8">
+          <Copyright />
+        </div>
+      </footer>
+    </div>
+  );
+}

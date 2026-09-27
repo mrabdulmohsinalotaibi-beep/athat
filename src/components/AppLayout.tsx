@@ -45,6 +45,7 @@ const NAV = [
       { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
       { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert },
       { to: "/referrals", label: "الإحالات", icon: Send },
+      { to: "/requests", label: "صندوق الطلبات", icon: Inbox },
     ],
   },
   {
@@ -58,6 +59,7 @@ const NAV = [
     ],
   },
   { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
+  { to: "/toolkit", label: "أدوات القياس والأرشيف", icon: FolderKanban },
   { to: "/posts", label: "المنشورات العامة", icon: Newspaper },
   { to: "/integrations", label: "مدرستي ونور", icon: Globe2 },
   { to: "/weekly-poster", label: "التوجيه الطلابي الأسبوعي", icon: Sparkles },
@@ -255,9 +257,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        
+
         <main className="min-w-0 flex-1 p-4 lg:p-8">{children}</main>
-        
+
         <footer className="no-print border-t px-4 py-4">
           <Copyright />
         </footer>

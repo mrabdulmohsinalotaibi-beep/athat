@@ -16,7 +16,10 @@ export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
       { title: "الإعدادات | الذات" },
-      { name: "description", content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة الذات." },
+      {
+        name: "description",
+        content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة الذات.",
+      },
       { property: "og:title", content: "الإعدادات | منصة الذات" },
       { property: "og:description", content: "بيانات المدرسة والعام الدراسي والقوائم المرجعية." },
       { property: "og:type", content: "website" },
@@ -33,13 +36,80 @@ const SCHOOL_FIELDS = [
   { name: "counselor_name", label: "اسم الموجه الطلابي" },
   { name: "academic_year", label: "العام الدراسي" },
   { name: "semester", label: "الفصل الدراسي" },
+  { name: "contact_phone", label: "هاتف التواصل" },
+  { name: "contact_email", label: "البريد الإلكتروني" },
+  { name: "office_hours", label: "أوقات المقابلات" },
 ];
+
+/** المحتوى الظاهر في صفحات الموقع العام. */
+const PORTAL_FIELDS = [
+  { name: "vision", label: "رؤية التوجيه الطلابي" },
+  { name: "mission", label: "رسالة التوجيه الطلابي" },
+  { name: "announcement", label: "التنبيهات والإعلانات" },
+];
+
+function LogoField({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: string | null;
+  onChange: (value: string | null) => void;
+}) {
+  return (
+    <div className="rounded-lg border border-dashed p-3">
+      <Label className="mb-1.5 block text-xs">{label}</Label>
+      <div className="flex items-center gap-3">
+        {value ? (
+          <img
+            src={value}
+            alt={label}
+            className="h-16 w-24 rounded border bg-white object-contain"
+          />
+        ) : (
+          <div className="flex h-16 w-24 items-center justify-center rounded border bg-muted text-[10px] text-muted-foreground">
+            بلا شعار
+          </div>
+        )}
+        <div className="space-y-2">
+          <Input
+            type="file"
+            accept="image/*"
+            className="text-xs"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              if (file.size > 400_000) {
+                toast.error("حجم الشعار كبير؛ اختر صورة أقل من ٣٨٠ كيلوبايت");
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = () => onChange(String(reader.result));
+              reader.readAsDataURL(file);
+            }}
+          />
+          {value && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => onChange("")}>
+              <Trash2 className="size-4 text-destructive" /> إزالة
+            </Button>
+          )}
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
 
 function SettingsPage() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
   const [counselorSignature, setCounselorSignature] = useState<string | null>(null);
   const [principalSignature, setPrincipalSignature] = useState<string | null>(null);
+  const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
+  const [ministryLogo, setMinistryLogo] = useState<string | null>(null);
   const [editingLookup, setEditingLookup] = useState<{ id: string; value: string } | null>(null);
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
@@ -49,9 +119,15 @@ function SettingsPage() {
         show_principal_on_documents: values["show_principal_on_documents"] !== "false",
         counselor_signature: counselorSignature ?? school?.counselor_signature ?? null,
         principal_signature: principalSignature ?? school?.principal_signature ?? null,
+        logo_url: (schoolLogo ?? school?.logo_url) || null,
+        ministry_logo_url: (ministryLogo ?? school?.ministry_logo_url) || null,
+        public_requests_enabled: values["public_requests_enabled"] !== "false",
       };
       if (school?.id) {
-        const { error } = await supabase.from("school_settings").update(payload as never).eq("id", school.id);
+        const { error } = await supabase
+          .from("school_settings")
+          .update(payload as never)
+          .eq("id", school.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("school_settings").insert(payload as never);
@@ -60,6 +136,7 @@ function SettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["school_settings"] });
+      queryClient.invalidateQueries({ queryKey: ["guidance_profile"] });
       toast.success("تم حفظ بيانات المدرسة");
     },
     onError: (error: Error) => toast.error(error.message),
@@ -79,7 +156,9 @@ function SettingsPage() {
 
   const addLookup = useMutation({
     mutationFn: async (values: { category: string; value: string }) => {
-      const duplicate = lookups.some((item) => item.category === values.category && item.value?.trim() === values.value.trim());
+      const duplicate = lookups.some(
+        (item) => item.category === values.category && item.value?.trim() === values.value.trim(),
+      );
       if (duplicate) throw new Error("هذه القيمة موجودة في القائمة بالفعل");
       const { error } = await supabase.from("lookups").insert(values as never);
       if (error) throw error;
@@ -93,9 +172,17 @@ function SettingsPage() {
   const updateLookup = useMutation({
     mutationFn: async (values: { id: string; value: string }) => {
       const current = lookups.find((item) => item.id === values.id);
-      const duplicate = lookups.some((item) => item.id !== values.id && item.category === current?.category && item.value?.trim() === values.value.trim());
+      const duplicate = lookups.some(
+        (item) =>
+          item.id !== values.id &&
+          item.category === current?.category &&
+          item.value?.trim() === values.value.trim(),
+      );
       if (duplicate) throw new Error("هذه القيمة موجودة في القائمة بالفعل");
-      const { error } = await supabase.from("lookups").update({ value: values.value } as never).eq("id", values.id);
+      const { error } = await supabase
+        .from("lookups")
+        .update({ value: values.value } as never)
+        .eq("id", values.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -129,8 +216,18 @@ function SettingsPage() {
             SCHOOL_FIELDS.forEach((f) => {
               values[f.name] = String(data.get(f.name) ?? "");
             });
-            values["show_counselor_on_documents"] = data.get("show_counselor_on_documents") ? "true" : "false";
-            values["show_principal_on_documents"] = data.get("show_principal_on_documents") ? "true" : "false";
+            PORTAL_FIELDS.forEach((f) => {
+              values[f.name] = String(data.get(f.name) ?? "");
+            });
+            values["show_counselor_on_documents"] = data.get("show_counselor_on_documents")
+              ? "true"
+              : "false";
+            values["show_principal_on_documents"] = data.get("show_principal_on_documents")
+              ? "true"
+              : "false";
+            values["public_requests_enabled"] = data.get("public_requests_enabled")
+              ? "true"
+              : "false";
             saveSchool.mutate(values);
           }}
         >
@@ -142,23 +239,80 @@ function SettingsPage() {
               <Input
                 id={f.name}
                 name={f.name}
-                defaultValue={((school as Record<string, unknown> | null)?.[f.name] as string) ?? ""}
+                defaultValue={
+                  ((school as Record<string, unknown> | null)?.[f.name] as string) ?? ""
+                }
               />
             </div>
           ))}
+          {PORTAL_FIELDS.map((f) => (
+            <div key={f.name} className="sm:col-span-2">
+              <Label htmlFor={f.name} className="mb-1.5 block text-xs">
+                {f.label}
+              </Label>
+              <textarea
+                id={f.name}
+                name={f.name}
+                rows={3}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                defaultValue={
+                  ((school as Record<string, unknown> | null)?.[f.name] as string) ?? ""
+                }
+              />
+            </div>
+          ))}
+
           <div className="sm:col-span-2">
             <div className="mb-5 grid gap-5 sm:grid-cols-2">
-              <SignaturePad label="توقيع الموجه الطلابي" value={counselorSignature ?? school?.counselor_signature ?? ""} onChange={setCounselorSignature} />
-              <SignaturePad label="توقيع مدير المدرسة" value={principalSignature ?? school?.principal_signature ?? ""} onChange={setPrincipalSignature} />
+              <LogoField
+                label="شعار المدرسة"
+                hint="يظهر في الكليشة الرسمية للتقارير وفي الموقع العام."
+                value={schoolLogo ?? school?.logo_url ?? null}
+                onChange={setSchoolLogo}
+              />
+              <LogoField
+                label="شعار وزارة التعليم"
+                hint="عند عدم رفع شعار يُستخدم الشعار الرسمي المضمّن في النظام."
+                value={ministryLogo ?? school?.ministry_logo_url ?? null}
+                onChange={setMinistryLogo}
+              />
+            </div>
+            <div className="mb-5 grid gap-5 sm:grid-cols-2">
+              <SignaturePad
+                label="توقيع الموجه الطلابي"
+                value={counselorSignature ?? school?.counselor_signature ?? ""}
+                onChange={setCounselorSignature}
+              />
+              <SignaturePad
+                label="توقيع مدير المدرسة"
+                value={principalSignature ?? school?.principal_signature ?? ""}
+                onChange={setPrincipalSignature}
+              />
             </div>
             <div className="mb-5 grid gap-3 rounded-lg border border-dashed p-3 sm:grid-cols-2">
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="show_counselor_on_documents" defaultChecked={school?.show_counselor_on_documents !== false} />
+                <input
+                  type="checkbox"
+                  name="show_counselor_on_documents"
+                  defaultChecked={school?.show_counselor_on_documents !== false}
+                />
                 إظهار اسم وتوقيع الموجه في المستندات
               </label>
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="show_principal_on_documents" defaultChecked={school?.show_principal_on_documents !== false} />
+                <input
+                  type="checkbox"
+                  name="show_principal_on_documents"
+                  defaultChecked={school?.show_principal_on_documents !== false}
+                />
                 إظهار اسم وتوقيع المدير في المستندات
+              </label>
+              <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  name="public_requests_enabled"
+                  defaultChecked={school?.public_requests_enabled !== false}
+                />
+                استقبال الاستمارات العامة (استشارة فردية، إحالة طالب، إبلاغ سري)
               </label>
             </div>
             <Button type="submit" disabled={saveSchool.isPending}>
@@ -186,9 +340,17 @@ function SettingsPage() {
             form.reset();
           }}
         >
-          <select name="category" required className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+          <select
+            name="category"
+            required
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          >
             <option value="">اختر القائمة</option>
-            {LOOKUP_CATEGORIES.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
+            {LOOKUP_CATEGORIES.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label}
+              </option>
+            ))}
           </select>
           <Input name="value" placeholder="القيمة" />
           <Button type="submit" variant="outline">
@@ -198,22 +360,70 @@ function SettingsPage() {
 
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {lookups.map((item) => (
-            <li key={item.id} className="flex items-center justify-between rounded-lg bg-secondary/60 px-3 py-2 text-sm">
+            <li
+              key={item.id}
+              className="flex items-center justify-between rounded-lg bg-secondary/60 px-3 py-2 text-sm"
+            >
               {editingLookup?.id === item.id ? (
-                <Input value={editingLookup.value} onChange={(event) => setEditingLookup({ id: item.id, value: event.target.value })} className="ml-2" autoFocus />
+                <Input
+                  value={editingLookup.value}
+                  onChange={(event) => setEditingLookup({ id: item.id, value: event.target.value })}
+                  className="ml-2"
+                  autoFocus
+                />
               ) : (
-                <span><span className="text-muted-foreground">{lookupCategoryLabel(item.category ?? "")}:</span> {item.value}</span>
+                <span>
+                  <span className="text-muted-foreground">
+                    {lookupCategoryLabel(item.category ?? "")}:
+                  </span>{" "}
+                  {item.value}
+                </span>
               )}
               <div className="flex shrink-0 gap-1">
                 {editingLookup?.id === item.id ? (
                   <>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => { const value = editingLookup.value.trim(); if (value) updateLookup.mutate({ id: item.id, value }); }} aria-label="حفظ التعديل"><Check className="size-4 text-primary" /></Button>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => setEditingLookup(null)} aria-label="إلغاء التعديل"><X className="size-4" /></Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const value = editingLookup.value.trim();
+                        if (value) updateLookup.mutate({ id: item.id, value });
+                      }}
+                      aria-label="حفظ التعديل"
+                    >
+                      <Check className="size-4 text-primary" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingLookup(null)}
+                      aria-label="إلغاء التعديل"
+                    >
+                      <X className="size-4" />
+                    </Button>
                   </>
                 ) : (
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setEditingLookup({ id: item.id, value: item.value ?? "" })} aria-label="تعديل"><Pencil className="size-4" /></Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingLookup({ id: item.id, value: item.value ?? "" })}
+                    aria-label="تعديل"
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
                 )}
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeLookup.mutate(item.id)} aria-label="حذف"><Trash2 className="size-4 text-destructive" /></Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeLookup.mutate(item.id)}
+                  aria-label="حذف"
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
               </div>
             </li>
           ))}

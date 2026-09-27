@@ -15,6 +15,15 @@ export interface SchoolSettings {
   show_principal_on_documents?: boolean | null;
   public_feedback_token?: string | null;
   theme?: string | null;
+  logo_url?: string | null;
+  ministry_logo_url?: string | null;
+  vision?: string | null;
+  mission?: string | null;
+  announcement?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  office_hours?: string | null;
+  public_requests_enabled?: boolean | null;
 }
 
 export function useSchool() {
