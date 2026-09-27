@@ -39,9 +39,17 @@ export const Route = createFileRoute("/auth")({
     };
   },
   beforeLoad: async ({ search }) => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      throw redirect({ to: search.next || "/" });
+    // Keep the sign-in route accessible even when Supabase is temporarily
+    // unavailable (for example, in an unconfigured preview environment).
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        throw redirect({ to: search.next || "/dashboard" });
+      }
+    } catch (error) {
+      // Do not let an auth-service/configuration error prevent the login page
+      // from rendering; the form will surface the actionable auth error.
+      if (error && typeof error === "object" && "isRedirect" in error) throw error;
     }
   },
   component: AuthPage,
@@ -71,7 +79,7 @@ function AuthPage() {
       });
       if (error) throw error;
       toast.success("تم تسجيل الدخول بنجاح");
-      navigate({ to: next || "/" });
+      navigate({ to: next || "/dashboard" });
     } catch (err) {
       toast.error(arabicAuthError(err));
     } finally {
