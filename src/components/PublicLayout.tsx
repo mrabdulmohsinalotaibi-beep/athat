@@ -74,7 +74,7 @@ export function PublicLayout({
               size="sm"
               className="hidden font-semibold sm:inline-flex"
             >
-              <Link to="/auth" search={{ next: "" }}>
+              <Link to="/auth" search={{ next: "/dashboard" }}>
                 دخول الموجه الطلابي
               </Link>
             </Button>
@@ -113,7 +113,7 @@ export function PublicLayout({
               <li>
                 <Link
                   to="/auth"
-                  search={{ next: "" }}
+                  search={{ next: "/dashboard" }}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-lg px-3 py-2 text-primary hover:bg-muted"
                 >
