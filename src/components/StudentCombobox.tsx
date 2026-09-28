@@ -75,9 +75,9 @@ export function StudentCombobox({
             type="button"
             variant="outline"
             role="combobox"
-            className={cn("h-9 w-full justify-between font-normal", value && "pl-9")}
+            className={cn("h-10 w-full justify-between overflow-hidden font-normal", value && "pl-9")}
           >
-            <span className={cn(!value && "text-muted-foreground")}>{value || "اختر الطالب أو ابحث..."}</span>
+            <span className={cn("truncate", !value && "text-muted-foreground")}>{value || "اختر الطالب أو ابحث..."}</span>
             <ChevronsUpDown className="size-4 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -104,7 +104,7 @@ export function StudentCombobox({
             autoFocus
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="ابحث بالاسم أو رقم الهوية أو الفصل..."
+            placeholder="ابحث بالاسم أو رقم الطالب أو الهوية أو الصف أو الفصل..."
             className="pr-9"
           />
         </div>
@@ -127,7 +127,7 @@ export function StudentCombobox({
               <span className="flex-1">
                 <span className="font-semibold">{s.full_name}</span>
                 <span className="block text-[11px] text-muted-foreground">
-                  {[s.grade, s.classroom, s.national_id].filter(Boolean).join(" · ") || "—"}
+                  {[s.student_no && `رقم: ${s.student_no}`, s.grade, s.classroom, s.national_id].filter(Boolean).join(" · ") || "—"}
                 </span>
               </span>
             </button>
