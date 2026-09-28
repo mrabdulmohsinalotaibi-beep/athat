@@ -48,7 +48,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     setOpen(false);
     const activeSection = WORKSPACE_SECTIONS.find((section) =>
-      section.items.some((item) => isPathActive(pathname, item.to)),
+      section.items.some((item) => !item.disabled && isPathActive(pathname, item.to)),
     );
     setExpandedSection(activeSection?.id ?? null);
   }, [pathname]);
@@ -263,7 +263,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               aria-label={"روابط " + currentSection.title}
             >
               <div className="flex min-w-0 gap-2 overflow-x-auto">
-                {currentSection.items.map((item) => {
+                {currentSection.items.filter((item) => !item.disabled).map((item) => {
                   const ItemIcon = item.icon;
                   const isActive = isPathActive(pathname, item.to);
                   return (
