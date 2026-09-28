@@ -24,6 +24,7 @@ export interface SchoolSettings {
   contact_phone?: string | null;
   office_hours?: string | null;
   public_requests_enabled?: boolean | null;
+  updated_at?: string | null;
 }
 
 export function useSchool() {
