@@ -176,22 +176,23 @@ export function RecordPrintDialog({
             page-break-after: avoid !important;
           }
 
-          /* Reserve physical space for the fixed official header/footer.
-             Without this, the first/last lines of every printed page can sit
-             underneath the letterhead or signatures. */
+          /* Repeat the letterhead clearance on every page of a long record. */
           body.printing-record .record-print-dialog .print-area {
-            padding-top: 40mm !important;
+            padding-top: 70mm !important;
             padding-bottom: 0 !important;
+            -webkit-box-decoration-break: clone !important;
+            box-decoration-break: clone !important;
           }
 
           body.printing-record .record-print-dialog .print-repeat-header {
             position: fixed !important;
-            top: 12mm !important;
-            left: 12mm !important;
-            right: 12mm !important;
-            width: auto !important;
-            height: 34mm !important;
-            overflow: hidden !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
             z-index: 9999 !important;
             background: #fff !important;
           }

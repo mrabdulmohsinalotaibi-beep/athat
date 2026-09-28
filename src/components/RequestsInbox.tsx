@@ -399,7 +399,7 @@ export function RequestsInbox() {
       </div>
 
       {selected && (
-        <div ref={printRef} className="print-only space-y-4 bg-white p-6 text-black" dir="rtl">
+        <div ref={printRef} className="print-only-document print-area space-y-4 bg-white p-6 text-black" dir="rtl">
           <OfficialHeader
             school={school}
             title={`استمارة ${selected.kind}`}

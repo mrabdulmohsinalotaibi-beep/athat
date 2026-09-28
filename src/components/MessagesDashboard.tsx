@@ -944,7 +944,7 @@ export default function MessagesDashboard() {
       </section>
 
       {/* قسم الطباعة والتصدير المخفي المتوافق مع A4 */}
-      <div ref={printRef} className="print-only bg-white text-black p-6 space-y-4" dir="rtl">
+      <div ref={printRef} className="print-only-document print-area bg-white text-black p-6 space-y-4" dir="rtl">
         <OfficialHeader school={school} title={includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"} />
         <div className="text-center my-4">
           <h2 className="text-lg font-bold">
