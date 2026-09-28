@@ -73,7 +73,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     visibility: "primary",
     items: [
       { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList },
-      { to: "/programs", label: "البرامج والأنشطة", icon: Sparkles },
+      { to: "/programs", label: "البرامج الإرشادية", icon: Sparkles },
       { to: "/programs", label: "النشاط الطلابي — قريبًا", icon: Sparkles, disabled: true },
       { to: "/committees", label: "اللجان والاجتماعات", icon: MessagesSquare },
       { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
