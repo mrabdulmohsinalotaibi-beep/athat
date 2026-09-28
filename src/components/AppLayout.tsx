@@ -2,28 +2,18 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  LayoutDashboard,
-  Users,
-  HeartHandshake,
-  ClipboardList,
   CalendarDays,
-  MessagesSquare,
-  CalendarCheck,
-  ShieldAlert,
-  Send,
-  Gavel,
-  Globe2,
-  FolderCheck,
-  FileText,
-  Settings,
+  ChevronDown,
+  FileBarChart,
+  Home,
+  LayoutDashboard,
   LogOut,
   Menu,
-  FolderKanban,
+  MessagesSquare,
   UserRound,
-  Newspaper,
-  Home,
-  FileBarChart,
+  Users,
 } from "lucide-react";
+import { WORKSPACE_SECTIONS } from "@/lib/workspace-sections";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { cn } from "@/lib/utils";
@@ -31,24 +21,26 @@ import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
-const NAV = [
-  { to: "/dashboard", label: "الرئيسية ومركز الأقسام", icon: LayoutDashboard },
-  { to: "/students", label: "السجلات الإرشادية", icon: Users },
-  { to: "/plan", label: "الخطط والبرامج", icon: FolderKanban },
-  { to: "/evidences", label: "التوثيق والتقارير", icon: FolderCheck },
-  { to: "/posts", label: "المحتوى والخدمات", icon: Newspaper },
-  { to: "/messages", label: "التواصل والحساب", icon: MessagesSquare },
-] as const;
+function isPathActive(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(route + "/");
+}
+
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: school } = useSchool();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     setOpen(false);
+    const activeSection = WORKSPACE_SECTIONS.find((section) =>
+      section.items.some((item) => isPathActive(pathname, item.to)),
+    );
+    setExpandedSection(activeSection?.id ?? null);
   }, [pathname]);
 
   useEffect(() => {
@@ -72,7 +64,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* القائمة الجانبية */}
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
+          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-hidden border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -87,27 +79,80 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 p-3">
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.to === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.to);
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-3 text-sm hover:bg-sidebar-accent",
-                  isActive &&
-                    "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary",
-                )}
-              >
-                <Icon className="size-4 shrink-0" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 min-h-0 space-y-1 overflow-y-auto p-3" aria-label="التنقل الرئيسي">
+          <Link
+            to="/dashboard"
+            onClick={() => setOpen(false)}
+            aria-current={pathname === "/dashboard" ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm hover:bg-sidebar-accent",
+              pathname === "/dashboard" &&
+                "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary",
+            )}
+          >
+            <LayoutDashboard className="size-4 shrink-0" aria-hidden="true" />
+            <span>الرئيسية</span>
+          </Link>
+          <p className="px-3 pb-1 pt-4 text-[10px] font-bold tracking-wide text-sidebar-foreground/55">
+            مساحات العمل
+          </p>
+          <div className="space-y-1">
+            {WORKSPACE_SECTIONS.map((section) => {
+              const Icon = section.icon;
+              const isActive = section.items.some((item) => isPathActive(pathname, item.to));
+              const isExpanded = expandedSection === section.id;
+              const panelId = "sidebar-section-" + section.id;
+
+              return (
+                <div key={section.id}>
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={panelId}
+                    onClick={() => setExpandedSection(isExpanded ? null : section.id)}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-right text-sm hover:bg-sidebar-accent",
+                      isActive &&
+                        "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary",
+                    )}
+                  >
+                    <Icon className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate">{section.title}</span>
+                    <ChevronDown
+                      className={cn("size-4 shrink-0 transition-transform", isExpanded && "rotate-180")}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <div
+                    id={panelId}
+                    hidden={!isExpanded}
+                    className="mr-3 mt-1 space-y-1 border-r border-sidebar-border pr-3"
+                  >
+                    {section.items.map((item) => {
+                      const ItemIcon = item.icon;
+                      const isItemActive = isPathActive(pathname, item.to);
+
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setOpen(false)}
+                          aria-current={isItemActive ? "page" : undefined}
+                          className={cn(
+                            "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                            isItemActive && "bg-sidebar-accent font-semibold text-sidebar-primary",
+                          )}
+                        >
+                          <ItemIcon className="size-3.5 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 truncate">{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </nav>
         <div className="mt-auto border-t border-sidebar-border p-3">
           <Button
