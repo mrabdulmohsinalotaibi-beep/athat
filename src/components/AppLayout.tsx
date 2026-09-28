@@ -25,13 +25,12 @@ function isPathActive(pathname: string, route: string) {
 }
 
 
-
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
   { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases", "/attendance", "/behavior", "/referrals", "/requests"] },
   { to: "/interviews", label: "الجلسات", icon: CalendarDays, activeRoutes: ["/interviews", "/calendar", "/messages"] },
-  { to: "/programs", label: "البرامج والخطط", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/committees", "/evidences", "/weekly-poster", "/posts"] },
-  { to: "/settings", label: "الإعدادات", icon: Settings, activeRoutes: ["/settings", "/reports", "/toolkit", "/integrations", "/profile", "/subscription"] },
+  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/committees", "/evidences", "/weekly-poster", "/posts"] },
+  { to: "/settings", label: "الإدارة", icon: Settings, activeRoutes: ["/settings", "/reports", "/toolkit", "/integrations", "/profile", "/subscription"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -42,13 +41,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const currentSection = WORKSPACE_SECTIONS.find((section) =>
-    section.items.some((item) => !item.disabled && isPathActive(pathname, item.to)),
+    section.items.some((item) => isPathActive(pathname, item.to)),
   );
 
   useEffect(() => {
     setOpen(false);
     const activeSection = WORKSPACE_SECTIONS.find((section) =>
-      section.items.some((item) => !item.disabled && isPathActive(pathname, item.to)),
+      section.items.some((item) => isPathActive(pathname, item.to)),
     );
     setExpandedSection(activeSection?.id ?? null);
   }, [pathname]);
@@ -115,11 +114,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
               return (
                 <div key={section.id}>
-                  {section.visibility === "more" && (
-                    <p className="px-3 pb-1 pt-4 text-[10px] font-bold tracking-wide text-sidebar-foreground/55">
-                      أدوات مساندة والحساب
-                    </p>
-                  )}
                   <button
                     type="button"
                     aria-expanded={isExpanded}
@@ -145,21 +139,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   >
                     {section.items.map((item, index) => {
                       const ItemIcon = item.icon;
-                      const isItemActive = !item.disabled && isPathActive(pathname, item.to);
-
-                      if (item.disabled) {
-                        return (
-                          <span
-                            key={item.label + index}
-                            aria-disabled="true"
-                            className="flex cursor-not-allowed items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-sidebar-foreground/45"
-                            title="هذه الخدمة ستتوفر قريبًا"
-                          >
-                            <ItemIcon className="size-3.5 shrink-0" aria-hidden="true" />
-                            <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                          </span>
-                        );
-                      }
+                      const isItemActive = isPathActive(pathname, item.to);
 
                       return (
                         <Link
@@ -263,7 +243,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               aria-label={"روابط " + currentSection.title}
             >
               <div className="flex min-w-0 gap-2 overflow-x-auto">
-                {currentSection.items.filter((item) => !item.disabled).map((item) => {
+                {currentSection.items.map((item) => {
                   const ItemIcon = item.icon;
                   const isActive = isPathActive(pathname, item.to);
                   return (
