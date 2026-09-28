@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import { Eye, Download, Share2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 
 type PdfPreviewButtonProps = {
-  elementRef: React.RefObject<HTMLElement | null>;
+  elementRef: RefObject<HTMLElement | null>;
   filename: string;
   title: string;
   disabled?: boolean;
