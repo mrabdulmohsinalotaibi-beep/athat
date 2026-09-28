@@ -475,12 +475,12 @@ function ProgramsPage() {
     onError: (error: Error) => toast.error(`تعذّر حفظ البرنامج: ${error.message}`),
   });
 
-  async function loadAttachments(recordId: string) {
+  async function loadAttachments(recordId: string, recordTitle = "") {
     const { data, error } = await supabase
       .from("evidences")
       .select("id,name,file_name,file_path,mime_type")
-      .eq("linked_ref", recordId)
       .eq("linked_type", "برنامج")
+      .or(`linked_ref.eq.${recordId}${recordTitle ? `,linked_ref.eq.${recordTitle.replace(/,/g, " ")}` : ""}`)
       .order("created_at", { ascending: true });
     if (error) throw error;
     setUploadedAttachments((data ?? []) as Attachment[]);
@@ -526,10 +526,13 @@ function ProgramsPage() {
           file_name: file.name,
           mime_type: mimeType,
         } as never);
-        if (error) throw error;
+        if (error) {
+          await supabase.storage.from("evidences").remove([path]);
+          throw error;
+        }
       }
       setPendingFiles([]);
-      await loadAttachments(recordId);
+      await loadAttachments(recordId, recordTitle);
       await queryClient.invalidateQueries({ queryKey: ["evidence-files"] });
       toast.success("تم رفع الشواهد والصور وربطها بالبرنامج");
     } catch (error) {
@@ -550,7 +553,7 @@ function ProgramsPage() {
     setUploadedAttachments([]);
     setEditorOpen(true);
     try {
-      await loadAttachments(row.id);
+      await loadAttachments(row.id, row.name || "");
     } catch (error) {
       toast.error(`تعذّر تحميل الشواهد: ${(error as Error).message}`);
     }
