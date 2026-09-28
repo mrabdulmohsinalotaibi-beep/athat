@@ -55,8 +55,8 @@ export function OfficialHeader({
             <p>التاريخ: {todayDate()}</p>
             <p>العام الدراسي: {school?.academic_year || "—"}</p>
             <p>الفصل الدراسي: {school?.semester || "—"}</p>
-            <p>نوع المستند: {reportType || title}</p>
-            {reportNo && <p>رقم التقرير: {reportNo}</p>}
+            <p>نوع المستند: {reportType || title}</p>\n            <p>تاريخ الإصدار: {todayDate()}</p>
+            {reportNo && <p>رقم المستند: {reportNo}</p>}
             {period && <p>الفترة: {period}</p>}
           </div>
         </div>
@@ -112,7 +112,7 @@ export function OfficialFooter({
           <p>{school?.principal_name || "................."}</p>
         </div>
       )}
-      <Copyright className="col-span-full mt-2 border-t pt-2 text-right text-[9px] font-normal" />
+      <div className="col-span-full mt-1 flex items-center justify-between gap-3 border-t border-paper-border pt-2 text-[9px] font-normal text-paper-muted-foreground">\n        <span>{school?.school_name || "المدرسة"} · مستند صادر من منصة الذات</span>\n        <span>{todayDate()}</span>\n      </div>\n      <Copyright className="col-span-full text-right text-[9px] font-normal" />
     </div>
   );
 }
