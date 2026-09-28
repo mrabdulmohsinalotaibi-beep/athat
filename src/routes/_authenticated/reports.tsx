@@ -14,7 +14,7 @@ import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Button } from "@/components/ui/button";
 
 import { Label } from "@/components/ui/label";
-import { sharePdfFile } from "@/lib/share-pdf";
+import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 
 
 
@@ -64,31 +64,6 @@ function dateFieldForRecord(key: string) {
 function ReportsPage() {
   const { data: school } = useSchool();
   const reportRef = useRef<HTMLDivElement>(null);
-  const [sharingPdf, setSharingPdf] = useState(false);
-
-  async function handleSharePdf() {
-    if (!reportRef.current || sharingPdf) return;
-    setSharingPdf(true);
-    try {
-      const result = await sharePdfFile({
-        element: reportRef.current,
-        filename: `تقرير-${reportTitle || "الذات"}`,
-        title: reportTitle || "التقرير الرسمي للتوجيه الطلابي",
-      });
-      toast.success(
-        result === "shared"
-          ? "تم فتح قائمة مشاركة PDF في جهازك."
-          : "تم تنزيل ملف PDF؛ افتحه من التنزيلات أو شاركه إلى تطبيق خارجي.",
-      );
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") {
-        toast.error((error as Error).message || "تعذّرت مشاركة PDF.");
-      }
-    } finally {
-      setSharingPdf(false);
-    }
-  }
-
 
   const reportableRecords = useMemo(() => RECORDS.filter((record) => record.key !== "reports"), []);
 
@@ -212,9 +187,7 @@ function ReportsPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={handleSharePdf} disabled={sharingPdf || isLoading}>
-              {sharingPdf ? "جارٍ تجهيز PDF..." : "مشاركة PDF"}
-            </Button>
+            <PdfPreviewButton elementRef={reportRef} filename={`تقرير-${reportTitle || "الذات"}`} title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"} disabled={isLoading} />
             <Button type="button" variant="ghost" onClick={reset}>
               <RotateCcw className="size-4" />
               إعادة ضبط
