@@ -44,7 +44,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     visibility: "primary",
     items: [
       { to: "/students", label: "سجل الطلاب", icon: Users },
-      { to: "/cases", label: "الحالات الفردية", icon: HeartHandshake },
+      { to: "/cases", label: "الحالات الخاصة", icon: HeartHandshake },
       { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
       { to: "/behavior", label: "السجل السلوكي", icon: ShieldAlert },
       { to: "/referrals", label: "الإحالات", icon: Send },
