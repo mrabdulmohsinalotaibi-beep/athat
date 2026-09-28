@@ -379,9 +379,6 @@ export function RequestsInbox() {
           </div>
         )}
       </div>
-
-      {selected && (
-      )}
     </div>
   );
 }
