@@ -94,7 +94,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <span>الرئيسية</span>
           </Link>
           <p className="px-3 pb-1 pt-4 text-[10px] font-bold tracking-wide text-sidebar-foreground/55">
-            مساحات العمل
+            الأقسام الأساسية
           </p>
           <div className="space-y-1">
             {WORKSPACE_SECTIONS.map((section) => {
@@ -105,6 +105,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
               return (
                 <div key={section.id}>
+                  {section.visibility === "more" && (
+                    <p className="px-3 pb-1 pt-4 text-[10px] font-bold tracking-wide text-sidebar-foreground/55">
+                      أدوات مساندة والحساب
+                    </p>
+                  )}
                   <button
                     type="button"
                     aria-expanded={isExpanded}
