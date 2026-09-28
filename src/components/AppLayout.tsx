@@ -1,8 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  CalendarDays,
+  Bell,\n  Bell,\n  CalendarDays,
   ChevronDown,
   ClipboardList,
   LayoutDashboard,
@@ -38,9 +38,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);\n  const [alertsOpen, setAlertsOpen] = useState(false);\n  const [alertsOpen, setAlertsOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const currentSection = WORKSPACE_SECTIONS.find((section) =>
+  const { data: alertCount = 0 } = useQuery({\n    queryKey: ["app-alert-count"],\n    queryFn: async () => {\n      const day = new Date().toISOString().slice(0, 10);\n      const [cases, tasks] = await Promise.all([\n        supabase.from("counseling_cases").select("id,case_status,followup_at"),\n        supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),\n      ]);\n      if (cases.error) throw cases.error;\n      if (tasks.error) throw tasks.error;\n      const dueCases = (cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;\n      const attentionTasks = (tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;\n      return dueCases + attentionTasks;\n    },\n    staleTime: 60_000,\n  });\n  const { data: alertCount = 0 } = useQuery({\n    queryKey: ["app-alert-count"],\n    queryFn: async () => {\n      const day = new Date().toISOString().slice(0, 10);\n      const [cases, tasks] = await Promise.all([supabase.from("counseling_cases").select("id,case_status,followup_at"), supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status")]);\n      if (cases.error) throw cases.error; if (tasks.error) throw tasks.error;\n      const dueCases = (cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;\n      const attentionTasks = (tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;\n      return dueCases + attentionTasks;\n    }, staleTime: 60_000,\n  });\n  const currentSection = WORKSPACE_SECTIONS.find((section) =>
     section.items.some((item) => isPathActive(pathname, item.to)),
   );
 
@@ -214,7 +214,20 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <GlobalSearch />
+              <GlobalSearch />\n              <div className="relative">\n                <Button variant="ghost" size="icon" aria-label="التنبيهات" onClick={() => setAlertsOpen((value) => !value)} className="relative"><Bell className="size-5" />{alertCount > 0 && <span className="absolute -left-1 -top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-[10px] font-black leading-5 text-destructive-foreground">{alertCount > 99 ? "99+" : alertCount}</span>}</Button>\n                {alertsOpen && <div className="absolute left-0 top-12 z-50 w-72 rounded-xl border bg-card p-3 shadow-xl"><p className="text-sm font-black">تنبيهات العمل</p><p className="mt-1 text-xs text-muted-foreground">{alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}</p><Button asChild size="sm" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}><Link to="/dashboard">فتح مركز مهام اليوم</Link></Button></div>}\n              </div>
+              <div className="relative">
+                <Button variant="ghost" size="icon" aria-label="التنبيهات" onClick={() => setAlertsOpen((value) => !value)} className="relative">
+                  <Bell className="size-5" />
+                  {alertCount > 0 && <span className="absolute -left-1 -top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-[10px] font-black leading-5 text-destructive-foreground">{alertCount > 99 ? "99+" : alertCount}</span>}
+                </Button>
+                {alertsOpen && (
+                  <div className="absolute left-0 top-12 z-50 w-72 rounded-xl border bg-card p-3 shadow-xl">
+                    <p className="text-sm font-black">تنبيهات العمل</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}</p>
+                    <Button asChild size="sm" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}><Link to="/dashboard">فتح مركز مهام اليوم</Link></Button>
+                  </div>
+                )}
+              </div>
               <div className="hidden text-xs text-muted-foreground sm:block">
                 <p>الموجه الطلابي: {school?.counselor_name || "—"}</p>
                 <p>
