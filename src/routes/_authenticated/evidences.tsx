@@ -1,22 +1,19 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Upload } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, FileText, Upload } from "lucide-react";
 
 import { RecordPage } from "@/components/RecordPage";
-import { recordByKey } from "@/lib/records";
 import { EvidenceGallery, EvidenceUploadDialog } from "@/components/EvidenceUpload";
 import { Button } from "@/components/ui/button";
+import { recordByKey } from "@/lib/records";
 
 export const Route = createFileRoute("/_authenticated/evidences")({
   head: () => ({
     meta: [
       { title: "الشواهد والتوثيق | منصة الذات" },
-      { name: "description", content: "رفع وتصفح شواهد البرامج: صور ومقاطع فيديو ومستندات مرتبطة بالأنشطة الإرشادية والخطط التشغيلية." },
+      { name: "description", content: "رفع وتصفح شواهد البرامج والأنشطة الإرشادية." },
       { property: "og:title", content: "الشواهد والتوثيق | منصة الذات" },
-      {
-        property: "og:description",
-        content: "رفع وتصفح شواهد البرامج: صور ومقاطع فيديو ومستندات مرتبطة بالأنشطة الإرشادية والخطط التشغيلية.",
-      },
+      { property: "og:description", content: "رفع وتصفح الشواهد المرتبطة بالأعمال الإرشادية." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -28,56 +25,35 @@ function EvidencesPage() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* رأس الصفحة الترحيبي والتوضيحي */}
-      <div className="flex flex-col gap-4 rounded-2xl border bg-card p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <FolderCheck className="size-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold tracking-tight">الشواهد والتوثيق الإرشادي</h1>
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                <Sparkles className="size-3" /> موثق ومنظم
-              </span>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              توثيق شامل لأنشطة البرامج الإرشادية، الاجتماعات، والمقابلات الفردية لضمان جاهزية التقارير.
-            </p>
-          </div>
+    <div className="space-y-5 pb-10" dir="rtl">
+      <section className="flex flex-col gap-3 rounded-2xl border border-primary/15 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <span className="text-[11px] font-black text-primary">3. الشاهد</span>
+          <h1 className="mt-1 text-xl font-black">الشواهد والتوثيق</h1>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+            ارفع الشاهد مرة واحدة واربطه بالسجل أو البرنامج، ثم استخدمه في التقرير الرسمي.
+          </p>
         </div>
-        <div className="flex items-center gap-2 self-start md:self-auto">
-          <Button onClick={() => setOpen(true)} className="gap-2 shadow-sm">
-            <Upload className="size-4" />
-            <span>رفع شاهد جديد</span>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => setOpen(true)} className="gap-2">
+            <Upload className="size-4" /> رفع شاهد
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/reports"><FileText className="size-4" /> 4. التقرير <ArrowLeft className="size-3.5" /></Link>
           </Button>
         </div>
-      </div>
+      </section>
 
-      {/* قسم السجلات والجداول المرتبطة */}
-      <RecordPage
-        config={recordByKey("evidences")}
-        toolbarExtra={
-          <Button variant="outline" onClick={() => setOpen(true)} className="gap-2">
-            <Upload className="size-4" />
-            <span>رفع شاهد</span>
-          </Button>
-        }
-      />
+      <RecordPage config={recordByKey("evidences")} hideImport />
 
-      {/* معرض الشواهد المرئية */}
-      <section className="space-y-4 rounded-2xl border bg-card p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b pb-4">
-          <div>
-            <h2 className="text-lg font-extrabold">معرض الشواهد المرفوعة</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">استعراض سريع لكافة الملفات، الصور، والمستندات المحفوظة في السجل</p>
-          </div>
+      <section className="space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
+        <div>
+          <h2 className="font-black">معرض الشواهد</h2>
+          <p className="mt-1 text-xs text-muted-foreground">معاينة الملفات المحفوظة دون إنشاء سجل آخر.</p>
         </div>
         <EvidenceGallery />
       </section>
 
-      {/* نافذة رفع الشواهد */}
       <EvidenceUploadDialog open={open} onOpenChange={setOpen} />
     </div>
   );
