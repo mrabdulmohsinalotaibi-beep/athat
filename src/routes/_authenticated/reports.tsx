@@ -69,15 +69,13 @@ function ReportsPage() {
   const reportableRecords = useMemo(() => RECORDS.filter((record) => record.key !== "reports"), []);
 
   const [reportMode, setReportMode] = useState<"single" | "combined">("single");
-  const [selectedSingleKey, setSelectedSingleKey] = useState("cases");
+  const [selectedSingleKey, setSelectedSingleKey] = useState("programs");
   const [period, setPeriod] = useState("");
-  const [reportTitle, setReportTitle] = useState("التقرير الرسمي للتوجيه الطلابي");
+  const [reportTitle, setReportTitle] = useState("تقرير تنفيذ أعمال التوجيه الطلابي");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [narrative, setNarrative] = useState("");
-  const [selectedKeys, setSelectedKeys] = useState<string[]>(
-    reportableRecords.map((record) => record.key),
-  );
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(["plan", "programs", "evidences"]);
 
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -155,13 +153,13 @@ function ReportsPage() {
 
   function reset() {
     setReportMode("single");
-    setSelectedSingleKey("cases");
-    setReportTitle("التقرير الرسمي للتوجيه الطلابي");
+    setSelectedSingleKey("programs");
+    setReportTitle("تقرير تنفيذ أعمال التوجيه الطلابي");
     setPeriod("");
     setFromDate("");
     setToDate("");
     setNarrative("");
-    selectAll();
+    setSelectedKeys(["plan", "programs", "evidences"]);
     toast.success("تمت إعادة ضبط التقرير.");
   }
 
@@ -188,7 +186,7 @@ function ReportsPage() {
             </div>
             <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير</h1>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم راجع المعاينة الرسمية أدناه، بما فيها توقيع الموجه الطلابي ومدير المدرسة.
+              اطبع تقرير برنامج أو اجمع الخطة والبرامج والشواهد في تقرير تنفيذ واحد، مع كليشة المدرسة الرسمية والتوقيعات.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -233,7 +231,7 @@ function ReportsPage() {
                   <div>
                     <p className="font-bold">تقرير مجمع</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      اجمع أكثر من سجل في تقرير رسمي واحد.
+                      الافتراضي: الخطة والبرامج والشواهد، ويمكن إضافة سجلات أخرى عند الحاجة.
                     </p>
                   </div>
                 </div>
