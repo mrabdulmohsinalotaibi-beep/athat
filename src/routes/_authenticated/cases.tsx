@@ -220,7 +220,7 @@ function SpecialCasesPage() {
         الطالب، بادر بالإجراء الرسمي فورًا.
       </section>
 
-      <RecordPage config={recordByKey("cases")} />
+      <RecordPage\n        config={recordByKey("cases")}\n        rowAction={{\n          icon: <Workflow className="size-4" />,\n          title: "متابعة الحالة",\n          onClick: (row) => {\n            const studentId = encodeURIComponent(String(row.student_id ?? ""));\n            const studentNo = encodeURIComponent(String(row.student_no ?? ""));\n            const studentName = encodeURIComponent(String(row.student_name ?? ""));\n            window.location.href = `/interviews?new=student&studentId=${studentId}&studentNo=${studentNo}&studentName=${studentName}`;\n          },\n        }}\n      />
     </div>
   );
 }
