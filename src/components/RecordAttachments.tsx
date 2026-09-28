@@ -117,7 +117,11 @@ export function RecordAttachmentsDialog({
         file_name: file.name,
         mime_type: contentType,
       } as never);
-      if (error) throw error;
+      if (error) {
+        // لا نترك ملفًا يتيمًا في التخزين إذا فشل إنشاء سجل قاعدة البيانات.
+        await supabase.storage.from("evidences").remove([path]);
+        throw error;
+      }
 
       await queryClient.invalidateQueries({ queryKey: ["record-attachments", recordId] });
       queryClient.invalidateQueries({ queryKey: ["evidences"] });
@@ -133,10 +137,15 @@ export function RecordAttachmentsDialog({
 
   async function removeItem(id: string, path: string) {
     if (!confirm("هل تريد حذف هذا المرفق وملفه؟")) return;
-    await supabase.storage.from("evidences").remove([path]);
+    const { error: storageError } = await supabase.storage.from("evidences").remove([path]);
+    if (storageError) {
+      toast.error(`تعذّر حذف الملف من التخزين: ${storageError.message}`);
+      return;
+    }
+
     const { error } = await supabase.from("evidences").delete().eq("id", id);
     if (error) {
-      toast.error(`تعذّر الحذف: ${error.message}`);
+      toast.error(`تم حذف الملف لكن تعذّر حذف سجل المرفق: ${error.message}`);
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["record-attachments", recordId] });
