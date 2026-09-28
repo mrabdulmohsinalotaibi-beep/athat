@@ -81,6 +81,24 @@ function watermarkBackground(text: string) {
 
 export function WeeklyGuidancePoster() {
   const { data: school } = useSchool();
+  const posterRef = useRef<HTMLDivElement>(null);
+  const [sharingPdf, setSharingPdf] = useState(false);
+
+  async function handleSharePdf() {
+    if (!posterRef.current || sharingPdf) return;
+    setSharingPdf(true);
+    try {
+      await sharePdfFile({
+        element: posterRef.current,
+        filename: `لوحة-التوجيه-الطلابي-${title}`,
+        title: `لوحة التوجيه الطلابي - ${title}`,
+      });
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") console.error(error);
+    } finally {
+      setSharingPdf(false);
+    }
+  }
 
 
   const [topic, setTopic] = useState<WeeklyTopic>("الانضباط");
