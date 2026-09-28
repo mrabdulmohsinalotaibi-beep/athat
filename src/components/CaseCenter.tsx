@@ -119,7 +119,7 @@ export function CaseCenter() {
           <div>
             <h2 className="text-base font-black">مركز متابعة الحالات</h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              تابعي الحالات حسب مرحلتها، وانقليها بسرعة بعد كل إجراء إرشادي.
+              تابع الحالات حسب مرحلتها، وانقلها بسرعة بعد كل إجراء إرشادي.
             </p>
           </div>
         </div>
@@ -156,7 +156,7 @@ export function CaseCenter() {
           <p className="mt-1 text-xs text-muted-foreground">
             {activeFilter === "overdue"
               ? "ممتاز، جميع المتابعات ضمن مواعيدها."
-              : "ابدئي بإضافة حالة إرشادية لبناء سجل متابعة متكامل."}
+              : "ابدأ بإضافة حالة إرشادية لبناء سجل متابعة متكامل."}
           </p>
         </div>
       ) : (
