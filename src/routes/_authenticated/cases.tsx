@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { RecordPage } from "@/components/RecordPage";
 import { recordByKey } from "@/lib/records";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -58,6 +60,23 @@ const workflow = [
 ];
 
 function SpecialCasesPage() {
+  const { data: cases = [] } = useQuery({
+    queryKey: ["cases-followup-center"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("counseling_cases")
+        .select("id,student_name,case_status,priority,followup_at,last_followup,next_action");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
+  const today = new Date().toISOString().slice(0, 10);
+  const active = cases.filter((row) => row.case_status !== "مغلقة");
+  const overdue = active.filter((row) => row.followup_at && String(row.followup_at).slice(0, 10) <= today);
+  const urgent = active.filter((row) => ["عاجلة", "عاجل", "مرتفعة"].includes(String(row.priority ?? "")));
+  const withNextAction = active.filter((row) => String(row.next_action ?? "").trim());
+
   return (
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-l from-primary via-primary to-[#116f78] p-6 text-primary-foreground shadow-lg shadow-primary/15 sm:p-8">
@@ -82,6 +101,42 @@ function SpecialCasesPage() {
           </Link>
         </div>
       </section>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <FollowupStat title="الحالات النشطة" value={active.length} hint="مفتوحة أو قيد المتابعة" />
+        <FollowupStat title="متابعة مستحقة" value={overdue.length} hint="موعدها اليوم أو قبله" />
+        <FollowupStat title="أولوية مرتفعة" value={urgent.length} hint="ضمن الحالات النشطة" />
+        <FollowupStat title="لها إجراء قادم" value={withNextAction.length} hint="إجراء متابعة موثق" />
+      </section>
+
+      {overdue.length > 0 && (
+        <section className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-black text-amber-950">متابعات تحتاج انتباهك</h2>
+              <p className="text-xs text-amber-800">أقرب الحالات التي حان موعد متابعتها.</p>
+            </div>
+            <Link to="/interviews" className="text-xs font-bold text-primary">فتح الجلسات ←</Link>
+          </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            {overdue.slice(0, 6).map((row) => (
+              <div key={row.id} className="rounded-xl border border-amber-200 bg-white p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="truncate text-sm">{row.student_name || "طالب غير محدد"}</strong>
+                  <Badge variant="outline">{row.case_status || "—"}</Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">موعد المتابعة: {String(row.followup_at ?? "—")}</p>
+                {row.next_action && <p className="mt-2 text-xs">الإجراء القادم: {String(row.next_action)}</p>}
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link to="/students" className="text-xs font-bold text-primary">ملفات الطلاب</Link>
+            <span className="text-muted-foreground">•</span>
+            <Link to="/interviews" className="text-xs font-bold text-primary">الجلسات الإرشادية</Link>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -167,5 +222,17 @@ function SpecialCasesPage() {
 
       <RecordPage config={recordByKey("cases")} />
     </div>
+  );
+}
+
+function FollowupStat({ title, value, hint }: { title: string; value: number; hint: string }) {
+  return (
+    <Card className="border-primary/10 shadow-sm">
+      <CardContent className="p-4">
+        <p className="text-xs font-bold text-muted-foreground">{title}</p>
+        <p className="mt-2 text-2xl font-black text-primary">{value}</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>
+      </CardContent>
+    </Card>
   );
 }
