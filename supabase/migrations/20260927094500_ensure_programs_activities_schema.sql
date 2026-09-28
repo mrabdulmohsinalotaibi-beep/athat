@@ -83,6 +83,11 @@ ALTER TABLE public.programs
   ADD CONSTRAINT programs_plan_task_id_fkey
   FOREIGN KEY (plan_task_id) REFERENCES public.plan_tasks(id) ON DELETE SET NULL;
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.plan_tasks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.programs TO authenticated;
+GRANT ALL ON public.plan_tasks TO service_role;
+GRANT ALL ON public.programs TO service_role;
+
 ALTER TABLE public.plan_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
 
@@ -101,3 +106,12 @@ CREATE POLICY "own_programs" ON public.programs
 CREATE INDEX IF NOT EXISTS plan_tasks_user_id_idx ON public.plan_tasks(user_id);
 CREATE INDEX IF NOT EXISTS programs_user_id_idx ON public.programs(user_id);
 CREATE INDEX IF NOT EXISTS programs_plan_task_id_idx ON public.programs(plan_task_id);
+
+
+-- إعادة ضمان تحديث updated_at إذا كانت الجداول موجودة من ترحيل سابق.
+DROP TRIGGER IF EXISTS trg_plan_tasks_updated ON public.plan_tasks;
+CREATE TRIGGER trg_plan_tasks_updated BEFORE UPDATE ON public.plan_tasks
+FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+DROP TRIGGER IF EXISTS trg_programs_updated ON public.programs;
+CREATE TRIGGER trg_programs_updated BEFORE UPDATE ON public.programs
+FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
