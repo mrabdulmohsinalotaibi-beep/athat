@@ -691,3 +691,50 @@ textarea {
     min-width: 0;
   }
 }
+
+
+/* Shared print behavior for every document using the print-area contract. */
+@media print {
+  .print-area,
+  .program-a4,
+  .single-print-sheet,
+  .print-only-document {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 190mm !important;
+    margin-inline: auto !important;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  /* Keep signature/approval groups together and avoid forced repetition. */
+  .print-area .report-signatures,
+  .print-area .signature-block,
+  .print-area .signature-area,
+  .print-area [data-print-signature],
+  .program-a4 .report-signatures,
+  .program-a4 .signature-block,
+  .program-a4 .signature-area,
+  .program-a4 [data-print-signature] {
+    break-inside: avoid-page !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Content can flow naturally across pages; do not clip long documents. */
+  .print-area *,
+  .program-a4 *,
+  .single-print-sheet * {
+    max-height: none;
+  }
+
+  .print-area table,
+  .program-a4 table {
+    max-width: 100% !important;
+  }
+
+  .print-area .print-document-title,
+  .program-a4 .print-document-title {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+}
