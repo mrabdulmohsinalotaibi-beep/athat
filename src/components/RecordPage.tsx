@@ -258,8 +258,11 @@ export function RecordPage({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [config.table] });
+      queryClient.invalidateQueries({ queryKey: ["student-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("تم حذف السجل");
     },
+    onError: (error: Error) => toast.error(`تعذّر حذف السجل: ${error.message}`),
   });
 
   async function handleImport(file: File) {
