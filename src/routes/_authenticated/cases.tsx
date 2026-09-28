@@ -79,9 +79,9 @@ function SpecialCasesPage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-l from-primary via-primary to-[#116f78] p-6 text-primary-foreground shadow-lg shadow-primary/15 sm:p-8">
+      <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-l from-primary via-primary to-accent p-6 text-primary-foreground shadow-lg shadow-primary/15 sm:p-8">
         <div className="absolute -left-12 -top-16 size-48 rounded-full border border-white/15" />
-        <div className="absolute -bottom-24 right-1/3 size-64 rounded-full border border-[#8de0cb]/20" />
+        <div className="absolute -bottom-24 right-1/3 size-64 rounded-full border border-white/15" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <Badge className="mb-3 border-0 bg-white/15 text-white hover:bg-white/20">
@@ -95,7 +95,7 @@ function SpecialCasesPage() {
           </div>
           <Link
             to="/reports"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-[#e8fff9]"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-secondary"
           >
             <FileText className="size-4" /> إعداد تقرير رسمي <ArrowLeft className="size-4" />
           </Link>
