@@ -701,8 +701,8 @@ export function RecordPage({
 
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" dir="rtl">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[90vh]" dir="rtl">
+          <DialogHeader className="border-b px-4 pb-3 pt-4 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <DialogTitle>
                 {editing?.id ? `تعديل ${config.singular}` : `إضافة ${config.singular}`}
@@ -726,7 +726,7 @@ export function RecordPage({
           </DialogHeader>
           <form
             id="record-form"
-            className="grid gap-4 sm:grid-cols-2"
+            className="grid flex-1 gap-4 overflow-y-auto px-4 py-4 sm:grid-cols-2 sm:px-6"
             onSubmit={(e) => {
               e.preventDefault();
               const data = new FormData(e.currentTarget);
@@ -747,7 +747,7 @@ export function RecordPage({
               .map((f) => {
                 const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
                 return (
-                  <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : ""}>
+                  <div key={f.name} className={f.type === "textarea" || f.student ? "sm:col-span-2" : ""}>
                     <div className="mb-1.5 flex items-center justify-between gap-2">
                       <Label htmlFor={f.name} className="text-xs">
                         {f.label}
@@ -772,7 +772,7 @@ export function RecordPage({
                       )}
                     </div>
                     {f.student ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <div className="flex-1">
                           <StudentCombobox
                             value={current}
@@ -908,12 +908,13 @@ export function RecordPage({
                 );
               })}
           </form>
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+          <DialogFooter className="sticky bottom-0 z-10 gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setEditing(null)} disabled={save.isPending}>
               إلغاء
             </Button>
-            <Button type="submit" form="record-form" disabled={save.isPending}>
-              حفظ
+            <Button type="submit" form="record-form" className="w-full sm:w-auto" disabled={save.isPending}>
+              {save.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {save.isPending ? "جارٍ الحفظ..." : "حفظ"}
             </Button>
           </DialogFooter>
         </DialogContent>
