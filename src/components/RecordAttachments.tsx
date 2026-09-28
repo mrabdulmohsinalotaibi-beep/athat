@@ -17,7 +17,12 @@ function kindOf(mime: string, name: string) {
   return "doc";
 }
 
-function fileSizeLabel(bytes: number) {\n  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} كيلوبايت`;\n  return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;\n}\n\nfunction typeLabel(kind: string) {
+function fileSizeLabel(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} كيلوبايت`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;
+}
+
+function typeLabel(kind: string) {
   return kind === "image" ? "صورة" : kind === "video" ? "مقطع فيديو" : "مستند";
 }
 
@@ -59,7 +64,8 @@ export function useRecordAttachments(recordId: string | null) {
         name: String(row.name ?? row.file_name ?? "مرفق"),
         path: String(row.file_path),
         url: signed[index]?.signedUrl ?? "",
-        kind: kindOf(String(row.mime_type ?? ""), String(row.file_name ?? "")),\n        type: typeLabel(kindOf(String(row.mime_type ?? ""), String(row.file_name ?? ""))),
+        kind: kindOf(String(row.mime_type ?? ""), String(row.file_name ?? "")),
+        type: typeLabel(kindOf(String(row.mime_type ?? ""), String(row.file_name ?? ""))),
       }));
     },
   });
@@ -81,7 +87,9 @@ export function RecordAttachmentsDialog({
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);\n  const [pendingFile, setPendingFile] = useState<File | null>(null);\n  const pendingPreview = useMemo(() => pendingFile && kindOf(pendingFile.type, pendingFile.name) === "image" ? URL.createObjectURL(pendingFile) : "", [pendingFile]);
+  const [busy, setBusy] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const pendingPreview = useMemo(() => pendingFile && kindOf(pendingFile.type, pendingFile.name) === "image" ? URL.createObjectURL(pendingFile) : "", [pendingFile]);
   const [preview, setPreview] = useState<{ url: string; kind: string; name: string } | null>(null);
   const { data: items = [], isLoading } = useRecordAttachments(open ? recordId : null);
 
@@ -132,7 +140,8 @@ export function RecordAttachmentsDialog({
       await queryClient.invalidateQueries({ queryKey: ["record-attachments", recordId] });
       queryClient.invalidateQueries({ queryKey: ["evidences"] });
       queryClient.invalidateQueries({ queryKey: ["evidence-files"] });
-      toast.success("تم رفع المرفق");\n      setPendingFile(null);
+      toast.success("تم رفع المرفق");
+      setPendingFile(null);
     } catch (error) {
       toast.error(`تعذّر الرفع: ${(error as Error).message}`);
     } finally {
@@ -230,7 +239,8 @@ export function RecordAttachmentsDialog({
                   )}
                 </button>
                 <div className="space-y-1 p-2">
-                  <p className="truncate text-xs font-bold">{item.name}</p>\n                  <p className="text-[10px] text-muted-foreground">{item.type}</p>
+                  <p className="truncate text-xs font-bold">{item.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{item.type}</p>
                   <div className="flex gap-1">
                     <Button variant="outline" size="icon" asChild>
                       <a href={item.url} download target="_blank" rel="noreferrer" aria-label="تنزيل المرفق">
