@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, FileText, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignaturePad } from "@/components/SignaturePad";
 import { LOOKUP_CATEGORIES, lookupCategoryLabel } from "@/lib/lookups";
+import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -206,10 +207,14 @@ function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold">الإعدادات</h1>
+      <div>
+        <h1 className="text-2xl font-extrabold">بيانات المدرسة والمستندات</h1>
+        <p className="mt-1 text-sm text-muted-foreground">هذه البيانات هي المصدر الموحد للكليشة الرسمية في جميع ملفات PDF وتقارير A4.</p>
+      </div>
 
       <section className="rounded-xl border bg-card p-5 shadow-sm">
-        <h2 className="mb-4 font-bold">بيانات المدرسة والموجه</h2>
+        <h2 className="mb-1 font-bold">بيانات المدرسة والموجه</h2>
+        <p className="mb-4 text-xs text-muted-foreground">أدخلها مرة واحدة؛ ستظهر تلقائيًا في التقارير وملف الطالب والخطة والبرامج.</p>
         <form
           key={schoolFormKey}
           className="grid gap-4 sm:grid-cols-2"
@@ -324,6 +329,23 @@ function SettingsPage() {
             </Button>
           </div>
         </form>
+      </section>
+
+      <section className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <FileText className="size-5 text-primary" />
+          <div>
+            <h2 className="font-bold">معاينة الكليشة الرسمية</h2>
+            <p className="text-xs text-muted-foreground">هذه هي الهوية التي ستظهر في مستندات A4 بعد الحفظ.</p>
+          </div>
+        </div>
+        <div className="record-pdf-document mx-auto max-w-[210mm] rounded-xl border bg-paper p-4 text-paper-foreground">
+          <OfficialHeader school={school} title="معاينة المستند الرسمي" reportType="نموذج معاينة" />
+          <div className="my-8 rounded-xl border border-dashed border-paper-border bg-[var(--letterhead-soft)] p-6 text-center text-sm text-paper-muted-foreground">
+            محتوى المستند يظهر هنا، وتُستخدم نفس الكليشة تلقائيًا في التقارير والسجلات القابلة للطباعة.
+          </div>
+          <OfficialFooter school={school} />
+        </div>
       </section>
 
       <section className="rounded-xl border bg-card p-5 shadow-sm">
