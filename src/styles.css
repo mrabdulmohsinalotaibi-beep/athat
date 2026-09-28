@@ -410,3 +410,40 @@ textarea {
   .final-signatures { break-inside: avoid; page-break-inside: avoid; }
   [data-pdf-exclude="true"] { display: none; }
 }
+
+/* Mobile record ergonomics */
+@media (max-width: 767px) {
+  .record-toolbar > button,
+  .record-toolbar > a {
+    min-height: 2.75rem;
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+  .record-table-scroll {
+    position: relative;
+    border-inline: 1px solid var(--border);
+  }
+  .record-table-scroll::after {
+    display: block;
+    padding: 0.4rem 0.75rem;
+    content: "مرّر الجدول أفقيًا لعرض بقية الحقول";
+    font-size: 0.625rem;
+    color: var(--muted-foreground);
+    text-align: center;
+    background: var(--muted);
+  }
+  .record-row-actions {
+    position: sticky;
+    left: 0;
+    width: max-content;
+    padding-inline: 0.25rem;
+    background: var(--card);
+    box-shadow: 8px 0 14px -14px var(--foreground);
+  }
+  .record-row-actions button {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+  }
+}
+@media print {
+  .record-table-scroll::after { display: none; }
+}

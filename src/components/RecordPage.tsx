@@ -436,7 +436,7 @@ export function RecordPage({
           <h1 className="text-2xl font-extrabold">{config.title}</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} سجل</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="record-toolbar flex w-full flex-wrap gap-2 sm:w-auto">
           <Button
             onClick={() => {
               setAuto({});
@@ -477,7 +477,7 @@ export function RecordPage({
 
       {filters && <div className="flex flex-wrap items-end gap-3">{filters}</div>}
 
-      <div className="relative max-w-sm">
+      <div className="relative w-full sm:max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -506,7 +506,7 @@ export function RecordPage({
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
-        <div className="overflow-x-auto">
+        <div className="record-table-scroll overflow-x-auto">
           <table className="w-full text-right text-sm">
             <thead>
               <tr className="border-b bg-muted/60 text-xs">
@@ -570,7 +570,7 @@ export function RecordPage({
                     </td>
                   ))}
                   <td data-pdf-exclude="true" className="p-2">
-                    <div className="flex gap-1">
+                    <div className="record-row-actions flex gap-1">
                       {rowAction && (
                         <Button
                           variant="ghost"
