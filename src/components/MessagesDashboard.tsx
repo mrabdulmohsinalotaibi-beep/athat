@@ -9,6 +9,7 @@ import {
   Mail,
   MessageCircle,
   MessageSquareText,
+  Printer,
   QrCode,
   RotateCcw,
   Send,
@@ -795,6 +796,9 @@ export default function MessagesDashboard() {
             </Button>
             <Button onClick={() => exportVariantPdf(true)} disabled={!selected.length || exporting}>
               <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF (داخلي)"}
+            </Button>
+            <Button variant="outline" onClick={() => window.print()} disabled={!selected.length}>
+              <Printer className="size-4" /> طباعة التقرير
             </Button>
           </div>
         </div>
