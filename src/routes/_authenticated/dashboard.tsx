@@ -283,8 +283,6 @@ function Dashboard() {
     { label: "تسجيل مقابلة", to: "/interviews" as const, icon: UserCheck },
     { label: "رصد مواظبة", to: "/attendance" as const, icon: ClipboardList },
     { label: "إحالة جديدة", to: "/referrals" as const, icon: Zap },
-    { label: "تقرير رسمي", to: "/reports" as const, icon: FileText },
-    { label: "صندوق الطلبات", to: "/requests" as const, icon: Inbox },
   ];
 
   const quickReport = [
@@ -323,9 +321,9 @@ function Dashboard() {
   ];
 
   return (
-    <div className="dashboard-shell space-y-6 dir-rtl">
+    <div className="dashboard-shell space-y-4 dir-rtl">
       {/* 1. Hero Card - ترويسة الصفحة */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-primary/75 p-6 text-primary-foreground shadow-xl shadow-primary/20 sm:p-8">
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-primary via-primary/95 to-primary/75 p-4 text-primary-foreground shadow-lg shadow-primary/15 sm:p-6">
         <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
         <div className="absolute right-1/2 top-0 size-72 translate-x-1/2 rounded-full border border-amber-300/15" />
@@ -357,7 +355,7 @@ function Dashboard() {
       </div>
 
       {/* 2. Quick Action Buttons - أزرار سريعة متناسقة وموزعة بالتساوي */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -412,6 +410,11 @@ function Dashboard() {
         </div>
       </section>
 
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">
+          مؤشرات إضافية للطلاب والإنجاز
+        </summary>
+        <div className="mt-4">
       {/* 3. Stat Grid - بطاقات الإحصائيات */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map(({ label, value, icon: Icon, to, gradient, iconColor, badge }) => (
@@ -441,14 +444,33 @@ function Dashboard() {
         ))}
       </div>
 
-      <CaseCenter />
+        </div>
+      </details>
 
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">مركز الحالات</summary>
+        <div className="mt-4"><CaseCenter /></div>
+      </details>
+
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">
+          السجل اليومي والقوالب والمساعد
+        </summary>
+        <div className="mt-4 space-y-4">
       <DailyWorkLog />
 
       <GuidanceTemplates />
 
       <AiCounselorAssistant />
 
+        </div>
+      </details>
+
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">
+          مؤشرات الأداء والرسوم البيانية
+        </summary>
+        <div className="mt-4 space-y-4">
       {/* 4. KPI Performance Meter - قسم مؤشرات الأداء */}
       <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between border-b border-border/40 pb-4">
@@ -544,6 +566,9 @@ function Dashboard() {
           )}
         </div>
       </div>
+
+        </div>
+      </details>
 
       {/* 6. Notifications & Agenda Cards - المتابعات والمواعيد */}
       <div className="grid gap-6 lg:grid-cols-2">
