@@ -106,6 +106,16 @@ export function RecordPage({
     if (!studentId && !studentNo && !studentName) return;
     setAuto({ student_id: studentId, student_no: studentNo, student_name: studentName });
     setEditing({ student_id: studentId, student_no: studentNo, student_name: studentName });
+
+    // Consume the prefill link once so refreshing the page does not reopen
+    // a duplicate draft. Preserve unrelated query parameters and the hash.
+    ["new", "studentId", "studentNo", "studentName"].forEach((key) => params.delete(key));
+    const query = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+    );
   }, [config.key]);
 
   const fileRef = useRef<HTMLInputElement>(null);
