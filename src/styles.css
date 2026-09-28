@@ -63,84 +63,84 @@
   color-scheme: light;
   --radius: 0.5rem;
 
-  /* هوية بصرية مستوحاة من شعار "الذات": برونزي دافئ + رمادي غرافيتي معدني رسمي */
-  --background: #f7f5f2;
-  --foreground: #2a2622;
+  /* هوية بصرية مستوحاة من النموذج المرفق: أزرق التعليم + أخضر تركوازي */
+  --background: #f4f8f7;
+  --foreground: #153b4a;
   --card: #ffffff;
-  --card-foreground: #2a2622;
+  --card-foreground: #153b4a;
   --popover: #ffffff;
-  --popover-foreground: #2a2622;
-  --primary: #6f4a2c;
-  --primary-foreground: #fdf8f2;
-  --secondary: #e9e2d6;
-  --secondary-foreground: #3a332b;
-  --muted: #efeae2;
-  --muted-foreground: #6d655a;
-  --accent: #dcc9a8;
-  --accent-foreground: #3f2f1d;
+  --popover-foreground: #153b4a;
+  --primary: #0d5269;
+  --primary-foreground: #f8fffd;
+  --secondary: #dceee9;
+  --secondary-foreground: #164b56;
+  --muted: #e9f2f0;
+  --muted-foreground: #5b7379;
+  --accent: #bde5dc;
+  --accent-foreground: #0e4b58;
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.99 0.01 80);
-  --border: #e2dacb;
-  --input: #d2c4ac;
-  --ring: #8a6136;
-  --chart-1: #6f4a2c;
-  --chart-2: #a9752f;
-  --chart-3: #3f3a34;
-  --chart-4: #c9ac82;
-  --chart-5: #7c5b34;
-  --sidebar: #23201c;
-  --sidebar-foreground: #f3ede2;
-  --sidebar-primary: #d9b47c;
-  --sidebar-primary-foreground: #26201a;
-  --sidebar-accent: #37312a;
-  --sidebar-accent-foreground: #fff8ee;
-  --sidebar-border: #423b32;
-  --sidebar-ring: #c19b64;
-  --brand-mark-surface: #ece2d0;
-  --brand-mark-border: rgb(138 97 54 / 0.3);
+  --border: #cfe2de;
+  --input: #b9d6d1;
+  --ring: #159b88;
+  --chart-1: #0d5269;
+  --chart-2: #159b88;
+  --chart-3: #4e7780;
+  --chart-4: #7ec7b8;
+  --chart-5: #2d7182;
+  --sidebar: #0b465d;
+  --sidebar-foreground: #ecfbf8;
+  --sidebar-primary: #8de0cb;
+  --sidebar-primary-foreground: #073e50;
+  --sidebar-accent: #14647a;
+  --sidebar-accent-foreground: #f4fffc;
+  --sidebar-border: #22677a;
+  --sidebar-ring: #8de0cb;
+  --brand-mark-surface: #e2f2ef;
+  --brand-mark-border: rgb(21 155 136 / 0.3);
   --paper: #fffefc;
-  --paper-foreground: #26221d;
-  --paper-muted: #f3efe7;
-  --paper-muted-foreground: #665e53;
-  --paper-border: #cec3b3;
-  --shadow-soft: 0 10px 32px -18px rgb(42 33 20 / 0.3);
-  --shadow-card: 0 5px 18px -12px rgb(42 33 20 / 0.2);
+  --paper-foreground: #173943;
+  --paper-muted: #eef6f4;
+  --paper-muted-foreground: #587078;
+  --paper-border: #b9d2ce;
+  --shadow-soft: 0 10px 32px -18px rgb(13 82 105 / 0.24);
+  --shadow-card: 0 5px 18px -12px rgb(13 82 105 / 0.16);
 }
 
 .dark {
   color-scheme: dark;
-  --background: #18160f;
-  --foreground: #f4eee0;
-  --card: #221f18;
-  --card-foreground: #f4eee0;
-  --popover: #221f18;
-  --popover-foreground: #f4eee0;
-  --primary: #d9ac71;
-  --primary-foreground: #241a10;
-  --secondary: #3b3325;
-  --secondary-foreground: #efe4d1;
-  --muted: #322b1f;
-  --muted-foreground: #c2b49b;
-  --accent: #46392a;
-  --accent-foreground: #fff3e0;
+  --background: #092b38;
+  --foreground: #e7faf6;
+  --card: #0f3b4a;
+  --card-foreground: #e7faf6;
+  --popover: #0f3b4a;
+  --popover-foreground: #e7faf6;
+  --primary: #75d7c2;
+  --primary-foreground: #073542;
+  --secondary: #1b5261;
+  --secondary-foreground: #dcf6f0;
+  --muted: #164555;
+  --muted-foreground: #afd0ca;
+  --accent: #226272;
+  --accent-foreground: #effffb;
   --destructive: oklch(0.65 0.18 25);
   --destructive-foreground: oklch(0.99 0.01 80);
-  --border: #47392a;
-  --input: #61503a;
-  --ring: #d6ab78;
-  --chart-1: #d9ac71;
-  --chart-2: #b08a56;
-  --chart-3: #ebd8b6;
-  --chart-4: #7c6541;
-  --chart-5: #c69463;
-  --sidebar: #121009;
-  --sidebar-foreground: #f4eee0;
-  --sidebar-primary: #d9ac71;
-  --sidebar-primary-foreground: #241a10;
-  --sidebar-accent: #2f2819;
-  --sidebar-accent-foreground: #fff3e0;
-  --sidebar-border: #3c3020;
-  --sidebar-ring: #bb9463;
+  --border: #2f6471;
+  --input: #3d7a84;
+  --ring: #75d7c2;
+  --chart-1: #75d7c2;
+  --chart-2: #42bba8;
+  --chart-3: #b4eee1;
+  --chart-4: #3e8b99;
+  --chart-5: #8bceb9;
+  --sidebar: #062431;
+  --sidebar-foreground: #e7faf6;
+  --sidebar-primary: #8de0cb;
+  --sidebar-primary-foreground: #073542;
+  --sidebar-accent: #0d4657;
+  --sidebar-accent-foreground: #effffb;
+  --sidebar-border: #1c5364;
+  --sidebar-ring: #75d7c2;
   --brand-mark-surface: #ece2d0;
   --brand-mark-border: rgb(217 172 113 / 0.36);
   --shadow-soft: 0 10px 32px -18px rgb(0 0 0 / 0.48);
@@ -264,9 +264,9 @@
     right: 0;
     bottom: -2px;
     left: 0;
-    height: 2px;
+    height: 3px;
     content: "";
-    background: color-mix(in oklab, var(--primary) 72%, #78b9b0);
+    background: linear-gradient(90deg, #0d5269 0 70%, #159b88 70% 100%);
   }
 }
 
@@ -602,7 +602,6 @@ textarea {
   }
 }
 
-
 /* Device-independent print refinements: the browser's print dialog controls
    the physical printer/PDF destination; CSS keeps the document legible. */
 @media print {
@@ -691,7 +690,6 @@ textarea {
     min-width: 0;
   }
 }
-
 
 /* Shared print behavior for every document using the print-area contract. */
 @media print {

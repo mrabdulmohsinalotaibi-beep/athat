@@ -20,8 +20,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f7f4ef",
-  "theme_color": "#2b211b",
+  "background_color": "#f4f8f7",
+  "theme_color": "#0d5269",
   "dir": "rtl",
   "lang": "ar"
 }

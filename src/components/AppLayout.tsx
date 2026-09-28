@@ -40,7 +40,7 @@ const NAV = [
     icon: Users,
     children: [
       { to: "/students", label: "سجل الطلاب", icon: Users },
-      { to: "/cases", label: "حالات التوجيه", icon: HeartHandshake },
+      { to: "/cases", label: "الحالات الخاصة", icon: HeartHandshake },
       { to: "/interviews", label: "المقابلات والتواصل", icon: MessagesSquare },
       { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
       { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert },
@@ -111,7 +111,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-1">
+            <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-1 ring-2 ring-sidebar-primary/30">
               <img src="/brand-logo.png" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
@@ -217,7 +217,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print sticky top-0 z-20 border-b bg-card/90 shadow-sm backdrop-blur-xl">
+        <header className="no-print sticky top-0 z-20 border-b-2 border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
           <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <div className="flex items-center gap-3">
               <Button
@@ -248,7 +248,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   {school?.academic_year || "العام الدراسي"} · {school?.semester || "الفصل الدراسي"}
                 </p>
               </div>
-              <Button asChild variant="outline" size="sm" className="gap-2">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="gap-2 border-primary/25 bg-secondary/40"
+              >
                 <Link to="/profile" title="حسابي الشخصي">
                   <UserRound className="size-4 shrink-0" />
                   <span className="hidden sm:inline">حسابي</span>

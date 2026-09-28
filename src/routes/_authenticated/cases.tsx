@@ -1,85 +1,169 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { RecordPage } from "@/components/RecordPage";
 import { recordByKey } from "@/lib/records";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ClipboardCheck, HeartHandshake, ShieldCheck, Siren } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  ClipboardCheck,
+  HeartHandshake,
+  ShieldCheck,
+  Siren,
+  FileText,
+  ArrowLeft,
+  Stethoscope,
+  UsersRound,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/cases")({
   head: () => ({
     meta: [
       { title: "الحالات الخاصة | الذات" },
-      { name: "description", content: "سجل الحالات الخاصة وإجراءات الرصد والمتابعة والإحالة بسرية." },
+      {
+        name: "description",
+        content: "مساحة عمل الموجه الطلابي لإدارة الحالات الخاصة والرصد والمتابعة والإحالة بسرية.",
+      },
       { property: "og:title", content: "الحالات الخاصة | منصة الذات" },
       { property: "og:description", content: "إدارة ومتابعة الحالات الخاصة بسرية." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: SpecialCasesPage,
 });
 
+const workflow = [
+  {
+    n: "01",
+    title: "الرصد والاستقبال",
+    text: "سجّل الملاحظة أو مصدر الإحالة بعبارات موضوعية، وحدد مستوى الأولوية دون تشخيص أو أحكام.",
+    icon: ClipboardCheck,
+  },
+  {
+    n: "02",
+    title: "التقدير الأولي",
+    text: "تحقق من الاحتياج والعوامل المؤثرة، واستمع للطالب في بيئة آمنة واحفظ الحد الأدنى اللازم من البيانات.",
+    icon: Stethoscope,
+  },
+  {
+    n: "03",
+    title: "خطة المساندة",
+    text: "حدد هدفًا قابلًا للمتابعة، وإجراءً واضحًا، ومسؤول التنفيذ وموعد المتابعة القادم.",
+    icon: HeartHandshake,
+  },
+  {
+    n: "04",
+    title: "التنسيق والإحالة",
+    text: "نسّق مع ولي الأمر والجهات المدرسية المختصة وفق الصلاحيات والضوابط المعتمدة.",
+    icon: UsersRound,
+  },
+];
+
 function SpecialCasesPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">الحالات الخاصة</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          مساحة عمل للموجه الطلابي لرصد الاحتياج، وتوثيق التدخلات، ومتابعة الإحالات مع مراعاة السرية.
-        </p>
-      </div>
+      <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-l from-primary via-primary to-[#116f78] p-6 text-primary-foreground shadow-lg shadow-primary/15 sm:p-8">
+        <div className="absolute -left-12 -top-16 size-48 rounded-full border border-white/15" />
+        <div className="absolute -bottom-24 right-1/3 size-64 rounded-full border border-[#8de0cb]/20" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <Badge className="mb-3 border-0 bg-white/15 text-white hover:bg-white/20">
+              مساحة عمل سرية
+            </Badge>
+            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">الحالات الخاصة</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/80">
+              سجل موحد للموجه الطلابي لرصد الحالات الخاصة، إعداد خطة المساندة، متابعة التدخلات،
+              وتوثيق الإغلاق أو الإحالة.
+            </p>
+          </div>
+          <Link
+            to="/reports"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-[#e8fff9]"
+          >
+            <FileText className="size-4" /> إعداد تقرير رسمي <ArrowLeft className="size-4" />
+          </Link>
+        </div>
+      </section>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-            <ClipboardCheck className="size-5 text-primary" />
-            <CardTitle className="text-sm">الرصد الأولي</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs leading-6 text-muted-foreground">
-            تسجيل الملاحظة بعبارات موضوعية، وتحديد مصدرها وتاريخها دون إطلاق أحكام أو تشخيص.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-            <HeartHandshake className="size-5 text-primary" />
-            <CardTitle className="text-sm">خطة المساندة</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs leading-6 text-muted-foreground">
-            تحديد احتياج الطالب، وهدف قابل للمتابعة، والإجراءات والمسؤول عن كل إجراء.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-            <ShieldCheck className="size-5 text-primary" />
-            <CardTitle className="text-sm">السرية والخصوصية</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs leading-6 text-muted-foreground">
-            قصر الاطلاع على أصحاب الصلاحية، وتجنب إدراج تفاصيل حساسة في المستندات العامة.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-            <Siren className="size-5 text-destructive" />
-            <CardTitle className="text-sm">الحالات العاجلة</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs leading-6 text-muted-foreground">
-            عند وجود خطر مباشر على سلامة الطالب، اتبع إجراءات الحماية والإبلاغ المعتمدة فورًا ولا تؤخرها لأجل التوثيق.
-          </CardContent>
-        </Card>
+        {[
+          {
+            title: "الرصد الأولي",
+            text: "توثيق الوقائع ومصدر الملاحظة وتاريخها بلغة مهنية محايدة.",
+            icon: ClipboardCheck,
+            tone: "bg-primary/10 text-primary",
+          },
+          {
+            title: "خطة المساندة",
+            text: "احتياج واضح وهدف قابل للقياس وإجراء ومسؤول وموعد متابعة.",
+            icon: HeartHandshake,
+            tone: "bg-[#159b88]/10 text-[#087c6e]",
+          },
+          {
+            title: "السرية والخصوصية",
+            text: "قصر الاطلاع على أصحاب الصلاحية وعدم تداول التفاصيل الحساسة.",
+            icon: ShieldCheck,
+            tone: "bg-sky-500/10 text-sky-700",
+          },
+          {
+            title: "الحالات العاجلة",
+            text: "اتبع إجراءات الحماية والإبلاغ المعتمدة فورًا عند وجود خطر مباشر.",
+            icon: Siren,
+            tone: "bg-rose-500/10 text-rose-700",
+          },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card
+              key={item.title}
+              className="border-primary/10 bg-card/90 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
+                <span
+                  className={`flex size-10 items-center justify-center rounded-xl ${item.tone}`}
+                >
+                  <Icon className="size-5" />
+                </span>
+                <CardTitle className="text-sm">{item.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs leading-6 text-muted-foreground">
+                {item.text}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">خطوات عمل مقترحة</CardTitle>
+      <Card className="overflow-hidden border-primary/10 shadow-sm">
+        <CardHeader className="border-b bg-secondary/35">
+          <CardTitle className="text-base">مسار التعامل مع الحالة</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            دليل مختصر يساعد الموجه على توحيد التوثيق والمتابعة في كل حالة.
+          </p>
         </CardHeader>
-        <CardContent>
-          <ol className="list-decimal space-y-1.5 pr-5 text-sm leading-6">
-            <li>استقبال الحالة والتحقق من المعلومات الأساسية ومصدرها.</li>
-            <li>إجراء مقابلة مناسبة وتوثيق الوقائع والاحتياج بلغة مهنية محايدة.</li>
-            <li>التنسيق مع ولي الأمر والجهات المدرسية المختصة وفق الصلاحيات والإجراءات المعتمدة.</li>
-            <li>وضع خطة تدخل ومواعيد متابعة، ثم توثيق النتائج والإغلاق أو الإحالة.</li>
-          </ol>
+        <CardContent className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
+          {workflow.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.n}
+                className="rounded-2xl border border-primary/10 bg-background/70 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-primary/45">{item.n}</span>
+                  <Icon className="size-5 text-primary" />
+                </div>
+                <h3 className="mt-4 text-sm font-black">{item.title}</h3>
+                <p className="mt-2 text-xs leading-6 text-muted-foreground">{item.text}</p>
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
+
+      <section className="rounded-2xl border border-[#159b88]/25 bg-[#e8f7f3] p-4 text-sm leading-7 text-[#145b62] sm:p-5">
+        <strong>تنبيه مهني:</strong> هذه الصفحة أداة لتنظيم أعمال التوجيه والتوثيق المدرسي، ولا تُعد
+        بديلًا عن التقييم المتخصص أو إجراءات الحماية والإبلاغ المعتمدة. عند وجود خطر مباشر على سلامة
+        الطالب، بادر بالإجراء الرسمي فورًا.
+      </section>
 
       <RecordPage config={recordByKey("cases")} />
     </div>
