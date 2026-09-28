@@ -391,4 +391,3 @@ function Detail({ label, value }: { label: string; value: string | null | undefi
     </div>
   );
 }
-

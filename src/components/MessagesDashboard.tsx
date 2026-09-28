@@ -522,7 +522,7 @@ export default function MessagesDashboard() {
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
-      
+
 
       <section className="border-b border-border pb-6">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
@@ -860,7 +860,7 @@ export default function MessagesDashboard() {
         </div>
       </section>
 
-      
+
     </div>
   );
 }
