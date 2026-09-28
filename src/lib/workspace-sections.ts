@@ -9,6 +9,12 @@ import {
   Settings,
   Sparkles,
   Users,
+  MoreHorizontal,
+  CalendarCheck,
+  ShieldAlert,
+  ExternalLink,
+  UsersRound,
+  Wrench,
 } from "lucide-react";
 
 export type WorkspaceSectionItem = {
@@ -18,7 +24,7 @@ export type WorkspaceSectionItem = {
 };
 
 export type WorkspaceSection = {
-  id: "students" | "sessions" | "programs" | "settings";
+  id: "students" | "sessions" | "programs" | "tools" | "settings";
   title: string;
   description: string;
   icon: LucideIcon;
@@ -56,6 +62,19 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
       { to: "/programs", label: "2. البرنامج والتنفيذ", icon: Sparkles },
       { to: "/evidences", label: "3. الشاهد", icon: FolderCheck },
       { to: "/reports", label: "4. التقرير", icon: FileText },
+    ],
+  },
+  {
+    id: "tools",
+    title: "أدوات إضافية",
+    description: "السجلات المساندة محفوظة هنا دون مزاحمة مسار العمل الأساسي.",
+    icon: MoreHorizontal,
+    items: [
+      { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
+      { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert },
+      { to: "/referrals", label: "الإحالات", icon: ExternalLink },
+      { to: "/committees", label: "اللجان والاجتماعات", icon: UsersRound },
+      { to: "/toolkit", label: "النماذج والأدوات", icon: Wrench },
     ],
   },
   {
