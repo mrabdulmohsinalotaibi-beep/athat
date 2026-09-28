@@ -103,6 +103,16 @@ const ELECTRONIC_FIELDS: Record<
   string,
   { label: string; multiline?: boolean; placeholder?: string }[]
 > = {
+  "behavioral-contract": [
+    { label: "اسم الطالب / الصف" },
+    { label: "السلوك المستهدف ووصفه بموضوعية", multiline: true },
+    { label: "الهدف السلوكي البديل ومؤشر قياسه", multiline: true },
+    { label: "التزام الطالب", multiline: true },
+    { label: "دعم المدرسة والموجه", multiline: true },
+    { label: "دور ولي الأمر", multiline: true },
+    { label: "مدة الاتفاق وموعد المراجعة" },
+    { label: "توقيع الطالب وولي الأمر والموجه", multiline: true },
+  ],
   "guidance-observation": [
     { label: "اسم الطالب / الصف" },
     { label: "تاريخ الملاحظة", placeholder: "اليوم / الشهر / السنة" },
@@ -138,7 +148,7 @@ const DOWNLOADABLE_FORMS: {
   title: string;
   description: string;
   category: FormCategory;
-  file: string;
+  file?: string;
 }[] = [
   {
     id: "guidance-observation",
@@ -160,6 +170,12 @@ const DOWNLOADABLE_FORMS: {
     description: "نموذج متابعة ميدانية للطالب المستجد خلال الأسابيع الأولى.",
     category: "students",
     file: "first-grade-observation.docx",
+  },
+  {
+    id: "behavioral-contract",
+    title: "عقد التعاون السلوكي",
+    description: "اتفاق إلكتروني يحدد السلوك المستهدف، مسؤوليات الطالب والأسرة والمدرسة، وموعد المراجعة.",
+    category: "cases",
   },
   {
     id: "case-follow-up-schedule",
@@ -304,7 +320,7 @@ export function GuidanceTemplates() {
         <div>
           <h2 className="text-base font-black">مكتبة القوالب الإرشادية</h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            أربعة قوالب سريعة و18 نموذجًا إلكترونيًا للتعبئة والطباعة داخل المنصة.
+            {QUICK_TEMPLATES.length} قوالب سريعة و{DOWNLOADABLE_FORMS.length} نموذجًا إلكترونيًا للتعبئة والطباعة داخل المنصة.
           </p>
         </div>
       </div>
@@ -437,7 +453,7 @@ export function GuidanceTemplates() {
                 <p className="mt-3 min-h-10 flex-1 text-[11px] leading-5 text-muted-foreground">
                   {item.description}
                 </p>
-                <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                <div className={"mt-3 grid gap-2 " + (item.file ? "grid-cols-[1fr_auto]" : "grid-cols-1")}>
                   <Button
                     type="button"
                     size="sm"
@@ -447,6 +463,7 @@ export function GuidanceTemplates() {
                   >
                     فتح إلكتروني
                   </Button>
+                  {item.file && (
                   <Button
                     asChild
                     type="button"
@@ -464,6 +481,7 @@ export function GuidanceTemplates() {
                       <Download className="size-4" aria-hidden="true" />
                     </a>
                   </Button>
+                  )}
                 </div>
               </article>
             ))}

@@ -25,8 +25,6 @@ import {
   Sparkles,
   Plus,
   UserCheck,
-  ClipboardList,
-  FileText,
   TrendingUp,
   Clock,
   CheckCircle2,
@@ -140,16 +138,38 @@ function Dashboard() {
   const cases = data?.cases ?? [];
   const attendance = data?.attendance ?? [];
   const behavior = data?.behavior ?? [];
+  const behaviorCounts = behavior.reduce<Record<string, { studentName: string; count: number }>>((acc, item) => {
+    const key = String(item["student_no"] ?? item["student_name"] ?? "").trim();
+    if (!key) return acc;
+    const previous = acc[key];
+    acc[key] = {
+      studentName: String(item["student_name"] ?? "طالب"),
+      count: (previous?.count ?? 0) + 1,
+    };
+    return acc;
+  }, {});
+  const repeatedBehavior = Object.values(behaviorCounts)
+    .filter((item) => item.count > 1)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
   const programs = data?.programs ?? [];
   const calendar = data?.calendar ?? [];
   const feedback = (data?.feedback ?? []) as FeedbackSummary[];
 
   const activeCases = cases.filter((c) => c.case_status !== "مغلقة");
-  const todayAbsence = attendance.filter((a) => a.adate === day);
+  const todayAbsence = attendance.filter(
+    (a) => a.adate === day && ["غياب", "غياب بعذر"].includes(String(a.case_type ?? "")),
+  );
+  const todayLateness = attendance.filter(
+    (a) => a.adate === day && String(a.case_type ?? "") === "تأخر",
+  );
   const upcoming = calendar
     .filter((e) => (e.edate ?? "") >= day && e.status !== "منفذ")
     .sort((a, b) => String(a.edate).localeCompare(String(b.edate)))
     .slice(0, 6);
+  const todayAgenda = calendar
+    .filter((e) => e.edate === day && e.status !== "منفذ" && e.status !== "ملغي")
+    .sort((a, b) => String(a.etime ?? "").localeCompare(String(b.etime ?? "")));
   const overdue = activeCases.filter((c) => c.followup_at && String(c.followup_at) <= day);
   const donePrograms = programs.filter((p) => p.exec_status === "مكتمل");
   const newFeedback = feedback.filter((item) => item.status === "جديد");
@@ -191,7 +211,7 @@ function Dashboard() {
     },
     {
       label: "غياب وتأخر اليوم",
-      value: todayAbsence.length,
+      value: todayAbsence.length + todayLateness.length,
       icon: CalendarCheck,
       to: "/attendance" as const,
       gradient: "from-amber-500/18 via-card to-orange-500/10",
@@ -252,6 +272,24 @@ function Dashboard() {
       iconColor: "text-violet-700",
       badge: "واردة",
     },
+    {
+      label: "مهام الخطة المتأخرة",
+      value: latePlanTasks.length,
+      icon: Clock,
+      to: "/plan" as const,
+      gradient: "from-rose-500/12 via-card to-amber-500/8",
+      iconColor: "text-rose-700",
+      badge: "تنفيذ",
+    },
+    {
+      label: "شواهد ناقصة",
+      value: missingEvidence.length,
+      icon: FileWarning,
+      to: "/plan" as const,
+      gradient: "from-amber-500/12 via-card to-primary/8",
+      iconColor: "text-amber-700",
+      badge: "توثيق",
+    },
   ];
 
   const domainData = Object.entries(
@@ -279,53 +317,51 @@ function Dashboard() {
   });
 
   const quickActions = [
-    { label: "حالة إرشادية جديدة", to: "/cases" as const, icon: Plus },
-    { label: "تسجيل مقابلة", to: "/interviews" as const, icon: UserCheck },
-    { label: "رصد مواظبة", to: "/attendance" as const, icon: ClipboardList },
-    { label: "إحالة جديدة", to: "/referrals" as const, icon: Zap },
-    { label: "تقرير رسمي", to: "/reports" as const, icon: FileText },
-    { label: "صندوق الطلبات", to: "/requests" as const, icon: Inbox },
+    { label: "حالة طارئة", to: "/cases" as const, icon: Plus },
+    { label: "غياب جديد", to: "/attendance" as const, icon: CalendarCheck },
+    { label: "ملاحظة سلوكية سريعة", to: "/behavior" as const, icon: ShieldAlert },
+    { label: "جلسة فورية", to: "/interviews" as const, icon: UserCheck },
   ];
 
   const quickReport = [
     {
-      label: "طلبات عاجلة",
-      value: urgentRequests.length,
-      hint: "من الاستمارات العامة",
-      to: "/requests" as const,
-      icon: AlertTriangle,
+      label: "حالات نشطة",
+      value: activeCases.length,
+      hint: "تحتاج متابعة أو إغلاق",
+      to: "/cases" as const,
+      icon: HeartHandshake,
       tone: "text-rose-700 bg-rose-500/10",
     },
     {
-      label: "رسائل للموجه",
-      value: assignedToCounselor.length,
-      hint: "تحتاج فرزًا أو ردًا",
-      to: "/messages" as const,
-      icon: Inbox,
-      tone: "text-violet-700 bg-violet-500/10",
-    },
-    {
-      label: "مهام متأخرة",
-      value: latePlanTasks.length,
-      hint: "تجاوزت موعد التنفيذ",
-      to: "/plan" as const,
-      icon: Clock,
-      tone: "text-rose-700 bg-rose-500/10",
-    },
-    {
-      label: "توثيق ناقص",
-      value: missingEvidence.length,
-      hint: "يحتاج إرفاق شاهد",
-      to: "/plan" as const,
-      icon: FileWarning,
+      label: "غياب اليوم",
+      value: todayAbsence.length,
+      hint: "غياب بعذر أو بدونه",
+      to: "/attendance" as const,
+      icon: CalendarCheck,
       tone: "text-amber-700 bg-amber-500/10",
+    },
+    {
+      label: "التأخر الصباحي",
+      value: todayLateness.length,
+      hint: "حالات التأخر المسجلة اليوم",
+      to: "/attendance" as const,
+      icon: Clock,
+      tone: "text-orange-700 bg-orange-500/10",
+    },
+    {
+      label: "إحالات معلقة",
+      value: incomingReferrals.length,
+      hint: "بانتظار الفرز الأولي",
+      to: "/requests" as const,
+      icon: Zap,
+      tone: "text-sky-700 bg-sky-500/10",
     },
   ];
 
   return (
-    <div className="dashboard-shell space-y-6 dir-rtl">
+    <div className="dashboard-shell space-y-4 dir-rtl">
       {/* 1. Hero Card - ترويسة الصفحة */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary/95 to-primary/75 p-6 text-primary-foreground shadow-xl shadow-primary/20 sm:p-8">
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-primary via-primary/95 to-primary/75 p-4 text-primary-foreground shadow-lg shadow-primary/15 sm:p-6">
         <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
         <div className="absolute right-1/2 top-0 size-72 translate-x-1/2 rounded-full border border-amber-300/15" />
@@ -357,7 +393,7 @@ function Dashboard() {
       </div>
 
       {/* 2. Quick Action Buttons - أزرار سريعة متناسقة وموزعة بالتساوي */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -380,13 +416,13 @@ function Dashboard() {
       <section className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-black">ملخص العمل السريع</h2>
+            <h2 className="text-base font-black">مؤشرات اليوم</h2>
             <p className="text-xs text-muted-foreground">
-              تنبيهات حية من السجلات والرسائل داخل المنصة.
+              الحالات النشطة والغياب والتأخر والإحالات المعلقة.
             </p>
           </div>
-          <Link to="/messages" className="text-xs font-bold text-primary hover:underline">
-            عرض مركز الرسائل
+          <Link to="/requests" className="text-xs font-bold text-primary hover:underline">
+            عرض صندوق الطلبات
           </Link>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
@@ -412,6 +448,11 @@ function Dashboard() {
         </div>
       </section>
 
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">
+          مؤشرات إضافية للطلاب والإنجاز
+        </summary>
+        <div className="mt-4">
       {/* 3. Stat Grid - بطاقات الإحصائيات */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map(({ label, value, icon: Icon, to, gradient, iconColor, badge }) => (
@@ -441,14 +482,33 @@ function Dashboard() {
         ))}
       </div>
 
-      <CaseCenter />
+        </div>
+      </details>
 
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">مركز الحالات</summary>
+        <div className="mt-4"><CaseCenter /></div>
+      </details>
+
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">
+          السجل اليومي والقوالب والمساعد
+        </summary>
+        <div className="mt-4 space-y-4">
       <DailyWorkLog />
 
       <GuidanceTemplates />
 
       <AiCounselorAssistant />
 
+        </div>
+      </details>
+
+      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">
+          مؤشرات الأداء والرسوم البيانية
+        </summary>
+        <div className="mt-4 space-y-4">
       {/* 4. KPI Performance Meter - قسم مؤشرات الأداء */}
       <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between border-b border-border/40 pb-4">
@@ -545,6 +605,9 @@ function Dashboard() {
         </div>
       </div>
 
+        </div>
+      </details>
+
       {/* 6. Notifications & Agenda Cards - المتابعات والمواعيد */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
@@ -562,7 +625,7 @@ function Dashboard() {
 
           {overdue.length === 0 ? (
             <div className="py-10 text-center text-xs font-bold text-muted-foreground">
-              لا توجد أي متابعات عاجلة اليوم 👌
+              لا توجد متابعات متأخرة اليوم.
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -582,6 +645,46 @@ function Dashboard() {
               ))}
             </div>
           )}
+        {(school?.announcement || urgentRequests.length > 0 || assignedToCounselor.length > 0 || repeatedBehavior.length > 0) && (
+          <div className="mt-4 space-y-3 border-t border-border/60 pt-3">
+            {school?.announcement && (
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                <p className="text-[11px] font-black text-amber-800">تنبيه المدرسة</p>
+                <p className="mt-1 max-h-12 overflow-hidden text-xs leading-5 text-muted-foreground">
+                  {school.announcement}
+                </p>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {urgentRequests.length > 0 && (
+                <Link to="/requests" className="rounded-full bg-rose-500/10 px-3 py-1.5 text-[11px] font-bold text-rose-700">
+                  {urgentRequests.length} طلب عاجل
+                </Link>
+              )}
+              {assignedToCounselor.length > 0 && (
+                <Link to="/messages" className="rounded-full bg-violet-500/10 px-3 py-1.5 text-[11px] font-bold text-violet-700">
+                  {assignedToCounselor.length} رسالة بانتظار الرد
+                </Link>
+              )}
+            </div>
+            {repeatedBehavior.length > 0 && (
+              <div>
+                <p className="mb-2 text-[11px] font-bold text-muted-foreground">طلاب لديهم أكثر من رصد في السجل السلوكي</p>
+                <div className="flex flex-wrap gap-2">
+                  {repeatedBehavior.map((item, index) => (
+                    <Link
+                      key={item.studentName + index}
+                      to="/behavior"
+                      className="rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-semibold"
+                    >
+                      {item.studentName} · {item.count} مرات
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         </div>
 
         <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
@@ -590,27 +693,25 @@ function Dashboard() {
               <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-500">
                 <CalendarDays className="size-4" />
               </div>
-              <h2 className="text-sm font-black text-foreground">المواعيد القادمة</h2>
+              <h2 className="text-sm font-black text-foreground">جدول اليوم</h2>
             </div>
-            <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-500">
-              جدول للأيام القادمة
-            </span>
+            <Link to="/calendar" className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700">إدارة الجدول</Link>
           </div>
 
-          {upcoming.length === 0 ? (
+          {todayAgenda.length === 0 ? (
             <div className="py-10 text-center text-xs font-bold text-muted-foreground">
-              لا توجد مواعيد مجدولة قادمة
+              لا توجد جلسات أو مواعيد مسجلة اليوم
             </div>
           ) : (
             <div className="space-y-2.5">
-              {upcoming.map((e) => (
+              {todayAgenda.slice(0, 5).map((e) => (
                 <div
                   key={e.id}
                   className="flex items-center justify-between rounded-2xl border border-border/50 bg-background/80 p-3.5 text-xs transition-colors hover:border-primary/30"
                 >
                   <span className="font-extrabold text-foreground">{e.title || e.etype}</span>
                   <span className="font-mono text-[11px] font-bold text-muted-foreground">
-                    {formatHijriDate(e.edate)}
+                    {e.etime || "وقت غير محدد"}
                   </span>
                 </div>
               ))}

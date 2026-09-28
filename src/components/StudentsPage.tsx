@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet, FolderOpen, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -62,9 +63,11 @@ export function StudentsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [profileStudent, setProfileStudent] = useState<StudentRow | null>(null);
   const [confirmText, setConfirmText] = useState("");
+  const [stage, setStage] = useState("");
   const [grade, setGrade] = useState("");
   const [classroom, setClassroom] = useState("");
   const [nationality, setNationality] = useState("");
+  const [studentStatus, setStudentStatus] = useState("");
 
   const { data: rows = [] } = useQuery({
     queryKey: [config.table],
@@ -83,9 +86,11 @@ export function StudentsPage() {
       a.localeCompare(b, "ar"),
     );
 
+  const stages = useMemo(() => uniq("stage"), [rows]);
   const grades = useMemo(() => uniq("grade"), [rows]);
   const classrooms = useMemo(() => uniq("classroom"), [rows]);
   const nationalities = useMemo(() => uniq("nationality"), [rows]);
+  const studentStatuses = useMemo(() => uniq("status"), [rows]);
 
   const deleteAll = useMutation({
     mutationFn: async () => {
@@ -106,10 +111,12 @@ export function StudentsPage() {
 
   const extraFilter = useCallback(
     (row: Record<string, unknown>) =>
+      (!stage || String(row["stage"] ?? "") === stage) &&
       (!grade || String(row["grade"] ?? "") === grade) &&
       (!classroom || String(row["classroom"] ?? "") === classroom) &&
-      (!nationality || String(row["nationality"] ?? "") === nationality),
-    [grade, classroom, nationality],
+      (!nationality || String(row["nationality"] ?? "") === nationality) &&
+      (!studentStatus || String(row["status"] ?? "") === studentStatus),
+    [stage, grade, classroom, nationality, studentStatus],
   );
 
   return (
@@ -131,6 +138,10 @@ export function StudentsPage() {
             <Button variant="outline" onClick={downloadStudentsTemplate}>
               <FileSpreadsheet className="size-4" /> تحميل نموذج Excel
             </Button>
+            <Button asChild variant="outline"><Link to="/integrations">استيراد من نور أو مدرستي</Link></Button>
+            <details className="rounded-lg border px-2 py-1">
+              <summary className="cursor-pointer px-1 py-1 text-[11px] font-semibold text-muted-foreground">إجراءات إدارية</summary>
+              <div className="pt-2">
             <AlertDialog onOpenChange={(open) => !open && setConfirmText("")}>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" disabled={rows.length === 0}>
@@ -168,20 +179,31 @@ export function StudentsPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+              </div>
+            </details>
           </>
         }
         filters={
           <>
+            <Filter label="المرحلة" value={stage} options={stages} onChange={setStage} />
             <Filter label="الصف" value={grade} options={grades} onChange={setGrade} />
             <Filter label="الفصل" value={classroom} options={classrooms} onChange={setClassroom} />
-            <Filter label="الجنسية" value={nationality} options={nationalities} onChange={setNationality} />
-            {(grade || classroom || nationality) && (
+            <details className="rounded-lg border px-3 py-1.5">
+              <summary className="cursor-pointer text-xs font-semibold">فلاتر إضافية</summary>
+              <div className="mt-2 flex flex-wrap items-end gap-3">
+                <Filter label="حالة القيد" value={studentStatus} options={studentStatuses} onChange={setStudentStatus} />
+                <Filter label="الجنسية" value={nationality} options={nationalities} onChange={setNationality} />
+              </div>
+            </details>
+            {(stage || grade || classroom || nationality || studentStatus) && (
               <Button
                 variant="ghost"
                 onClick={() => {
+                  setStage("");
                   setGrade("");
                   setClassroom("");
                   setNationality("");
+                  setStudentStatus("");
                 }}
               >
                 مسح الفلاتر

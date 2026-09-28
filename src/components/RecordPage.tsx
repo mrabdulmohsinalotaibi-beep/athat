@@ -178,11 +178,11 @@ export function RecordPage({
   });
 
   const filtered = useMemo(() => {
-    const term = search.trim();
+    const term = search.trim().toLocaleLowerCase("ar");
     let out = rows;
     if (term) {
       out = out.filter((row) =>
-        config.fields.some((f) => String(row[f.name] ?? "").includes(term)),
+        config.fields.some((f) => String(row[f.name] ?? "").toLocaleLowerCase("ar").includes(term)),
       );
     }
     if (extraFilter) out = out.filter((row) => extraFilter(row));
@@ -496,7 +496,8 @@ export function RecordPage({
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder="بحث في السجل..."
+          placeholder={config.key === "students" ? "ابحث بالاسم أو رقم الطالب أو الهوية أو الصف..." : "بحث في السجل..."}
+          aria-label={config.key === "students" ? "البحث بالاسم أو رقم الطالب أو الهوية أو الصف" : "بحث في السجل"}
           className="pr-9 pl-9"
         />
         {search && (
