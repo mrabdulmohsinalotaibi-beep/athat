@@ -62,20 +62,20 @@
   color-scheme: light;
   --radius: 0.5rem;
 
-  /* هوية بصرية مستوحاة من النموذج المرفق: أزرق التعليم + أخضر تركوازي */
+  /* هوية الذات: تركوازي داكن + مرجاني هادئ مستوحاة من الشعار */
   --background: #f6f8f6;
   --foreground: #163f49;
   --card: #ffffff;
   --card-foreground: #163f49;
   --popover: #ffffff;
   --popover-foreground: #163f49;
-  --primary: #163f49;
-  --primary-foreground: #f6f8f6;
+  --primary: #174f59;
+  --primary-foreground: #ffffff;
   --secondary: #dde9e4;
   --secondary-foreground: #163f49;
   --muted: #edf3f0;
   --muted-foreground: #567078;
-  --accent: #d16d63;
+  --accent: #d36f64;
   --accent-foreground: #ffffff;
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.99 0.01 80);
@@ -87,9 +87,9 @@
   --chart-3: #567078;
   --chart-4: #dde9e4;
   --chart-5: #6b9d8f;
-  --sidebar: #163f49;
+  --sidebar: #123f48;
   --sidebar-foreground: #f6f8f6;
-  --sidebar-primary: #f0aaa2;
+  --sidebar-primary: #f2a69e;
   --sidebar-primary-foreground: #163f49;
   --sidebar-accent: #275661;
   --sidebar-accent-foreground: #f6f8f6;
@@ -97,11 +97,14 @@
   --sidebar-ring: #f0aaa2;
   --brand-mark-surface: #dde9e4;
   --brand-mark-border: #b6cbc5;
-  --paper: #fffefc;
-  --paper-foreground: #302820;
-  --paper-muted: #f2ede5;
-  --paper-muted-foreground: #71665b;
-  --paper-border: #d0c2b1;
+  --paper: #ffffff;
+  --paper-foreground: #173f47;
+  --paper-muted: #eef5f3;
+  --paper-muted-foreground: #587178;
+  --paper-border: #bfd3ce;
+  --letterhead-primary: #174f59;
+  --letterhead-secondary: #d36f64;
+  --letterhead-soft: #eef5f3;
   --shadow-soft: 0 10px 32px -18px color-mix(in oklab, var(--primary) 24%, transparent);
   --shadow-card: 0 5px 18px -12px color-mix(in oklab, var(--primary) 16%, transparent);
 }
@@ -233,7 +236,7 @@ select {
     left: 0;
     height: 3px;
     content: "";
-    background: linear-gradient(90deg, #0d5269 0 70%, #159b88 70% 100%);
+    background: linear-gradient(90deg, var(--letterhead-primary) 0 78%, var(--letterhead-secondary) 78% 100%);
   }
 }
 html {
@@ -382,7 +385,7 @@ textarea {
 
 
 @media print {
-  @page { size: A4 portrait; margin: 10mm; }
+  @page { size: A4 portrait; margin: 8mm; }
   html, body { width: 100%; overflow: visible; background: #fff; }
   .app-shell > aside,
   .app-shell > header,
@@ -391,7 +394,8 @@ textarea {
   .app-shell main > nav { display: none; }
   .app-shell { display: block; min-height: 0; background: #fff; }
   .app-shell main { width: 100%; max-width: none; padding: 0; overflow: visible; }
-  .record-pdf-document { width: 100%; margin: 0; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+  .record-pdf-document { width: 100%; max-width: 194mm; margin: 0 auto; border: 0; border-radius: 0; box-shadow: none; overflow: visible; background: var(--paper); color: var(--paper-foreground); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .official-letterhead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .record-pdf-document .overflow-x-auto { width: 100%; overflow: visible; margin: 0; padding: 0; }
   .record-pdf-document table { width: 100%; min-width: 0; table-layout: auto; border-collapse: collapse; }
   .record-pdf-document thead { display: table-header-group; }
