@@ -61,7 +61,7 @@ function InterviewsPage() {
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat title="جلسات هذا الشهر" value={monthSessions.length} icon={<MessageSquare className="size-4" />} />
         <Stat title="متابعات مستحقة" value={dueFollowups.length} icon={<CalendarClock className="size-4" />} />
-        <Stat title="مواعيد قادمة" value={upcoming.length} icon={<CheckCircle2 className="size-4" />} />
+        <Stat title="مواعيد قادمة" value={upcomingAll.length} icon={<CheckCircle2 className="size-4" />} />
         <Stat title="جلسات بتوصيات" value={withRecommendations} icon={<ClipboardList className="size-4" />} />
       </section>
 
