@@ -45,7 +45,25 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+
   useEffect(() => {
+    const message = String(error?.message || error);
+    const isStaleDeploymentAsset =
+      /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|Loading chunk|Failed to load module script/i.test(
+        message,
+      );
+
+    if (isStaleDeploymentAsset) {
+      const recoveryKey = "athat:deployment-recovery";
+      if (sessionStorage.getItem(recoveryKey) !== "1") {
+        sessionStorage.setItem(recoveryKey, "1");
+        window.location.reload();
+        return;
+      }
+    } else {
+      sessionStorage.removeItem("athat:deployment-recovery");
+    }
+
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
