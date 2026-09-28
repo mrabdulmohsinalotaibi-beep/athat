@@ -96,7 +96,7 @@ export const RECORDS: RecordConfig[] = [
       { name: "seq", label: "رقم", list: true },
       { name: "task", label: "المهمة/النشاط", list: true },
       { name: "domain", label: "المجال", type: "select", options: DOMAINS, list: true },
-      { name: "target_group", label: "الفئة المستهدفة" },
+      { name: "target_group", label: "الفئة المستهدفة", list: true },
       { name: "term", label: "الفصل الدراسي" },
       { name: "indicator", label: "المؤشر/المعيار" },
       { name: "exec_status", label: "حالة التنفيذ", type: "select", options: EXEC_STATUS, list: true },
