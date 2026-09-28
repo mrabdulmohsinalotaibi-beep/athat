@@ -21,6 +21,8 @@ import {
   FolderKanban,
   UserRound,
   Newspaper,
+  Home,
+  FileBarChart,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -66,17 +68,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="app-shell flex min-h-screen bg-background">
+    <div className="app-shell app-screen flex min-h-screen bg-background">
       {/* القائمة الجانبية */}
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300",
+          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-1 ring-2 ring-sidebar-primary/30">
+            <div className="brand-mark-well flex size-14 shrink-0 items-center justify-center rounded-lg p-1 ring-2 ring-sidebar-primary/30">
               <img src="/brand-logo.png" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
@@ -134,13 +136,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-20 border-b-2 border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
-          <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
-            <div className="flex items-center gap-3">
+          <div className="grid min-h-18 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 lg:px-8">
+            <div className="flex min-w-0 items-center gap-3">
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label="فتح القائمة الجانبية"
                 onClick={() => setOpen(true)}
+                className="lg:hidden"
               >
                 <Menu className="size-5" />
               </Button>
@@ -149,9 +152,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 alt="شعار الذات"
                 className="brand-mark-well hidden size-14 rounded-xl p-0.5 object-contain sm:block"
               />
-              <div>
-                <p className="text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
-                <p className="text-xs text-muted-foreground">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
+                <p className="truncate text-xs text-muted-foreground">
                   {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
                 </p>
               </div>
@@ -179,7 +182,22 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 p-4 lg:p-8">{children}</main>
+        <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">{children}</main>
+
+        <nav className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
+          {[
+            { to: "/dashboard" as const, label: "الرئيسية", icon: Home },
+            { to: "/students" as const, label: "الطلاب", icon: Users },
+            { to: "/plan" as const, label: "الخطة", icon: CalendarDays },
+            { to: "/reports" as const, label: "التقارير", icon: FileBarChart },
+            { to: "/messages" as const, label: "الرسائل", icon: MessagesSquare },
+          ].map(({ to, label, icon: Icon }) => (
+            <Link key={to} to={to} className={cn("flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground", pathname === to && "text-primary")}>
+              <Icon className="size-5" aria-hidden="true" />
+              <span>{label}</span>
+            </Link>
+          ))}
+        </nav>
 
         <footer className="no-print border-t px-4 py-4">
           <Copyright />

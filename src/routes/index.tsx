@@ -9,6 +9,8 @@ import {
   Megaphone,
   ShieldCheck,
   Sparkles,
+  BookOpen,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -38,9 +40,7 @@ export const Route = createFileRoute("/")({
           "خدمات إرشادية أكاديمية وسلوكية ومهنية ونفسية، واستمارات تصل مباشرة للموجه الطلابي.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/brand-logo.png" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "/brand-logo.png" },
     ],
     links: [
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
@@ -63,84 +63,52 @@ function Landing() {
 
   return (
     <PublicLayout>
-      <section className="border-b border-border/60 bg-gradient-to-bl from-primary/10 via-background to-accent/10">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-card px-3.5 py-1 text-xs font-bold text-primary">
-              <Sparkles className="size-3.5" />
-              {profile?.school_name
-                ? `التوجيه الطلابي · ${profile.school_name}`
-                : "نظام الإرشاد المدرسي"}
-            </span>
-            <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-              التوجيه الطلابي: رعاية الطالب نفسياً وسلوكياً وأكاديمياً ومهنياً.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
-              بوابة تعرّفك على خدمات التوجيه الطلابي في المدرسة، وتتيح لك طلب استشارة فردية أو إحالة
-              طالب أو الإبلاغ السري عن مشكلة، لتصل مباشرة إلى الموجه الطلابي.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button
-                asChild
-                size="lg"
-                className="h-12 gap-2 px-7 text-base font-bold shadow-lg shadow-primary/20"
-              >
-                <Link to="/forms/consultation">
-                  طلب استشارة فردية
-                  <ArrowLeft className="size-5" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="h-12 px-7 text-base font-semibold"
-              >
-                <Link to="/services">الخدمات الإرشادية</Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="h-12 gap-2 px-7 text-base font-bold"
-              >
-                <Link to="/auth" search={{ next: "/dashboard" }}>
-                  دخول الموجه الطلابي
-                  <ChevronLeft className="size-5" />
-                </Link>
-              </Button>
-            </div>
+      <section className="mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-8 sm:pt-12">
+        <div className="mb-6 flex items-center gap-4">
+          <img src="/brand-logo.png" alt="شعار الذات" className="brand-mark-well size-14 shrink-0 rounded-lg object-contain" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-muted-foreground">{profile?.school_name || "نظام الإرشاد المدرسي"}</p>
+            <h1 className="text-2xl font-black text-primary sm:text-3xl">الذات</h1>
           </div>
-
-          <div className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-xl">
-            <div className="flex items-center gap-3 border-b border-border/60 pb-4">
-              <Megaphone className="size-5 text-primary" />
-              <h2 className="font-bold">تنبيهات وإعلانات</h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex min-h-56 flex-col justify-between rounded-lg bg-primary p-6 text-primary-foreground sm:col-span-2 lg:row-span-2 lg:min-h-80 lg:p-8">
+            <div>
+              <p className="text-sm font-semibold text-primary-foreground/75">التوجيه الطلابي</p>
+              <h2 className="mt-4 max-w-xl text-2xl font-black leading-snug sm:text-3xl">مساحة آمنة لكل طالب، وخطوة أقرب إلى الدعم الذي يحتاجه.</h2>
             </div>
-            <p className="mt-4 whitespace-pre-wrap text-sm leading-8 text-muted-foreground">
-              {profile?.announcement ||
-                "لا توجد إعلانات جديدة حالياً. تابع هذه المساحة لمعرفة مواعيد البرامج الإرشادية والتنبيهات المهمة."}
-            </p>
-            <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-7">
-              <p className="font-bold text-primary">أوقات المقابلات</p>
-              <p className="mt-1 text-muted-foreground">
-                {profile?.office_hours ||
-                  "من الأحد إلى الخميس خلال الدوام المدرسي، ويفضّل الحجز المسبق."}
-              </p>
-            </div>
+            <Button asChild variant="secondary" className="mt-8 h-11 w-fit gap-2 px-5 font-bold">
+              <Link to="/forms/consultation">طلب استشارة فردية <ArrowLeft className="size-4" /></Link>
+            </Button>
+          </div>
+          <Link to="/services" className="group flex min-h-36 flex-col justify-between rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/40 sm:min-h-40">
+            <BookOpen className="size-6 text-primary" />
+            <span className="flex items-center justify-between gap-2 font-bold">الخدمات الإرشادية <ArrowLeft className="size-4 text-muted-foreground" /></span>
+          </Link>
+          <Link to="/forms" className="group flex min-h-36 flex-col justify-between rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/40 sm:min-h-40">
+            <FileText className="size-6 text-accent" />
+            <span className="flex items-center justify-between gap-2 font-bold">الاستمارات <ArrowLeft className="size-4 text-muted-foreground" /></span>
+          </Link>
+          <div className="flex min-h-36 flex-col justify-between rounded-lg border border-border bg-card p-5 sm:min-h-40">
+            <Megaphone className="size-6 text-accent" />
+            <div><h3 className="font-bold">تنبيهات وإعلانات</h3><p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs leading-6 text-muted-foreground">{profile?.announcement || "لا توجد إعلانات جديدة حالياً."}</p></div>
+          </div>
+          <div className="flex min-h-36 flex-col justify-between rounded-lg bg-secondary p-5 sm:min-h-40">
+            <Sparkles className="size-6 text-primary" />
+            <div><h3 className="font-bold">أوقات المقابلات</h3><p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">{profile?.office_hours || "تواصل مع الموجه الطلابي لترتيب الموعد."}</p></div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-8">
         <div className="grid gap-5 lg:grid-cols-2">
-          <article className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
+          <article className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-primary">رؤيتنا</h2>
             <p className="mt-3 text-sm leading-8 text-muted-foreground">
               {profile?.vision || DEFAULT_VISION}
             </p>
           </article>
-          <article className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
+          <article className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-primary">رسالتنا</h2>
             <p className="mt-3 text-sm leading-8 text-muted-foreground">
               {profile?.mission || DEFAULT_MISSION}
@@ -149,13 +117,13 @@ function Landing() {
         </div>
       </section>
 
-      <section className="border-y border-border/60 bg-muted/20 py-16">
+      <section className="border-y border-border/60 bg-secondary/30 py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-8">
           <h2 className="text-3xl font-black tracking-tight">الخدمات الإرشادية</h2>
           <p className="mt-3 max-w-2xl text-sm leading-8 text-muted-foreground">
             أربعة مجالات إرشادية متكاملة تغطي احتياجات الطالب داخل المدرسة.
           </p>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {GUIDANCE_SERVICES.map((service) => {
               const Icon = SERVICE_ICONS[service.slug] ?? GraduationCap;
               return (
@@ -163,9 +131,9 @@ function Landing() {
                   key={service.slug}
                   to="/services"
                   hash={service.slug}
-                  className="group rounded-2xl border border-border/70 bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg"
+                  className="group rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/50 sm:p-6"
                 >
-                  <span className="mb-5 inline-flex rounded-xl bg-primary/10 p-3 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <span className="mb-5 inline-flex rounded-md bg-secondary p-3 text-primary">
                     <Icon className="size-5" />
                   </span>
                   <h3 className="text-lg font-bold">{service.title}</h3>
@@ -177,7 +145,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-8">
         <h2 className="text-3xl font-black tracking-tight">الاستمارات التفاعلية</h2>
         <p className="mt-3 max-w-2xl text-sm leading-8 text-muted-foreground">
           كل استمارة تصل مباشرة إلى صندوق الطلبات في لوحة تحكم الموجه الطلابي.
@@ -187,7 +155,7 @@ function Landing() {
             <Link
               key={form.to}
               to={form.to}
-              className="group rounded-2xl border border-border/70 bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg"
+              className="group rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/50"
             >
               <span className="rounded-full bg-accent/20 px-2.5 py-1 text-[11px] font-bold text-accent-foreground">
                 {form.audience}
@@ -212,9 +180,7 @@ function Landing() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-8">
-        <div className="relative overflow-hidden rounded-[2rem] bg-primary px-6 py-12 text-center text-primary-foreground shadow-2xl sm:px-12 sm:py-16">
-          <div className="absolute -bottom-24 -left-16 size-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -right-20 -top-24 size-72 rounded-full bg-accent/20 blur-3xl" />
+        <div className="relative overflow-hidden rounded-lg bg-primary px-6 py-12 text-center text-primary-foreground sm:px-12 sm:py-16">
           <div className="relative">
             <p className="text-sm font-semibold text-primary-foreground/80">للموجه الطلابي</p>
             <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-black leading-tight sm:text-4xl">

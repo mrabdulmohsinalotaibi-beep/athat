@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Cairo Variable", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans Arabic", "Manrope", "Cairo Variable", system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -64,47 +64,47 @@
   --radius: 0.5rem;
 
   /* هوية بصرية مستوحاة من النموذج المرفق: أزرق التعليم + أخضر تركوازي */
-  --background: #f7f4ef;
-  --foreground: #302820;
+  --background: #f6f8f6;
+  --foreground: #163f49;
   --card: #ffffff;
-  --card-foreground: #302820;
+  --card-foreground: #163f49;
   --popover: #ffffff;
-  --popover-foreground: #302820;
-  --primary: #1f5964;
-  --primary-foreground: #fffaf3;
-  --secondary: #eee5d9;
-  --secondary-foreground: #4c3a2c;
-  --muted: #eee9e1;
-  --muted-foreground: #756b61;
-  --accent: #c0925d;
-  --accent-foreground: #3a2b20;
+  --popover-foreground: #163f49;
+  --primary: #163f49;
+  --primary-foreground: #f6f8f6;
+  --secondary: #dde9e4;
+  --secondary-foreground: #163f49;
+  --muted: #edf3f0;
+  --muted-foreground: #567078;
+  --accent: #d16d63;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.99 0.01 80);
-  --border: #dfd4c6;
-  --input: #cdbba7;
-  --ring: #1f5964;
-  --chart-1: #1f5964;
-  --chart-2: #c0925d;
-  --chart-3: #6b5b4d;
-  --chart-4: #8bb9ae;
-  --chart-5: #315f68;
-  --sidebar: #283b3f;
-  --sidebar-foreground: #f6f0e7;
-  --sidebar-primary: #e2b77e;
-  --sidebar-primary-foreground: #2d2822;
-  --sidebar-accent: #37565a;
-  --sidebar-accent-foreground: #fffaf3;
-  --sidebar-border: #47666a;
-  --sidebar-ring: #e2b77e;
-  --brand-mark-surface: #eee4d6;
-  --brand-mark-border: rgb(192 146 93 / 0.35);
+  --border: #dde9e4;
+  --input: #b6cbc5;
+  --ring: #163f49;
+  --chart-1: #163f49;
+  --chart-2: #d16d63;
+  --chart-3: #567078;
+  --chart-4: #dde9e4;
+  --chart-5: #6b9d8f;
+  --sidebar: #163f49;
+  --sidebar-foreground: #f6f8f6;
+  --sidebar-primary: #f0aaa2;
+  --sidebar-primary-foreground: #163f49;
+  --sidebar-accent: #275661;
+  --sidebar-accent-foreground: #f6f8f6;
+  --sidebar-border: #3b6670;
+  --sidebar-ring: #f0aaa2;
+  --brand-mark-surface: #dde9e4;
+  --brand-mark-border: #b6cbc5;
   --paper: #fffefc;
   --paper-foreground: #302820;
   --paper-muted: #f2ede5;
   --paper-muted-foreground: #71665b;
   --paper-border: #d0c2b1;
-  --shadow-soft: 0 10px 32px -18px rgb(48 40 32 / 0.24);
-  --shadow-card: 0 5px 18px -12px rgb(48 40 32 / 0.16);
+  --shadow-soft: 0 10px 32px -18px color-mix(in oklab, var(--primary) 24%, transparent);
+  --shadow-card: 0 5px 18px -12px color-mix(in oklab, var(--primary) 16%, transparent);
 }
 
 .dark {
@@ -210,11 +210,7 @@
 
 @layer components {
   .dashboard-shell {
-    background: radial-gradient(
-      circle at 85% 0%,
-      color-mix(in oklab, var(--accent) 55%, transparent),
-      transparent 28rem
-    );
+    background: transparent;
   }
 
   .dashboard-panel {

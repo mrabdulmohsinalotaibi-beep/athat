@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LogIn, Menu, X } from "lucide-react";
+import { BookOpen, FileText, Home, LogIn, Menu, MessageCircle, X } from "lucide-react";
 
 import { Copyright } from "@/components/Copyright";
 import { Button } from "@/components/ui/button";
@@ -30,17 +30,17 @@ export function PublicLayout({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
-    <div dir="rtl" className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+    <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-card/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
               src="/brand-logo.png"
               alt="شعار الذات"
-              className="brand-mark-well size-11 rounded-xl object-contain"
+              className="brand-mark-well size-11 rounded-lg object-contain"
             />
             <div>
-              <p className="text-lg font-black tracking-tight text-primary sm:text-xl">الذات</p>
+              <p className="text-lg font-black text-primary sm:text-xl">الذات</p>
               <p className="text-[10px] font-medium text-muted-foreground sm:text-xs">
                 {profile?.school_name
                   ? `التوجيه الطلابي · ${profile.school_name}`
@@ -58,8 +58,8 @@ export function PublicLayout({
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "transition-colors hover:text-primary",
-                  pathname === item.to && "text-primary",
+                  "rounded-md px-2 py-2 transition-colors hover:bg-muted hover:text-primary",
+                  pathname === item.to && "bg-secondary text-primary",
                 )}
               >
                 {item.label}
@@ -108,7 +108,7 @@ export function PublicLayout({
                     to={item.to}
                     onClick={() => setMenuOpen(false)}
                     className={cn(
-                      "block rounded-lg px-3 py-2 hover:bg-muted",
+                    "block rounded-md px-3 py-2 hover:bg-muted",
                       pathname === item.to && "bg-primary/10 text-primary",
                     )}
                   >
@@ -132,9 +132,9 @@ export function PublicLayout({
       </header>
 
       {title && (
-        <section className="border-b border-border/60 bg-muted/30">
-          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-8 sm:py-14">
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{title}</h1>
+        <section className="border-b border-border/60 bg-secondary/40">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-8 sm:py-10">
+            <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
             {subtitle && (
               <p className="mt-3 max-w-3xl text-sm leading-8 text-muted-foreground sm:text-base">
                 {subtitle}
@@ -144,9 +144,24 @@ export function PublicLayout({
         </section>
       )}
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-20 lg:pb-0">{children}</main>
 
-      <footer className="border-t border-border/60 bg-muted/20">
+      <nav className="no-print fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
+        {[
+          { to: "/" as const, label: "الرئيسية", icon: Home },
+          { to: "/services" as const, label: "الخدمات", icon: BookOpen },
+          { to: "/forms" as const, label: "الاستمارات", icon: FileText },
+          { to: "/contact" as const, label: "التواصل", icon: MessageCircle },
+          { to: "/auth" as const, label: "حسابي", icon: LogIn },
+        ].map(({ to, label, icon: Icon }) => (
+          <Link key={to} to={to} {...(to === "/auth" ? { search: { next: "/dashboard" } } : {})} className={cn("flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground", pathname === to && "text-primary")}>
+            <Icon className="size-5" aria-hidden="true" />
+            <span>{label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      <footer className="border-t border-border/60 bg-card">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-3">
           <div>
             <p className="text-lg font-black text-primary">الذات</p>
