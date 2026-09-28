@@ -60,6 +60,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 const today = () => new Date().toISOString().slice(0, 10);
+const EMPTY_LABEL = "لا توجد بيانات بعد";
 
 type FeedbackSummary = {
   id: string;
@@ -131,7 +132,7 @@ const COLORS = [
 
 function Dashboard() {
   const { data: school } = useSchool();
-  const { data, isLoading } = useDashboard();
+  const { data, isLoading, isError, refetch } = useDashboard();
 
   const day = today();
   const students = data?.students ?? [];
@@ -357,6 +358,29 @@ function Dashboard() {
       tone: "text-sky-700 bg-sky-500/10",
     },
   ];
+
+  if (isError) {
+    return (
+      <div className="mx-auto flex min-h-[55vh] max-w-xl items-center justify-center px-4 dir-rtl">
+        <div className="w-full rounded-3xl border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+            <AlertTriangle className="size-7" />
+          </div>
+          <h1 className="text-xl font-black">تعذر تحميل لوحة العمل</h1>
+          <p className="mt-2 text-sm leading-7 text-muted-foreground">
+            حدث خطأ مؤقت أثناء قراءة بيانات المنصة. أعد المحاولة، ولن تتأثر السجلات المحفوظة.
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-shell space-y-4 dir-rtl">
