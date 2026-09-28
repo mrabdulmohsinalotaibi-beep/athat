@@ -132,7 +132,8 @@ function PublicLinkCard() {
     queryFn: async () => {
       const { data: u, error: authError } = await supabase.auth.getUser();
       if (authError || !u.user) throw authError || new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا.");
-      const { data } = await (supabase as any).from("school_settings").select("id,private_blog_token").eq("user_id", u.user?.id ?? "").order("created_at").limit(1).maybeSingle();
+      const { data, error } = await (supabase as any).from("school_settings").select("id,private_blog_token").eq("user_id", u.user.id).order("created_at").limit(1).maybeSingle();
+      if (error) throw error;
       return data;
     },
   });
