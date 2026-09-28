@@ -71,6 +71,7 @@ function ReportsPage() {
   const [reportMode, setReportMode] = useState<"single" | "combined">("single");
   const [selectedSingleKey, setSelectedSingleKey] = useState("programs");
   const [period, setPeriod] = useState("");
+  const [documentNo, setDocumentNo] = useState("");
   const [reportTitle, setReportTitle] = useState("تقرير تنفيذ أعمال التوجيه الطلابي");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -151,11 +152,25 @@ function ReportsPage() {
     setSelectedKeys([]);
   }
 
+  function applyPreset(keys: string[], title: string) {
+    setReportMode("combined");
+    setSelectedKeys(keys.filter((key) => reportableRecords.some((record) => record.key === key)));
+    setReportTitle(title);
+    toast.success("تم تجهيز حزمة المستندات.");
+  }
+
+  const documentPresets = [
+    { title: "ملف التنفيذ", description: "الخطة + البرامج + الشواهد", keys: ["plan", "programs", "evidences"] },
+    { title: "ملف متابعة الطلاب", description: "الطلاب + الحالات + الجلسات + الإحالات", keys: ["students", "cases", "interviews", "referrals"] },
+    { title: "الملف الشامل", description: "جميع السجلات المتاحة في مستند واحد", keys: reportableRecords.map((record) => record.key) },
+  ];
+
   function reset() {
     setReportMode("single");
     setSelectedSingleKey("programs");
     setReportTitle("تقرير تنفيذ أعمال التوجيه الطلابي");
     setPeriod("");
+    setDocumentNo("");
     setFromDate("");
     setToDate("");
     setNarrative("");
@@ -203,6 +218,21 @@ function ReportsPage() {
               إعادة ضبط
             </Button>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 shadow-sm">
+        <div className="mb-3">
+          <h2 className="font-black">حزم مستندات جاهزة</h2>
+          <p className="mt-1 text-xs text-muted-foreground">اختر حزمة ثم عدّل السجلات أو الفترة قبل إنشاء PDF.</p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {documentPresets.map((preset) => (
+            <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-xl border bg-card p-4 text-right transition hover:border-primary hover:bg-primary/5">
+              <p className="font-black">{preset.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{preset.description}</p>
+            </button>
+          ))}
         </div>
       </section>
 
@@ -302,7 +332,11 @@ function ReportsPage() {
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label htmlFor="report-document-no">رقم المستند</Label>
+              <input id="report-document-no" value={documentNo} onChange={(event) => setDocumentNo(event.target.value)} placeholder="اختياري" className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" />
+            </div>
             <div>
               <Label htmlFor="report-period">الفترة</Label>
               <input
@@ -379,6 +413,7 @@ function ReportsPage() {
           school={school}
           title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"}
           reportType="تقرير رسمي"
+          reportNo={documentNo || undefined}
           period={period || undefined}
         />
 
