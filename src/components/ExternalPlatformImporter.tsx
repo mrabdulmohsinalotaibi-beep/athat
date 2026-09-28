@@ -82,13 +82,14 @@ export function ExternalPlatformImporter() {
       const firstRow = rows[0]!;
       const headers = Object.keys(firstRow);
       const mapping = autoMap(headers);
-      const records = rows.map((row) => {
+      const records = rows.map((row, index) => {
         const value = (field: string) => {
           const header = mapping[field] || "";
-          return header ? row[header] || "" : "";
+          return header ? String(row[header] ?? "").trim() : "";
         };
         return {
-          full_name: value("full_name") || "بيانات مستوردة بدون اسم",
+          rowNumber: index + 2,
+          full_name: value("full_name"),
           national_id: cleanId(value("national_id")),
           stage: value("stage") || null,
           grade: value("grade") || null,
@@ -97,10 +98,44 @@ export function ExternalPlatformImporter() {
           guardian_phone: cleanPhone(value("guardian_phone")),
         };
       });
-      const { error } = await supabase.from("students").insert(records);
+
+      const invalid = records.filter((record) => !record.full_name || record.national_id.length < 10);
+      if (invalid.length) {
+        throw new Error(
+          `يوجد ${invalid.length} صف غير مكتمل. يجب توفر اسم الطالب ورقم هوية صحيح من 10 أرقام.`,
+        );
+      }
+
+      const seen = new Set<string>();
+      const duplicateInFile = records.filter((record) => {
+        if (seen.has(record.national_id)) return true;
+        seen.add(record.national_id);
+        return false;
+      });
+      if (duplicateInFile.length) {
+        throw new Error(`يوجد تكرار لرقم الهوية داخل الملف (${duplicateInFile.length} صف).`);
+      }
+
+      const nationalIds = records.map((record) => record.national_id);
+      const { data: existing, error: existingError } = await supabase
+        .from("students")
+        .select("national_id")
+        .in("national_id", nationalIds);
+      if (existingError) throw existingError;
+
+      const existingIds = new Set((existing ?? []).map((item) => item.national_id));
+      const newRecords = records
+        .filter((record) => !existingIds.has(record.national_id))
+        .map(({ rowNumber: _rowNumber, ...record }) => record);
+
+      if (!newRecords.length) {
+        throw new Error("جميع الطلاب الموجودين في الملف مسجلون مسبقًا.");
+      }
+
+      const { error } = await supabase.from("students").insert(newRecords);
       if (error) throw new Error(error.message);
-      toast.success(`تم حفظ ${records.length} سجل طالب.`);
-      setMessage(`نجح الحفظ: ${records.length} سجل.`);
+      toast.success(`تم حفظ ${newRecords.length} سجل طالب، وتجاوز ${records.length - newRecords.length} سجل مكرر.`);
+      setMessage(`نجح الحفظ: ${newRecords.length} سجل جديد، وتم تجاوز ${records.length - newRecords.length} مكرر.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر حفظ البيانات");
     } finally {
