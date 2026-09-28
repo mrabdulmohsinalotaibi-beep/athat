@@ -39,7 +39,7 @@ function PlanPage() {
   const day = new Date().toISOString().slice(0, 10);
   const done = tasks.filter((task) => task.exec_status === "مكتمل").length;
   const late = tasks.filter((task) => task.due_date && String(task.due_date) < day && task.exec_status !== "مكتمل").length;
-  const documented = tasks.filter((task) => task.doc_status === "مكتمل").length;
+  const documented = tasks.filter((task) => task.doc_status === "معتمد").length;
   const linkedPrograms = new Set(programs.filter((program) => program.plan_task_id).map((program) => String(program.plan_task_id))).size;
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
 
