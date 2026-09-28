@@ -25,11 +25,11 @@ export function WorkspaceSectionLauncher() {
             مسارات عمل الموجه
           </h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            أدوات الحساب والخدمات الإضافية موجودة في «المزيد».
+            افتح كل مسار للوصول إلى سجلاته وأدواته المرتبطة.
           </p>
         </div>
         <span className="rounded-full bg-primary/5 px-3 py-1 text-[11px] font-bold text-primary">
-          {primarySections.length} أقسام
+          {primarySections.length} مسارات
         </span>
       </div>
       <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">

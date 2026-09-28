@@ -4,12 +4,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   CalendarDays,
   ChevronDown,
-  FileBarChart,
-  Home,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
   Menu,
-  MessagesSquare,
+  Settings,
   UserRound,
   Users,
 } from "lucide-react";
@@ -27,6 +26,14 @@ function isPathActive(pathname: string, route: string) {
 
 
 
+const bottomNavigation = [
+  { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+  { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases", "/attendance", "/behavior", "/referrals", "/requests"] },
+  { to: "/interviews", label: "الجلسات", icon: CalendarDays, activeRoutes: ["/interviews", "/calendar", "/messages"] },
+  { to: "/programs", label: "البرامج والخطط", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/committees", "/evidences", "/weekly-poster", "/posts"] },
+  { to: "/settings", label: "الإعدادات", icon: Settings, activeRoutes: ["/settings", "/reports", "/toolkit", "/integrations", "/profile", "/subscription"] },
+] as const;
+
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: school } = useSchool();
   const navigate = useNavigate();
@@ -34,6 +41,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const currentSection = WORKSPACE_SECTIONS.find((section) =>
+    section.items.some((item) => isPathActive(pathname, item.to)),
+  );
 
   useEffect(() => {
     setOpen(false);
@@ -232,21 +242,60 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">{children}</main>
+        <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
+          {currentSection && (
+            <nav
+              className="no-print mb-4 -mx-4 -mt-4 border-b bg-card/70 px-4 py-2 lg:hidden"
+              aria-label={"روابط " + currentSection.title}
+            >
+              <div className="flex min-w-0 gap-2 overflow-x-auto">
+                {currentSection.items.map((item) => {
+                  const ItemIcon = item.icon;
+                  const isActive = isPathActive(pathname, item.to);
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setOpen(false)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                        isActive ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:bg-accent",
+                      )}
+                    >
+                      <ItemIcon className="size-3.5" aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+          )}
+          {children}
+        </main>
 
-        <nav className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
-          {[
-            { to: "/dashboard" as const, label: "الرئيسية", icon: Home },
-            { to: "/students" as const, label: "الطلاب", icon: Users },
-            { to: "/plan" as const, label: "الخطة", icon: CalendarDays },
-            { to: "/reports" as const, label: "التقارير", icon: FileBarChart },
-            { to: "/messages" as const, label: "الرسائل", icon: MessagesSquare },
-          ].map(({ to, label, icon: Icon }) => (
-            <Link key={to} to={to} className={cn("flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground", pathname === to && "text-primary")}>
-              <Icon className="size-5" aria-hidden="true" />
-              <span>{label}</span>
-            </Link>
-          ))}
+        <nav
+          className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden"
+          aria-label="التنقل الرئيسي"
+        >
+          {bottomNavigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.activeRoutes.some((route) => isPathActive(pathname, route));
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] font-semibold leading-3 transition",
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="size-5" aria-hidden="true" />
+                <span className="max-w-full whitespace-normal">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <footer className="no-print border-t px-4 py-4">
