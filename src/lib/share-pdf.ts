@@ -21,12 +21,13 @@ function safeFilename(value: string) {
  * Falls back to downloading the PDF when file sharing is unavailable.
  */
 export async function createPdfFile({ element, filename }: Pick<SharePdfOptions, "element" | "filename">) {
+  const scale = Math.min(2, window.devicePixelRatio || 1);
   const canvas = await html2canvas(element, {
-    scale: Math.min(2, window.devicePixelRatio || 1),
+    scale,
     useCORS: true,
     backgroundColor: "#ffffff",
     logging: false,
-    windowWidth: element.scrollWidth,
+    windowWidth: Math.max(element.scrollWidth, element.clientWidth),
     ignoreElements: (node) =>
       node instanceof HTMLElement && node.dataset.pdfExclude === "true",
   });
@@ -44,23 +45,67 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
   const contentWidth = pageWidth - margin * 2;
   const contentHeight = pageHeight - margin * 2;
   const imageWidth = contentWidth;
-  const imageHeight = (canvas.height * imageWidth) / canvas.width;
+  const pixelsPerMm = canvas.width / imageWidth;
 
-  let offset = 0;
+  const header = element.querySelector<HTMLElement>(".official-letterhead");
+  const footer = element.querySelector<HTMLElement>(".final-signatures");
+  let headerCanvas: HTMLCanvasElement | null = null;
+  let headerHeightMm = 0;
+  let headerBottomPx = 0;
+  let footerTopPx = Number.POSITIVE_INFINITY;
+
+  if (header) {
+    headerCanvas = await html2canvas(header, {
+      scale,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      windowWidth: Math.max(element.scrollWidth, element.clientWidth),
+      ignoreElements: (node) =>
+        node instanceof HTMLElement && node.dataset.pdfExclude === "true",
+    });
+    headerHeightMm = (headerCanvas.height * imageWidth) / headerCanvas.width;
+    const elementRect = element.getBoundingClientRect();
+    const headerRect = header.getBoundingClientRect();
+    headerBottomPx = Math.max(
+      0,
+      Math.round((headerRect.bottom - elementRect.top) * pixelsPerMm),
+    );
+  }
+
+  if (footer) {
+    const elementRect = element.getBoundingClientRect();
+    const footerRect = footer.getBoundingClientRect();
+    footerTopPx = Math.max(
+      0,
+      Math.round((footerRect.top - elementRect.top) * pixelsPerMm),
+    );
+  }
+
+  let sourceY = 0;
   let page = 0;
 
-  while (offset < imageHeight) {
+  while (sourceY < canvas.height - 1) {
     if (page > 0) pdf.addPage();
 
-    const sourceY = Math.floor((offset / imageHeight) * canvas.height);
-    const sourceHeight = Math.min(
-      canvas.height - sourceY,
-      Math.floor((contentHeight / imageHeight) * canvas.height),
-    );
+    const repeatedHeader = page > 0 && headerCanvas;
+    const bodyTopMm = margin + (repeatedHeader ? headerHeightMm : 0);
+    const availableMm = contentHeight - (repeatedHeader ? headerHeightMm : 0);
+    const availablePx = Math.max(1, Math.floor(availableMm * pixelsPerMm));
+
+    let sourceHeight = Math.min(canvas.height - sourceY, availablePx);
+
+    // Keep the final signature block together and only show it on the last page.
+    if (footerTopPx > sourceY && footerTopPx < sourceY + sourceHeight) {
+      const beforeFooter = footerTopPx - sourceY;
+      if (beforeFooter > pixelsPerMm * 12) {
+        sourceHeight = beforeFooter;
+      }
+    }
 
     const pageCanvas = document.createElement("canvas");
     pageCanvas.width = canvas.width;
-    pageCanvas.height = sourceHeight;
+    pageCanvas.height = Math.max(1, sourceHeight);
     const context = pageCanvas.getContext("2d");
     if (!context) throw new Error("تعذّر تجهيز صفحة PDF.");
 
@@ -78,24 +123,46 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
       sourceHeight,
     );
 
-    const pageImageHeight = (sourceHeight * imageWidth) / canvas.width;
-    pdf.addImage(pageCanvas.toDataURL("image/jpeg", 0.92), "JPEG", margin, margin, imageWidth, pageImageHeight);
-    offset += contentHeight;
+    if (repeatedHeader && headerCanvas) {
+      const headerImageHeight = headerHeightMm;
+      pdf.addImage(
+        headerCanvas.toDataURL("image/png"),
+        "PNG",
+        margin,
+        margin,
+        imageWidth,
+        headerImageHeight,
+      );
+      const bodyImageHeight = (sourceHeight * imageWidth) / canvas.width;
+      pdf.addImage(
+        pageCanvas.toDataURL("image/jpeg", 0.92),
+        "JPEG",
+        margin,
+        bodyTopMm,
+        imageWidth,
+        Math.min(availableMm, bodyImageHeight),
+      );
+    } else {
+      const pageImageHeight = (sourceHeight * imageWidth) / canvas.width;
+      pdf.addImage(
+        pageCanvas.toDataURL("image/jpeg", 0.92),
+        "JPEG",
+        margin,
+        margin,
+        imageWidth,
+        Math.min(contentHeight, pageImageHeight),
+      );
+    }
+
+    sourceY += sourceHeight;
     page += 1;
   }
 
-  if (!page) {
-    pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", margin, margin, imageWidth, Math.min(contentHeight, imageHeight));
-  }
-
   const blob = pdf.output("blob");
-  const file = new File([blob], safeFilename(filename) + ".pdf", {
+  return new File([blob], safeFilename(filename) + ".pdf", {
     type: "application/pdf",
   });
-
-  return file;
 }
-
 export async function sharePdfFile({ element, filename, title }: SharePdfOptions) {
   const file = await createPdfFile({ element, filename });
   if (typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
