@@ -174,6 +174,13 @@ function ReportsPage() {
     (sum, record) => sum + (filteredSections[record.key]?.length ?? 0),
     0,
   );
+  const planRows = filteredSections.plan ?? [];
+  const programRows = filteredSections.programs ?? [];
+  const evidenceRows = filteredSections.evidences ?? [];
+  const planDone = planRows.filter((row) => String(row.exec_status ?? "") === "مكتمل").length;
+  const programDone = programRows.filter((row) => String(row.exec_status ?? "") === "مكتمل").length;
+  const planProgress = planRows.length ? Math.round((planDone / planRows.length) * 100) : 0;
+  const programProgress = programRows.length ? Math.round((programDone / programRows.length) * 100) : 0;
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
@@ -366,7 +373,7 @@ function ReportsPage() {
 
       <div
         ref={reportRef}
-        className="reports-preview mx-auto mt-6 rounded-xl border bg-paper p-5 text-paper-foreground shadow-sm sm:p-8"
+        className="record-pdf-document reports-preview mx-auto mt-6 rounded-xl border bg-paper p-5 text-paper-foreground shadow-sm sm:p-8"
       >
         <OfficialHeader
           school={school}
@@ -398,6 +405,21 @@ function ReportsPage() {
             </div>
           </section>
 
+          {reportMode === "combined" && (
+            <section className="mt-6 break-inside-avoid">
+              <h2 className="mb-3 border-r-4 border-[var(--letterhead-primary)] pr-3 text-base font-black">الملخص التنفيذي للتنفيذ</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <ReportStat label="إنجاز الخطة" value={`${planProgress}%`} />
+                <ReportStat label="البرامج المنفذة" value={`${programDone} / ${programRows.length}`} />
+                <ReportStat label="إنجاز البرامج" value={`${programProgress}%`} />
+                <ReportStat label="الشواهد الموثقة" value={evidenceRows.length} />
+              </div>
+              <p className="mt-3 rounded-xl border border-paper-border bg-paper-muted p-3 text-xs leading-6">
+                يعرض هذا التقرير دورة التنفيذ من الخطة التشغيلية إلى البرامج والشواهد، وفق السجلات المختارة والنطاق الزمني المحدد أعلاه.
+              </p>
+            </section>
+          )}
+
           <section className="report-summary mt-6">
             <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
               ملخص مؤشرات الأداء
@@ -422,7 +444,7 @@ function ReportsPage() {
             const rows = filteredSections[record.key] ?? [];
             const columns = reportColumns(record.fields);
             return (
-              <section key={record.key} className="report-record-section mt-8">
+              <section key={record.key} className="report-record-section mt-8 break-before-auto">
                 <div className="mb-3 flex items-end justify-between gap-3 border-b-2 border-paper-border pb-2">
                   <h2 className="border-r-4 border-primary pr-3 text-base font-black">
                     {record.title}
