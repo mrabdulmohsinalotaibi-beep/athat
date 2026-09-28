@@ -18,11 +18,7 @@ import {
   Settings,
   LogOut,
   Menu,
-  ChevronDown,
   FolderKanban,
-  Crown,
-  Sparkles,
-  Inbox,
   UserRound,
   Newspaper,
 } from "lucide-react";
@@ -34,39 +30,12 @@ import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
 const NAV = [
-  { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
-  {
-    label: "الطلاب والسجلات الإرشادية",
-    icon: Users,
-    children: [
-      { to: "/students", label: "سجل الطلاب", icon: Users },
-      { to: "/cases", label: "الحالات الخاصة", icon: HeartHandshake },
-      { to: "/interviews", label: "المقابلات والتواصل", icon: MessagesSquare },
-      { to: "/attendance", label: "الحضور والمواظبة", icon: CalendarCheck },
-      { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert },
-      { to: "/referrals", label: "الإحالات", icon: Send },
-      { to: "/requests", label: "صندوق الطلبات", icon: Inbox },
-    ],
-  },
-  {
-    label: "الخطط والبرامج",
-    icon: FolderKanban,
-    children: [
-      { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList },
-      { to: "/programs", label: "البرامج والأنشطة", icon: CalendarDays },
-      { to: "/calendar", label: "التقويم والمتابعة", icon: CalendarDays },
-      { to: "/committees", label: "اللجان والاجتماعات", icon: Gavel },
-    ],
-  },
-  { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
-  { to: "/toolkit", label: "أدوات القياس والأرشيف", icon: FolderKanban },
-  { to: "/posts", label: "المنشورات العامة", icon: Newspaper },
-  { to: "/integrations", label: "مدرستي ونور", icon: Globe2 },
-  { to: "/weekly-poster", label: "التوجيه الطلابي الأسبوعي", icon: Sparkles },
-  { to: "/messages", label: "الآراء والرسائل", icon: Inbox },
-  { to: "/reports", label: "التقارير والإحصائيات", icon: FileText },
-  { to: "/subscription", label: "الاشتراك والترقية", icon: Crown },
-  { to: "/settings", label: "الإعدادات", icon: Settings },
+  { to: "/dashboard", label: "الرئيسية ومركز الأقسام", icon: LayoutDashboard },
+  { to: "/students", label: "السجلات الإرشادية", icon: Users },
+  { to: "/plan", label: "الخطط والبرامج", icon: FolderKanban },
+  { to: "/evidences", label: "التوثيق والتقارير", icon: FolderCheck },
+  { to: "/posts", label: "المحتوى والخدمات", icon: Newspaper },
+  { to: "/messages", label: "التواصل والحساب", icon: MessagesSquare },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -74,10 +43,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [expanded, setExpanded] = useState<string[]>([
-    "الطلاب والسجلات الإرشادية",
-    "الخطط والبرامج",
-  ]);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
@@ -123,64 +88,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <nav className="flex-1 space-y-1 p-3">
           {NAV.map((item) => {
             const Icon = item.icon;
-            if ("children" in item) {
-              const isOpen = expanded.includes(item.label);
-              const active = item.children.some((child) => pathname === child.to);
-              return (
-                <div key={item.label}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() =>
-                      setExpanded((v) =>
-                        isOpen ? v.filter((x) => x !== item.label) : [...v, item.label],
-                      )
-                    }
-                    className={cn(
-                      "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                      active && "text-sidebar-primary",
-                    )}
-                  >
-                    <Icon className="size-4 shrink-0" />
-                    <span className="flex-1 text-right">{item.label}</span>
-                    <ChevronDown
-                      className={cn("size-4 shrink-0 transition-transform", isOpen && "rotate-180")}
-                    />
-                  </Button>
-                  {isOpen && (
-                    <div className="mr-5 space-y-1 border-r border-sidebar-border pr-2">
-                      {item.children.map((child) => {
-                        const ChildIcon = child.icon;
-                        const isChildActive = pathname === child.to;
-                        return (
-                          <Link
-                            key={child.to}
-                            to={child.to}
-                            onClick={() => setOpen(false)}
-                            className={cn(
-                              "flex items-center gap-2 rounded-md px-3 py-2 text-xs hover:bg-sidebar-accent",
-                              isChildActive &&
-                                "bg-sidebar-accent font-semibold text-sidebar-primary",
-                            )}
-                          >
-                            <ChildIcon className="size-3.5 shrink-0" />
-                            <span>{child.label}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-            const isActive = pathname === item.to;
+            const isActive =
+              item.to === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
                 to={item.to}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-2.5 text-sm hover:bg-sidebar-accent",
+                  "flex items-center gap-3 rounded-lg border-r-2 border-transparent px-3 py-3 text-sm hover:bg-sidebar-accent",
                   isActive &&
                     "border-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-primary",
                 )}

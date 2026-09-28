@@ -42,6 +42,7 @@ import { CaseCenter } from "@/components/CaseCenter";
 import { DailyWorkLog } from "@/components/DailyWorkLog";
 import { GuidanceTemplates } from "@/components/GuidanceTemplates";
 import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
+import { WorkspaceSectionLauncher } from "@/components/WorkspaceSectionLauncher";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -373,6 +374,8 @@ function Dashboard() {
           );
         })}
       </div>
+
+      <WorkspaceSectionLauncher />
 
       <section className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
