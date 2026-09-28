@@ -48,6 +48,24 @@ export function PdfPreviewButton({
     }
   }
 
+  async function downloadDirect() {
+    if (file) {
+      downloadPdfFile(file);
+      return;
+    }
+    if (!elementRef.current || loading) return;
+    setLoading(true);
+    try {
+      const nextFile = await createPdfFile({ element: elementRef.current, filename });
+      downloadPdfFile(nextFile);
+      toast.success("تم تنزيل ملف PDF.");
+    } catch (error) {
+      toast.error((error as Error).message || "تعذّر تنزيل ملف PDF.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function share() {
     if (!file) return;
     try {
@@ -71,10 +89,16 @@ export function PdfPreviewButton({
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => void openPreview()} disabled={disabled || loading}>
-        {loading ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
-        {loading ? "جارٍ تجهيز المعاينة..." : "معاينة المستند"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => void openPreview()} disabled={disabled || loading}>
+          {loading ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
+          {loading ? "جارٍ تجهيز المعاينة..." : "معاينة المستند"}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => void downloadDirect()} disabled={disabled || loading}>
+          <Download className="size-4" />
+          تنزيل PDF
+        </Button>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent dir="rtl" className="h-[94vh] w-[96vw] max-w-6xl p-3 sm:p-5">
@@ -97,7 +121,7 @@ export function PdfPreviewButton({
               </div>
             )}
           </div>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="sticky bottom-0 z-10 gap-2 border-t bg-background/95 pt-3 backdrop-blur">
             <Button type="button" variant="outline" onClick={() => file && downloadPdfFile(file)} disabled={!file}>
               <Download className="size-4" /> تنزيل PDF
             </Button>
