@@ -49,7 +49,11 @@ export function useRecordAttachments(recordId: string | null) {
       if (error) throw error;
       const rows = data ?? [];
       const paths = rows.map((row) => String(row.file_path));
-      const signed = paths.length ? (await supabase.storage.from("evidences").createSignedUrls(paths, 3600)).data ?? [] : [];
+      const signedResult = paths.length
+        ? await supabase.storage.from("evidences").createSignedUrls(paths, 3600)
+        : { data: [], error: null };
+      if (signedResult.error) throw signedResult.error;
+      const signed = signedResult.data ?? [];
       return rows.map((row, index) => ({
         id: String(row.id),
         name: String(row.name ?? row.file_name ?? "مرفق"),
