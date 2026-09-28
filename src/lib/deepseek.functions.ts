@@ -89,9 +89,7 @@ export const generateSmartFill = createServerFn({ method: "POST" })
         : Object.entries(data.values)
             .filter(
               ([name, value]) =>
-                allowedContextNames.has(name) &&
-                !sensitiveFieldPattern.test(name) &&
-                value.trim(),
+                allowedContextNames.has(name) && !sensitiveFieldPattern.test(name) && value.trim(),
             )
             .slice(0, 30);
 
@@ -132,7 +130,9 @@ export const generateSmartFill = createServerFn({ method: "POST" })
       console.error("[DeepSeek] request failed", response.status, message);
 
       if (response.status === 401 || response.status === 403) {
-        throw new Error("مفتاح DeepSeek غير صحيح أو غير متاح للخدمة. تأكد من إضافة DEEPSEEK_API_KEY في Cloudflare ثم أعد نشر الموقع.");
+        throw new Error(
+          "مفتاح DeepSeek غير صحيح أو غير متاح للخدمة. تأكد من إضافة DEEPSEEK_API_KEY في Cloudflare ثم أعد نشر الموقع.",
+        );
       }
       if (response.status === 402) {
         throw new Error("حساب DeepSeek لا يملك رصيدًا كافيًا لاستخدام واجهة API.");
@@ -141,7 +141,9 @@ export const generateSmartFill = createServerFn({ method: "POST" })
         throw new Error("تم تجاوز حد طلبات DeepSeek مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى.");
       }
 
-      throw new Error("تعذّر الاتصال بخدمة DeepSeek. تأكد من DEEPSEEK_API_KEY وإعادة نشر الموقع بعد إضافته.");
+      throw new Error(
+        "تعذّر الاتصال بخدمة DeepSeek. تأكد من DEEPSEEK_API_KEY وإعادة نشر الموقع بعد إضافته.",
+      );
     }
 
     const payload = (await response.json()) as {
@@ -154,8 +156,6 @@ export const generateSmartFill = createServerFn({ method: "POST" })
       throw new Error(payload.error?.message || "لم تُرجع خدمة DeepSeek اقتراحات.");
     }
 
-    // DeepSeek normally returns strict JSON with response_format=json_object,
-    // but some deployments may still wrap it in a markdown code fence.
     const normalizedContent = rawContent
       .replace(/^\s*```(?:json)?\s*/i, "")
       .replace(/\s*```\s*$/i, "")
@@ -174,4 +174,86 @@ export const generateSmartFill = createServerFn({ method: "POST" })
     );
 
     return outputSchema.parse({ suggestions });
+  });
+
+const assistantInputSchema = z.object({
+  task: z.enum(["message", "plan", "next_steps"]),
+  audience: z.enum(["ولي أمر", "طالب", "معلم", "إدارة المدرسة", "الموجه الطلابي"]),
+  brief: z.string().min(5).max(3000),
+});
+const assistantOutputSchema = z.object({
+  answer: z.string().min(1).max(6000),
+  bullets: z.array(z.string().min(1).max(500)).max(8),
+});
+const ASSISTANT_SYSTEM_PROMPT = `أنت مساعد مهني للموجه الطلابي في المدارس السعودية.
+اكتب بالعربية الفصحى، وبأسلوب تربوي عملي قابل للمراجعة.
+لا تشخّص حالة نفسية أو طبية، ولا تقرر إجراءً نظاميًا نيابة عن المدرسة.
+لا تخترع أسماء أو تواريخ أو أرقامًا أو وقائع غير موجودة.
+إذا كان الطلب يتضمن خطرًا على سلامة طالب، أو إيذاءً، أو تنمرًا شديدًا، فنبّه إلى اتباع إجراءات الحماية والإحالة الرسمية فورًا.
+في الرسائل: اكتب نصًا مهنيًا قصيرًا قابلًا للنسخ.
+في الخطط: اكتب هدفًا وخطوات ومؤشر نجاح ومتابعة، مع اعتبارها مقترحات لا وقائع.
+في الخطوات التالية: رتّب إجراءات عملية مع تنبيه لما يحتاج توثيقًا أو إحالة.
+أعد JSON فقط بالشكل: {"answer":"...","bullets":["..."]}.`;
+
+function redactAssistantBrief(value: string) {
+  return value
+    .replace(/\b\d{8,}\b/g, "[بيانات رقمية محجوبة]")
+    .replace(/(?:\+?966|05)\s?\d[\d\s-]{6,}\d/g, "[رقم هاتف محجوب]")
+    .trim();
+}
+
+export const generateCounselorAssistant = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(assistantInputSchema)
+  .handler(async ({ data }) => {
+    const apiKey = process.env["DEEPSEEK_API_KEY"];
+    if (!apiKey) throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
+    const safeBrief = redactAssistantBrief(data.brief);
+    const taskLabel =
+      data.task === "message"
+        ? "صياغة رسالة"
+        : data.task === "plan"
+          ? "بناء خطة إرشادية"
+          : "اقتراح الخطوات التالية";
+    const userPrompt = JSON.stringify(
+      { نوع_المهمة: taskLabel, الجمهور: data.audience, وصف_منزوع_البيانات_الرقمية: safeBrief },
+      null,
+      2,
+    );
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: process.env["DEEPSEEK_MODEL"] || "deepseek-chat",
+        temperature: 0.3,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: ASSISTANT_SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403)
+        throw new Error("مفتاح DeepSeek غير صحيح أو غير متاح للخدمة.");
+      if (response.status === 402)
+        throw new Error("حساب DeepSeek لا يملك رصيدًا كافيًا لاستخدام الخدمة.");
+      if (response.status === 429)
+        throw new Error("تم تجاوز حد طلبات DeepSeek مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى.");
+      throw new Error("تعذّر الاتصال بخدمة DeepSeek. تحقق من إعداد المفتاح ثم حاول مرة أخرى.");
+    }
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+    const rawContent = payload.choices?.[0]?.message?.content?.trim();
+    if (!rawContent) throw new Error("لم تُرجع خدمة الذكاء الاصطناعي إجابة.");
+    const normalizedContent = rawContent
+      .replace(/^\s*```(?:json)?\s*/i, "")
+      .replace(/\s*```\s*$/i, "")
+      .trim();
+    try {
+      return assistantOutputSchema.parse(JSON.parse(normalizedContent));
+    } catch {
+      throw new Error("تعذّرت قراءة إجابة الذكاء الاصطناعي. حاول مرة أخرى.");
+    }
   });

@@ -41,6 +41,7 @@ import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { CaseCenter } from "@/components/CaseCenter";
 import { DailyWorkLog } from "@/components/DailyWorkLog";
 import { GuidanceTemplates } from "@/components/GuidanceTemplates";
+import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -60,6 +61,15 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+type FeedbackSummary = {
+  id: string;
+  sender_name: string;
+  category: string;
+  status: string;
+  assigned_to: string | null;
+  created_at: string;
+};
 
 function useDashboard() {
   return useQuery({
@@ -92,7 +102,7 @@ function useDashboard() {
           .select("id, exec_status, due_date, doc_status, task, created_at"),
         supabase.from("interviews").select("id, itype"),
         supabase.from("public_requests").select("id, kind, status, urgency, created_at"),
-        (supabase as any)
+        supabase
           .from("feedback_messages")
           .select("id, sender_name, category, status, assigned_to, created_at"),
       ]);
@@ -131,7 +141,7 @@ function Dashboard() {
   const behavior = data?.behavior ?? [];
   const programs = data?.programs ?? [];
   const calendar = data?.calendar ?? [];
-  const feedback = data?.feedback ?? [];
+  const feedback = (data?.feedback ?? []) as FeedbackSummary[];
 
   const activeCases = cases.filter((c) => c.case_status !== "مغلقة");
   const todayAbsence = attendance.filter((a) => a.adate === day);
@@ -141,7 +151,7 @@ function Dashboard() {
     .slice(0, 6);
   const overdue = activeCases.filter((c) => c.followup_at && String(c.followup_at) <= day);
   const donePrograms = programs.filter((p) => p.exec_status === "مكتمل");
-  const newFeedback = feedback.filter((item: any) => item.status === "جديد");
+  const newFeedback = feedback.filter((item) => item.status === "جديد");
   const publicRequests = data?.publicRequests ?? [];
   const newRequests = publicRequests.filter((item) => item.status === "جديد");
   const urgentRequests = publicRequests.filter(
@@ -151,7 +161,7 @@ function Dashboard() {
     (item) => item.kind === "إحالة طالب" && item.status === "جديد",
   );
   const assignedToCounselor = feedback.filter(
-    (item: any) =>
+    (item) =>
       (item.assigned_to || "الموجه الطلابي") === "الموجه الطلابي" && item.status !== "تم الرد",
   );
   const latePlanTasks = (data?.planTasks ?? []).filter(
@@ -433,6 +443,8 @@ function Dashboard() {
       <DailyWorkLog />
 
       <GuidanceTemplates />
+
+      <AiCounselorAssistant />
 
       {/* 4. KPI Performance Meter - قسم مؤشرات الأداء */}
       <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
