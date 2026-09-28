@@ -751,12 +751,13 @@ textarea {
     page-break-after: avoid;
   }
 
-  /* OfficialHeader is fixed so the ministry-style letterhead stays visible at
-     the top of every printed page. Reserve its physical height in the flow. */
+  /* Repeat the letterhead clearance on every printed page fragment. */
   .print-area:has(.print-repeat-header),
   .program-a4:has(.print-repeat-header),
   .electronic-template-sheet:has(.print-repeat-header) {
-    padding-top: 42mm !important;
+    padding-top: 70mm !important;
+    -webkit-box-decoration-break: clone !important;
+    box-decoration-break: clone !important;
   }
 
   .final-signatures {
