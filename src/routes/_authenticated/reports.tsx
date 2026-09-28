@@ -292,6 +292,51 @@ function ReportsPage() {
             </div>
           )}
 
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="report-period">الفترة</Label>
+              <input
+                id="report-period"
+                value={period}
+                onChange={(event) => setPeriod(event.target.value)}
+                placeholder="مثال: الفصل الدراسي الأول"
+                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="report-title">عنوان التقرير</Label>
+              <input
+                id="report-title"
+                value={reportTitle}
+                onChange={(event) => setReportTitle(event.target.value)}
+                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="report-from">من تاريخ</Label>
+              <input id="report-from" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" />
+            </div>
+            <div>
+              <Label htmlFor="report-to">إلى تاريخ</Label>
+              <input id="report-to" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="report-narrative">التحليل والملاحظات والتوصيات</Label>
+            <textarea
+              id="report-narrative"
+              value={narrative}
+              onChange={(event) => setNarrative(event.target.value)}
+              rows={4}
+              placeholder="اكتب الملاحظات أو التوصيات التي تريد ظهورها في التقرير الرسمي..."
+              className="mt-2 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm leading-7"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <ReportStat label="السجلات المختارة" value={selectedRecords.length} />
             <ReportStat label="إجمالي الصفوف" value={totalRows} />
