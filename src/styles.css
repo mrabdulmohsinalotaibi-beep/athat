@@ -396,6 +396,10 @@ textarea {
   .app-shell main { width: 100%; max-width: none; padding: 0; overflow: visible; }
   .record-pdf-document { width: 100%; max-width: 194mm; margin: 0 auto; border: 0; border-radius: 0; box-shadow: none; overflow: visible; background: var(--paper); color: var(--paper-foreground); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .official-letterhead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .record-pdf-document [data-radix-accordion-content] { display: block !important; height: auto !important; overflow: visible !important; }
+  .record-pdf-document [data-radix-accordion-trigger] svg { display: none; }
+  .record-pdf-document [data-radix-accordion-trigger] { pointer-events: none; }
+  .record-pdf-document .report-signatures { margin-top: 8mm; }
   .record-pdf-document .overflow-x-auto { width: 100%; overflow: visible; margin: 0; padding: 0; }
   .record-pdf-document table { width: 100%; min-width: 0; table-layout: auto; border-collapse: collapse; }
   .record-pdf-document thead { display: table-header-group; }
