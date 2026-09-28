@@ -115,6 +115,21 @@ export function StudentProfileDialog({
 
   const phone = normalizeSaudiPhone(student?.["guardian_phone"]);
   const motherPhone = normalizeSaudiPhone(student?.["mother_phone"]);
+  const cases = sections.cases ?? [];
+  const interviews = sections.interviews ?? [];
+  const activeCases = cases.filter((row) => !["مغلقة", "مغلق", "مكتمل"].includes(String(row["case_status"] ?? "")));
+  const today = new Date().toISOString().slice(0, 10);
+  const overdueFollowups = activeCases.filter((row) => {
+    const followup = String(row["followup_at"] ?? "").slice(0, 10);
+    return followup && followup <= today;
+  });
+  const latestActivity = LINKED_SECTIONS.flatMap((section) =>
+    (sections[section.key] ?? []).map((row) => ({
+      date: String(row[section.dateField] ?? row["created_at"] ?? ""),
+      label: recordByKey(section.key)?.title ?? section.key,
+      title: String(row[section.titleField] ?? ""),
+    })),
+  ).sort((a, b) => b.date.localeCompare(a.date, "ar"))[0];
 
   async function deleteRow(sectionKey: string, table: string, id: string) {
     if (!confirm("هل تريد حذف هذا السجل من ملف الطالب؟")) return;
@@ -214,6 +229,29 @@ export function StudentProfileDialog({
             })}
           </div>
 
+          {!isLoading && (
+            <section className="break-inside-avoid rounded-xl border border-paper-border bg-paper-muted p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <ClipboardList className="size-4 text-primary" />
+                <h3 className="text-sm font-black">ملخص المتابعة الإرشادية</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <FollowStat label="الحالات النشطة" value={activeCases.length} />
+                <FollowStat label="الجلسات" value={interviews.length} />
+                <FollowStat label="متابعات مستحقة" value={overdueFollowups.length} />
+                <FollowStat label="إجمالي السجلات" value={stats.reduce((sum, item) => sum + item.count, 0)} />
+              </div>
+              {latestActivity ? (
+                <p className="mt-3 text-xs leading-6 text-paper-muted-foreground">
+                  آخر نشاط مسجل: <strong className="text-paper-foreground">{latestActivity.label}</strong>
+                  {latestActivity.title ? ` — ${latestActivity.title}` : ""}.
+                </p>
+              ) : (
+                <p className="mt-3 text-xs text-paper-muted-foreground">لا توجد متابعة إرشادية مسجلة للطالب حتى الآن.</p>
+              )}
+            </section>
+          )}
+
           {isLoading && <p className="text-sm text-muted-foreground">جارٍ تحميل ملف الطالب...</p>}
 
           {/* الأقسام المرتبطة باسم الطالب */}
@@ -292,5 +330,14 @@ export function StudentProfileDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FollowStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-paper-border bg-paper p-3 text-center">
+      <p className="text-lg font-black text-[var(--letterhead-primary)]">{value}</p>
+      <p className="mt-1 text-[10px] text-paper-muted-foreground">{label}</p>
+    </div>
   );
 }
