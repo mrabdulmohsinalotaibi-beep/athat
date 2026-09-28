@@ -14,7 +14,9 @@ export default defineConfig({
     server: {
       host: "0.0.0.0",
       port: 3000,
-      allowedHosts: ["5173-ivf1p6isf8wtpgcca1e3y-4463b23e.sg2.manus.computer"],
+      // The preview hostname changes per sandbox/session; the app is still bound
+      // to 0.0.0.0, so allow the active preview host instead of a stale hostname.
+      allowedHosts: true,
     },
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(publicBackend.url),
