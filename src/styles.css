@@ -447,3 +447,45 @@ textarea {
 @media print {
   .record-table-scroll::after { display: none; }
 }
+
+
+/* Unified official A4 document system */
+.record-pdf-document {
+  --document-inline: clamp(0.75rem, 2vw, 1.5rem);
+}
+.record-pdf-document > .official-letterhead:first-child,
+.record-pdf-document > div:first-child > .official-letterhead:first-child {
+  margin-inline: calc(var(--document-inline) * -0.15);
+}
+.record-pdf-document table th {
+  font-weight: 800;
+}
+.record-pdf-document table th,
+.record-pdf-document table td {
+  vertical-align: top;
+}
+@media print {
+  .record-pdf-document {
+    font-size: 10.5pt;
+    line-height: 1.55;
+  }
+  .record-pdf-document h1,
+  .record-pdf-document h2,
+  .record-pdf-document h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  .record-pdf-document table th,
+  .record-pdf-document table td {
+    padding: 2.2mm 2.5mm;
+    border-bottom: 0.2mm solid var(--paper-border);
+  }
+  .record-pdf-document p {
+    orphans: 3;
+    widows: 3;
+  }
+  .report-signatures {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
