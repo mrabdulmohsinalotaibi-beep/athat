@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { BookOpenCheck } from "lucide-react";
 
 
@@ -6,6 +6,7 @@ import { BookOpenCheck } from "lucide-react";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
+import { sharePdfFile } from "@/lib/share-pdf";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -187,12 +188,16 @@ export function WeeklyGuidancePoster() {
           <Button onClick={() => applyTemplate(topic)} variant="secondary" className="w-full">
             <BookOpenCheck className="size-4 ml-2" /> إعادة تطبيق القالب
           </Button>
+          <Button onClick={() => void handleSharePdf()} variant="outline" className="w-full" disabled={sharingPdf}>
+            {sharingPdf ? "جارٍ تجهيز PDF..." : "مشاركة PDF"}
+          </Button>
         </div>
       </section>
 
       {/* معاينة البوستر الطباعي */}
       <div className="overflow-auto rounded-3xl border bg-muted/30 p-4 flex justify-center">
         <div
+          ref={posterRef}
           dir="rtl"
           className="bg-[#fffdf8] text-[#30261f] shrink-0"
           style={{
