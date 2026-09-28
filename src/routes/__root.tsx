@@ -143,7 +143,10 @@ function RootComponent() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => registration.update())
+        .catch((error) => console.warn("[PWA] تعذر تسجيل عامل الخدمة:", error));
     }
   }, []);
 
