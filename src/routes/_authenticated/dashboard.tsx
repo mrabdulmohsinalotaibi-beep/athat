@@ -94,7 +94,7 @@ function useDashboard() {
             "id, domain, case_status, priority, followup_at, last_followup, student_name, created_at",
           ),
         supabase.from("attendance").select("id, adate, case_type, count_days, created_at"),
-        supabase.from("behavior").select("id, bdate, created_at"),
+        supabase.from("behavior").select("id, bdate, student_no, student_name, created_at"),
         supabase.from("programs").select("id, exec_status, created_at"),
         supabase.from("calendar_events").select("id, edate, title, etype, status, priority"),
         supabase
