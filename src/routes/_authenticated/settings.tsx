@@ -129,11 +129,20 @@ function SettingsPage() {
         public_requests_enabled: values["public_requests_enabled"] !== "false",
         user_id: userId,
       };
-      if (school?.id) {
+      // ابحث عن سجل الحساب مباشرةً بدل الاعتماد على id قديم أو غير متزامن
+      // مع جلسة المستخدم، ثم حدّثه أو أنشئه عند عدم وجود سجل.
+      const { data: existing, error: lookupError } = await supabase
+        .from("school_settings")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+
+      if (existing?.id) {
         const { error } = await supabase
           .from("school_settings")
           .update(payload as never)
-          .eq("id", school.id)
+          .eq("id", existing.id)
           .eq("user_id", userId);
         if (error) throw error;
       } else {
@@ -323,7 +332,7 @@ function SettingsPage() {
               </label>
             </div>
             <Button type="submit" disabled={saveSchool.isPending}>
-              حفظ البيانات
+              {saveSchool.isPending ? "جارٍ الحفظ..." : "حفظ البيانات"}
             </Button>
           </div>
         </form>
