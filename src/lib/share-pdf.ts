@@ -45,7 +45,7 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
   const margin = 10;
   const contentWidth = pageWidth - margin * 2;
   const contentHeight = pageHeight - margin * 2;
-  const pixelsPerMm = canvas.width / contentWidth;\n  // DOM coordinates are CSS pixels; convert them to rendered canvas pixels\n  // using the actual render scale instead of pixels-per-mm.\n  const canvasScale = canvas.width / Math.max(1, elementRect.width);
+  const pixelsPerMm = canvas.width / contentWidth;
 
   const elementRect = element.getBoundingClientRect();
   const header = element.querySelector<HTMLElement>(".official-letterhead");
@@ -63,7 +63,7 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
   if (header) {
     headerCanvas = await html2canvas(header, renderOptions);
     const headerRect = header.getBoundingClientRect();
-    headerBottomPx = Math.max(0, Math.round((headerRect.bottom - elementRect.top) * canvasScale));
+    headerBottomPx = Math.max(0, Math.round((headerRect.bottom - elementRect.top) * pixelsPerMm));
     headerHeightPx = headerCanvas.height;
     headerHeightMm = (headerHeightPx * contentWidth) / headerCanvas.width;
   }
@@ -71,7 +71,7 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
   if (footer) {
     footerCanvas = await html2canvas(footer, renderOptions);
     const footerRect = footer.getBoundingClientRect();
-    footerTopPx = Math.max(0, Math.round((footerRect.top - elementRect.top) * canvasScale));
+    footerTopPx = Math.max(0, Math.round((footerRect.top - elementRect.top) * pixelsPerMm));
     footerHeightPx = footerCanvas.height;
     footerHeightMm = (footerHeightPx * contentWidth) / footerCanvas.width;
   }
