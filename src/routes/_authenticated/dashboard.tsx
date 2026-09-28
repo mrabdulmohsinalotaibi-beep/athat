@@ -25,10 +25,10 @@ function useDashboard() {
     queryFn: async () => {
       const [students, cases, programs, calendar, planTasks, interviews, evidences] = await Promise.all([
         supabase.from("students").select("id"),
-        supabase.from("counseling_cases").select("id, case_status, followup_at, student_name"),
+        supabase.from("counseling_cases").select("id, case_status, followup_at, student_name, student_id, student_no, next_action"),
         supabase.from("programs").select("id, name, exec_status"),
         supabase.from("calendar_events").select("id, edate, etime, title, etype, status"),
-        supabase.from("plan_tasks").select("id, exec_status, due_date, doc_status"),
+        supabase.from("plan_tasks").select("id, task, exec_status, due_date, doc_status"),
         supabase.from("interviews").select("id, student_name, topic, followup_at"),
         supabase.from("evidences").select("id, linked_ref, linked_type"),
       ]);
@@ -130,6 +130,47 @@ function Dashboard() {
       </div>
 
       <WorkspaceSectionLauncher />
+
+      {(overdueCases.length > 0 || latePlan.length > 0 || programsMissingEvidence.length > 0) && (
+        <section className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-black">مهام اليوم</h2>
+              <p className="text-xs text-muted-foreground">ابدأ مباشرة من أكثر الأعمال احتياجًا للمتابعة.</p>
+            </div>
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">
+              {overdueCases.length + latePlan.length + programsMissingEvidence.length}
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 lg:grid-cols-3">
+            {overdueCases.slice(0, 3).map((item) => (
+              <a
+                key={item.id}
+                href={`/interviews?new=student&studentId=${encodeURIComponent(String(item.student_id ?? ""))}&studentNo=${encodeURIComponent(String(item.student_no ?? ""))}&studentName=${encodeURIComponent(String(item.student_name ?? ""))}`}
+                className="rounded-xl border border-amber-200 bg-amber-50 p-3 transition hover:border-primary/40"
+              >
+                <p className="text-[11px] font-black text-amber-800">متابعة حالة مستحقة</p>
+                <p className="mt-1 truncate text-sm font-black">{item.student_name || "طالب غير محدد"}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{item.next_action || "إنشاء جلسة متابعة"}</p>
+              </a>
+            ))}
+            {latePlan.slice(0, 3).map((item) => (
+              <Link key={item.id} to="/plan" className="rounded-xl border p-3 transition hover:border-primary/40">
+                <p className="text-[11px] font-black text-destructive">مهمة خطة متأخرة</p>
+                <p className="mt-1 truncate text-sm font-black">{item.task || "مهمة في الخطة"}</p>
+                <p className="mt-1 text-xs text-muted-foreground">الاستحقاق: {String(item.due_date ?? "—")}</p>
+              </Link>
+            ))}
+            {programsMissingEvidence.slice(0, 3).map((item) => (
+              <Link key={item.id} to="/programs" className="rounded-xl border p-3 transition hover:border-primary/40">
+                <p className="text-[11px] font-black text-primary">برنامج يحتاج شاهدًا</p>
+                <p className="mt-1 truncate text-sm font-black">{item.name || "برنامج"}</p>
+                <p className="mt-1 text-xs text-muted-foreground">مكتمل ولم يُعثر على شاهد مرتبط.</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {(latePlan.length > 0 || missingEvidence.length > 0 || overdueCases.length > 0 || programsMissingEvidence.length > 0) && (
         <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
