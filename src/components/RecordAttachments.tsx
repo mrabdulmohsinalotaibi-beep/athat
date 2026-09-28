@@ -80,6 +80,7 @@ export function RecordAttachmentsDialog({
 }) {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<{ url: string; kind: string; name: string } | null>(null);
   const { data: items = [], isLoading } = useRecordAttachments(open ? recordId : null);
@@ -178,6 +179,18 @@ export function RecordAttachmentsDialog({
             }}
           />
 
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) upload(file);
+            }}
+          />
+
           <div
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
@@ -189,9 +202,10 @@ export function RecordAttachmentsDialog({
           >
             {busy ? <Loader2 className="mx-auto size-7 animate-spin text-primary" /> : <Upload className="mx-auto size-7 text-primary" />}
             <p className="mt-2 text-sm font-bold">اسحب الملف هنا أو اختر من جهازك</p>
-            <Button type="button" variant="outline" size="sm" className="mt-3" disabled={busy} onClick={() => inputRef.current?.click()}>
-              اختيار ملف
-            </Button>
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => inputRef.current?.click()}>اختيار ملف</Button>
+              <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => cameraRef.current?.click()}>التقاط صورة</Button>
+            </div>
           </div>
 
           {isLoading && <p className="text-sm text-muted-foreground">جارٍ تحميل المرفقات...</p>}
