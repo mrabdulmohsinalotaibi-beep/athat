@@ -94,7 +94,19 @@ export function RecordPage({
   const [smartPrompt, setSmartPrompt] = useState("");
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
-  const [attachFor, setAttachFor] = useState<Row | null>(null);\n\n  useEffect(() => {\n    if (config.key === "students" || typeof window === "undefined") return;\n    const params = new URLSearchParams(window.location.search);\n    if (params.get("new") !== "student") return;\n    const studentId = params.get("studentId") ?? "";\n    const studentNo = params.get("studentNo") ?? "";\n    const studentName = params.get("studentName") ?? "";\n    if (!studentId && !studentNo && !studentName) return;\n    setAuto({ student_id: studentId, student_no: studentNo, student_name: studentName });\n    setEditing({ student_id: studentId, student_no: studentNo, student_name: studentName });\n  }, [config.key]);
+  const [attachFor, setAttachFor] = useState<Row | null>(null);
+
+  useEffect(() => {
+    if (config.key === "students" || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") !== "student") return;
+    const studentId = params.get("studentId") ?? "";
+    const studentNo = params.get("studentNo") ?? "";
+    const studentName = params.get("studentName") ?? "";
+    if (!studentId && !studentNo && !studentName) return;
+    setAuto({ student_id: studentId, student_no: studentNo, student_name: studentName });
+    setEditing({ student_id: studentId, student_no: studentNo, student_name: studentName });
+  }, [config.key]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const recordPdfRef = useRef<HTMLDivElement>(null);
