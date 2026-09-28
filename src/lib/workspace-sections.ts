@@ -21,6 +21,7 @@ export type WorkspaceSectionItem = {
   to: string;
   label: string;
   icon: LucideIcon;
+  disabled?: boolean;
 };
 
 export type WorkspaceSection = {
@@ -73,6 +74,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     items: [
       { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList },
       { to: "/programs", label: "البرامج والأنشطة", icon: Sparkles },
+      { to: "/programs", label: "النشاط الطلابي — قريبًا", icon: Sparkles, disabled: true },
       { to: "/committees", label: "اللجان والاجتماعات", icon: MessagesSquare },
       { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
       { to: "/weekly-poster", label: "التوجيه الأسبوعي", icon: Sparkles },
