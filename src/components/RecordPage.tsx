@@ -552,7 +552,7 @@ export function RecordPage({
                   </td>
                 </tr>
               )}
-              {filtered.map((row) => (
+              {paged.map((row) => (
                 <tr key={row.id} className="border-b last:border-0 hover:bg-muted/40">
                   {listFields.map((f) => (
                     <td key={f.name} className="p-3 align-top">
