@@ -33,7 +33,7 @@ export function OfficialHeader({
               <img
                 src={school.logo_url}
                 alt="شعار المدرسة"
-                className="official-school-logo mt-2 h-14 w-24 object-contain"
+                className="official-school-logo mt-2 h-16 w-28 rounded-lg bg-white/95 p-1 object-contain"
               />
             )}
           </div>
@@ -44,7 +44,7 @@ export function OfficialHeader({
               alt="شعار وزارة التعليم"
               width={144}
               height={104}
-              className="official-ministry-logo h-24 w-36 object-contain brightness-0 invert sm:h-28 sm:w-40"
+              className="official-ministry-logo h-24 w-36 object-contain sm:h-28 sm:w-40"
             />
           </div>
 
@@ -55,7 +55,7 @@ export function OfficialHeader({
             <p>التاريخ: {todayDate()}</p>
             <p>العام الدراسي: {school?.academic_year || "—"}</p>
             <p>الفصل الدراسي: {school?.semester || "—"}</p>
-            <p>نوع السجل: {reportType || title}</p>
+            <p>نوع المستند: {reportType || title}</p>
             {reportNo && <p>رقم التقرير: {reportNo}</p>}
             {period && <p>الفترة: {period}</p>}
           </div>
