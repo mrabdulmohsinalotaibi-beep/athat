@@ -170,7 +170,7 @@ export function StudentProfileDialog({
                 </div>
               ))}
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div data-pdf-exclude="true" className="mt-3 flex flex-wrap gap-2">
               {phone && (
                 <Button asChild size="sm" variant="outline">
                   <a
@@ -218,7 +218,7 @@ export function StudentProfileDialog({
 
           {/* الأقسام المرتبطة باسم الطالب */}
           {!isLoading && (
-            <Accordion type="multiple" className="w-full">
+            <Accordion type="multiple" defaultValue={LINKED_SECTIONS.map((section) => section.key)} className="w-full">
               {LINKED_SECTIONS.map((section) => {
                 const config = recordByKey(section.key)!;
                 const Icon = section.icon;
@@ -263,6 +263,7 @@ export function StudentProfileDialog({
                                 </p>
                               </div>
                               <Button
+                                data-pdf-exclude="true"
                                 variant="ghost"
                                 size="icon"
                                 title="حذف السجل"
