@@ -70,7 +70,7 @@ function ReportsPage() {
 
   const [reportMode, setReportMode] = useState<"single" | "combined">("single");
   const [selectedSingleKey, setSelectedSingleKey] = useState("programs");
-  const [period, setPeriod] = useState("");
+  const [period, setPeriod] = useState("");\n  const [documentNo, setDocumentNo] = useState("");
   const [reportTitle, setReportTitle] = useState("تقرير تنفيذ أعمال التوجيه الطلابي");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -155,7 +155,7 @@ function ReportsPage() {
     setReportMode("single");
     setSelectedSingleKey("programs");
     setReportTitle("تقرير تنفيذ أعمال التوجيه الطلابي");
-    setPeriod("");
+    setPeriod("");\n    setDocumentNo("");
     setFromDate("");
     setToDate("");
     setNarrative("");
