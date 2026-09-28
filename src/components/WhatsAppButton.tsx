@@ -51,7 +51,7 @@ export function WhatsAppButton({
         size={label ? "sm" : "icon"}
         onClick={start}
         title={`مراسلة ولي الأمر عبر واتساب (${number})`}
-        className="no-print gap-1.5 border-[#25D366]/40 text-[#128C7E] hover:bg-[#25D366]/10 hover:text-[#128C7E]"
+        className="gap-1.5 border-[#25D366]/40 text-[#128C7E] hover:bg-[#25D366]/10 hover:text-[#128C7E]"
       >
         <MessageCircle className="size-4 shrink-0 text-[#25D366]" />
         {label && <span>{label}</span>}

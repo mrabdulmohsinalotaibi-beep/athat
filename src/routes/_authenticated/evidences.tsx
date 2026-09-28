@@ -67,7 +67,7 @@ function EvidencesPage() {
       />
 
       {/* معرض الشواهد المرئية */}
-      <section className="no-print space-y-4 rounded-2xl border bg-card p-6 shadow-sm">
+      <section className="space-y-4 rounded-2xl border bg-card p-6 shadow-sm">
         <div className="flex items-center justify-between border-b pb-4">
           <div>
             <h2 className="text-lg font-extrabold">معرض الشواهد المرفوعة</h2>

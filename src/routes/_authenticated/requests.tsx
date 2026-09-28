@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/requests")({
 function RequestsPage() {
   return (
     <div className="space-y-6">
-      <div className="no-print">
+      <div>
         <h1 className="text-2xl font-extrabold">صندوق الطلبات والإحالات</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           كل ما يرد من استمارات الموقع العام: طلبات الاستشارة الفردية، إحالات المعلمين، والبلاغات

@@ -146,7 +146,7 @@ export function PublicLayout({
 
       <main className="flex-1 pb-20 lg:pb-0">{children}</main>
 
-      <nav className="no-print fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
+      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
         {[
           { to: "/" as const, label: "الرئيسية", icon: Home },
           { to: "/services" as const, label: "الخدمات", icon: BookOpen },
