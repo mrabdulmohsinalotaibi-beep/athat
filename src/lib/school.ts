@@ -31,14 +31,15 @@ export function useSchool() {
   return useQuery({
     queryKey: ["school_settings"],
     queryFn: async (): Promise<SchoolSettings | null> => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData.user?.id;
+      if (!userId) return null;
+
       const { data, error } = await supabase
         .from("school_settings")
         .select("*")
-        // نجلب آخر صف تم تعديله فعلياً (وليس أقدم صف تم إنشاؤه)،
-        // حتى تظهر آخر بيانات محفوظة في كل الصفحات فوراً بعد الحفظ،
-        // مع إبقاء بيانات المدرسة المحدثة متاحة للصفحات والنماذج التي تعرضها.
-        .order("updated_at", { ascending: false })
-        .limit(1)
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (error) {
