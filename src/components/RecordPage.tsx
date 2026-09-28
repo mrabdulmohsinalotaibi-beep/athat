@@ -37,7 +37,7 @@ import {
   type StudentOption
 } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { sharePdfFile } from "@/lib/share-pdf";
+import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { Button } from "@/components/ui/button";
@@ -95,27 +95,6 @@ export function RecordPage({
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
-  const [sharingPdf, setSharingPdf] = useState(false);
-  const recordPdfRef = useRef<HTMLDivElement>(null);
-
-  async function handleShareRecordsPdf() {
-    if (!recordPdfRef.current || sharingPdf) return;
-    setSharingPdf(true);
-    try {
-      const result = await sharePdfFile({
-        element: recordPdfRef.current,
-        filename: `سجل-${config.title}`,
-        title: `سجل ${config.title}`,
-      });
-      toast.success(result === "shared" ? "تم فتح قائمة مشاركة PDF في جهازك." : "تم تنزيل ملف PDF؛ افتحه من التنزيلات أو شاركه إلى تطبيق خارجي.");
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") toast.error((error as Error).message || "تعذّرت مشاركة PDF.");
-    } finally {
-      setSharingPdf(false);
-    }
-  }
-
-
 
   const fileRef = useRef<HTMLInputElement>(null);
 
