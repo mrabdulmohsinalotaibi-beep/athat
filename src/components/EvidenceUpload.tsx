@@ -207,8 +207,8 @@ export function EvidenceUploadDialog({
               >
                 <option value="">— اختر البرنامج —</option>
                 {programs.map((p) => (
-                  <option key={String(p.id)} value={String(p.name ?? "")}>
-                    {String(p.name ?? "")}
+                  <option key={String(p.id)} value={String(p.id)}>
+                    {String(p.name ?? "")}{p.program_no ? ` — ${String(p.program_no)}` : ""}
                   </option>
                 ))}
               </select>
