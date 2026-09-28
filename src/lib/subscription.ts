@@ -8,7 +8,8 @@ export function useSubscription() {
   return useQuery({
     queryKey: ["subscription"],
     queryFn: async (): Promise<Subscription> => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
       const userId = auth.user?.id;
       if (!userId) return { plan: "free", status: "active", cases_limit: 5 };
       const { data, error } = await supabase
