@@ -22,7 +22,7 @@ export function OfficialHeader({
 }) {
   return (
     <>
-      <div className="official-letterhead overflow-hidden rounded-b-[1.35rem] bg-[#1f5964] text-white pb-4">
+      <div data-pdf-header="true" className="official-letterhead overflow-hidden rounded-b-[1.35rem] bg-[#1f5964] text-white pb-4">
         <div className="official-header-grid grid grid-cols-1 items-center gap-3 border-t-4 border-[#c0925d] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
           <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
             <p>المملكة العربية السعودية</p>
