@@ -22,8 +22,8 @@ export function OfficialHeader({
 }) {
   return (
     <>
-      <div data-pdf-header="true" className="official-letterhead overflow-hidden rounded-b-[1.35rem] bg-[#1f5964] text-white pb-4">
-        <div className="official-header-grid grid grid-cols-1 items-center gap-3 border-t-4 border-[#c0925d] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
+      <div data-pdf-header="true" className="official-letterhead overflow-hidden rounded-b-[1.35rem] bg-[var(--letterhead-primary)] pb-4 text-white">
+        <div className="official-header-grid grid grid-cols-1 items-center gap-3 border-t-4 border-[var(--letterhead-secondary)] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_10rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
           <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
             <p>المملكة العربية السعودية</p>
             <p>وزارة التعليم</p>
@@ -44,7 +44,7 @@ export function OfficialHeader({
               alt="شعار وزارة التعليم"
               width={144}
               height={104}
-              className="official-ministry-logo h-20 w-32 object-contain brightness-0 invert sm:h-24 sm:w-36"
+              className="official-ministry-logo h-24 w-36 object-contain brightness-0 invert sm:h-28 sm:w-40"
             />
           </div>
 
@@ -60,7 +60,7 @@ export function OfficialHeader({
             {period && <p>الفترة: {period}</p>}
           </div>
         </div>
-        <h2 className="mx-auto mt-3 w-fit rounded-t-lg bg-[#174651] px-6 py-2 text-center text-lg font-extrabold text-white">
+        <h2 className="mx-auto mt-3 w-fit rounded-t-lg border border-white/15 bg-white/10 px-7 py-2 text-center text-lg font-extrabold text-white">
           {title}
         </h2>
       </div>
