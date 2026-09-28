@@ -23,14 +23,16 @@ function useDashboard() {
   return useQuery({
     queryKey: ["dashboard-core"],
     queryFn: async () => {
-      const [students, cases, programs, calendar, planTasks] = await Promise.all([
+      const [students, cases, programs, calendar, planTasks, interviews, evidences] = await Promise.all([
         supabase.from("students").select("id"),
         supabase.from("counseling_cases").select("id, case_status, followup_at, student_name"),
-        supabase.from("programs").select("id, exec_status"),
+        supabase.from("programs").select("id, name, exec_status"),
         supabase.from("calendar_events").select("id, edate, etime, title, etype, status"),
         supabase.from("plan_tasks").select("id, exec_status, due_date, doc_status"),
+        supabase.from("interviews").select("id, student_name, topic, followup_at"),
+        supabase.from("evidences").select("id, linked_ref, linked_type"),
       ]);
-      const failed = [students, cases, programs, calendar, planTasks].find((result) => result.error);
+      const failed = [students, cases, programs, calendar, planTasks, interviews, evidences].find((result) => result.error);
       if (failed?.error) throw failed.error;
       return {
         students: students.data ?? [],
@@ -38,6 +40,8 @@ function useDashboard() {
         programs: programs.data ?? [],
         calendar: calendar.data ?? [],
         planTasks: planTasks.data ?? [],
+        interviews: interviews.data ?? [],
+        evidences: evidences.data ?? [],
       };
     },
     staleTime: 30_000,
@@ -57,6 +61,21 @@ function Dashboard() {
   const missingEvidence = planTasks.filter((item) => item.doc_status === "ناقص");
   const programs = data?.programs ?? [];
   const donePrograms = programs.filter((item) => item.exec_status === "مكتمل").length;
+  const programEvidenceRefs = new Set(
+    (data?.evidences ?? [])
+      .filter((item) => item.linked_type === "برنامج")
+      .map((item) => String(item.linked_ref ?? "")),
+  );
+  const programsMissingEvidence = programs.filter(
+    (program) =>
+      program.exec_status === "مكتمل" &&
+      !programEvidenceRefs.has(String(program.id)) &&
+      !programEvidenceRefs.has(String(program.name ?? "")),
+  );
+  const upcomingFollowups = (data?.interviews ?? [])
+    .filter((item) => String(item.followup_at ?? "").slice(0, 10) > day)
+    .sort((a, b) => String(a.followup_at).localeCompare(String(b.followup_at)))
+    .slice(0, 4);
   const todayAgenda = (data?.calendar ?? [])
     .filter((item) => item.edate === day && item.status !== "منفذ" && item.status !== "ملغي")
     .sort((a, b) => String(a.etime ?? "").localeCompare(String(b.etime ?? "")));
@@ -112,13 +131,37 @@ function Dashboard() {
 
       <WorkspaceSectionLauncher />
 
-      {(latePlan.length > 0 || missingEvidence.length > 0 || overdueCases.length > 0) && (
+      {(latePlan.length > 0 || missingEvidence.length > 0 || overdueCases.length > 0 || programsMissingEvidence.length > 0) && (
         <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
           <h2 className="font-black">يحتاج انتباهك</h2>
           <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
             {overdueCases.length > 0 && <Link to="/cases" className="rounded-full bg-card px-3 py-2">{overdueCases.length} متابعة حالة مستحقة</Link>}
             {latePlan.length > 0 && <Link to="/plan" className="rounded-full bg-card px-3 py-2">{latePlan.length} مهمة خطة متأخرة</Link>}
-            {missingEvidence.length > 0 && <Link to="/evidences" className="rounded-full bg-card px-3 py-2">{missingEvidence.length} شاهد ناقص</Link>}
+            {missingEvidence.length > 0 && <Link to="/evidences" className="rounded-full bg-card px-3 py-2">{missingEvidence.length} مهمة توثيقها ناقص</Link>}
+            {programsMissingEvidence.length > 0 && <Link to="/programs" className="rounded-full bg-card px-3 py-2">{programsMissingEvidence.length} برنامج مكتمل بلا شاهد</Link>}
+          </div>
+        </section>
+      )}
+
+      {upcomingFollowups.length > 0 && (
+        <section className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-black">المتابعات القادمة</h2>
+              <p className="text-xs text-muted-foreground">أقرب مواعيد متابعة الجلسات الإرشادية.</p>
+            </div>
+            <Link to="/interviews" className="text-xs font-bold text-primary">فتح الجلسات</Link>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {upcomingFollowups.map((item) => (
+              <div key={item.id} className="rounded-xl border bg-background p-3 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="truncate">{item.student_name || "طالب غير محدد"}</strong>
+                  <span className="font-bold text-primary">{String(item.followup_at)}</span>
+                </div>
+                <p className="mt-1 truncate text-muted-foreground">{item.topic || "متابعة إرشادية"}</p>
+              </div>
+            ))}
           </div>
         </section>
       )}
