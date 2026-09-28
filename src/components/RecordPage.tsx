@@ -16,6 +16,7 @@ import {
   Upload,
   Pencil,
   Paperclip,
+  FileText,
   X
 } from "lucide-react";
 import { toast } from "sonner";
@@ -95,6 +96,8 @@ export function RecordPage({
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
+  const [documentRow, setDocumentRow] = useState<Row | null>(null);
+  const singleDocumentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (config.key === "students" || typeof window === "undefined") return;
@@ -623,6 +626,15 @@ export function RecordPage({
                       <Button
                         variant="ghost"
                         size="icon"
+                        title="فتح المستند A4"
+                        onClick={() => setDocumentRow(row)}
+                      >
+                        <FileText className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="تعديل السجل"
                         onClick={() => {
                           setAuto({});
                           setEditing(row);
@@ -721,6 +733,55 @@ export function RecordPage({
         )}
       </div>
 
+
+      <Dialog open={documentRow !== null} onOpenChange={(open) => !open && setDocumentRow(null)}>
+        <DialogContent className="max-h-[96vh] max-w-5xl overflow-y-auto p-3 sm:p-5" dir="rtl">
+          <DialogHeader data-pdf-exclude="true">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <DialogTitle>مستند ${config.singular}</DialogTitle>
+              <PdfPreviewButton
+                elementRef={singleDocumentRef}
+                filename={`${config.singular}-${String(documentRow?.id ?? "مستند").slice(0, 8)}`}
+                title={config.singular}
+                disabled={!documentRow}
+              />
+            </div>
+          </DialogHeader>
+          {documentRow && (
+            <div ref={singleDocumentRef} className="record-pdf-document min-h-[277mm] bg-white p-[10mm] text-[#2c2824] shadow-sm">
+              <OfficialHeader
+                school={school}
+                title={config.singular}
+                reportType={config.title}
+                documentNo={String(
+                  documentRow["case_no"] ??
+                  documentRow["program_no"] ??
+                  documentRow["referral_no"] ??
+                  documentRow["meeting_no"] ??
+                  documentRow["student_no"] ??
+                  documentRow["id"] ??
+                  "",
+                )}
+              />
+              <div className="my-6 grid grid-cols-1 gap-x-6 gap-y-0 border border-[var(--paper-border)] sm:grid-cols-2">
+                {config.fields.map((field) => {
+                  const value = displayRecordValue(documentRow[field.name]);
+                  return (
+                    <div
+                      key={field.name}
+                      className={`border-b border-[var(--paper-border)] p-3 ${field.type === "textarea" ? "sm:col-span-2" : ""}`}
+                    >
+                      <p className="mb-1 text-[11px] font-bold text-[var(--paper-muted-foreground)]">{field.label}</p>
+                      <div className="whitespace-pre-wrap break-words text-sm leading-7">{value || "—"}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <OfficialFooter school={school} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[90vh]" dir="rtl">
