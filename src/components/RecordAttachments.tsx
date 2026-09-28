@@ -59,7 +59,7 @@ export function useRecordAttachments(recordId: string | null) {
         name: String(row.name ?? row.file_name ?? "مرفق"),
         path: String(row.file_path),
         url: signed[index]?.signedUrl ?? "",
-        kind: kindOf(String(row.mime_type ?? ""), String(row.file_name ?? "")),\n        size: Number(row.file_size ?? 0),\n        type: typeLabel(kindOf(String(row.mime_type ?? ""), String(row.file_name ?? ""))),
+        kind: kindOf(String(row.mime_type ?? ""), String(row.file_name ?? "")),\n        type: typeLabel(kindOf(String(row.mime_type ?? ""), String(row.file_name ?? ""))),
       }));
     },
   });
@@ -121,7 +121,7 @@ export function RecordAttachmentsDialog({
         description: recordTitle || null,
         file_path: path,
         file_name: file.name,
-        mime_type: contentType,\n        file_size: file.size,
+        mime_type: contentType,
       } as never);
       if (error) {
         // لا نترك ملفًا يتيمًا في التخزين إذا فشل إنشاء سجل قاعدة البيانات.
@@ -230,7 +230,7 @@ export function RecordAttachmentsDialog({
                   )}
                 </button>
                 <div className="space-y-1 p-2">
-                  <p className="truncate text-xs font-bold">{item.name}</p>\n                  <p className="text-[10px] text-muted-foreground">{item.type}{item.size ? ` · ${fileSizeLabel(item.size)}` : ""}</p>
+                  <p className="truncate text-xs font-bold">{item.name}</p>\n                  <p className="text-[10px] text-muted-foreground">{item.type}</p>
                   <div className="flex gap-1">
                     <Button variant="outline" size="icon" asChild>
                       <a href={item.url} download target="_blank" rel="noreferrer" aria-label="تنزيل المرفق">
