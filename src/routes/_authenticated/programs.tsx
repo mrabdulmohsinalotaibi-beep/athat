@@ -39,6 +39,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { requestPrint } from "@/lib/print";
 
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
@@ -768,7 +769,7 @@ function ProgramsPage() {
           <Button variant="outline" onClick={exportListPdf} disabled={listPdfBusy}>
             <FileDown className="size-4" /> {listPdfBusy ? "جارٍ تجهيز PDF..." : "حفظ PDF للقائمة"}
           </Button>
-          <Button variant="outline" onClick={() => window.print()}>
+          <Button variant="outline" onClick={() => requestPrint()}>
             <Printer className="size-4" /> طباعة A4
           </Button>
           <Button

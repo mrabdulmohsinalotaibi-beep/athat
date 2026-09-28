@@ -52,6 +52,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { requestPrint } from "@/lib/print";
 
 type Row = Record<string, unknown> & { id: string };
 
@@ -470,7 +471,7 @@ export function RecordPage({
           <Button variant="outline" onClick={exportPdf} disabled={exportingPdf}>
             <FileDown className="size-4" /> {exportingPdf ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
           </Button>
-          <Button variant="outline" onClick={() => window.print()}>
+          <Button variant="outline" onClick={() => requestPrint()}>
             <Printer className="size-4" /> طباعة A4
           </Button>
           <input

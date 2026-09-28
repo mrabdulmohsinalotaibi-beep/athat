@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { formatHijriDate, formatHijriDateTime } from "@/lib/date";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Textarea } from "@/components/ui/textarea";
+import { requestPrint } from "@/lib/print";
 
 const STATUSES = ["جديد", "قيد المراجعة", "تم الرد", "محفوظ"];
 
@@ -797,7 +798,7 @@ export default function MessagesDashboard() {
             <Button onClick={() => exportVariantPdf(true)} disabled={!selected.length || exporting}>
               <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF (داخلي)"}
             </Button>
-            <Button variant="outline" onClick={() => window.print()} disabled={!selected.length}>
+            <Button variant="outline" onClick={() => requestPrint()} disabled={!selected.length}>
               <Printer className="size-4" /> طباعة التقرير
             </Button>
           </div>

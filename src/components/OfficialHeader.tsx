@@ -29,7 +29,7 @@ export function OfficialHeader({
         }
       `}</style>
       <div className="official-letterhead print-repeat-header overflow-hidden rounded-b-[1.35rem] bg-[#1f5964] text-white pb-4">
-        <div className="grid grid-cols-1 items-center gap-3 border-t-4 border-[#c0925d] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
+        <div className="official-header-grid grid grid-cols-1 items-center gap-3 border-t-4 border-[#c0925d] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
           <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
             <p>المملكة العربية السعودية</p>
             <p>وزارة التعليم</p>
@@ -39,7 +39,7 @@ export function OfficialHeader({
               <img
                 src={school.logo_url}
                 alt="شعار المدرسة"
-                className="mt-2 h-14 w-24 object-contain"
+                className="official-school-logo mt-2 h-14 w-24 object-contain"
               />
             )}
           </div>
@@ -50,7 +50,7 @@ export function OfficialHeader({
               alt="شعار وزارة التعليم"
               width={144}
               height={104}
-              className="h-20 w-32 object-contain brightness-0 invert sm:h-24 sm:w-36"
+              className="official-ministry-logo h-20 w-32 object-contain brightness-0 invert sm:h-24 sm:w-36"
             />
           </div>
 

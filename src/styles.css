@@ -755,7 +755,7 @@ textarea {
   .print-area:has(.print-repeat-header),
   .program-a4:has(.print-repeat-header),
   .electronic-template-sheet:has(.print-repeat-header) {
-    padding-top: 70mm !important;
+    padding-top: var(--print-header-clearance, 54mm) !important;
     -webkit-box-decoration-break: clone !important;
     box-decoration-break: clone !important;
   }
@@ -767,5 +767,141 @@ textarea {
     page-break-before: auto !important;
     break-inside: avoid-page !important;
     page-break-inside: avoid !important;
+  }
+}
+
+
+:root {
+  --print-header-clearance: 54mm;
+}
+
+/* Keep A4 PDF output independent of a phone or tablet viewport. */
+.pdf-capture {
+  box-sizing: border-box !important;
+  direction: rtl !important;
+  font-family: "Cairo Variable", Arial, sans-serif !important;
+  color: #252124;
+}
+
+.pdf-capture table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+.pdf-capture th,
+.pdf-capture td {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  vertical-align: top !important;
+}
+
+.pdf-capture .overflow-x-auto,
+.pdf-capture .overflow-hidden {
+  overflow: visible !important;
+}
+
+.pdf-capture .official-letterhead,
+.pdf-capture-part.official-letterhead {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.pdf-capture .official-header-grid,
+.pdf-capture-part .official-header-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 38mm minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 3mm !important;
+  padding: 3mm 4mm !important;
+}
+
+.pdf-capture .official-header-grid > div,
+.pdf-capture-part .official-header-grid > div {
+  min-width: 0 !important;
+  min-height: 24mm !important;
+  line-height: 1.3 !important;
+}
+
+.pdf-capture .official-ministry-logo,
+.pdf-capture-part .official-ministry-logo {
+  width: 34mm !important;
+  max-width: 34mm !important;
+  height: 22mm !important;
+  max-height: 22mm !important;
+}
+
+.pdf-capture .official-school-logo,
+.pdf-capture-part .official-school-logo {
+  width: auto !important;
+  max-width: 24mm !important;
+  height: auto !important;
+  max-height: 14mm !important;
+}
+
+.pdf-capture .official-letterhead > h2,
+.pdf-capture-part.official-letterhead > h2 {
+  margin-top: 2mm !important;
+  padding: 1.5mm 4mm !important;
+  font-size: 11pt !important;
+}
+
+.pdf-capture.reports-print-sheet {
+  font-size: 9pt !important;
+  line-height: 1.55 !important;
+}
+
+.pdf-capture.reports-print-sheet table {
+  font-size: 7.5pt !important;
+  line-height: 1.35 !important;
+}
+
+@media print {
+  .official-letterhead {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    margin-inline: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .official-header-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 38mm minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 3mm !important;
+    padding: 3mm 4mm !important;
+  }
+
+  .official-header-grid > div {
+    min-width: 0 !important;
+    min-height: 24mm !important;
+    line-height: 1.3 !important;
+  }
+
+  .official-ministry-logo {
+    width: 34mm !important;
+    max-width: 34mm !important;
+    height: 22mm !important;
+    max-height: 22mm !important;
+  }
+
+  .official-school-logo {
+    width: auto !important;
+    max-width: 24mm !important;
+    height: auto !important;
+    max-height: 14mm !important;
+  }
+
+  .official-letterhead > h2 {
+    margin-top: 2mm !important;
+    padding: 1.5mm 4mm !important;
+    font-size: 11pt !important;
   }
 }

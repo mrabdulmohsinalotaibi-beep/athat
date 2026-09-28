@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { requestPrint } from "@/lib/print";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -207,7 +208,7 @@ function ReportsPage() {
               <FileDown className="size-4" />
               {isExporting ? "جارٍ إنشاء PDF..." : "حفظ PDF للتقرير الرسمي"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => window.print()}>
+            <Button type="button" variant="outline" onClick={() => requestPrint()}>
               <Printer className="size-4" /> طباعة A4
             </Button>
             <Button type="button" variant="ghost" onClick={reset}>

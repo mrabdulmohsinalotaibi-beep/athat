@@ -81,6 +81,12 @@ async function waitForDocumentAssets(root: HTMLElement) {
   );
 }
 
+function getPdfPixelRatio() {
+  const isTouchDevice =
+    typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  return isTouchDevice ? 1.5 : Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
+}
+
 function getPageMarkers(root: HTMLElement, canvas: HTMLCanvasElement, pagePixelHeight: number) {
   const rootTop = root.getBoundingClientRect().top;
   const scale = canvas.width / Math.max(root.getBoundingClientRect().width, 1);
@@ -177,6 +183,7 @@ async function renderRepeatPart(
 
   const clone = source.cloneNode(true) as HTMLElement;
   clone.classList.remove("fixed");
+  clone.classList.add("pdf-capture-part");
   clone.style.setProperty("position", "static", "important");
   clone.style.setProperty("top", "auto", "important");
   clone.style.setProperty("bottom", "auto", "important");
@@ -186,7 +193,7 @@ async function renderRepeatPart(
   clone.style.setProperty("max-width", `${widthMm}mm`, "important");
   clone.style.setProperty("margin", "0", "important");
   clone.style.setProperty("box-sizing", "border-box", "important");
-  clone.style.setProperty("background", "#ffffff", "important");
+  clone.style.setProperty("background-color", getComputedStyle(source).backgroundColor, "important");
   host.appendChild(clone);
 
   try {
@@ -195,10 +202,10 @@ async function renderRepeatPart(
     return await toCanvas(clone, {
       backgroundColor: "#ffffff",
       cacheBust: true,
-      pixelRatio: Math.min(2, Math.max(1.5, window.devicePixelRatio || 1)),
+      pixelRatio: getPdfPixelRatio(),
       width: Math.max(clone.scrollWidth, 1),
       height: Math.max(clone.scrollHeight, 1),
-      style: { background: "#ffffff", boxShadow: "none", overflow: "visible" },
+      style: { boxShadow: "none", overflow: "visible" },
     });
   } finally {
     clone.remove();
@@ -236,7 +243,6 @@ async function createPdf(element: HTMLElement) {
   capture.style.setProperty("width", `${CONTENT_WIDTH_MM}mm`, "important");
   capture.style.setProperty("max-width", `${CONTENT_WIDTH_MM}mm`, "important");
   capture.style.setProperty("min-width", "0", "important");
-  capture.style.setProperty("min-height", `${CONTENT_HEIGHT_MM}mm`, "important");
   capture.style.setProperty("height", "auto", "important");
   capture.style.setProperty("max-height", "none", "important");
   capture.style.setProperty("margin", "0", "important");
@@ -269,7 +275,7 @@ async function createPdf(element: HTMLElement) {
     await waitForDocumentAssets(capture);
     await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 
-    const pixelRatio = Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
+    const pixelRatio = getPdfPixelRatio();
     const canvas = await toCanvas(capture, {
       backgroundColor: "#ffffff",
       cacheBust: true,
@@ -373,7 +379,7 @@ async function createPdf(element: HTMLElement) {
       }
       pdf.setFontSize(8);
       pdf.setTextColor(110, 110, 110);
-      pdf.text(`صفحة ${pageIndex + 1}`, pageWidth - PAGE_MARGIN_MM, pageHeight - 5, {
+      pdf.text(String(pageIndex + 1), pageWidth - PAGE_MARGIN_MM, pageHeight - 5, {
         align: "right",
       });
 

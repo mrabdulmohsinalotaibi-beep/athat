@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { requestPrint } from "@/lib/print";
 
 type TemplateField = { label: string; multiline?: boolean; placeholder?: string };
 
@@ -63,9 +64,7 @@ export function ElectronicTemplateDialog({
   }
 
   function printSheet() {
-    document.body.classList.add("printing-electronic-template");
-    window.setTimeout(() => window.print(), 80);
-    window.setTimeout(() => document.body.classList.remove("printing-electronic-template"), 600);
+    requestPrint("printing-electronic-template");
   }
 
   async function fillWithAi() {

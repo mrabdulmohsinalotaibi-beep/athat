@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { requestPrint } from "@/lib/print";
 
 const LONG_FIELDS = new Set([
   "summary",
@@ -72,11 +73,7 @@ export function RecordPrintDialog({
   }
 
   function printDocument() {
-    document.body.classList.add("printing-record");
-    window.setTimeout(() => {
-      window.print();
-      window.setTimeout(() => document.body.classList.remove("printing-record"), 300);
-    }, 80);
+    requestPrint("printing-record");
   }
 
   return (
@@ -178,7 +175,7 @@ export function RecordPrintDialog({
 
           /* Repeat the letterhead clearance on every page of a long record. */
           body.printing-record .record-print-dialog .print-area {
-            padding-top: 70mm !important;
+            padding-top: var(--print-header-clearance, 54mm) !important;
             padding-bottom: 0 !important;
             -webkit-box-decoration-break: clone !important;
             box-decoration-break: clone !important;
@@ -194,7 +191,8 @@ export function RecordPrintDialog({
             max-height: none !important;
             overflow: visible !important;
             z-index: 9999 !important;
-            background: #fff !important;
+            background: #1f5964 !important;
+            color: #fff !important;
           }
 
           body.printing-record .record-print-dialog .print-repeat-footer {

@@ -13,6 +13,7 @@ import { elementToPdf } from "@/lib/pdf";
 import { useSchool } from "@/lib/school";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { requestPrint } from "@/lib/print";
 
 export const REQUEST_KINDS = ["استشارة فردية", "إحالة طالب", "إبلاغ سري"] as const;
 export const REQUEST_STATUSES = ["جديد", "قيد المعالجة", "تم التحويل لحالة", "مغلق"] as const;
@@ -296,7 +297,7 @@ export function RequestsInbox() {
                 <Button variant="outline" size="sm" onClick={exportPdf} disabled={exporting}>
                   <FileDown className="size-4" /> PDF
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => window.print()}>
+                <Button variant="outline" size="sm" onClick={() => requestPrint()}>
                   <Printer className="size-4" /> طباعة
                 </Button>
               </div>

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import moeLogo from "@/assets/moe-logo-official.png";
+import { requestPrint } from "@/lib/print";
 
 const WEEKLY_TEMPLATES = {
   الانضباط: {
@@ -206,7 +207,7 @@ export function WeeklyGuidancePoster() {
             )}
             حفظ PDF
           </Button>
-          <Button onClick={() => window.print()} variant="outline" className="w-full">
+          <Button onClick={() => requestPrint()} variant="outline" className="w-full">
             <Printer className="size-4 ml-2" /> طباعة مباشرة
           </Button>
         </div>
