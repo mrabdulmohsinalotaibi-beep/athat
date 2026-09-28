@@ -1,401 +1,110 @@
-import {
-  AlertTriangle,
-  CalendarCheck,
-  CalendarDays,
-  HeartHandshake,
-  ShieldAlert,
-  Users,
-  ArrowLeft,
-  Sparkles,
-  Plus,
-  UserCheck,
-  Clock,
-  CheckCircle2,
-  Zap,
-  Inbox,
-  FileWarning,
-} from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, ArrowLeft, CalendarDays, Clock, HeartHandshake, Sparkles, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
+import { formatHijriDate } from "@/lib/date";
 import { WorkspaceSectionLauncher } from "@/components/WorkspaceSectionLauncher";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "لوحة التحكم | الذات" },
-      { name: "description", content: "مؤشرات وإحصائيات أعمال الموجه الطلابي والتنبيهات العاجلة." },
-      { property: "og:title", content: "لوحة التحكم | منصة الذات" },
-      {
-        property: "og:description",
-        content: "إحصائيات الحالات والمواظبة والسلوك والبرامج الإرشادية.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "description", content: "ملخص أعمال الموجه الطلابي والمتابعات اليومية." },
     ],
   }),
   component: Dashboard,
 });
 
 const today = () => new Date().toISOString().slice(0, 10);
-const EMPTY_LABEL = "لا توجد بيانات بعد";
-
-type FeedbackSummary = {
-  id: string;
-  sender_name: string;
-  category: string;
-  status: string;
-  assigned_to: string | null;
-  created_at: string;
-};
 
 function useDashboard() {
   return useQuery({
-    queryKey: ["dashboard"],
+    queryKey: ["dashboard-core"],
     queryFn: async () => {
-      const [
-        students,
-        cases,
-        attendance,
-        behavior,
-        programs,
-        calendar,
-        planTasks,
-        interviews,
-        publicRequests,
-        feedback,
-      ] = await Promise.all([
-        supabase.from("students").select("id, stage, created_at"),
-        supabase
-          .from("counseling_cases")
-          .select(
-            "id, domain, case_status, priority, followup_at, last_followup, student_name, created_at",
-          ),
-        supabase.from("attendance").select("id, adate, case_type, count_days, created_at"),
-        supabase.from("behavior").select("id, bdate, student_no, student_name, created_at"),
-        supabase.from("programs").select("id, exec_status, created_at"),
-        supabase.from("calendar_events").select("id, edate, title, etype, status, priority"),
-        supabase
-          .from("plan_tasks")
-          .select("id, exec_status, due_date, doc_status, task, created_at"),
-        supabase.from("interviews").select("id, itype"),
-        supabase.from("public_requests").select("id, kind, status, urgency, created_at"),
-        supabase
-          .from("feedback_messages")
-          .select("id, sender_name, category, status, assigned_to, created_at"),
+      const [students, cases, programs, calendar, planTasks] = await Promise.all([
+        supabase.from("students").select("id"),
+        supabase.from("counseling_cases").select("id, case_status, followup_at, student_name"),
+        supabase.from("programs").select("id, exec_status"),
+        supabase.from("calendar_events").select("id, edate, etime, title, etype, status"),
+        supabase.from("plan_tasks").select("id, exec_status, due_date, doc_status"),
       ]);
-      const queryResults = [
-        students,
-        cases,
-        attendance,
-        behavior,
-        programs,
-        calendar,
-        planTasks,
-        interviews,
-        publicRequests,
-        feedback,
-      ];
-      const failed = queryResults.find((result) => result.error);
-      if (failed?.error) {
-        console.error("[Dashboard] failed to load data", failed.error);
-        throw failed.error;
-      }
-
+      const failed = [students, cases, programs, calendar, planTasks].find((result) => result.error);
+      if (failed?.error) throw failed.error;
       return {
         students: students.data ?? [],
         cases: cases.data ?? [],
-        attendance: attendance.data ?? [],
-        behavior: behavior.data ?? [],
         programs: programs.data ?? [],
         calendar: calendar.data ?? [],
         planTasks: planTasks.data ?? [],
-        interviews: interviews.data ?? [],
-        publicRequests: publicRequests.data ?? [],
-        feedback: feedback.data ?? [],
       };
     },
+    staleTime: 30_000,
   });
 }
-
-
 
 function Dashboard() {
   const { data: school } = useSchool();
   const { data, isLoading, isError, refetch } = useDashboard();
-
   const day = today();
-  const students = data?.students ?? [];
-  const cases = data?.cases ?? [];
-  const attendance = data?.attendance ?? [];
-  const behavior = data?.behavior ?? [];
-  const behaviorCounts = behavior.reduce<Record<string, { studentName: string; count: number }>>((acc, item) => {
-    const key = String(item["student_no"] ?? item["student_name"] ?? "").trim();
-    if (!key) return acc;
-    const previous = acc[key];
-    acc[key] = {
-      studentName: String(item["student_name"] ?? "طالب"),
-      count: (previous?.count ?? 0) + 1,
-    };
-    return acc;
-  }, {});
-  const repeatedBehavior = Object.values(behaviorCounts)
-    .filter((item) => item.count > 1)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 3);
+
+  const activeCases = (data?.cases ?? []).filter((item) => item.case_status !== "مغلقة");
+  const overdueCases = activeCases.filter((item) => item.followup_at && String(item.followup_at) <= day);
+  const planTasks = data?.planTasks ?? [];
+  const planDone = planTasks.filter((item) => item.exec_status === "مكتمل").length;
+  const latePlan = planTasks.filter((item) => item.due_date && String(item.due_date) < day && item.exec_status !== "مكتمل");
+  const missingEvidence = planTasks.filter((item) => item.doc_status === "ناقص");
   const programs = data?.programs ?? [];
-  const calendar = data?.calendar ?? [];
-  const feedback = (data?.feedback ?? []) as FeedbackSummary[];
-
-  const activeCases = cases.filter((c) => c.case_status !== "مغلقة");
-  const todayAbsence = attendance.filter(
-    (a) => a.adate === day && ["غياب", "غياب بعذر"].includes(String(a.case_type ?? "")),
-  );
-  const todayLateness = attendance.filter(
-    (a) => a.adate === day && String(a.case_type ?? "") === "تأخر",
-  );
-  const upcoming = calendar
-    .filter((e) => (e.edate ?? "") >= day && e.status !== "منفذ")
-    .sort((a, b) => String(a.edate).localeCompare(String(b.edate)))
-    .slice(0, 6);
-  const todayAgenda = calendar
-    .filter((e) => e.edate === day && e.status !== "منفذ" && e.status !== "ملغي")
+  const donePrograms = programs.filter((item) => item.exec_status === "مكتمل").length;
+  const todayAgenda = (data?.calendar ?? [])
+    .filter((item) => item.edate === day && item.status !== "منفذ" && item.status !== "ملغي")
     .sort((a, b) => String(a.etime ?? "").localeCompare(String(b.etime ?? "")));
-  const overdue = activeCases.filter((c) => c.followup_at && String(c.followup_at) <= day);
-  const donePrograms = programs.filter((p) => p.exec_status === "مكتمل");
-  const newFeedback = feedback.filter((item) => item.status === "جديد");
-  const publicRequests = data?.publicRequests ?? [];
-  const newRequests = publicRequests.filter((item) => item.status === "جديد");
-  const urgentRequests = publicRequests.filter(
-    (item) => item.urgency === "عاجل" && item.status !== "مغلق",
-  );
-  const incomingReferrals = publicRequests.filter(
-    (item) => item.kind === "إحالة طالب" && item.status === "جديد",
-  );
-  const assignedToCounselor = feedback.filter(
-    (item) =>
-      (item.assigned_to || "الموجه الطلابي") === "الموجه الطلابي" && item.status !== "تم الرد",
-  );
-  const latePlanTasks = (data?.planTasks ?? []).filter(
-    (task) => task.due_date && String(task.due_date) < day && task.exec_status !== "مكتمل",
-  );
-  const missingEvidence = (data?.planTasks ?? []).filter((task) => task.doc_status === "ناقص");
 
-  const stats = [
-    {
-      label: "إجمالي الطلاب",
-      value: students.length,
-      icon: Users,
-      to: "/students" as const,
-      gradient: "from-primary/14 via-card to-amber-500/10",
-      iconColor: "text-primary",
-      badge: "طالب",
-    },
-    {
-      label: "الحالات النشطة",
-      value: activeCases.length,
-      icon: HeartHandshake,
-      to: "/cases" as const,
-      gradient: "from-rose-900/12 via-card to-rose-500/10",
-      iconColor: "text-rose-700",
-      badge: "متابعة",
-    },
-    {
-      label: "غياب وتأخر اليوم",
-      value: todayAbsence.length + todayLateness.length,
-      icon: CalendarCheck,
-      to: "/attendance" as const,
-      gradient: "from-amber-500/18 via-card to-orange-500/10",
-      iconColor: "text-amber-700",
-      badge: "اليوم",
-    },
-    {
-      label: "المواعيد المجدولة",
-      value: upcoming.length,
-      icon: CalendarDays,
-      to: "/calendar" as const,
-      gradient: "from-primary/12 via-card to-primary/10",
-      iconColor: "text-primary",
-      badge: "قريباً",
-    },
-    {
-      label: "المخالفات السلوكية",
-      value: behavior.length,
-      icon: ShieldAlert,
-      to: "/behavior" as const,
-      gradient: "from-slate-700/10 via-card to-slate-500/10",
-      iconColor: "text-slate-600",
-      badge: "سجل",
-    },
-    {
-      label: "البرامج المنفذة",
-      value: donePrograms.length,
-      icon: CheckCircle2,
-      to: "/programs" as const,
-      gradient: "from-amber-500/14 via-card to-primary/10",
-      iconColor: "text-amber-700",
-      badge: "مكتمل",
-    },
-    {
-      label: "طلبات جديدة",
-      value: newRequests.length,
-      icon: Inbox,
-      to: "/requests" as const,
-      gradient: "from-emerald-500/14 via-card to-primary/10",
-      iconColor: "text-emerald-700",
-      badge: "استمارات",
-    },
-    {
-      label: "إحالات واردة",
-      value: incomingReferrals.length,
-      icon: Zap,
-      to: "/requests" as const,
-      gradient: "from-sky-500/14 via-card to-primary/10",
-      iconColor: "text-sky-700",
-      badge: "معلمون",
-    },
-    {
-      label: "رسائل جديدة",
-      value: newFeedback.length,
-      icon: Inbox,
-      to: "/messages" as const,
-      gradient: "from-violet-500/14 via-card to-primary/10",
-      iconColor: "text-violet-700",
-      badge: "واردة",
-    },
-    {
-      label: "مهام الخطة المتأخرة",
-      value: latePlanTasks.length,
-      icon: Clock,
-      to: "/plan" as const,
-      gradient: "from-rose-500/12 via-card to-amber-500/8",
-      iconColor: "text-rose-700",
-      badge: "تنفيذ",
-    },
-    {
-      label: "شواهد ناقصة",
-      value: missingEvidence.length,
-      icon: FileWarning,
-      to: "/plan" as const,
-      gradient: "from-amber-500/12 via-card to-primary/8",
-      iconColor: "text-amber-700",
-      badge: "توثيق",
-    },
-  ];
-
-  const quickActions = [
-    { label: "حالة طارئة", to: "/cases" as const, icon: Plus },
-    { label: "إضافة طالب", to: "/students" as const, icon: Users },
-    { label: "برنامج جديد", to: "/programs" as const, icon: Sparkles },
-    { label: "جلسة فورية", to: "/interviews" as const, icon: UserCheck },
-  ];
-
-  const quickReport = [
-    {
-      label: "حالات نشطة",
-      value: activeCases.length,
-      hint: "تحتاج متابعة أو إغلاق",
-      to: "/cases" as const,
-      icon: HeartHandshake,
-      tone: "text-rose-700 bg-rose-500/10",
-    },
-    {
-      label: "غياب اليوم",
-      value: todayAbsence.length,
-      hint: "غياب بعذر أو بدونه",
-      to: "/attendance" as const,
-      icon: CalendarCheck,
-      tone: "text-amber-700 bg-amber-500/10",
-    },
-    {
-      label: "التأخر الصباحي",
-      value: todayLateness.length,
-      hint: "حالات التأخر المسجلة اليوم",
-      to: "/attendance" as const,
-      icon: Clock,
-      tone: "text-orange-700 bg-orange-500/10",
-    },
-    {
-      label: "إحالات معلقة",
-      value: incomingReferrals.length,
-      hint: "بانتظار الفرز الأولي",
-      to: "/requests" as const,
-      icon: Zap,
-      tone: "text-sky-700 bg-sky-500/10",
-    },
+  const cards = [
+    { label: "الطلاب", value: data?.students.length ?? 0, hint: "السجل الأساسي", to: "/students" as const, icon: Users },
+    { label: "الحالات النشطة", value: activeCases.length, hint: `${overdueCases.length} متابعة مستحقة`, to: "/cases" as const, icon: HeartHandshake },
+    { label: "إنجاز الخطة", value: planTasks.length ? `${Math.round((planDone / planTasks.length) * 100)}%` : "0%", hint: `${latePlan.length} مهمة متأخرة`, to: "/plan" as const, icon: Clock },
+    { label: "البرامج المنفذة", value: donePrograms, hint: `${programs.length} برنامج إجمالًا`, to: "/programs" as const, icon: Sparkles },
   ];
 
   if (isError) {
     return (
-      <div className="mx-auto flex min-h-[55vh] max-w-xl items-center justify-center px-4 dir-rtl">
-        <div className="w-full rounded-3xl border bg-card p-8 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
-            <AlertTriangle className="size-7" />
-          </div>
-          <h1 className="text-xl font-black">تعذر تحميل لوحة العمل</h1>
-          <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            حدث خطأ مؤقت أثناء قراءة بيانات المنصة. أعد المحاولة، ولن تتأثر السجلات المحفوظة.
-          </p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground"
-          >
-            إعادة المحاولة
-          </button>
-        </div>
+      <div dir="rtl" className="mx-auto max-w-xl rounded-3xl border bg-card p-8 text-center shadow-sm">
+        <AlertTriangle className="mx-auto size-8 text-destructive" />
+        <h1 className="mt-3 text-xl font-black">تعذر تحميل لوحة العمل</h1>
+        <p className="mt-2 text-sm text-muted-foreground">أعد المحاولة؛ السجلات المحفوظة لن تتأثر.</p>
+        <button type="button" onClick={() => void refetch()} className="mt-5 rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">إعادة المحاولة</button>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-shell space-y-4 dir-rtl">
-      {/* 1. Hero Card - ترويسة الصفحة */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-primary via-primary/95 to-primary/75 p-4 text-primary-foreground shadow-lg shadow-primary/15 sm:p-6">
-        <div className="absolute -left-12 -top-12 size-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="absolute -right-12 -bottom-12 size-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
-        <div className="absolute right-1/2 top-0 size-72 translate-x-1/2 rounded-full border border-amber-300/15" />
-        <div className="absolute right-1/2 top-8 size-56 translate-x-1/2 rounded-full border border-amber-300/10" />
-
-        <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-medium backdrop-blur-md">
-              <Sparkles className="size-3.5 text-amber-200" />
-              <span>مساحة العمل اليومية</span>
-            </div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">
-              أهلاً {school?.counselor_name || "بالموجه الطلابي"} 👋
-            </h1>
-            <p className="text-xs font-medium text-primary-foreground/80 sm:text-sm">
-              {school?.school_name || "أكمل بيانات مدرستك"} ·{" "}
-              {school?.semester || "الفصل الدراسي الحالي"}
-            </p>
+    <div dir="rtl" className="dashboard-shell space-y-4">
+      <section className="rounded-3xl bg-primary p-5 text-primary-foreground shadow-lg sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-bold text-primary-foreground/75">مساحة العمل اليومية</p>
+            <h1 className="mt-1 text-2xl font-black">أهلًا {school?.counselor_name || "بالموجه الطلابي"}</h1>
+            <p className="mt-1 text-xs text-primary-foreground/75">{school?.school_name || "أكمل بيانات المدرسة من الإعدادات"}</p>
           </div>
-
-          <Link
-            to="/cases"
-            className="inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-l from-amber-100 to-white px-6 text-sm font-extrabold text-primary shadow-lg shadow-black/10 transition-all hover:-translate-y-0.5 hover:shadow-xl active:scale-95"
-          >
-            <span>متابعة الحالات</span>
-            <ArrowLeft className="size-4" />
+          <Link to="/cases" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-primary">
+            متابعة الحالات <ArrowLeft className="size-4" />
           </Link>
         </div>
-      </div>
+      </section>
 
-      {/* 2. Quick Action Buttons - أزرار سريعة متناسقة وموزعة بالتساوي */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {quickActions.map((action) => {
-          const Icon = action.icon;
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => {
+          const Icon = card.icon;
           return (
-            <Link
-              key={action.label}
-              to={action.to}
-              className="group flex items-center justify-center gap-2.5 rounded-2xl border border-primary/12 bg-card/90 px-4 py-3 text-xs font-extrabold text-foreground shadow-sm shadow-primary/5 backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-accent hover:shadow-md"
-            >
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <Icon className="size-4" />
+            <Link key={card.label} to={card.to} className="rounded-2xl border bg-card p-4 shadow-sm transition hover:border-primary/30">
+              <div className="flex items-center justify-between">
+                <span className="rounded-xl bg-primary/10 p-2 text-primary"><Icon className="size-4" /></span>
+                <strong className="text-2xl">{isLoading ? "—" : card.value}</strong>
               </div>
-              <span className="truncate">{action.label}</span>
+              <p className="mt-3 text-sm font-black">{card.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
             </Link>
           );
         })}
@@ -403,150 +112,38 @@ function Dashboard() {
 
       <WorkspaceSectionLauncher />
 
-      <section className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      {(latePlan.length > 0 || missingEvidence.length > 0 || overdueCases.length > 0) && (
+        <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+          <h2 className="font-black">يحتاج انتباهك</h2>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+            {overdueCases.length > 0 && <Link to="/cases" className="rounded-full bg-card px-3 py-2">{overdueCases.length} متابعة حالة مستحقة</Link>}
+            {latePlan.length > 0 && <Link to="/plan" className="rounded-full bg-card px-3 py-2">{latePlan.length} مهمة خطة متأخرة</Link>}
+            {missingEvidence.length > 0 && <Link to="/evidences" className="rounded-full bg-card px-3 py-2">{missingEvidence.length} شاهد ناقص</Link>}
+          </div>
+        </section>
+      )}
+
+      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-black">مؤشرات اليوم</h2>
-            <p className="text-xs text-muted-foreground">
-              الحالات النشطة والغياب والتأخر والإحالات المعلقة.
-            </p>
+            <h2 className="font-black">مواعيد اليوم</h2>
+            <p className="text-xs text-muted-foreground">{formatHijriDate(new Date())}</p>
           </div>
-
+          <Link to="/calendar" className="text-xs font-bold text-primary">فتح التقويم</Link>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {quickReport.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.label}
-                to={item.to}
-                className="group rounded-2xl border bg-background/70 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`rounded-xl p-2 ${item.tone}`}>
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="text-2xl font-black">{isLoading ? "—" : item.value}</span>
-                </div>
-                <p className="mt-3 text-sm font-bold">{item.label}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 6. Notifications & Agenda Cards - المتابعات والمواعيد */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="rounded-xl bg-rose-500/10 p-2 text-rose-500">
-                <AlertTriangle className="size-4" />
+        {todayAgenda.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted-foreground">لا توجد مواعيد مسجلة اليوم.</p>
+        ) : (
+          <div className="mt-3 grid gap-2">
+            {todayAgenda.slice(0, 5).map((item) => (
+              <div key={item.id} className="flex items-center justify-between rounded-xl border bg-background p-3 text-xs">
+                <span className="font-bold">{item.title || item.etype || "موعد"}</span>
+                <span className="flex items-center gap-1 text-muted-foreground"><CalendarDays className="size-3.5" /> {item.etime || "غير محدد"}</span>
               </div>
-              <h2 className="text-sm font-black text-foreground">متابعات عاجلة</h2>
-            </div>
-            <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-[10px] font-bold text-rose-500">
-              {overdue.length} متأخرة
-            </span>
-          </div>
-
-          {overdue.length === 0 ? (
-            <div className="py-10 text-center text-xs font-bold text-muted-foreground">
-              لا توجد متابعات متأخرة اليوم.
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {overdue.slice(0, 5).map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between rounded-2xl border border-rose-500/20 bg-rose-500/5 p-3.5 text-xs transition-colors hover:bg-rose-500/10"
-                >
-                  <span className="font-extrabold text-foreground">
-                    {c.student_name || "حالة إرشادية"}
-                  </span>
-                  <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-rose-500">
-                    <Clock className="size-3.5" />
-                    <span>{formatHijriDate(c.followup_at)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        {(school?.announcement || urgentRequests.length > 0 || assignedToCounselor.length > 0 || repeatedBehavior.length > 0) && (
-          <div className="mt-4 space-y-3 border-t border-border/60 pt-3">
-            {school?.announcement && (
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
-                <p className="text-[11px] font-black text-amber-800">تنبيه المدرسة</p>
-                <p className="mt-1 max-h-12 overflow-hidden text-xs leading-5 text-muted-foreground">
-                  {school.announcement}
-                </p>
-              </div>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {urgentRequests.length > 0 && (
-                <Link to="/requests" className="rounded-full bg-rose-500/10 px-3 py-1.5 text-[11px] font-bold text-rose-700">
-                  {urgentRequests.length} طلب عاجل
-                </Link>
-              )}
-              {assignedToCounselor.length > 0 && (
-                <Link to="/messages" className="rounded-full bg-violet-500/10 px-3 py-1.5 text-[11px] font-bold text-violet-700">
-                  {assignedToCounselor.length} رسالة بانتظار الرد
-                </Link>
-              )}
-            </div>
-            {repeatedBehavior.length > 0 && (
-              <div>
-                <p className="mb-2 text-[11px] font-bold text-muted-foreground">طلاب لديهم أكثر من رصد في السجل السلوكي</p>
-                <div className="flex flex-wrap gap-2">
-                  {repeatedBehavior.map((item, index) => (
-                    <Link
-                      key={item.studentName + index}
-                      to="/behavior"
-                      className="rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-semibold"
-                    >
-                      {item.studentName} · {item.count} مرات
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+            ))}
           </div>
         )}
-        </div>
-
-        <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-500">
-                <CalendarDays className="size-4" />
-              </div>
-              <h2 className="text-sm font-black text-foreground">جدول اليوم</h2>
-            </div>
-            <Link to="/calendar" className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700">إدارة الجدول</Link>
-          </div>
-
-          {todayAgenda.length === 0 ? (
-            <div className="py-10 text-center text-xs font-bold text-muted-foreground">
-              لا توجد جلسات أو مواعيد مسجلة اليوم
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {todayAgenda.slice(0, 5).map((e) => (
-                <div
-                  key={e.id}
-                  className="flex items-center justify-between rounded-2xl border border-border/50 bg-background/80 p-3.5 text-xs transition-colors hover:border-primary/30"
-                >
-                  <span className="font-extrabold text-foreground">{e.title || e.etype}</span>
-                  <span className="font-mono text-[11px] font-bold text-muted-foreground">
-                    {e.etime || "وقت غير محدد"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
