@@ -113,7 +113,12 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
   const bodyEndPx = Math.max(bodyStartPx, footerTopPx);
   const bodyAvailableFirstPx = Math.max(
     1,
-    Math.floor((contentHeight - (headerCanvas ? headerHeightMm : 0)) * pixelsPerMm),
+    Math.floor(
+      (contentHeight -
+        (headerCanvas ? headerHeightMm : 0) -
+        (footerCanvas ? footerHeightMm : 0)) *
+        pixelsPerMm,
+    ),
   );
   const bodyAvailableLaterPx = Math.max(
     1,
@@ -190,12 +195,12 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
       bodyY,
       sourceHeight,
       margin + headerMm,
-      contentHeight - headerMm - (isLastBodyPage && hasFooter ? footerMm : 0),
+      contentHeight - headerMm - (hasFooter ? footerMm : 0),
     );
 
     bodyY += sourceHeight;
 
-    if (isLastBodyPage && hasFooter) {
+    if (hasFooter) {
       const footerY = pageHeight - margin - footerMm;
       pdf.addImage(
         footerCanvas!.toDataURL("image/png"),
