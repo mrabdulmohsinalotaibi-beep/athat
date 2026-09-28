@@ -419,6 +419,10 @@ function ProgramsPage() {
   });
 
   const ministryNames = useMemo(() => new Set<string>(MINISTRY_PROGRAMS.map((p) => p[1])), []);
+  const linkedPlanTask = useMemo(
+    () => planTasks.find((task) => String(task.id) === value(editing?.plan_task_id)),
+    [planTasks, editing?.plan_task_id],
+  );
 
   const save = useMutation({
     mutationFn: async (draft: ProgramDraft) => {
@@ -788,6 +792,8 @@ function ProgramsPage() {
                       <DocCell label="تاريخ النهاية" value={value(editing.end_date)} />
                       <DocCell label="عدد المستفيدين" value={value(editing.beneficiaries)} />
                       <DocCell label="الفصل الدراسي" value={value(editing.term)} />
+                      <DocCell label="مهمة الخطة المرتبطة" value={linkedPlanTask ? `${linkedPlanTask.seq ? `#${linkedPlanTask.seq} - ` : ""}${linkedPlanTask.task ?? ""}` : "—"} />
+                      <DocCell label="عدد الشواهد المرفوعة" value={String(uploadedAttachments.length)} />
                     </div>
                     <DocSection title="الهدف">
                       <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.goal) || "—"}</p>
@@ -795,19 +801,23 @@ function ProgramsPage() {
                     <DocSection title="مؤشر النجاح / التنفيذ">
                       <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.indicator) || "—"}</p>
                     </DocSection>
-                    <DocSection title="الشواهد المطلوبة">
+                    <DocSection title="التوثيق والشواهد المطلوبة">
                       <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.required_evidence) || "—"}</p>
                     </DocSection>
-                    {uploadedAttachments.length > 0 && (
-                      <DocSection title="الشواهد المرفوعة">
+                    <DocSection title="الشواهد المرفوعة">
+                      {uploadedAttachments.length > 0 ? (
                         <EvidenceGrid attachments={uploadedAttachments} />
-                      </DocSection>
-                    )}
-                    {value(editing.notes) && (
-                      <DocSection title="الملاحظات والإجراءات">
-                        <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.notes)}</p>
-                      </DocSection>
-                    )}
+                      ) : (
+                        <p className="text-sm text-paper-muted-foreground">لم تُرفق شواهد بالبرنامج حتى الآن.</p>
+                      )}
+                    </DocSection>
+                    <DocSection title="الملاحظات والإجراءات">
+                      <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.notes) || "—"}</p>
+                    </DocSection>
+                    <div className="mt-4 rounded-xl border border-paper-border bg-[var(--letterhead-soft)] p-3 text-xs leading-6">
+                      <strong className="text-[var(--letterhead-primary)]">ملخص التوثيق:</strong>{" "}
+                      حالة التنفيذ: {value(editing.exec_status) || "—"} · عدد المستفيدين: {value(editing.beneficiaries) || "—"} · الشواهد المرفوعة: {uploadedAttachments.length}
+                    </div>
                     <OfficialFooter school={school} />
                   </div>
                 </>
