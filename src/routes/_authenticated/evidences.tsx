@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Upload, FolderCheck, Sparkles } from "lucide-react";
+import { Upload } from "lucide-react";
 
 import { RecordPage } from "@/components/RecordPage";
 import { recordByKey } from "@/lib/records";
@@ -59,9 +59,9 @@ function EvidencesPage() {
       <RecordPage
         config={recordByKey("evidences")}
         toolbarExtra={
-          <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-2">
-            <Upload className="size-4" /> 
-            <span>رفع شاهد (صورة/مستند)</span>
+          <Button variant="outline" onClick={() => setOpen(true)} className="gap-2">
+            <Upload className="size-4" />
+            <span>رفع شاهد</span>
           </Button>
         }
       />
