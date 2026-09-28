@@ -9,6 +9,7 @@ import { useSchool } from "@/lib/school";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { RECORDS, type FieldDef } from "@/lib/records";
 import { displayRecordValue } from "@/lib/display";
+import { formatHijriDate } from "@/lib/date";
 
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Button } from "@/components/ui/button";
@@ -386,8 +387,10 @@ function ReportsPage() {
                   <strong>الفترة:</strong> {period || "—"}
                 </p>
                 <p>
-                  <strong>النطاق:</strong> {fromDate || "بداية البيانات"} إلى{" "}
-                  {toDate || "نهاية البيانات"}
+                  <strong>النطاق:</strong>{" "}
+                  {fromDate ? formatHijriDate(new Date(`${fromDate}T12:00:00`)) : "بداية البيانات"}{" "}
+                  إلى{" "}
+                  {toDate ? formatHijriDate(new Date(`${toDate}T12:00:00`)) : "نهاية البيانات"}
                 </p>
               </div>
             </div>
