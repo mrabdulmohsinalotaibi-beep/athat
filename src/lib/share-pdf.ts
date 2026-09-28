@@ -30,6 +30,39 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
     windowWidth: Math.max(element.scrollWidth, element.clientWidth),
     ignoreElements: (node: Element) =>
       node instanceof HTMLElement && node.dataset.pdfExclude === "true",
+    onclone: (clonedDocument: Document) => {
+      // html2canvas does not support modern oklab()/oklch() color functions.
+      // Keep the live UI untouched and normalize only the cloned PDF document.
+      const root = clonedDocument.documentElement;
+      root.style.setProperty("--background", "#f3f0ea");
+      root.style.setProperty("--foreground", "#29241f");
+      root.style.setProperty("--card", "#fbf9f5");
+      root.style.setProperty("--border", "#cfc4b6");
+      root.style.setProperty("--primary", "#8b5736");
+      root.style.setProperty("--ring", "#9b623d");
+      root.style.setProperty("--paper", "#ffffff");
+      root.style.setProperty("--paper-foreground", "#2c2824");
+      root.style.setProperty("--paper-muted", "#f1ede7");
+      root.style.setProperty("--paper-muted-foreground", "#6e655d");
+      root.style.setProperty("--paper-border", "#cfc4b6");
+      root.style.setProperty("--letterhead-primary", "#3d3833");
+      root.style.setProperty("--letterhead-secondary", "#a6673f");
+
+      clonedDocument.querySelectorAll<HTMLElement>(".record-pdf-document, .record-pdf-document *").forEach((node) => {
+        node.style.boxShadow = "none";
+        const style = clonedDocument.defaultView?.getComputedStyle(node);
+        if (!style) return;
+        const props = ["color", "backgroundColor", "borderColor", "outlineColor", "textDecorationColor"] as const;
+        for (const prop of props) {
+          const value = style[prop];
+          if (/oklab|oklch|color-mix/i.test(value)) {
+            if (prop === "color") node.style.color = "#2c2824";
+            else if (prop === "backgroundColor") node.style.backgroundColor = "transparent";
+            else node.style.borderColor = "#cfc4b6";
+          }
+        }
+      });
+    },
   };
 
   const canvas = await html2canvas(element, renderOptions);
