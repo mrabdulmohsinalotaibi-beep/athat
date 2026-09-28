@@ -601,3 +601,93 @@ textarea {
     row-gap: 0.625rem;
   }
 }
+
+
+/* Device-independent print refinements: the browser's print dialog controls
+   the physical printer/PDF destination; CSS keeps the document legible. */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .reports-print-sheet {
+    font-family: "Cairo Variable", Arial, sans-serif !important;
+    font-size: 9pt !important;
+    line-height: 1.55 !important;
+    direction: rtl !important;
+  }
+
+  .report-official-content {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .report-record-section {
+    margin-top: 7mm !important;
+  }
+
+  .report-record-section > div:first-child {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  .report-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .reports-print-sheet table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 7.5pt !important;
+    line-height: 1.35 !important;
+  }
+
+  .reports-print-sheet th,
+  .reports-print-sheet td {
+    padding: 1.2mm !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .reports-print-sheet a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  .reports-print-sheet p,
+  .reports-print-sheet li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .reports-print-sheet .report-summary,
+  .reports-print-sheet .report-analysis,
+  .reports-print-sheet .report-approval {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+}
+
+/* Screen preview and controls remain usable on narrow phones and tablets. */
+.reports-print-sheet {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .reports-print-sheet {
+    font-size: 0.875rem;
+  }
+
+  .reports-print-sheet table {
+    min-width: 0;
+  }
+}
