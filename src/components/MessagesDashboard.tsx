@@ -9,6 +9,7 @@ import {
   Mail,
   MessageCircle,
   MessageSquareText,
+  Printer,
   QrCode,
   RotateCcw,
   Send,
@@ -62,29 +63,20 @@ type FeedbackMessage = {
 function createFeedbackToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(18));
 
-  return Array.from(bytes, (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function messageExcerpt(message: string) {
   const compact = message.replace(/\s+/g, " ").trim();
 
-  return compact.length > 90
-    ? `${compact.slice(0, 90)}…`
-    : compact;
+  return compact.length > 90 ? `${compact.slice(0, 90)}…` : compact;
 }
 
 function isEmail(value: string | null | undefined) {
-  return Boolean(
-    value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
-  );
+  return Boolean(value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()));
 }
 
-function deliveryText(
-  items: FeedbackMessage[],
-  schoolName: string,
-) {
+function deliveryText(items: FeedbackMessage[], schoolName: string) {
   return [
     "السلام عليكم ورحمة الله وبركاته",
     `من ${schoolName || "التوجيه الطلابي"}`,
@@ -95,9 +87,7 @@ function deliveryText(
         `المرسل: ${item.sender_name || "مستفيد"}`,
         `التاريخ: ${formatHijriDate(item.created_at)}`,
         `المشاركة: ${item.message}`,
-        item.response_note
-          ? `الرد/الإجراء: ${item.response_note}`
-          : "",
+        item.response_note ? `الرد/الإجراء: ${item.response_note}` : "",
       ]
         .filter(Boolean)
         .join("\n"),
@@ -146,7 +136,11 @@ export default function MessagesDashboard() {
   const [rotatingLink, setRotatingLink] = useState(false);
   const [includeInternal, setIncludeInternal] = useState(true);
 
-  const { data: messages = [], isLoading, isError } = useQuery({
+  const {
+    data: messages = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["feedback_messages"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -163,20 +157,12 @@ export default function MessagesDashboard() {
   });
 
   const publicLink =
-    typeof window === "undefined" ||
-    !school?.public_feedback_token
+    typeof window === "undefined" || !school?.public_feedback_token
       ? ""
       : `${window.location.origin}/feedback/${school.public_feedback_token}`;
 
   const categories = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          messages
-            .map((item) => item.category)
-            .filter(Boolean),
-        ),
-      ),
+    () => Array.from(new Set(messages.map((item) => item.category).filter(Boolean))),
     [messages],
   );
 
@@ -193,81 +179,53 @@ export default function MessagesDashboard() {
           .join(" ")
           .toLowerCase();
 
-        const matchesSearch = searchText.includes(
-          search.trim().toLowerCase(),
-        );
+        const matchesSearch = searchText.includes(search.trim().toLowerCase());
 
         return (
           matchesSearch &&
           (category === "الكل" || item.category === category) &&
           (status === "الكل" || item.status === status) &&
-          (assignee === "الكل" ||
-            (item.assigned_to || "الموجه الطلابي") === assignee)
+          (assignee === "الكل" || (item.assigned_to || "الموجه الطلابي") === assignee)
         );
       }),
     [messages, search, category, status, assignee],
   );
 
-  const selected = messages.filter((item) =>
-    selectedIds.includes(item.id),
-  );
+  const selected = messages.filter((item) => selectedIds.includes(item.id));
 
   const allVisibleSelected =
-    filtered.length > 0 &&
-    filtered.every((item) => selectedIds.includes(item.id));
+    filtered.length > 0 && filtered.every((item) => selectedIds.includes(item.id));
 
-  const newMessages = messages.filter(
-    (item) => item.status === "جديد",
-  ).length;
+  const newMessages = messages.filter((item) => item.status === "جديد").length;
 
   const counselorInbox = messages.filter(
     (item) =>
-      (item.assigned_to || "الموجه الطلابي") ===
-        "الموجه الطلابي" &&
-      item.status !== "تم الرد",
+      (item.assigned_to || "الموجه الطلابي") === "الموجه الطلابي" && item.status !== "تم الرد",
   ).length;
 
   const helpRequests = messages.filter(
-    (item) =>
-      item.category === "طلب مساعدة" &&
-      item.status !== "تم الرد",
+    (item) => item.category === "طلب مساعدة" && item.status !== "تم الرد",
   ).length;
 
-  const rated = messages.filter(
-    (item) => item.satisfaction != null,
-  );
+  const rated = messages.filter((item) => item.satisfaction != null);
 
   const averageRating = rated.length
-    ? (
-        rated.reduce(
-          (total, item) =>
-            total + Number(item.satisfaction),
-          0,
-        ) / rated.length
-      ).toFixed(1)
+    ? (rated.reduce((total, item) => total + Number(item.satisfaction), 0) / rated.length).toFixed(
+        1,
+      )
     : "—";
 
   function toggle(id: string) {
     setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((value) => value !== id)
-        : [...current, id],
+      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
     );
   }
 
   function toggleAllVisible() {
     setSelectedIds((current) =>
       allVisibleSelected
-        ? current.filter(
-            (id) =>
-              !filtered.some((item) => item.id === id),
-          )
-        : Array.from(
-            new Set([
-              ...current,
-              ...filtered.map((item) => item.id),
-            ]),
-          ),
+        ? current.filter((id) => !filtered.some((item) => item.id === id))
+        : Array.from(new Set([...current, ...filtered.map((item) => item.id)])),
     );
   }
 
@@ -276,10 +234,7 @@ export default function MessagesDashboard() {
     patch: Record<string, unknown>,
     successMessage?: string,
   ) {
-    const { error } = await (supabase as any)
-      .from("feedback_messages")
-      .update(patch)
-      .eq("id", id);
+    const { error } = await (supabase as any).from("feedback_messages").update(patch).eq("id", id);
 
     if (error) {
       toast.error(`تعذّر تحديث الرسالة: ${error.message}`);
@@ -297,15 +252,10 @@ export default function MessagesDashboard() {
     return true;
   }
 
-  async function updateStatus(
-    id: string,
-    nextStatus: string,
-  ) {
+  async function updateStatus(id: string, nextStatus: string) {
     await updateMessage(id, {
       status: nextStatus,
-      ...(nextStatus === "تم الرد"
-        ? { responded_at: new Date().toISOString() }
-        : {}),
+      ...(nextStatus === "تم الرد" ? { responded_at: new Date().toISOString() } : {}),
     });
   }
 
@@ -319,10 +269,7 @@ export default function MessagesDashboard() {
     );
   }
 
-  async function updateResponse(
-    id: string,
-    response: string,
-  ) {
+  async function updateResponse(id: string, response: string) {
     const trimmedResponse = response.trim();
 
     await updateMessage(
@@ -335,18 +282,11 @@ export default function MessagesDashboard() {
   }
 
   async function deleteMessage(id: string) {
-    if (
-      !window.confirm(
-        "هل أنت متأكد من حذف هذه المشاركة نهائياً؟",
-      )
-    ) {
+    if (!window.confirm("هل أنت متأكد من حذف هذه المشاركة نهائياً؟")) {
       return;
     }
 
-    const { error } = await (supabase as any)
-      .from("feedback_messages")
-      .delete()
-      .eq("id", id);
+    const { error } = await (supabase as any).from("feedback_messages").delete().eq("id", id);
 
     if (error) {
       toast.error(`تعذّر حذف الرسالة: ${error.message}`);
@@ -357,9 +297,7 @@ export default function MessagesDashboard() {
       queryKey: ["feedback_messages"],
     });
 
-    setSelectedIds((current) =>
-      current.filter((selectedId) => selectedId !== id),
-    );
+    setSelectedIds((current) => current.filter((selectedId) => selectedId !== id));
 
     toast.success("تم حذف المشاركة بنجاح");
   }
@@ -393,11 +331,7 @@ export default function MessagesDashboard() {
       return;
     }
 
-    if (
-      !window.confirm(
-        "سيصبح رابط الاستبانة الحالي غير فعال. هل تريد إنشاء رابط جديد؟",
-      )
-    ) {
+    if (!window.confirm("سيصبح رابط الاستبانة الحالي غير فعال. هل تريد إنشاء رابط جديد؟")) {
       return;
     }
 
@@ -441,14 +375,7 @@ export default function MessagesDashboard() {
 
     const csv = [
       "الاسم,صفة المشارك,التواصل,نوع المشاركة,التقييم,الجهة المسؤولة,الحالة,الرسالة,الرد أو الإجراء,ملاحظات داخلية,تاريخ الاستلام",
-      ...rows.map((row) =>
-        row
-          .map(
-            (cell) =>
-              `"${String(cell).replace(/"/g, '""')}"`,
-          )
-          .join(","),
-      ),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
     ].join("\n");
 
     const url = URL.createObjectURL(
@@ -465,10 +392,7 @@ export default function MessagesDashboard() {
     anchor.click();
     anchor.remove();
 
-    window.setTimeout(
-      () => URL.revokeObjectURL(url),
-      30_000,
-    );
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }
 
   async function exportVariantPdf(internal: boolean) {
@@ -517,10 +441,7 @@ export default function MessagesDashboard() {
     }
   }
 
-  async function replyToBeneficiary(
-    item: FeedbackMessage,
-    channel?: "whatsapp" | "email",
-  ) {
+  async function replyToBeneficiary(item: FeedbackMessage, channel?: "whatsapp" | "email") {
     const note = window.prompt(
       "اكتب الرد أو الإجراء المراد إرساله للمستفيد:",
       item.response_note || "",
@@ -549,16 +470,23 @@ export default function MessagesDashboard() {
       `من ${school?.school_name || "التوجيه الطلابي"}`,
       item.sender_name ? `الأستاذ/ة ${item.sender_name}،` : "",
       trimmedNote,
-    ].filter(Boolean).join("\n\n");
+    ]
+      .filter(Boolean)
+      .join("\n\n");
 
     if (channel === "email" || (!channel && isEmail(item.sender_contact))) {
-      const email = isEmail(item.sender_contact) ? item.sender_contact?.trim() : window.prompt("البريد الإلكتروني للمستفيد:");
+      const email = isEmail(item.sender_contact)
+        ? item.sender_contact?.trim()
+        : window.prompt("البريد الإلكتروني للمستفيد:");
       if (!email) return;
       window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`رد من ${school?.school_name || "التوجيه الطلابي"}`)}&body=${encodeURIComponent(responseText)}`;
     } else {
-      const suggested = item.sender_contact && !isEmail(item.sender_contact)
-        ? normalizeSaudiPhone(item.sender_contact) : "";
-      const phone = suggested || window.prompt("رقم جوال المستفيد (اتركه فارغاً لاختيار المحادثة):", "");
+      const suggested =
+        item.sender_contact && !isEmail(item.sender_contact)
+          ? normalizeSaudiPhone(item.sender_contact)
+          : "";
+      const phone =
+        suggested || window.prompt("رقم جوال المستفيد (اتركه فارغاً لاختيار المحادثة):", "");
       if (phone === null) return;
       shareOnWhatsApp(responseText, phone);
     }
@@ -599,9 +527,7 @@ export default function MessagesDashboard() {
           <div>
             <div className="flex items-center gap-2 text-primary">
               <MessageSquareText className="size-5" />
-              <span className="text-xs font-bold">
-                مركز تواصل المستفيدين
-              </span>
+              <span className="text-xs font-bold">مركز تواصل المستفيدين</span>
             </div>
 
             <h1 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">
@@ -614,33 +540,19 @@ export default function MessagesDashboard() {
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            <Button
-              variant="outline"
-              onClick={copyLink}
-              disabled={!publicLink}
-            >
+            <Button variant="outline" onClick={copyLink} disabled={!publicLink}>
               <Copy className="size-4" />
               نسخ الرابط
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={shareFormLink}
-              disabled={!publicLink}
-            >
+            <Button variant="outline" onClick={shareFormLink} disabled={!publicLink}>
               <Link2 className="size-4" />
               مشاركة واتساب
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={rotateLink}
-              disabled={!publicLink || rotatingLink}
-            >
+            <Button variant="outline" onClick={rotateLink} disabled={!publicLink || rotatingLink}>
               <RotateCcw className="size-4" />
-              {rotatingLink
-                ? "جارٍ الإنشاء..."
-                : "رابط جديد"}
+              {rotatingLink ? "جارٍ الإنشاء..." : "رابط جديد"}
             </Button>
           </div>
         </div>
@@ -659,9 +571,7 @@ export default function MessagesDashboard() {
                 رمز QR ورابط الاستبانة
               </div>
 
-              <span className="mt-2 block break-all font-mono">
-                {publicLink}
-              </span>
+              <span className="mt-2 block break-all font-mono">{publicLink}</span>
 
               <p className="mt-2 text-muted-foreground">
                 شارك الرابط مع المستفيدين؛ الردود لا تظهر للزوار.
@@ -672,18 +582,9 @@ export default function MessagesDashboard() {
       </section>
 
       <section className="no-print grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <SummaryCard
-          label="إجمالي المشاركات"
-          value={messages.length}
-          hint="كل الردود المستلمة"
-        />
+        <SummaryCard label="إجمالي المشاركات" value={messages.length} hint="كل الردود المستلمة" />
 
-        <SummaryCard
-          label="رسائل جديدة"
-          value={newMessages}
-          hint="بحاجة إلى فرز"
-          tone="amber"
-        />
+        <SummaryCard label="رسائل جديدة" value={newMessages} hint="بحاجة إلى فرز" tone="amber" />
 
         <SummaryCard
           label="صندوق الموجه"
@@ -703,11 +604,7 @@ export default function MessagesDashboard() {
         <SummaryCard
           label="متوسط التقييم"
           value={averageRating}
-          hint={
-            rated.length
-              ? `من ${rated.length} تقييم`
-              : "لا توجد تقييمات"
-          }
+          hint={rated.length ? `من ${rated.length} تقييم` : "لا توجد تقييمات"}
           icon={<Star className="size-4 fill-current" />}
         />
       </section>
@@ -721,9 +618,7 @@ export default function MessagesDashboard() {
                 id="feedback-search"
                 className="mt-1"
                 value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="الاسم أو نص الرسالة"
               />
             </div>
@@ -733,9 +628,7 @@ export default function MessagesDashboard() {
               <select
                 id="feedback-category-filter"
                 value={category}
-                onChange={(event) =>
-                  setCategory(event.target.value)
-                }
+                onChange={(event) => setCategory(event.target.value)}
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option>الكل</option>
@@ -750,9 +643,7 @@ export default function MessagesDashboard() {
               <select
                 id="feedback-assignee-filter"
                 value={assignee}
-                onChange={(event) =>
-                  setAssignee(event.target.value)
-                }
+                onChange={(event) => setAssignee(event.target.value)}
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option>الكل</option>
@@ -767,9 +658,7 @@ export default function MessagesDashboard() {
               <select
                 id="feedback-status-filter"
                 value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value)
-                }
+                onChange={(event) => setStatus(event.target.value)}
                 className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option>الكل</option>
@@ -784,17 +673,28 @@ export default function MessagesDashboard() {
             <Button variant="outline" onClick={exportCsv}>
               <Download className="size-4" /> تصدير CSV
             </Button>
-            <Button variant="outline" onClick={() => void sendWhatsApp()} disabled={!selected.length}>
+            <Button
+              variant="outline"
+              onClick={() => void sendWhatsApp()}
+              disabled={!selected.length}
+            >
               <MessageCircle className="size-4" /> واتساب
             </Button>
             <Button variant="outline" onClick={() => sendEmail()} disabled={!selected.length}>
               <Mail className="size-4" /> بريد
             </Button>
-            <Button variant="outline" onClick={() => exportVariantPdf(false)} disabled={!selected.length || exporting}>
+            <Button
+              variant="outline"
+              onClick={() => exportVariantPdf(false)}
+              disabled={!selected.length || exporting}
+            >
               <FileDown className="size-4" /> حفظ PDF (مشاركة)
             </Button>
             <Button onClick={() => exportVariantPdf(true)} disabled={!selected.length || exporting}>
               <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF (داخلي)"}
+            </Button>
+            <Button variant="outline" onClick={() => window.print()} disabled={!selected.length}>
+              <Printer className="size-4" /> طباعة التقرير
             </Button>
           </div>
         </div>
@@ -803,7 +703,8 @@ export default function MessagesDashboard() {
       <section className="no-print min-w-0 overflow-hidden rounded-md border border-border bg-card shadow-sm">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-muted/30 px-4 py-3 text-sm sm:px-5">
           <span>
-            <strong>{filtered.length}</strong> مشاركة مطابقة {selected.length ? `· ${selected.length} محددة` : ""}
+            <strong>{filtered.length}</strong> مشاركة مطابقة{" "}
+            {selected.length ? `· ${selected.length} محددة` : ""}
           </span>
           <Button size="sm" variant="ghost" onClick={exportAllPdf} disabled={exporting}>
             <FileDown className="size-4" /> حفظ PDF لقائمة النتائج
@@ -811,38 +712,137 @@ export default function MessagesDashboard() {
         </div>
 
         <div className="space-y-3 p-3 md:hidden">
-          {isLoading ? <p className="py-10 text-center text-muted-foreground">جارٍ تحميل الردود...</p>
-            : isError ? <p className="py-10 text-center text-destructive">تعذّر تحميل المشاركات. حاول تحديث الصفحة.</p>
-            : filtered.length === 0 ? <p className="py-10 text-center text-muted-foreground">لا توجد مشاركات مطابقة حتى الآن.</p>
-            : filtered.map((item) => (
+          {isLoading ? (
+            <p className="py-10 text-center text-muted-foreground">جارٍ تحميل الردود...</p>
+          ) : isError ? (
+            <p className="py-10 text-center text-destructive">
+              تعذّر تحميل المشاركات. حاول تحديث الصفحة.
+            </p>
+          ) : filtered.length === 0 ? (
+            <p className="py-10 text-center text-muted-foreground">
+              لا توجد مشاركات مطابقة حتى الآن.
+            </p>
+          ) : (
+            filtered.map((item) => (
               <article key={item.id} className="min-w-0 rounded-md border border-border p-4">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2"><strong className="break-words">{item.sender_name}</strong><span className="rounded-sm bg-accent px-2 py-0.5 text-xs text-accent-foreground">{item.category}</span></div>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.sender_role} · {formatHijriDate(item.created_at)}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="break-words">{item.sender_name}</strong>
+                      <span className="rounded-sm bg-accent px-2 py-0.5 text-xs text-accent-foreground">
+                        {item.category}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {item.sender_role} · {formatHijriDate(item.created_at)}
+                    </p>
                   </div>
-                  <Button type="button" size="icon" variant="ghost" onClick={() => toggle(item.id)} aria-label={selectedIds.includes(item.id) ? "إلغاء تحديد المشاركة" : "تحديد المشاركة"}>
-                    {selectedIds.includes(item.id) ? <CheckSquare className="text-primary" /> : <Square />}
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => toggle(item.id)}
+                    aria-label={
+                      selectedIds.includes(item.id) ? "إلغاء تحديد المشاركة" : "تحديد المشاركة"
+                    }
+                  >
+                    {selectedIds.includes(item.id) ? (
+                      <CheckSquare className="text-primary" />
+                    ) : (
+                      <Square />
+                    )}
                   </Button>
                 </div>
-                <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{item.message}</p>
-                {item.sender_contact && <p className="mt-2 break-all text-xs text-muted-foreground">{item.sender_contact}</p>}
+                <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-foreground">
+                  {item.message}
+                </p>
+                {item.sender_contact && (
+                  <p className="mt-2 break-all text-xs text-muted-foreground">
+                    {item.sender_contact}
+                  </p>
+                )}
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <select aria-label="حالة المشاركة" value={item.status} onChange={(event) => void updateStatus(item.id, event.target.value)} className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs">{STATUSES.map((value) => <option key={value}>{value}</option>)}</select>
-                  <select aria-label="الجهة المسؤولة" value={item.assigned_to || "الموجه الطلابي"} onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")} className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs">{ASSIGNEES.map((value) => <option key={value}>{value}</option>)}</select>
+                  <select
+                    aria-label="حالة المشاركة"
+                    value={item.status}
+                    onChange={(event) => void updateStatus(item.id, event.target.value)}
+                    className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs"
+                  >
+                    {STATUSES.map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="الجهة المسؤولة"
+                    value={item.assigned_to || "الموجه الطلابي"}
+                    onChange={(event) =>
+                      void updateMessage(
+                        item.id,
+                        { assigned_to: event.target.value },
+                        "تم توجيه الرسالة",
+                      )
+                    }
+                    className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs"
+                  >
+                    {ASSIGNEES.map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "whatsapp")}><MessageCircle /> رد واتساب</Button>
-                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "email")}><Mail /> بريد</Button>
-                  <Button size="icon" variant="ghost" className="mr-auto text-destructive" onClick={() => void deleteMessage(item.id)} title="حذف المشاركة" aria-label="حذف المشاركة"><Trash2 /></Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void replyToBeneficiary(item, "whatsapp")}
+                  >
+                    <MessageCircle /> رد واتساب
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void replyToBeneficiary(item, "email")}
+                  >
+                    <Mail /> بريد
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="mr-auto text-destructive"
+                    onClick={() => void deleteMessage(item.id)}
+                    title="حذف المشاركة"
+                    aria-label="حذف المشاركة"
+                  >
+                    <Trash2 />
+                  </Button>
                 </div>
                 <details className="mt-3 border-t border-border pt-3 text-sm">
-                  <summary className="cursor-pointer text-primary">الرد والملاحظات الداخلية</summary>
-                  <Label className="mt-3 block">الرد أو الإجراء</Label><Textarea key={`${item.id}-response`} defaultValue={item.response_note || ""} onBlur={(event) => { if (event.target.value.trim() !== (item.response_note || "").trim()) void updateResponse(item.id, event.target.value); }} className="mt-1" />
-                  <Label className="mt-3 block">ملاحظة داخلية</Label><Textarea key={`${item.id}-notes`} defaultValue={item.internal_notes || ""} onBlur={(event) => { if (event.target.value.trim() !== (item.internal_notes || "").trim()) void updateNotes(item.id, event.target.value); }} className="mt-1" />
+                  <summary className="cursor-pointer text-primary">
+                    الرد والملاحظات الداخلية
+                  </summary>
+                  <Label className="mt-3 block">الرد أو الإجراء</Label>
+                  <Textarea
+                    key={`${item.id}-response`}
+                    defaultValue={item.response_note || ""}
+                    onBlur={(event) => {
+                      if (event.target.value.trim() !== (item.response_note || "").trim())
+                        void updateResponse(item.id, event.target.value);
+                    }}
+                    className="mt-1"
+                  />
+                  <Label className="mt-3 block">ملاحظة داخلية</Label>
+                  <Textarea
+                    key={`${item.id}-notes`}
+                    defaultValue={item.internal_notes || ""}
+                    onBlur={(event) => {
+                      if (event.target.value.trim() !== (item.internal_notes || "").trim())
+                        void updateNotes(item.id, event.target.value);
+                    }}
+                    className="mt-1"
+                  />
                 </details>
               </article>
-            ))}
+            ))
+          )}
         </div>
 
         <div className="hidden overflow-x-auto md:block">
@@ -850,9 +850,19 @@ export default function MessagesDashboard() {
             <thead className="bg-muted/50 text-xs">
               <tr>
                 <th className="p-4">
-                   <Button type="button" variant="ghost" size="icon" onClick={toggleAllVisible} title="تحديد كل النتائج">
-                    {allVisibleSelected ? <CheckSquare className="text-primary" /> : <Square className="text-muted-foreground" />}
-                   </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleAllVisible}
+                    title="تحديد كل النتائج"
+                  >
+                    {allVisibleSelected ? (
+                      <CheckSquare className="text-primary" />
+                    ) : (
+                      <Square className="text-muted-foreground" />
+                    )}
+                  </Button>
                 </th>
                 <th className="p-4">المشارك</th>
                 <th className="p-4">التصنيف</th>
@@ -866,17 +876,39 @@ export default function MessagesDashboard() {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={9} className="p-10 text-center text-muted-foreground">جارٍ تحميل الردود...</td></tr>
+                <tr>
+                  <td colSpan={9} className="p-10 text-center text-muted-foreground">
+                    جارٍ تحميل الردود...
+                  </td>
+                </tr>
               ) : isError ? (
-                <tr><td colSpan={9} className="p-10 text-center text-destructive">تعذّر تحميل المشاركات. حاول تحديث الصفحة.</td></tr>
+                <tr>
+                  <td colSpan={9} className="p-10 text-center text-destructive">
+                    تعذّر تحميل المشاركات. حاول تحديث الصفحة.
+                  </td>
+                </tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="p-10 text-center text-muted-foreground">لا توجد مشاركات مطابقة حتى الآن.</td></tr>
+                <tr>
+                  <td colSpan={9} className="p-10 text-center text-muted-foreground">
+                    لا توجد مشاركات مطابقة حتى الآن.
+                  </td>
+                </tr>
               ) : (
                 filtered.map((item) => (
                   <tr key={item.id} className="border-t border-border/60 align-top">
                     <td className="p-4">
-                      <Button type="button" variant="ghost" size="icon" aria-label="تحديد المشاركة" onClick={() => toggle(item.id)}>
-                        {selectedIds.includes(item.id) ? <CheckSquare className="text-primary" /> : <Square className="text-muted-foreground" />}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="تحديد المشاركة"
+                        onClick={() => toggle(item.id)}
+                      >
+                        {selectedIds.includes(item.id) ? (
+                          <CheckSquare className="text-primary" />
+                        ) : (
+                          <Square className="text-muted-foreground" />
+                        )}
                       </Button>
                     </td>
                     <td className="p-4 font-bold">
@@ -893,10 +925,18 @@ export default function MessagesDashboard() {
                     <td className="p-4">
                       <select
                         value={item.assigned_to || "الموجه الطلابي"}
-                        onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")}
+                        onChange={(event) =>
+                          void updateMessage(
+                            item.id,
+                            { assigned_to: event.target.value },
+                            "تم توجيه الرسالة",
+                          )
+                        }
                         className="h-8 max-w-44 rounded-md border border-input bg-background px-2 text-xs"
                       >
-                        {ASSIGNEES.map((name) => <option key={name}>{name}</option>)}
+                        {ASSIGNEES.map((name) => (
+                          <option key={name}>{name}</option>
+                        ))}
                       </select>
                     </td>
                     <td className="p-4">
@@ -904,7 +944,9 @@ export default function MessagesDashboard() {
                         <span className="inline-flex items-center gap-1 text-amber-500">
                           <Star className="size-4 fill-current" /> {item.satisfaction}/5
                         </span>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="max-w-sm p-4 leading-7" title={item.message}>
                       {messageExcerpt(item.message)}
@@ -918,15 +960,28 @@ export default function MessagesDashboard() {
                         onChange={(event) => void updateStatus(item.id, event.target.value)}
                         className="h-8 rounded-md border border-input bg-background px-2 text-xs"
                       >
-                        {STATUSES.map((s) => <option key={s}>{s}</option>)}
+                        {STATUSES.map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
                       </select>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => void replyToBeneficiary(item)} title="رد مباشر">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => void replyToBeneficiary(item)}
+                          title="رد مباشر"
+                        >
                           <Send className="size-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => void deleteMessage(item.id)} title="حذف">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive"
+                          onClick={() => void deleteMessage(item.id)}
+                          title="حذف"
+                        >
                           <Trash2 className="size-4" />
                         </Button>
                       </div>
@@ -941,28 +996,43 @@ export default function MessagesDashboard() {
 
       {/* قسم الطباعة والتصدير المخفي المتوافق مع A4 */}
       <div ref={printRef} className="print-only bg-white text-black p-6 space-y-4" dir="rtl">
-        <OfficialHeader school={school} title={includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"} />
+        <OfficialHeader
+          school={school}
+          title={includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"}
+        />
         <div className="text-center my-4">
           <h2 className="text-lg font-bold">
             {includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"}
           </h2>
-          <p className="text-xs text-gray-500 mt-1">تاريخ الاستخراج: {formatHijriDate(new Date())}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            تاريخ الاستخراج: {formatHijriDate(new Date())}
+          </p>
         </div>
 
         <div className="space-y-6">
           {selected.map((item, index) => (
-            <div key={item.id} className="page-break border border-gray-300 rounded-lg p-4 space-y-2 text-sm bg-white">
+            <div
+              key={item.id}
+              className="page-break border border-gray-300 rounded-lg p-4 space-y-2 text-sm bg-white"
+            >
               <div className="flex justify-between border-b pb-2 font-bold">
-                <span>#{index + 1} - {item.category} ({item.sender_role})</span>
+                <span>
+                  #{index + 1} - {item.category} ({item.sender_role})
+                </span>
                 <span>التاريخ: {formatHijriDate(item.created_at)}</span>
               </div>
               <div>
                 <span className="font-semibold">المرسل: </span>
-                <span>{item.sender_name || "مستفيد"} {item.sender_contact ? `(${item.sender_contact})` : ""}</span>
+                <span>
+                  {item.sender_name || "مستفيد"}{" "}
+                  {item.sender_contact ? `(${item.sender_contact})` : ""}
+                </span>
               </div>
               <div>
                 <span className="font-semibold">المشاركة: </span>
-                <p className="whitespace-pre-wrap mt-1 text-gray-800 leading-relaxed bg-gray-50 p-2 rounded">{item.message}</p>
+                <p className="whitespace-pre-wrap mt-1 text-gray-800 leading-relaxed bg-gray-50 p-2 rounded">
+                  {item.message}
+                </p>
               </div>
               {item.response_note && (
                 <div className="border-t pt-2">
