@@ -22,14 +22,8 @@ export function OfficialHeader({
 }) {
   return (
     <>
-      <style>{`
-        @media print {
-          .print-repeat-header { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: #1f5964 !important; }
-          .print-repeat-footer { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: #fff !important; }
-        }
-      `}</style>
-      <div className="official-letterhead print-repeat-header overflow-hidden rounded-b-[1.35rem] bg-[#1f5964] text-white pb-4">
-        <div className="grid grid-cols-1 items-center gap-3 border-t-4 border-[#c0925d] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
+      <div className="official-letterhead overflow-hidden rounded-b-[1.35rem] bg-[#1f5964] text-white pb-4">
+        <div className="official-header-grid grid grid-cols-1 items-center gap-3 border-t-4 border-[#c0925d] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
           <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
             <p>المملكة العربية السعودية</p>
             <p>وزارة التعليم</p>
@@ -39,7 +33,7 @@ export function OfficialHeader({
               <img
                 src={school.logo_url}
                 alt="شعار المدرسة"
-                className="mt-2 h-14 w-24 object-contain"
+                className="official-school-logo mt-2 h-14 w-24 object-contain"
               />
             )}
           </div>
@@ -50,7 +44,7 @@ export function OfficialHeader({
               alt="شعار وزارة التعليم"
               width={144}
               height={104}
-              className="h-20 w-32 object-contain brightness-0 invert sm:h-24 sm:w-36"
+              className="official-ministry-logo h-20 w-32 object-contain brightness-0 invert sm:h-24 sm:w-36"
             />
           </div>
 
@@ -76,10 +70,8 @@ export function OfficialHeader({
 
 export function OfficialFooter({
   school,
-  repeatEveryPage = false,
 }: {
   school?: SchoolSettings | null | undefined;
-  repeatEveryPage?: boolean;
 }) {
   const showCounselor = school?.show_counselor_on_documents !== false;
   const showPrincipal = school?.show_principal_on_documents !== false;
@@ -87,9 +79,8 @@ export function OfficialFooter({
 
   return (
     <div
-      className={`report-signatures final-signatures mt-8 ${repeatEveryPage ? "print-repeat-footer" : ""} grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground`}
+      className="report-signatures final-signatures mt-8 grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground"
       style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}
-      data-print-signature
     >
       {showCounselor && (
         <div className="flex min-h-28 flex-col items-center text-center">

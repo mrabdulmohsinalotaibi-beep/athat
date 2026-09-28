@@ -74,7 +74,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* القائمة الجانبية */}
       <aside
         className={cn(
-          "no-print fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-hidden border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
+          "fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-hidden border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -195,7 +195,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print sticky top-0 z-20 border-b-2 border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
+        <header className="sticky top-0 z-20 border-b-2 border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
           <div className="grid min-h-18 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <Button
@@ -245,7 +245,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
           {currentSection && (
             <nav
-              className="no-print mb-4 -mx-4 -mt-4 border-b bg-card/70 px-4 py-2 lg:hidden"
+              className="mb-4 -mx-4 -mt-4 border-b bg-card/70 px-4 py-2 lg:hidden"
               aria-label={"روابط " + currentSection.title}
             >
               <div className="flex min-w-0 gap-2 overflow-x-auto">
@@ -275,7 +275,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </main>
 
         <nav
-          className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden"
           aria-label="التنقل الرئيسي"
         >
           {bottomNavigation.map((item) => {
@@ -298,7 +298,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <footer className="no-print border-t px-4 py-4">
+        <footer className="border-t px-4 py-4">
           <Copyright />
         </footer>
       </div>

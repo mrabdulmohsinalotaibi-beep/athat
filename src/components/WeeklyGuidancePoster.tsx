@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from "react";
-import { BookOpenCheck, FileDown, Loader2, Printer } from "lucide-react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { BookOpenCheck } from "lucide-react";
 
-import { elementToPdf } from "@/lib/pdf";
+
+
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import moeLogo from "@/assets/moe-logo-official.png";
+
 
 const WEEKLY_TEMPLATES = {
   الانضباط: {
@@ -79,8 +80,8 @@ function watermarkBackground(text: string) {
 
 export function WeeklyGuidancePoster() {
   const { data: school } = useSchool();
-  const posterRef = useRef<HTMLDivElement>(null);
-  const [exporting, setExporting] = useState(false);
+
+
   const [topic, setTopic] = useState<WeeklyTopic>("الانضباط");
   const [title, setTitle] = useState<string>("الانضباط");
   const [intro, setIntro] = useState<string>(WEEKLY_TEMPLATES["الانضباط"].intro);
@@ -104,23 +105,11 @@ export function WeeklyGuidancePoster() {
     setReminder(template.reminder);
   }
 
-  async function downloadPdf() {
-    if (!posterRef.current) return;
-    setExporting(true);
-    try {
-      await elementToPdf(posterRef.current, `التوجيه الطلابي ${title || "الأسبوعي"}`);
-      toast.success("تم حفظ لوحة التوجيه بصيغة PDF");
-    } catch {
-      toast.error("تعذّر حفظ PDF.");
-    } finally {
-      setExporting(false);
-    }
-  }
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-[minmax(0,360px)_1fr]" dir="rtl">
       {/* لوحة التحكم الجانبية */}
-      <section className="no-print h-fit rounded-3xl border border-primary/12 bg-card p-5 shadow-sm lg:sticky lg:top-24">
+      <section className="h-fit rounded-3xl border border-primary/12 bg-card p-5 shadow-sm lg:sticky lg:top-24">
         <div className="mb-5 flex items-center gap-2">
           <div className="rounded-xl bg-primary/10 p-2 text-primary">
             <BookOpenCheck className="size-5" />
@@ -128,7 +117,7 @@ export function WeeklyGuidancePoster() {
           <div>
             <h1 className="font-black">التوجيه الطلابي الأسبوعي</h1>
             <p className="text-xs text-muted-foreground">
-              استخدم قالبًا معتمدًا ثم خصّصه واحفظه PDF
+              استخدم قالبًا معتمدًا، خصّص محتواه، وراجعه هنا
             </p>
           </div>
         </div>
@@ -198,26 +187,14 @@ export function WeeklyGuidancePoster() {
           <Button onClick={() => applyTemplate(topic)} variant="secondary" className="w-full">
             <BookOpenCheck className="size-4 ml-2" /> إعادة تطبيق القالب
           </Button>
-          <Button onClick={downloadPdf} disabled={exporting} className="w-full">
-            {exporting ? (
-              <Loader2 className="size-4 animate-spin ml-2" />
-            ) : (
-              <FileDown className="size-4 ml-2" />
-            )}
-            حفظ PDF
-          </Button>
-          <Button onClick={() => window.print()} variant="outline" className="w-full">
-            <Printer className="size-4 ml-2" /> طباعة مباشرة
-          </Button>
         </div>
       </section>
 
       {/* معاينة البوستر الطباعي */}
       <div className="overflow-auto rounded-3xl border bg-muted/30 p-4 flex justify-center">
         <div
-          ref={posterRef}
           dir="rtl"
-          className="weekly-poster-print print-area bg-[#fffdf8] text-[#30261f] shrink-0"
+          className="bg-[#fffdf8] text-[#30261f] shrink-0"
           style={{
             width: 794,
             minHeight: 1123,

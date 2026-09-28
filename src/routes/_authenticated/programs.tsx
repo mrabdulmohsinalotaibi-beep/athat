@@ -1,44 +1,37 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarRange,
-  Check,
-  Copy,
-  FileDown,
   FileText,
   Image as ImageIcon,
   Loader2,
-  Pencil,
   Plus,
-  Printer,
   Sparkles,
-  Trash2,
-  Upload,
-  X,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
-import { formatHijriDate } from "@/lib/date";
-import { elementToPdf } from "@/lib/pdf";
+
+
 import { generateSmartFill } from "@/lib/deepseek.functions";
-import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
-import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
-import { RecordPrintDialog } from "@/components/RecordPrintDialog";
+
+
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({
@@ -46,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
       { title: "البرامج والأنشطة | الذات" },
       {
         name: "description",
-        content: "إنشاء وتوثيق البرامج والأنشطة الإرشادية في مستندات A4 جاهزة للطباعة.",
+        content: "إنشاء وتوثيق البرامج والأنشطة الإرشادية ومتابعتها.",
       },
     ],
   }),
@@ -378,19 +371,19 @@ function Field({ label, value, onChange, options, type = "text" }: FieldProps) {
 function ProgramsPage() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
-  const printRef = useRef<HTMLDivElement>(null);
-  const listPrintRef = useRef<HTMLDivElement>(null);
-  const [listPdfBusy, setListPdfBusy] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+
+
   const [editorOpen, setEditorOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
+
   const [editing, setEditing] = useState<ProgramDraft | null>(null);
-  const [pdfBusy, setPdfBusy] = useState(false);
+
   const [aiBusy, setAiBusy] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
-  const [attachFor, setAttachFor] = useState<ProgramRow | null>(null);
-  const [printFor, setPrintFor] = useState<ProgramRow | null>(null);
+
+
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<Attachment[]>([]);
 
@@ -576,31 +569,7 @@ function ProgramsPage() {
     }));
   }
 
-  async function exportListPdf() {
-    if (!listPrintRef.current || listPdfBusy) return;
-    setListPdfBusy(true);
-    try {
-      await elementToPdf(listPrintRef.current, "كشف البرامج والأنشطة الإرشادية");
-      toast.success("تم حفظ كشف البرامج بصيغة PDF");
-    } catch (error) {
-      toast.error(`تعذّر تصدير PDF: ${(error as Error).message}`);
-    } finally {
-      setListPdfBusy(false);
-    }
-  }
 
-  async function exportCurrentPdf() {
-    if (!printRef.current || pdfBusy) return;
-    setPdfBusy(true);
-    try {
-      await elementToPdf(printRef.current, `برنامج-${editing?.name || "نشاط إرشادي"}`);
-      toast.success("تم تجهيز ملف PDF بصيغة A4");
-    } catch (error) {
-      toast.error(`تعذّر تصدير PDF: ${(error as Error).message}`);
-    } finally {
-      setPdfBusy(false);
-    }
-  }
 
   async function fillProgramWithAi() {
     const brief = aiPrompt.trim();
@@ -747,11 +716,11 @@ function ProgramsPage() {
 
   return (
     <div dir="rtl" className="space-y-5">
-      <div className="no-print flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">البرامج والأنشطة</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            أنشئ البرنامج كمستند رسمي A4، واكتب تفاصيله، وأرفق الشواهد والصور داخله.
+            أنشئ البرنامج ضمن السجل، واكتب تفاصيله، وأرفق الشواهد والصور.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -765,12 +734,6 @@ function ProgramsPage() {
           >
             <CalendarRange className="size-4" /> الخطة الوزارية 1448هـ
           </Button>
-          <Button variant="outline" onClick={exportListPdf} disabled={listPdfBusy}>
-            <FileDown className="size-4" /> {listPdfBusy ? "جارٍ تجهيز PDF..." : "حفظ PDF للقائمة"}
-          </Button>
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="size-4" /> طباعة A4
-          </Button>
           <Button
             variant="destructive"
             onClick={deleteAll}
@@ -781,7 +744,7 @@ function ProgramsPage() {
         </div>
       </div>
 
-      <div className="no-print grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-4">
         <Stat title="إجمالي البرامج" value={programs.length} />
         <Stat title="منفذ" value={programs.filter((p) => p.exec_status === "منفذ").length} />
         <Stat
@@ -794,120 +757,10 @@ function ProgramsPage() {
         />
       </div>
 
-      <div
-        ref={listPrintRef}
-        className="print-area overflow-hidden rounded-xl border bg-card shadow-sm"
-      >
-        <div className="p-4 pb-0 print:p-6">
-          <OfficialHeader
-            school={school}
-            title="كشف البرامج والأنشطة الإرشادية"
-            reportType="البرامج والأنشطة"
-          />
-        </div>
-        <div className="no-print border-b bg-muted/30 p-4 text-sm font-bold">
-          سجلات البرامج — اضغط «فتح المستند» للتعبئة والطباعة بصيغة A4.
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50 text-xs">
-                <th className="p-3">اسم البرنامج</th>
-                <th className="p-3">النوع</th>
-                <th className="p-3">المجال</th>
-                <th className="p-3">الفئة</th>
-                <th className="p-3">التنفيذ</th>
-                <th className="p-3">المستفيدون</th>
-                <th className="no-print p-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                    جارٍ التحميل...
-                  </td>
-                </tr>
-              )}
-              {programsFailed && (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-destructive">
-                    تعذّر تحميل البرامج حالياً. تحقّق من الاتصال بقاعدة البيانات ثم أعد المحاولة.
-                  </td>
-                </tr>
-              )}
-              {!isLoading && !programsFailed && !programs.length && (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                    لا توجد برامج بعد. ابدأ بإضافة برنامج أو استيراد الخطة الوزارية.
-                  </td>
-                </tr>
-              )}
-              {!programsFailed &&
-                programs.map((row) => (
-                  <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3 font-bold">{row.name || "—"}</td>
-                    <td className="p-3">{row.ptype || "—"}</td>
-                    <td className="p-3">{row.domain || "—"}</td>
-                    <td className="p-3">{row.target_group || "—"}</td>
-                    <td className="p-3">{row.exec_status || "—"}</td>
-                    <td className="p-3">{row.beneficiaries ?? "—"}</td>
-                    <td className="no-print p-2">
-                      <div className="flex justify-end gap-1">
-                        <Button size="sm" onClick={() => openEdit(row)}>
-                          <Pencil className="size-4" /> فتح المستند
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="نسخ"
-                          onClick={() => {
-                            setEditing({ ...row, id: "", program_no: ` - نسخة` });
-                            setEditorOpen(true);
-                          }}
-                        >
-                          <Copy className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="المرفقات"
-                          onClick={() => setAttachFor(row)}
-                        >
-                          <Upload className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="حفظ PDF رسمي"
-                          onClick={() => setPrintFor(row)}
-                        >
-                          <FileDown className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="حذف"
-                          onClick={() => deleteProgram(row)}
-                          disabled={deleteBusy}
-                        >
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="hidden print:block print:p-6 print:pt-0">
-          <OfficialFooter school={school} />
-        </div>
-      </div>
 
       <Dialog open={editorOpen} onOpenChange={(open) => !open && setEditorOpen(false)}>
         <DialogContent dir="rtl" className="max-h-[96vh] max-w-6xl overflow-y-auto p-0">
-          <DialogHeader className="no-print border-b px-6 py-4">
+          <DialogHeader className="border-b px-6 py-4">
             <DialogTitle>
               {editing?.id ? "تحرير مستند البرنامج" : "إنشاء مستند برنامج جديد"}
             </DialogTitle>
@@ -916,7 +769,7 @@ function ProgramsPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="no-print grid gap-4 bg-muted/20 p-4 lg:grid-cols-[300px_1fr]">
+          <div className="grid gap-4 bg-muted/20 p-4 lg:grid-cols-[300px_1fr]">
             <div className="space-y-4 rounded-xl border bg-card p-4">
               <div>
                 <Label className="mb-1.5 block">اسم البرنامج من القائمة المنسدلة</Label>
@@ -948,71 +801,10 @@ function ProgramsPage() {
             </div>
 
             <div className="mx-auto w-full max-w-[210mm]">
-              <div
-                ref={printRef}
-                className="program-a4 bg-white text-black shadow-xl"
-                style={{
-                  minHeight: "297mm",
-                  padding: "15mm",
-                  fontFamily: "Cairo, Arial, sans-serif",
-                }}
-              >
-                <OfficialHeader school={school} title="سجل تنفيذ برنامج / نشاط إرشادي" />
-                <div className="mt-5 border-2 border-black">
-                  <div className="border-b-2 border-black bg-gray-100 p-3 text-center text-xl font-extrabold">
-                    {value(editing?.name) || "اسم البرنامج"}
-                  </div>
-                  <div className="grid grid-cols-2 text-sm">
-                    <DocCell label="رقم البرنامج" value={value(editing?.program_no)} />
-                    <DocCell label="الفصل الدراسي" value={value(editing?.term)} />
-                    <DocCell label="نوع البرنامج" value={value(editing?.ptype)} />
-                    <DocCell label="المجال" value={value(editing?.domain)} />
-                    <DocCell label="الفئة المستهدفة" value={value(editing?.target_group)} />
-                    <DocCell label="حالة التنفيذ" value={value(editing?.exec_status)} />
-                    <DocCell label="تاريخ البداية" value={formatHijriDate(editing?.start_date)} />
-                    <DocCell label="تاريخ النهاية" value={formatHijriDate(editing?.end_date)} />
-                    <DocCell label="عدد المستفيدين" value={value(editing?.beneficiaries)} />
-                    <DocCell
-                      label="مهمة الخطة المرتبطة"
-                      value={
-                        value(planTasks.find((task) => task.id === editing?.plan_task_id)?.task) ||
-                        "غير مرتبط"
-                      }
-                    />
-                    <DocCell label="الشواهد المطلوبة" value={value(editing?.required_evidence)} />
-                  </div>
-                </div>
-                <DocSection title="الهدف من البرنامج">
-                  <p className="whitespace-pre-wrap leading-7">
-                    {value(editing?.goal) || "يُكتب الهدف هنا..."}
-                  </p>
-                </DocSection>
-                <DocSection title="مؤشر / معيار النجاح">
-                  <p className="whitespace-pre-wrap leading-7">
-                    {value(editing?.indicator) || "يُكتب المؤشر هنا..."}
-                  </p>
-                </DocSection>
-                <DocSection title="الإجراءات والملاحظات">
-                  <p className="min-h-32 whitespace-pre-wrap leading-7">
-                    {value(editing?.notes) ||
-                      "يُكتب وصف التنفيذ والإجراءات والنتائج والتوصيات هنا..."}
-                  </p>
-                </DocSection>
-                <DocSection title="الشواهد والصور">
-                  {uploadedAttachments.length ? (
-                    <EvidenceGrid attachments={uploadedAttachments} />
-                  ) : (
-                    <div className="flex h-28 items-center justify-center border border-dashed text-sm text-gray-500">
-                      ستظهر الصور والشواهد المرفقة هنا بعد رفعها.
-                    </div>
-                  )}
-                </DocSection>
-                <OfficialFooter school={school} repeatEveryPage={false} />
-              </div>
             </div>
           </div>
 
-          <div className="no-print space-y-4 border-t bg-background p-5">
+          <div className="space-y-4 border-t bg-background p-5">
             <div className="rounded-xl border border-primary/15 bg-primary/5 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Label className="flex items-center gap-2 font-black text-primary">

@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Copy,
   Download,
-  FileDown,
   Plus,
   Search,
   Send,
@@ -17,29 +16,28 @@ import {
   Upload,
   Pencil,
   Paperclip,
-  Printer,
-  X,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
-import { elementToPdf } from "@/lib/pdf";
+
 import { displayRecordValue } from "@/lib/display";
 import { formatHijriDate } from "@/lib/date";
 import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import { generateSmartFill } from "@/lib/deepseek.functions";
 import type { RecordConfig } from "@/lib/records";
-import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { OfficialHeader } from "@/components/OfficialHeader";
 import {
   StudentCombobox,
   useStudentOptions,
-  type StudentOption,
+  type StudentOption
 } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { RecordPrintDialog } from "@/components/RecordPrintDialog";
+
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,8 +48,9 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
+
 
 type Row = Record<string, unknown> & { id: string };
 
@@ -95,9 +94,9 @@ export function RecordPage({
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
-  const [printFor, setPrintFor] = useState<Row | null>(null);
-  const [exportingPdf, setExportingPdf] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
+
+
+
   const fileRef = useRef<HTMLInputElement>(null);
 
   const listFields = config.fields.filter((f) => f.list).slice(0, 7);
@@ -426,22 +425,10 @@ export function RecordPage({
     }
   }
 
-  async function exportPdf() {
-    if (!printRef.current || exportingPdf) return;
-    setExportingPdf(true);
-    try {
-      await elementToPdf(printRef.current, config.title);
-      toast.success("تم تجهيز ملف PDF");
-    } catch {
-      toast.error("تعذّر تصدير PDF. حاول مرة أخرى.");
-    } finally {
-      setExportingPdf(false);
-    }
-  }
 
   return (
     <div className="space-y-4">
-      <div className="no-print flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">{config.title}</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} سجل</p>
@@ -467,12 +454,6 @@ export function RecordPage({
           >
             <Download className="size-4" /> تصدير Excel
           </Button>
-          <Button variant="outline" onClick={exportPdf} disabled={exportingPdf}>
-            <FileDown className="size-4" /> {exportingPdf ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
-          </Button>
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="size-4" /> طباعة A4
-          </Button>
           <input
             ref={fileRef}
             type="file"
@@ -486,9 +467,9 @@ export function RecordPage({
         </div>
       </div>
 
-      {filters && <div className="no-print flex flex-wrap items-end gap-3">{filters}</div>}
+      {filters && <div className="flex flex-wrap items-end gap-3">{filters}</div>}
 
-      <div className="no-print relative max-w-sm">
+      <div className="relative max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -513,7 +494,7 @@ export function RecordPage({
         )}
       </div>
 
-      <div className="no-print screen-only-document print-area rounded-xl border bg-card p-4 shadow-sm">
+      <div className="rounded-xl border bg-card p-4 shadow-sm">
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
@@ -539,7 +520,7 @@ export function RecordPage({
                     </button>
                   </th>
                 ))}
-                <th className="no-print p-3" />
+                <th className="p-3" />
               </tr>
             </thead>
             <tbody>
@@ -580,7 +561,7 @@ export function RecordPage({
                       )}
                     </td>
                   ))}
-                  <td className="no-print p-2">
+                  <td className="p-2">
                     <div className="flex gap-1">
                       {rowAction && (
                         <Button
@@ -644,14 +625,6 @@ export function RecordPage({
                       >
                         <Paperclip className="size-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="حفظ PDF رسمي"
-                        onClick={() => setPrintFor(row)}
-                      >
-                        <FileDown className="size-4" />
-                      </Button>
                       {config.key === "referrals" && (
                         <Button
                           variant="ghost"
@@ -693,7 +666,7 @@ export function RecordPage({
           </table>
         </div>
         {pageCount > 1 && (
-          <div className="no-print mt-4 flex items-center justify-between gap-3 text-sm">
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm">
             <Button
               variant="outline"
               size="sm"
@@ -717,51 +690,6 @@ export function RecordPage({
         )}
       </div>
 
-      <div
-        ref={printRef}
-        data-testid="print-all-records"
-        className="print-area print-only-document rounded-xl border bg-paper p-4 text-paper-foreground shadow-sm"
-      >
-        <OfficialHeader school={school} title={config.title} />
-        <table className="mt-4 w-full text-right text-sm">
-          <thead>
-            <tr className="border-b bg-muted/60 text-xs">
-              {listFields.map((field) => (
-                <th key={field.name} className="p-2 font-bold">
-                  {field.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={listFields.length} className="p-6 text-center">
-                  جارٍ التحميل...
-                </td>
-              </tr>
-            )}
-            {!isLoading && filtered.length === 0 && (
-              <tr>
-                <td colSpan={listFields.length} className="p-6 text-center">
-                  لا توجد سجلات بعد.
-                </td>
-              </tr>
-            )}
-            {!isLoading &&
-              filtered.map((row) => (
-                <tr key={row.id} className="border-b last:border-0">
-                  {listFields.map((field) => (
-                    <td key={field.name} className="p-2 align-top">
-                      {displayRecordValue(row[field.name])}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-          </tbody>
-        </table>
-        <OfficialFooter school={school} />
-      </div>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" dir="rtl">
@@ -1038,12 +966,6 @@ export function RecordPage({
         recordId={attachFor?.id ?? null}
         recordTitle={displayRecordValue(attachFor?.[listFields[0]?.name ?? ""] ?? "")}
         linkedType={LINKED_TYPE[config.key] || config.singular}
-      />
-      <RecordPrintDialog
-        open={printFor !== null}
-        onOpenChange={(open) => !open && setPrintFor(null)}
-        config={config}
-        row={printFor}
       />
     </div>
   );
