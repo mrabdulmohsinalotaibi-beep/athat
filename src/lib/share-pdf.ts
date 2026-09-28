@@ -20,7 +20,7 @@ function safeFilename(value: string) {
  * actual PDF file through the device share sheet when supported.
  * Falls back to downloading the PDF when file sharing is unavailable.
  */
-export async function sharePdfFile({ element, filename, title }: SharePdfOptions) {
+export async function createPdfFile({ element, filename }: Pick<SharePdfOptions, "element" | "filename">) {
   const canvas = await html2canvas(element, {
     scale: Math.min(2, window.devicePixelRatio || 1),
     useCORS: true,
@@ -91,21 +91,21 @@ export async function sharePdfFile({ element, filename, title }: SharePdfOptions
     type: "application/pdf",
   });
 
-  if (
-    typeof navigator !== "undefined" &&
-    typeof navigator.share === "function" &&
-    typeof navigator.canShare === "function" &&
-    navigator.canShare({ files: [file] })
-  ) {
-    await navigator.share({
-      title: title || filename,
-      text: "ملف PDF من منصة الذات",
-      files: [file],
-    });
+  return file;
+}
+
+export async function sharePdfFile({ element, filename, title }: SharePdfOptions) {
+  const file = await createPdfFile({ element, filename });
+  if (typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+    await navigator.share({ title: title || filename, text: "ملف PDF من منصة الذات", files: [file] });
     return "shared" as const;
   }
+  downloadPdfFile(file);
+  return "downloaded" as const;
+}
 
-  const url = URL.createObjectURL(blob);
+export function downloadPdfFile(file: File) {
+  const url = URL.createObjectURL(file);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = file.name;
