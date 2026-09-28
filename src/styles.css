@@ -367,7 +367,8 @@
     padding: 2mm !important;
     vertical-align: top;
     white-space: normal !important;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
     border-color: #b8bcc2 !important;
   }
 
@@ -497,7 +498,9 @@ textarea {
 }
 
 .app-shell main {
-  overflow-wrap: anywhere;
+  /* Keep Arabic words readable; only explicitly long tokens should break. */
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .app-shell main .overflow-x-auto {
@@ -509,6 +512,21 @@ textarea {
 
 .app-shell main table {
   max-width: 100%;
+  table-layout: auto;
+  word-break: normal;
+}
+
+.app-shell main table th,
+.app-shell main table td {
+  min-width: auto;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.app-shell main .overflow-x-auto > table {
+  /* Scroll the table on narrow screens instead of squeezing Arabic into
+     one-character columns. */
+  min-width: 680px;
 }
 
 .app-shell input,
@@ -652,7 +670,7 @@ textarea {
   .reports-print-sheet th,
   .reports-print-sheet td {
     padding: 1.2mm !important;
-    overflow-wrap: anywhere !important;
+    overflow-wrap: break-word !important;
     word-break: normal !important;
   }
 
@@ -678,7 +696,8 @@ textarea {
 /* Screen preview and controls remain usable on narrow phones and tablets. */
 .reports-print-sheet {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 @media (max-width: 640px) {
