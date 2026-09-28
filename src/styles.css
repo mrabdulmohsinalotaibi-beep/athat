@@ -752,11 +752,11 @@ textarea {
   }
 
   /* OfficialHeader is fixed so the ministry-style letterhead stays visible at
-     the top of every printed page. Reserve its physical height in the flow. */
+     the top of every printed page. Reserve enough space for the full official letterhead so report text does not begin behind it. */
   .print-area:has(.print-repeat-header),
   .program-a4:has(.print-repeat-header),
   .electronic-template-sheet:has(.print-repeat-header) {
-    padding-top: 42mm !important;
+    padding-top: 70mm !important;
   }
 
   .final-signatures {
