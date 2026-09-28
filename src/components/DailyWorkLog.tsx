@@ -91,7 +91,7 @@ export function DailyWorkLog() {
           <div>
             <h2 className="text-base font-black">سجل العمل اليومي</h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              وثّقي إنجازات اليوم في أقل من دقيقة، واحتفظي بسجل مرتب للمتابعة والتقارير.
+              وثّق إنجازات اليوم في أقل من دقيقة، واحتفظ بسجل مرتب للمتابعة والتقارير.
             </p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export function DailyWorkLog() {
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <label className="text-xs font-bold">
           التاريخ
           <div className="relative mt-1.5">
