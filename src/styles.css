@@ -379,3 +379,26 @@ textarea {
 :root {
 
 }
+
+
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  html, body { width: 100%; overflow: visible; background: #fff; }
+  .app-shell > aside,
+  .app-shell > header,
+  .app-shell > nav,
+  .app-shell > footer,
+  .app-shell main > nav { display: none; }
+  .app-shell { display: block; min-height: 0; background: #fff; }
+  .app-shell main { width: 100%; max-width: none; padding: 0; overflow: visible; }
+  .record-pdf-document { width: 100%; margin: 0; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+  .record-pdf-document .overflow-x-auto { width: 100%; overflow: visible; margin: 0; padding: 0; }
+  .record-pdf-document table { width: 100%; min-width: 0; table-layout: auto; border-collapse: collapse; }
+  .record-pdf-document thead { display: table-header-group; }
+  .record-pdf-document tr,
+  .record-pdf-document th,
+  .record-pdf-document td,
+  .official-letterhead,
+  .final-signatures { break-inside: avoid; page-break-inside: avoid; }
+  [data-pdf-exclude="true"] { display: none; }
+}
