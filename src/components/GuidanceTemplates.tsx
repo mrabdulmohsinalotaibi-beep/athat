@@ -320,7 +320,7 @@ export function GuidanceTemplates() {
         <div>
           <h2 className="text-base font-black">مكتبة القوالب الإرشادية</h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            {QUICK_TEMPLATES.length} قوالب سريعة و{DOWNLOADABLE_FORMS.length} نموذجًا إلكترونيًا للتعبئة والطباعة داخل المنصة.
+            {QUICK_TEMPLATES.length} قوالب سريعة و{DOWNLOADABLE_FORMS.length} نموذجًا إلكترونيًا للتعبئة والمراجعة داخل المنصة.
           </p>
         </div>
       </div>
@@ -371,7 +371,7 @@ export function GuidanceTemplates() {
           <div>
             <h3 className="text-sm font-extrabold">نماذج قابلة للتنزيل</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              افتح النموذج داخل المنصة، املأه إلكترونيًا، ثم اطبعه A4 أو احفظه PDF.
+              افتح النموذج داخل المنصة واملأه إلكترونيًا وراجعه قبل الاعتماد.
             </p>
           </div>
           <span
@@ -489,7 +489,7 @@ export function GuidanceTemplates() {
         )}
 
         <p className="mt-4 rounded-xl bg-primary/5 p-3 text-[11px] leading-5 text-muted-foreground">
-          النماذج الإلكترونية مناسبة للتعبئة والطباعة الفورية. وللحفظ والمتابعة الدائمة استخدم السجل
+          النماذج الإلكترونية مناسبة للتعبئة والمراجعة الفورية. وللحفظ والمتابعة الدائمة استخدم السجل
           المتخصص في لوحة الموجه.
         </p>
       </div>

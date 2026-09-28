@@ -1,19 +1,19 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, FileDown, Inbox, Printer, ShieldAlert, Send } from "lucide-react";
+import { AlertTriangle, Inbox, ShieldAlert, Send } from "lucide-react";
 import { toast } from "sonner";
 
-import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatHijriDate } from "@/lib/date";
-import { elementToPdf } from "@/lib/pdf";
+
 import { useSchool } from "@/lib/school";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { requestPrint } from "@/lib/print";
+
 
 export const REQUEST_KINDS = ["استشارة فردية", "إحالة طالب", "إبلاغ سري"] as const;
 export const REQUEST_STATUSES = ["جديد", "قيد المعالجة", "تم التحويل لحالة", "مغلق"] as const;
@@ -87,8 +87,8 @@ export function RequestsInbox() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
+
+
 
   const update = useMutation({
     mutationFn: async (values: { id: string; status?: string; counselor_notes?: string }) => {
@@ -170,22 +170,10 @@ export function RequestsInbox() {
     [requests],
   );
 
-  async function exportPdf() {
-    if (!printRef.current || !selected || exporting) return;
-    setExporting(true);
-    try {
-      await elementToPdf(printRef.current, `طلب_${selected.request_no ?? selected.kind}`);
-      toast.success("تم حفظ الطلب بصيغة PDF");
-    } catch {
-      toast.error("تعذّر حفظ ملف PDF.");
-    } finally {
-      setExporting(false);
-    }
-  }
 
   return (
     <div className="space-y-6">
-      <div className="no-print grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="إجمالي الطلبات" value={stats.total} hint="الواردة من الاستمارات العامة" />
         <StatCard label="طلبات جديدة" value={stats.fresh} hint="بانتظار المراجعة" tone="amber" />
         <StatCard label="طلبات عاجلة" value={stats.urgent} hint="تحتاج تدخلاً سريعاً" tone="rose" />
@@ -193,7 +181,7 @@ export function RequestsInbox() {
         <StatCard label="بلاغات سرية" value={stats.reports} hint="تنمر ومشكلات السلامة" />
       </div>
 
-      <div className="no-print flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4 shadow-sm">
         <div className="min-w-48 flex-1">
           <Label className="mb-1.5 block text-xs">بحث</Label>
           <Input
@@ -234,7 +222,7 @@ export function RequestsInbox() {
         </div>
       </div>
 
-      <div className="no-print grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <ul className="max-h-[32rem] space-y-2 overflow-y-auto rounded-xl border bg-card p-3 shadow-sm">
           {isLoading && <li className="p-4 text-sm text-muted-foreground">جارٍ التحميل…</li>}
           {!isLoading && filtered.length === 0 && (
@@ -293,14 +281,7 @@ export function RequestsInbox() {
                   تاريخ الورود: {formatHijriDate(selected.created_at)}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={exportPdf} disabled={exporting}>
-                  <FileDown className="size-4" /> PDF
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => requestPrint()}>
-                  <Printer className="size-4" /> طباعة
-                </Button>
-              </div>
+
             </div>
 
             {selected.is_anonymous && (
@@ -400,56 +381,6 @@ export function RequestsInbox() {
       </div>
 
       {selected && (
-        <div ref={printRef} className="print-only-document print-area space-y-4 bg-white p-6 text-black" dir="rtl">
-          <OfficialHeader
-            school={school}
-            title={`استمارة ${selected.kind}`}
-            reportType={selected.kind}
-            reportNo={selected.request_no ?? ""}
-          />
-          <table className="w-full border border-gray-300 text-sm">
-            <tbody>
-              <PrintRow label="رقم الطلب" value={selected.request_no} />
-              <PrintRow label="تاريخ الورود" value={formatHijriDate(selected.created_at)} />
-              <PrintRow label="نوع الطلب" value={selected.kind} />
-              <PrintRow
-                label="مقدم الطلب"
-                value={selected.is_anonymous ? "مجهول (بلاغ سري)" : selected.requester_name}
-              />
-              <PrintRow label="الصفة" value={selected.requester_role} />
-              <PrintRow
-                label="وسيلة التواصل"
-                value={selected.is_anonymous ? "—" : selected.requester_contact}
-              />
-              <PrintRow label="اسم الطالب" value={selected.student_name} />
-              <PrintRow
-                label="الصف / الفصل"
-                value={[selected.student_grade, selected.classroom].filter(Boolean).join(" - ")}
-              />
-              <PrintRow label="الموضوع" value={selected.topic} />
-              <PrintRow label="درجة الأهمية" value={selected.urgency} />
-              <PrintRow label="الوقت المفضل" value={selected.preferred_time} />
-              <PrintRow label="حالة الطلب" value={selected.status} />
-              <PrintRow label="الموجه الطلابي" value={school?.counselor_name} />
-            </tbody>
-          </table>
-
-          <div>
-            <p className="font-bold">تفاصيل الطلب</p>
-            <p className="mt-1 whitespace-pre-wrap rounded border border-gray-300 p-3 leading-7">
-              {selected.details}
-            </p>
-          </div>
-
-          <div>
-            <p className="font-bold">ملاحظات الموجه الطلابي والإجراء المتخذ</p>
-            <p className="mt-1 min-h-20 whitespace-pre-wrap rounded border border-gray-300 p-3 leading-7">
-              {selected.counselor_notes || ""}
-            </p>
-          </div>
-
-          <OfficialFooter school={school} repeatEveryPage={false} />
-        </div>
       )}
     </div>
   );
@@ -464,13 +395,3 @@ function Detail({ label, value }: { label: string; value: string | null | undefi
   );
 }
 
-function PrintRow({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <tr className="border-b border-gray-300">
-      <th className="w-40 border-l border-gray-300 bg-gray-50 p-2 text-right font-semibold">
-        {label}
-      </th>
-      <td className="p-2">{value || "—"}</td>
-    </tr>
-  );
-}

@@ -58,7 +58,6 @@
   --color-paper-muted-foreground: var(--paper-muted-foreground);
   --color-paper-border: var(--paper-border);
 }
-
 :root {
   color-scheme: light;
   --radius: 0.5rem;
@@ -106,7 +105,6 @@
   --shadow-soft: 0 10px 32px -18px color-mix(in oklab, var(--primary) 24%, transparent);
   --shadow-card: 0 5px 18px -12px color-mix(in oklab, var(--primary) 16%, transparent);
 }
-
 .dark {
   color-scheme: dark;
   --background: #092b38;
@@ -146,7 +144,6 @@
   --shadow-soft: 0 10px 32px -18px rgb(0 0 0 / 0.48);
   --shadow-card: 0 5px 18px -12px rgb(0 0 0 / 0.38);
 }
-
 .brand-mark-well {
   background: var(--brand-mark-surface);
   border: 1px solid var(--brand-mark-border);
@@ -154,15 +151,13 @@
 }
 
 @layer base {
-  * {
+* {
     border-color: var(--color-border);
   }
-
-  html {
+html {
     scroll-behavior: smooth;
   }
-
-  body {
+body {
     min-height: 100vh;
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -172,90 +167,66 @@
     overflow-x: hidden;
     text-rendering: optimizeLegibility;
   }
-
-  h1,
-  h2,
-  h3 {
+h1,
+h2,
+h3 {
     letter-spacing: 0;
   }
-
-  button,
-  a,
-  input,
-  textarea,
-  select {
+button,
+a,
+input,
+textarea,
+select {
     transition-duration: 180ms;
   }
-
-  html,
-  body {
+html,
+body {
     max-width: 100%;
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    body,
-    aside,
-    header,
-    main,
-    footer,
-    button,
-    a,
-    input,
-    textarea,
-    select {
+body,
+aside,
+header,
+main,
+footer,
+button,
+a,
+input,
+textarea,
+select {
       transition-property: color, background-color, border-color, box-shadow;
     }
   }
 }
 
 @layer components {
-  .dashboard-shell {
+.dashboard-shell {
     background: transparent;
   }
-
-  .dashboard-panel {
+.dashboard-panel {
     box-shadow: 0 10px 28px -22px color-mix(in oklab, var(--primary) 45%, transparent);
     transition:
       border-color 180ms ease,
       box-shadow 180ms ease,
       transform 180ms ease;
   }
-
-  .dashboard-panel:hover {
+.dashboard-panel:hover {
     border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
     box-shadow: 0 16px 34px -24px color-mix(in oklab, var(--primary) 55%, transparent);
   }
-
-  .app-shell main > div > .rounded-xl,
-  .app-shell main > div > .rounded-lg,
-  .app-shell main .print-area {
+.app-shell main > div > .rounded-xl,
+.app-shell main > div > .rounded-lg {
     box-shadow: var(--shadow-card);
   }
-
-  .app-shell main a.rounded-xl,
-  .app-shell main .rounded-xl.border.bg-card {
+.app-shell main a.rounded-xl,
+.app-shell main .rounded-xl.border.bg-card {
     border-color: color-mix(in oklab, var(--border) 86%, var(--primary));
   }
-
-  .print-area {
-    background: var(--paper);
-    color: var(--paper-foreground);
-  }
-
-  .print-area table {
-    border-collapse: collapse;
-  }
-
-  .print-area th,
-  .print-area td {
-    border-color: var(--paper-border);
-  }
-
-  .official-letterhead {
+.official-letterhead {
     position: relative;
   }
-
-  .official-letterhead::after {
+.official-letterhead::after {
     position: absolute;
     right: 0;
     bottom: -2px;
@@ -265,214 +236,25 @@
     background: linear-gradient(90deg, #0d5269 0 70%, #159b88 70% 100%);
   }
 }
-
-.print-only-document {
-  display: none;
-}
-
-@page {
-  size: A4 portrait;
-  margin: 10mm;
-}
-
-@media print {
-  html,
-  body {
-    width: auto !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    background: #fff !important;
-    background-image: none !important;
-    print-color-adjust: exact !important;
-    -webkit-print-color-adjust: exact !important;
-  }
-
-  body {
-    font-size: 10pt;
-  }
-
-  #root,
-  .app-shell,
-  .app-shell > div,
-  .app-shell main {
-    width: auto !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-  }
-
-  #root,
-  .app-shell,
-  .app-shell > div {
-    display: block !important;
-  }
-
-  .app-shell main,
-  .app-shell main > * {
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  .no-print,
-  .screen-only-document,
-  [data-state="open"].fixed.inset-0 {
-    display: none !important;
-  }
-
-  .print-only-document {
-    display: block !important;
-  }
-
-  .print-area,
-  .program-a4 {
-    display: block !important;
-    box-sizing: border-box !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    min-height: auto !important;
-    height: auto !important;
-    max-height: none !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: #fff !important;
-    color: #252124 !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  .print-area .overflow-x-auto,
-  .print-area .overflow-hidden,
-  .program-a4 .overflow-hidden {
-    overflow: visible !important;
-  }
-
-  .print-area table {
-    width: 100% !important;
-    table-layout: fixed;
-    border-collapse: collapse;
-    font-size: 8.5pt;
-  }
-
-  .print-area th,
-  .print-area td {
-    padding: 2mm !important;
-    vertical-align: top;
-    white-space: normal !important;
-    overflow-wrap: break-word;
-    word-break: normal;
-    border-color: #b8bcc2 !important;
-  }
-
-  .print-area thead {
-    display: table-header-group;
-  }
-
-  .print-area tfoot {
-    display: table-footer-group;
-  }
-
-  .print-area thead tr,
-  .print-area .report-summary {
-    background: #f3f4f6 !important;
-  }
-
-  .print-area tr,
-  .print-area img,
-  .print-area figure,
-  .print-area .break-inside-avoid,
-  .print-area [data-pdf-keep-together],
-  .print-area .report-signatures,
-  .print-area .report-summary,
-  .print-area .official-letterhead,
-  .program-a4 tr,
-  .program-a4 img,
-  .program-a4 figure,
-  .program-a4 .break-inside-avoid,
-  .program-a4 [data-pdf-keep-together],
-  .program-a4 .official-letterhead {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .print-area h1,
-  .print-area h2,
-  .print-area h3,
-  .program-a4 h1,
-  .program-a4 h2,
-  .program-a4 h3 {
-    break-after: avoid-page;
-  }
-
-  .print-area .break-before-page,
-  .program-a4 .break-before-page,
-  .print-area [data-pdf-break-before],
-  .program-a4 [data-pdf-break-before] {
-    break-before: page;
-    page-break-before: always;
-  }
-
-  .print-area img,
-  .print-area svg,
-  .program-a4 img,
-  .program-a4 svg {
-    max-width: 100%;
-  }
-
-  .official-letterhead {
-    margin-inline: 2mm;
-  }
-
-  .official-letterhead h2 {
-    font-size: 15pt;
-  }
-
-  body:has(.single-print-sheet) .app-shell {
-    display: none !important;
-  }
-
-  .single-print-sheet {
-    position: static !important;
-    inset: auto !important;
-    transform: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }
-}
-
-/* Responsive layout layer */
 html {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
 }
-
 body {
   min-width: 320px;
   overflow-x: hidden;
 }
-
 *,
 *::before,
 *::after {
   min-width: 0;
 }
-
 img,
 svg,
 video,
 canvas {
   max-width: 100%;
 }
-
 button,
 a,
 input,
@@ -480,428 +262,120 @@ select,
 textarea {
   touch-action: manipulation;
 }
-
 .app-shell {
   width: 100%;
   min-width: 0;
 }
-
 .app-shell > div,
 .app-shell main,
 .app-shell footer {
   min-width: 0;
   max-width: 100%;
 }
-
 .app-shell main {
   /* Keep Arabic words readable; only explicitly long tokens should break. */
   overflow-wrap: break-word;
   word-break: normal;
 }
-
 .app-shell main .overflow-x-auto {
   max-width: 100%;
   overscroll-behavior-inline: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
-
 .app-shell main table {
   max-width: 100%;
   table-layout: auto;
   word-break: normal;
 }
-
 .app-shell main table th,
 .app-shell main table td {
   min-width: auto;
   word-break: normal;
   overflow-wrap: break-word;
 }
-
 .app-shell main .overflow-x-auto > table {
   /* Scroll the table on narrow screens instead of squeezing Arabic into
      one-character columns. */
   min-width: 680px;
 }
-
 .app-shell input,
 .app-shell select,
 .app-shell textarea {
   min-width: 0;
   max-width: 100%;
 }
-
 [data-radix-popper-content-wrapper] {
   max-width: calc(100vw - 1rem);
 }
 
 @media (max-width: 1023px) {
-  .app-shell > aside {
+.app-shell > aside {
     width: min(88vw, 18rem);
   }
-
-  .app-shell main {
+.app-shell main {
     padding: 1rem;
   }
-
-  .app-shell main > * {
+.app-shell main > * {
     max-width: 100%;
   }
 }
 
 @media (max-width: 767px) {
-  .app-shell main {
+.app-shell main {
     padding: 0.75rem;
   }
-
-  .app-shell footer {
+.app-shell footer {
     padding-inline: 0.75rem;
   }
-
-  .app-shell main .overflow-x-auto {
+.app-shell main .overflow-x-auto {
     width: calc(100% + 1.5rem);
     margin-inline: -0.75rem;
     padding-inline: 0.75rem;
   }
-
-  .app-shell main [data-slot="card"],
-  .app-shell main .rounded-2xl,
-  .app-shell main .rounded-3xl {
+.app-shell main [data-slot="card"],
+.app-shell main .rounded-2xl,
+.app-shell main .rounded-3xl {
     max-width: 100%;
   }
-
-  .app-shell main h1 {
+.app-shell main h1 {
     font-size: clamp(1.5rem, 7vw, 2.25rem);
     line-height: 1.3;
   }
-
-  .app-shell main h2 {
+.app-shell main h2 {
     font-size: clamp(1.2rem, 5.5vw, 1.75rem);
     line-height: 1.4;
   }
-
-  .app-shell main [data-slot="dialog-content"] {
+.app-shell main [data-slot="dialog-content"] {
     width: calc(100vw - 1rem);
     max-width: calc(100vw - 1rem);
     max-height: calc(100dvh - 1rem);
     overflow-y: auto;
     padding: 1rem;
   }
-
-  .app-shell main form {
+.app-shell main form {
     max-width: 100%;
   }
-
-  .app-shell main .grid {
+.app-shell main .grid {
     min-width: 0;
   }
 }
 
 @media (max-width: 479px) {
-  .app-shell header > div {
+.app-shell header > div {
     gap: 0.5rem;
     padding-inline: 0.75rem;
   }
-
-  .app-shell header p {
+.app-shell header p {
     max-width: 42vw;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
-  .app-shell main .flex-wrap {
+.app-shell main .flex-wrap {
     row-gap: 0.625rem;
   }
 }
-
-/* Device-independent print refinements: the browser's print dialog controls
-   the physical printer/PDF destination; CSS keeps the document legible. */
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 12mm 10mm;
-  }
-
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .reports-print-sheet {
-    font-family: "Cairo Variable", Arial, sans-serif !important;
-    font-size: 9pt !important;
-    line-height: 1.55 !important;
-    direction: rtl !important;
-  }
-
-  .report-official-content {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .report-record-section {
-    margin-top: 7mm !important;
-  }
-
-  .report-record-section > div:first-child {
-    break-after: avoid-page;
-    page-break-after: avoid;
-  }
-
-  .report-table-wrap {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
-  }
-
-  .reports-print-sheet table {
-    width: 100% !important;
-    table-layout: fixed !important;
-    font-size: 7.5pt !important;
-    line-height: 1.35 !important;
-  }
-
-  .reports-print-sheet th,
-  .reports-print-sheet td {
-    padding: 1.2mm !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-  }
-
-  .reports-print-sheet a {
-    color: inherit !important;
-    text-decoration: none !important;
-  }
-
-  .reports-print-sheet p,
-  .reports-print-sheet li {
-    orphans: 3;
-    widows: 3;
-  }
-
-  .reports-print-sheet .report-summary,
-  .reports-print-sheet .report-analysis,
-  .reports-print-sheet .report-approval {
-    break-inside: avoid-page;
-    page-break-inside: avoid;
-  }
-}
-
-/* Screen preview and controls remain usable on narrow phones and tablets. */
-.reports-print-sheet {
-  min-width: 0;
-  overflow-wrap: break-word;
-  word-break: normal;
-}
-
-@media (max-width: 640px) {
-  .reports-print-sheet {
-    font-size: 0.875rem;
-  }
-
-  .reports-print-sheet table {
-    min-width: 0;
-  }
-}
-
-/* Shared print behavior for every document using the print-area contract. */
-@media print {
-  .print-area,
-  .program-a4,
-  .single-print-sheet,
-  .print-only-document {
-    box-sizing: border-box !important;
-    width: 100% !important;
-    max-width: 190mm !important;
-    margin-inline: auto !important;
-    break-inside: auto;
-    page-break-inside: auto;
-  }
-
-  /* Keep signature/approval groups together and avoid forced repetition. */
-  .print-area .report-signatures,
-  .print-area .signature-block,
-  .print-area .signature-area,
-  .print-area [data-print-signature],
-  .program-a4 .report-signatures,
-  .program-a4 .signature-block,
-  .program-a4 .signature-area,
-  .program-a4 [data-print-signature] {
-    break-inside: avoid-page !important;
-    page-break-inside: avoid !important;
-  }
-
-  /* Content can flow naturally across pages; do not clip long documents. */
-  .print-area *,
-  .program-a4 *,
-  .single-print-sheet * {
-    max-height: none;
-  }
-
-  .print-area table,
-  .program-a4 table {
-    max-width: 100% !important;
-  }
-
-  .print-area .print-document-title,
-  .program-a4 .print-document-title {
-    break-after: avoid-page;
-    page-break-after: avoid;
-  }
-
-  /* Repeat the letterhead clearance on every printed page fragment. */
-  .print-area:has(.print-repeat-header),
-  .program-a4:has(.print-repeat-header),
-  .electronic-template-sheet:has(.print-repeat-header) {
-    padding-top: var(--print-header-clearance, 54mm) !important;
-    -webkit-box-decoration-break: clone !important;
-    box-decoration-break: clone !important;
-  }
-
-  .final-signatures {
-    position: static !important;
-    margin-top: 12mm !important;
-    break-before: auto !important;
-    page-break-before: auto !important;
-    break-inside: avoid-page !important;
-    page-break-inside: avoid !important;
-  }
-}
-
-
 :root {
-  --print-header-clearance: 54mm;
-}
 
-/* Keep A4 PDF output independent of a phone or tablet viewport. */
-.pdf-capture {
-  box-sizing: border-box !important;
-  direction: rtl !important;
-  font-family: "Cairo Variable", Arial, sans-serif !important;
-  color: #252124;
-}
-
-.pdf-capture table {
-  width: 100% !important;
-  max-width: 100% !important;
-  table-layout: fixed !important;
-  border-collapse: collapse !important;
-}
-
-.pdf-capture th,
-.pdf-capture td {
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: normal !important;
-  vertical-align: top !important;
-}
-
-.pdf-capture .overflow-x-auto,
-.pdf-capture .overflow-hidden {
-  overflow: visible !important;
-}
-
-.pdf-capture .official-letterhead,
-.pdf-capture-part.official-letterhead {
-  box-sizing: border-box !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  margin-inline: 0 !important;
-  -webkit-print-color-adjust: exact !important;
-  print-color-adjust: exact !important;
-}
-
-.pdf-capture .official-header-grid,
-.pdf-capture-part .official-header-grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 38mm minmax(0, 1fr) !important;
-  align-items: center !important;
-  gap: 3mm !important;
-  padding: 3mm 4mm !important;
-}
-
-.pdf-capture .official-header-grid > div,
-.pdf-capture-part .official-header-grid > div {
-  min-width: 0 !important;
-  min-height: 24mm !important;
-  line-height: 1.3 !important;
-}
-
-.pdf-capture .official-ministry-logo,
-.pdf-capture-part .official-ministry-logo {
-  width: 34mm !important;
-  max-width: 34mm !important;
-  height: 22mm !important;
-  max-height: 22mm !important;
-}
-
-.pdf-capture .official-school-logo,
-.pdf-capture-part .official-school-logo {
-  width: auto !important;
-  max-width: 24mm !important;
-  height: auto !important;
-  max-height: 14mm !important;
-}
-
-.pdf-capture .official-letterhead > h2,
-.pdf-capture-part.official-letterhead > h2 {
-  margin-top: 2mm !important;
-  padding: 1.5mm 4mm !important;
-  font-size: 11pt !important;
-}
-
-.pdf-capture.reports-print-sheet {
-  font-size: 9pt !important;
-  line-height: 1.55 !important;
-}
-
-.pdf-capture.reports-print-sheet table {
-  font-size: 7.5pt !important;
-  line-height: 1.35 !important;
-}
-
-@media print {
-  .official-letterhead {
-    box-sizing: border-box !important;
-    width: 100% !important;
-    margin-inline: 0 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .official-header-grid {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 38mm minmax(0, 1fr) !important;
-    align-items: center !important;
-    gap: 3mm !important;
-    padding: 3mm 4mm !important;
-  }
-
-  .official-header-grid > div {
-    min-width: 0 !important;
-    min-height: 24mm !important;
-    line-height: 1.3 !important;
-  }
-
-  .official-ministry-logo {
-    width: 34mm !important;
-    max-width: 34mm !important;
-    height: 22mm !important;
-    max-height: 22mm !important;
-  }
-
-  .official-school-logo {
-    width: auto !important;
-    max-width: 24mm !important;
-    height: auto !important;
-    max-height: 14mm !important;
-  }
-
-  .official-letterhead > h2 {
-    margin-top: 2mm !important;
-    padding: 1.5mm 4mm !important;
-    font-size: 11pt !important;
-  }
 }

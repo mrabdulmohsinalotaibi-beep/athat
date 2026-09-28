@@ -1,37 +1,34 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   CheckSquare,
-  ChevronDown,
   Copy,
   Download,
-  FileDown,
   Link2,
   Mail,
   MessageCircle,
   MessageSquareText,
-  Printer,
   QrCode,
   RotateCcw,
   Send,
   Square,
   Star,
   Trash2,
-  UserCog,
+  UserCog
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
-import { elementToPdf } from "@/lib/pdf";
+
 import { normalizeSaudiPhone, shareOnWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatHijriDate, formatHijriDateTime } from "@/lib/date";
-import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+
 import { Textarea } from "@/components/ui/textarea";
-import { requestPrint } from "@/lib/print";
+
 
 const STATUSES = ["جديد", "قيد المراجعة", "تم الرد", "محفوظ"];
 
@@ -137,16 +134,16 @@ function SummaryCard({
 export default function MessagesDashboard() {
   const { data: school } = useSchool();
   const queryClient = useQueryClient();
-  const printRef = useRef<HTMLDivElement>(null);
+
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("الكل");
   const [status, setStatus] = useState("الكل");
   const [assignee, setAssignee] = useState("الكل");
-  const [exporting, setExporting] = useState(false);
+
   const [rotatingLink, setRotatingLink] = useState(false);
-  const [includeInternal, setIncludeInternal] = useState(true);
+
 
   const { data: messages = [], isLoading, isError } = useQuery({
     queryKey: ["feedback_messages"],
@@ -473,51 +470,7 @@ export default function MessagesDashboard() {
     );
   }
 
-  async function exportVariantPdf(internal: boolean) {
-    if (!selected.length || exporting) {
-      return;
-    }
 
-    setIncludeInternal(internal);
-    setExporting(true);
-
-    try {
-      // إعطاء الواجهة فرصة لإعادة العرض بحسب النوع المطلوب (مشاركة / داخلي) قبل الالتقاط.
-      await new Promise((resolve) => window.setTimeout(resolve, 150));
-      if (!printRef.current) return;
-
-      await elementToPdf(
-        printRef.current,
-        internal ? "تقرير داخلي للآراء والرسائل" : "تقرير الآراء والرسائل",
-      );
-
-      toast.success("تم حفظ التقرير بصيغة PDF");
-    } catch {
-      toast.error("تعذّر حفظ ملف PDF.");
-    } finally {
-      setExporting(false);
-    }
-  }
-
-  async function exportAllPdf() {
-    if (exporting) return;
-
-    setSelectedIds(filtered.map((item) => item.id));
-    setIncludeInternal(true);
-    setExporting(true);
-
-    try {
-      await new Promise((resolve) => window.setTimeout(resolve, 150));
-      if (!printRef.current) return;
-
-      await elementToPdf(printRef.current, "تقرير قائمة نتائج الآراء والرسائل");
-      toast.success("تم حفظ التقرير بصيغة PDF");
-    } catch {
-      toast.error("تعذّر حفظ ملف PDF.");
-    } finally {
-      setExporting(false);
-    }
-  }
 
   async function replyToBeneficiary(
     item: FeedbackMessage,
@@ -569,34 +522,9 @@ export default function MessagesDashboard() {
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
-      {/* تنسيقات الطباعة الخاصة بـ A4 */}
-      <style>{`
-        @media print {
-          @page {
-            size: A4;
-            margin: 10mm;
-          }
-          .no-print {
-            display: none !important;
-          }
-          .print-only {
-            display: block !important;
-          }
-          body {
-            background: white !important;
-            color: black !important;
-          }
-          .page-break {
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-        }
-        .print-only {
-          display: none;
-        }
-      `}</style>
+      
 
-      <section className="no-print border-b border-border pb-6">
+      <section className="border-b border-border pb-6">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <div className="flex items-center gap-2 text-primary">
@@ -673,7 +601,7 @@ export default function MessagesDashboard() {
         )}
       </section>
 
-      <section className="no-print grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <SummaryCard
           label="إجمالي المشاركات"
           value={messages.length}
@@ -714,7 +642,7 @@ export default function MessagesDashboard() {
         />
       </section>
 
-      <section className="no-print border-y border-border py-5">
+      <section className="border-y border-border py-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div>
@@ -792,27 +720,15 @@ export default function MessagesDashboard() {
             <Button variant="outline" onClick={() => sendEmail()} disabled={!selected.length}>
               <Mail className="size-4" /> بريد
             </Button>
-            <Button variant="outline" onClick={() => exportVariantPdf(false)} disabled={!selected.length || exporting}>
-              <FileDown className="size-4" /> حفظ PDF (مشاركة)
-            </Button>
-            <Button onClick={() => exportVariantPdf(true)} disabled={!selected.length || exporting}>
-              <FileDown className="size-4" /> {exporting ? "جارٍ حفظ PDF..." : "حفظ PDF (داخلي)"}
-            </Button>
-            <Button variant="outline" onClick={() => requestPrint()} disabled={!selected.length}>
-              <Printer className="size-4" /> طباعة التقرير
-            </Button>
           </div>
         </div>
       </section>
 
-      <section className="no-print min-w-0 overflow-hidden rounded-md border border-border bg-card shadow-sm">
+      <section className="min-w-0 overflow-hidden rounded-md border border-border bg-card shadow-sm">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-muted/30 px-4 py-3 text-sm sm:px-5">
           <span>
             <strong>{filtered.length}</strong> مشاركة مطابقة {selected.length ? `· ${selected.length} محددة` : ""}
           </span>
-          <Button size="sm" variant="ghost" onClick={exportAllPdf} disabled={exporting}>
-            <FileDown className="size-4" /> حفظ PDF لقائمة النتائج
-          </Button>
         </div>
 
         <div className="space-y-3 p-3 md:hidden">
@@ -944,49 +860,7 @@ export default function MessagesDashboard() {
         </div>
       </section>
 
-      {/* قسم الطباعة والتصدير المخفي المتوافق مع A4 */}
-      <div ref={printRef} className="print-only-document print-area bg-white text-black p-6 space-y-4" dir="rtl">
-        <OfficialHeader school={school} title={includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"} />
-        <div className="text-center my-4">
-          <h2 className="text-lg font-bold">
-            {includeInternal ? "تقرير داخلي مفصل للآراء والمقترحات" : "تقرير الآراء والمقترحات"}
-          </h2>
-          <p className="text-xs text-gray-500 mt-1">تاريخ الاستخراج: {formatHijriDate(new Date())}</p>
-        </div>
-
-        <div className="space-y-6">
-          {selected.map((item, index) => (
-            <div key={item.id} className="page-break border border-gray-300 rounded-lg p-4 space-y-2 text-sm bg-white">
-              <div className="flex justify-between border-b pb-2 font-bold">
-                <span>#{index + 1} - {item.category} ({item.sender_role})</span>
-                <span>التاريخ: {formatHijriDate(item.created_at)}</span>
-              </div>
-              <div>
-                <span className="font-semibold">المرسل: </span>
-                <span>{item.sender_name || "مستفيد"} {item.sender_contact ? `(${item.sender_contact})` : ""}</span>
-              </div>
-              <div>
-                <span className="font-semibold">المشاركة: </span>
-                <p className="whitespace-pre-wrap mt-1 text-gray-800 leading-relaxed bg-gray-50 p-2 rounded">{item.message}</p>
-              </div>
-              {item.response_note && (
-                <div className="border-t pt-2">
-                  <span className="font-semibold text-blue-800">الرد أو الإجراء المتخذ: </span>
-                  <p className="whitespace-pre-wrap mt-1 text-gray-700">{item.response_note}</p>
-                </div>
-              )}
-              {includeInternal && item.internal_notes && (
-                <div className="border-t pt-2 text-xs bg-amber-50 p-2 rounded">
-                  <span className="font-semibold text-amber-900">ملاحظات داخلية: </span>
-                  <p className="whitespace-pre-wrap mt-1 text-amber-800">{item.internal_notes}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <OfficialFooter school={school} />
-      </div>
+      
     </div>
   );
 }

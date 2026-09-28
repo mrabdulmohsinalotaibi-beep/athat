@@ -1,7 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CheckSquare, FileDown, FileText, Printer, RotateCcw, Square } from "lucide-react";
+import { CheckSquare, FileText, RotateCcw, Square } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -9,13 +9,13 @@ import { useSchool } from "@/lib/school";
 import { computeKpis, isPercentKpi } from "@/lib/kpi";
 import { RECORDS, type FieldDef } from "@/lib/records";
 import { displayRecordValue } from "@/lib/display";
-import { elementToPdf } from "@/lib/pdf";
+
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { requestPrint } from "@/lib/print";
+
+
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
       { title: "التقارير | الذات" },
       {
         name: "description",
-        content: "إعداد وتصدير تقارير التوجيه الطلابي الرسمية بصيغة PDF ومشاركتها عبر واتساب.",
+        content: "إعداد واستعراض تقارير التوجيه الطلابي الرسمية ومشاركتها عبر واتساب.",
       },
     ],
   }),
@@ -62,7 +62,7 @@ function dateFieldForRecord(key: string) {
 
 function ReportsPage() {
   const { data: school } = useSchool();
-  const printRef = useRef<HTMLDivElement>(null);
+
 
   const reportableRecords = useMemo(() => RECORDS.filter((record) => record.key !== "reports"), []);
 
@@ -76,7 +76,7 @@ function ReportsPage() {
   const [selectedKeys, setSelectedKeys] = useState<string[]>(
     reportableRecords.map((record) => record.key),
   );
-  const [isExporting, setIsExporting] = useState(false);
+
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["official-reports-all-records"],
@@ -159,19 +159,6 @@ function ReportsPage() {
     toast.success("تمت إعادة ضبط التقرير.");
   }
 
-  async function exportOfficialPdf() {
-    if (!printRef.current || isExporting) return;
-    setIsExporting(true);
-    try {
-      await elementToPdf(printRef.current, reportTitle || "تقرير_رسمي");
-      toast.success("تم إنشاء التقرير الرسمي بصيغة PDF.");
-    } catch (error) {
-      console.error(error);
-      toast.error("تعذّر إنشاء ملف PDF.");
-    } finally {
-      setIsExporting(false);
-    }
-  }
 
   const activeSelectedKeys = reportMode === "single" ? [selectedSingleKey] : selectedKeys;
 
@@ -186,31 +173,19 @@ function ReportsPage() {
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
-      <section className="no-print border-b border-border pb-6">
+      <section className="border-b border-border pb-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <div className="flex items-center gap-2 text-primary">
               <FileText className="size-5" />
-              <span className="text-xs font-bold">الإصدار الرسمي PDF</span>
+              <span className="text-xs font-bold">معاينة رسمية</span>
             </div>
             <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير</h1>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم احفظ التقرير بصيغة PDF بالكليشة الرسمية
-              وتوقيع الموجه الطلابي ومدير المدرسة.
+              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم راجع المعاينة الرسمية أدناه، بما فيها توقيع الموجه الطلابي ومدير المدرسة.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              onClick={() => void exportOfficialPdf()}
-              disabled={isExporting || isLoading}
-            >
-              <FileDown className="size-4" />
-              {isExporting ? "جارٍ إنشاء PDF..." : "حفظ PDF للتقرير الرسمي"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => requestPrint()}>
-              <Printer className="size-4" /> طباعة A4
-            </Button>
             <Button type="button" variant="ghost" onClick={reset}>
               <RotateCcw className="size-4" />
               إعادة ضبط
@@ -219,7 +194,7 @@ function ReportsPage() {
         </div>
       </section>
 
-      <section className="no-print rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="space-y-5">
           <div>
             <Label>نوع التقرير</Label>
@@ -316,10 +291,10 @@ function ReportsPage() {
           )}
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <PrintStat label="السجلات المختارة" value={selectedRecords.length} />
-            <PrintStat label="إجمالي الصفوف" value={totalRows} />
-            <PrintStat label="الطلاب" value={filteredSections.students?.length ?? 0} />
-            <PrintStat label="الشواهد" value={filteredSections.evidences?.length ?? 0} />
+            <ReportStat label="السجلات المختارة" value={selectedRecords.length} />
+            <ReportStat label="إجمالي الصفوف" value={totalRows} />
+            <ReportStat label="الطلاب" value={filteredSections.students?.length ?? 0} />
+            <ReportStat label="الشواهد" value={filteredSections.evidences?.length ?? 0} />
           </div>
 
           {isLoading && <p className="text-xs text-muted-foreground">جارٍ تحميل السجلات...</p>}
@@ -340,8 +315,7 @@ function ReportsPage() {
       </section>
 
       <div
-        ref={printRef}
-        className="reports-print-sheet print-area hidden bg-paper text-paper-foreground print:block"
+        className="reports-preview mx-auto mt-6 rounded-xl border bg-paper p-5 text-paper-foreground shadow-sm sm:p-8"
       >
         <OfficialHeader
           school={school}
@@ -353,10 +327,10 @@ function ReportsPage() {
         <main className="report-official-content">
           <section className="report-cover block border-b border-paper-border pb-5 pt-5">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <PrintStat label="عدد السجلات" value={selectedRecords.length} />
-              <PrintStat label="إجمالي الصفوف" value={totalRows} />
-              <PrintStat label="عدد الطلاب" value={filteredSections.students?.length ?? 0} />
-              <PrintStat label="عدد الشواهد" value={filteredSections.evidences?.length ?? 0} />
+              <ReportStat label="عدد السجلات" value={selectedRecords.length} />
+              <ReportStat label="إجمالي الصفوف" value={totalRows} />
+              <ReportStat label="عدد الطلاب" value={filteredSections.students?.length ?? 0} />
+              <ReportStat label="عدد الشواهد" value={filteredSections.evidences?.length ?? 0} />
             </div>
             <div className="mt-5 rounded-xl border border-paper-border bg-paper-muted p-4">
               <div className="grid gap-2 sm:grid-cols-2 text-xs">
@@ -468,14 +442,14 @@ function ReportsPage() {
             </div>
           </section>
 
-          <OfficialFooter school={school} repeatEveryPage={false} />
+          <OfficialFooter school={school} />
         </main>
       </div>
     </div>
   );
 }
 
-function PrintStat({ label, value }: { label: string; value: number | string }) {
+function ReportStat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-xl border border-paper-border bg-paper-muted p-3 text-center">
       <p className="text-[11px] text-muted-foreground">{label}</p>
