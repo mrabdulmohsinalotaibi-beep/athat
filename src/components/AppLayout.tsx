@@ -42,7 +42,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const currentSection = WORKSPACE_SECTIONS.find((section) =>
-    section.items.some((item) => isPathActive(pathname, item.to)),
+    section.items.some((item) => !item.disabled && isPathActive(pathname, item.to)),
   );
 
   useEffect(() => {
@@ -143,13 +143,27 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     hidden={!isExpanded}
                     className="mr-3 mt-1 space-y-1 border-r border-sidebar-border pr-3"
                   >
-                    {section.items.map((item) => {
+                    {section.items.map((item, index) => {
                       const ItemIcon = item.icon;
-                      const isItemActive = isPathActive(pathname, item.to);
+                      const isItemActive = !item.disabled && isPathActive(pathname, item.to);
+
+                      if (item.disabled) {
+                        return (
+                          <span
+                            key={item.label + index}
+                            aria-disabled="true"
+                            className="flex cursor-not-allowed items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-sidebar-foreground/45"
+                            title="هذه الخدمة ستتوفر قريبًا"
+                          >
+                            <ItemIcon className="size-3.5 shrink-0" aria-hidden="true" />
+                            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          </span>
+                        );
+                      }
 
                       return (
                         <Link
-                          key={item.to}
+                          key={item.to + index}
                           to={item.to}
                           onClick={() => setOpen(false)}
                           aria-current={isItemActive ? "page" : undefined}
