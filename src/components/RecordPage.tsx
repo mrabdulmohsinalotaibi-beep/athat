@@ -30,7 +30,7 @@ import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import { generateSmartFill } from "@/lib/deepseek.functions";
 import type { RecordConfig } from "@/lib/records";
-import { OfficialHeader } from "@/components/OfficialHeader";
+import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import {
   StudentCombobox,
   useStudentOptions,
@@ -97,6 +97,7 @@ export function RecordPage({
   const [attachFor, setAttachFor] = useState<Row | null>(null);
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const recordPdfRef = useRef<HTMLDivElement>(null);
 
   const listFields = config.fields.filter((f) => f.list).slice(0, 7);
 
@@ -453,6 +454,11 @@ export function RecordPage({
           >
             <Download className="size-4" /> تصدير Excel
           </Button>
+          <PdfPreviewButton
+            elementRef={recordPdfRef}
+            filename={`${config.title}-تقرير`}
+            title={config.title}
+          />
           <input
             ref={fileRef}
             type="file"
@@ -493,7 +499,7 @@ export function RecordPage({
         )}
       </div>
 
-      <div ref={recordPdfRef} className="rounded-xl border bg-card p-4 shadow-sm">
+      <div ref={recordPdfRef} className="record-pdf-document rounded-xl border bg-card p-4 shadow-sm">
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
@@ -519,7 +525,7 @@ export function RecordPage({
                     </button>
                   </th>
                 ))}
-                <th className="p-3" />
+                <th data-pdf-exclude="true" className="p-3" />
               </tr>
             </thead>
             <tbody>
@@ -560,7 +566,7 @@ export function RecordPage({
                       )}
                     </td>
                   ))}
-                  <td className="p-2">
+                  <td data-pdf-exclude="true" className="p-2">
                     <div className="flex gap-1">
                       {rowAction && (
                         <Button
@@ -664,8 +670,9 @@ export function RecordPage({
             </tbody>
           </table>
         </div>
+        <OfficialFooter school={school} />
         {pageCount > 1 && (
-          <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+          <div data-pdf-exclude="true" className="mt-4 flex items-center justify-between gap-3 text-sm">
             <Button
               variant="outline"
               size="sm"
