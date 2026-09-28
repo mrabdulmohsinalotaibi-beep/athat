@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -31,6 +31,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 
 
 export const Route = createFileRoute("/_authenticated/programs")({
@@ -311,8 +313,8 @@ function Stat({ title, value }: { title: string; value: number }) {
 
 function DocCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-b border-l border-black p-3">
-      <p className="mb-1 text-xs text-gray-600">{label}</p>
+    <div className="border-b border-l border-paper-border p-3">
+      <p className="mb-1 text-xs text-paper-muted-foreground">{label}</p>
       <p className="min-h-6 whitespace-pre-wrap font-semibold">{value || "—"}</p>
     </div>
   );
@@ -320,8 +322,8 @@ function DocCell({ label, value }: { label: string; value: string }) {
 
 function DocSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-4 border border-black p-3">
-      <h3 className="mb-2 border-b border-black pb-1 font-bold">{title}</h3>
+    <section className="mt-4 break-inside-avoid rounded-xl border border-paper-border p-3">
+      <h3 className="mb-2 border-b border-paper-border pb-2 font-black text-[var(--letterhead-primary)]">{title}</h3>
       <div>{children}</div>
     </section>
   );
@@ -382,6 +384,7 @@ function ProgramsPage() {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const programPrintRef = useRef<HTMLDivElement>(null);
 
 
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -648,44 +651,6 @@ function ProgramsPage() {
     }
   }
 
-  async function deleteAll() {
-    if (!window.confirm("تحذير: سيتم حذف جميع البرامج وشواهدها نهائياً. هل أنت متأكد؟")) return;
-    setDeleteBusy(true);
-    try {
-      const ids = programs.map((p) => p.id);
-      if (ids.length) {
-        const { data: evidence, error } = await supabase
-          .from("evidences")
-          .select("id,file_path")
-          .in("linked_ref", ids)
-          .eq("linked_type", "برنامج");
-        if (error) throw error;
-        const paths = (evidence ?? []).map((x) => String(x.file_path ?? "")).filter(Boolean);
-        if (paths.length) await supabase.storage.from("evidences").remove(paths);
-        if ((evidence ?? []).length) {
-          const { error: delEv } = await supabase
-            .from("evidences")
-            .delete()
-            .in(
-              "id",
-              (evidence ?? []).map((x) => x.id),
-            );
-          if (delEv) throw delEv;
-        }
-      }
-      const { error } = await supabase
-        .from("programs")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-      if (error) throw error;
-      await queryClient.invalidateQueries({ queryKey: ["programs"] });
-      toast.success("تم حذف جميع البرامج والشواهد");
-    } catch (error) {
-      toast.error(`تعذّر الحذف: ${(error as Error).message}`);
-    } finally {
-      setDeleteBusy(false);
-    }
-  }
 
   async function importMinistryPrograms() {
     const existing = new Set(programs.map((p) => value(p.name).trim()));
@@ -733,13 +698,6 @@ function ProgramsPage() {
             disabled={isLoading || programsFailed}
           >
             <CalendarRange className="size-4" /> الخطة الوزارية 1448هـ
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={deleteAll}
-            disabled={deleteBusy || isLoading || programsFailed}
-          >
-            <Trash2 className="size-4" /> حذف الكل
           </Button>
         </div>
       </div>
@@ -800,7 +758,57 @@ function ProgramsPage() {
               </p>
             </div>
 
-            <div className="mx-auto w-full max-w-[210mm]">
+            <div className="mx-auto w-full max-w-[210mm] space-y-3">
+              {editing && (
+                <>
+                  <div className="flex justify-end" data-pdf-exclude="true">
+                    <PdfPreviewButton
+                      elementRef={programPrintRef}
+                      filename={`برنامج-${value(editing.name) || "إرشادي"}`}
+                      title={value(editing.name) || "تقرير برنامج إرشادي"}
+                    />
+                  </div>
+                  <div ref={programPrintRef} className="record-pdf-document rounded-xl border bg-paper p-5 text-paper-foreground shadow-sm">
+                    <OfficialHeader
+                      school={school}
+                      title={value(editing.name) || "برنامج إرشادي"}
+                      reportType="تقرير تنفيذ برنامج"
+                      reportNo={value(editing.program_no) || undefined}
+                      period={value(editing.term) || undefined}
+                    />
+                    <div className="mt-5 grid grid-cols-2 border-r border-t border-paper-border text-xs">
+                      <DocCell label="نوع البرنامج" value={value(editing.ptype)} />
+                      <DocCell label="المجال" value={value(editing.domain)} />
+                      <DocCell label="الفئة المستهدفة" value={value(editing.target_group)} />
+                      <DocCell label="حالة التنفيذ" value={value(editing.exec_status)} />
+                      <DocCell label="تاريخ البداية" value={value(editing.start_date)} />
+                      <DocCell label="تاريخ النهاية" value={value(editing.end_date)} />
+                      <DocCell label="عدد المستفيدين" value={value(editing.beneficiaries)} />
+                      <DocCell label="الفصل الدراسي" value={value(editing.term)} />
+                    </div>
+                    <DocSection title="الهدف">
+                      <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.goal) || "—"}</p>
+                    </DocSection>
+                    <DocSection title="مؤشر النجاح / التنفيذ">
+                      <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.indicator) || "—"}</p>
+                    </DocSection>
+                    <DocSection title="الشواهد المطلوبة">
+                      <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.required_evidence) || "—"}</p>
+                    </DocSection>
+                    {uploadedAttachments.length > 0 && (
+                      <DocSection title="الشواهد المرفوعة">
+                        <EvidenceGrid attachments={uploadedAttachments} />
+                      </DocSection>
+                    )}
+                    {value(editing.notes) && (
+                      <DocSection title="الملاحظات والإجراءات">
+                        <p className="whitespace-pre-wrap text-sm leading-7">{value(editing.notes)}</p>
+                      </DocSection>
+                    )}
+                    <OfficialFooter school={school} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
