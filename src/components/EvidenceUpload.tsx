@@ -67,13 +67,17 @@ export function EvidenceUploadDialog({
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const previewUrl = useMemo(() => file && kindOf(file.type, file.name) === "image" ? URL.createObjectURL(file) : "", [file]);
 
   const { data: programs = [] } = useQuery({
     queryKey: ["programs-options"],
     queryFn: async () => {
       const { data, error } = await supabase.from("programs").select("id, name, program_no");
-      if (error) throw error;
+      if (error) {
+        await supabase.storage.from("evidences").remove([path]);
+        throw error;
+      }
       return data ?? [];
     },
   });
@@ -157,11 +161,16 @@ export function EvidenceUploadDialog({
               if (chosen && chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); e.target.value = ""; return; }
               setFile(chosen); if (chosen && !name) setName(chosen.name);
             }} />
+            <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
+              const chosen = e.target.files?.[0] ?? null;
+              if (chosen && chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); e.target.value = ""; return; }
+              setFile(chosen); if (chosen && !name) setName(chosen.name);
+            }} />
             <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
               {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 h-28 max-w-full object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
               <p className="mt-2 text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
               <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>
-              <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => inputRef.current?.click()}>اختيار ملف</Button>
+              <div className="mt-3 flex flex-wrap justify-center gap-2"><Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>اختيار ملف</Button><Button type="button" variant="outline" size="sm" onClick={() => cameraRef.current?.click()}>التقاط صورة</Button></div>
             </div>
           </div>
           <div>
@@ -254,8 +263,10 @@ export function EvidenceGallery() {
 
   async function removeItem(id: string, path: string) {
     if (!confirm("هل تريد حذف هذا الشاهد وملفه؟")) return;
-    await supabase.storage.from("evidences").remove([path]);
-    await supabase.from("evidences").delete().eq("id", id);
+    const { error: storageError } = await supabase.storage.from("evidences").remove([path]);
+    if (storageError) { toast.error(`تعذّر حذف الملف: ${storageError.message}`); return; }
+    const { error } = await supabase.from("evidences").delete().eq("id", id);
+    if (error) { toast.error(`تم حذف الملف لكن تعذّر حذف سجل الشاهد: ${error.message}`); return; }
     queryClient.invalidateQueries({ queryKey: ["evidence-files"] });
     queryClient.invalidateQueries({ queryKey: ["evidences"] });
     toast.success("تم حذف الشاهد");
