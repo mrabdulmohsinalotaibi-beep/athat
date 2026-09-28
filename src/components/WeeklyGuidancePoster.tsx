@@ -6,7 +6,7 @@ import { BookOpenCheck } from "lucide-react";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
-import { sharePdfFile } from "@/lib/share-pdf";
+import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,24 +82,6 @@ function watermarkBackground(text: string) {
 export function WeeklyGuidancePoster() {
   const { data: school } = useSchool();
   const posterRef = useRef<HTMLDivElement>(null);
-  const [sharingPdf, setSharingPdf] = useState(false);
-
-  async function handleSharePdf() {
-    if (!posterRef.current || sharingPdf) return;
-    setSharingPdf(true);
-    try {
-      await sharePdfFile({
-        element: posterRef.current,
-        filename: `لوحة-التوجيه-الطلابي-${title}`,
-        title: `لوحة التوجيه الطلابي - ${title}`,
-      });
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") console.error(error);
-    } finally {
-      setSharingPdf(false);
-    }
-  }
-
 
   const [topic, setTopic] = useState<WeeklyTopic>("الانضباط");
   const [title, setTitle] = useState<string>("الانضباط");
@@ -206,9 +188,7 @@ export function WeeklyGuidancePoster() {
           <Button onClick={() => applyTemplate(topic)} variant="secondary" className="w-full">
             <BookOpenCheck className="size-4 ml-2" /> إعادة تطبيق القالب
           </Button>
-          <Button onClick={() => void handleSharePdf()} variant="outline" className="w-full" disabled={sharingPdf}>
-            {sharingPdf ? "جارٍ تجهيز PDF..." : "مشاركة PDF"}
-          </Button>
+          <PdfPreviewButton elementRef={posterRef} filename={`لوحة-التوجيه-الطلابي-${title}`} title={`لوحة التوجيه الطلابي - ${title}`} />
         </div>
       </section>
 
