@@ -29,7 +29,12 @@ function kindOf(mime: string, name: string) {
   return "doc";
 }
 
-function fileSizeLabel(bytes: number) {\n  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} كيلوبايت`;\n  return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;\n}\n\nfunction typeLabel(kind: string) {
+function fileSizeLabel(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} كيلوبايت`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;
+}
+
+function typeLabel(kind: string) {
   return kind === "image" ? "صورة" : kind === "video" ? "مقطع فيديو" : "مستند";
 }
 
@@ -74,10 +79,7 @@ export function EvidenceUploadDialog({
     queryKey: ["programs-options"],
     queryFn: async () => {
       const { data, error } = await supabase.from("programs").select("id, name, program_no");
-      if (error) {
-        await supabase.storage.from("evidences").remove([path]);
-        throw error;
-      }
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -130,7 +132,10 @@ export function EvidenceUploadDialog({
         file_name: file.name,
         mime_type: contentType,
       } as never);
-      if (error) throw error;
+      if (error) {
+        await supabase.storage.from("evidences").remove([path]);
+        throw error;
+      }
 
       queryClient.invalidateQueries({ queryKey: ["evidences"] });
       queryClient.invalidateQueries({ queryKey: ["evidence-files"] });
@@ -168,7 +173,8 @@ export function EvidenceUploadDialog({
             }} />
             <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
               {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 h-28 max-w-full object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
-              <p className="mt-2 break-all text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>\n              {file && <p className="mt-1 text-xs font-semibold text-primary">{typeLabel(kindOf(file.type, file.name))} · {fileSizeLabel(file.size)}</p>}
+              <p className="mt-2 break-all text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
+              {file && <p className="mt-1 text-xs font-semibold text-primary">{typeLabel(kindOf(file.type, file.name))} · {fileSizeLabel(file.size)}</p>}
               <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2"><Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>اختيار ملف</Button><Button type="button" variant="outline" size="sm" onClick={() => cameraRef.current?.click()}>التقاط صورة</Button></div>
             </div>
@@ -192,7 +198,10 @@ export function EvidenceUploadDialog({
             </div>
             <div>
               <Label className="mb-1.5 block text-xs">تاريخ الشاهد</Label>
-              <div className="relative">\n                <Input type="date" value={edate} onChange={(e) => setEdate(e.target.value)} className="text-transparent caret-transparent" aria-label="تاريخ الشاهد" />\n                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground">{formatHijriDate(edate)}</span>\n              </div>
+              <div className="relative">
+                <Input type="date" value={edate} onChange={(e) => setEdate(e.target.value)} className="text-transparent caret-transparent" aria-label="تاريخ الشاهد" />
+                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground">{formatHijriDate(edate)}</span>
+              </div>
             </div>
           </div>
           <div>
