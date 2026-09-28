@@ -29,7 +29,7 @@ function kindOf(mime: string, name: string) {
   return "doc";
 }
 
-function typeLabel(kind: string) {
+function fileSizeLabel(bytes: number) {\n  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} كيلوبايت`;\n  return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;\n}\n\nfunction typeLabel(kind: string) {
   return kind === "image" ? "صورة" : kind === "video" ? "مقطع فيديو" : "مستند";
 }
 
@@ -168,7 +168,7 @@ export function EvidenceUploadDialog({
             }} />
             <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
               {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 h-28 max-w-full object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
-              <p className="mt-2 text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
+              <p className="mt-2 break-all text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>\n              {file && <p className="mt-1 text-xs font-semibold text-primary">{typeLabel(kindOf(file.type, file.name))} · {fileSizeLabel(file.size)}</p>}
               <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2"><Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>اختيار ملف</Button><Button type="button" variant="outline" size="sm" onClick={() => cameraRef.current?.click()}>التقاط صورة</Button></div>
             </div>
@@ -226,8 +226,8 @@ export function EvidenceUploadDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             إلغاء
           </Button>
-          <Button onClick={upload} disabled={busy}>
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />} رفع الشاهد
+          <Button onClick={upload} disabled={busy || !file}>
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />} {busy ? "جارٍ الرفع..." : "رفع الشاهد"}
           </Button>
         </DialogFooter>
       </DialogContent>
