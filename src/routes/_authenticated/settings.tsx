@@ -113,6 +113,11 @@ function SettingsPage() {
   const [editingLookup, setEditingLookup] = useState<{ id: string; value: string } | null>(null);
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData.user?.id;
+      if (!userId) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا ثم حاول الحفظ");
+
       const payload = {
         ...values,
         show_counselor_on_documents: values["show_counselor_on_documents"] !== "false",
@@ -122,12 +127,14 @@ function SettingsPage() {
         logo_url: (schoolLogo ?? school?.logo_url) || null,
         ministry_logo_url: (ministryLogo ?? school?.ministry_logo_url) || null,
         public_requests_enabled: values["public_requests_enabled"] !== "false",
+        user_id: userId,
       };
       if (school?.id) {
         const { error } = await supabase
           .from("school_settings")
           .update(payload as never)
-          .eq("id", school.id);
+          .eq("id", school.id)
+          .eq("user_id", userId);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("school_settings").insert(payload as never);
