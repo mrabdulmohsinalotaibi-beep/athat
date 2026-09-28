@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileSpreadsheet, FolderOpen, Trash2, Upload } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { FileSpreadsheet, FolderOpen, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -12,18 +12,7 @@ import { StudentsImportDialog } from "@/components/StudentsImportDialog";
 import { StudentProfileDialog } from "@/components/StudentProfileDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
 
 type StudentRow = Record<string, unknown>;
 
@@ -59,10 +48,8 @@ function Filter({
 
 export function StudentsPage() {
   const config = recordByKey("students");
-  const queryClient = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
   const [profileStudent, setProfileStudent] = useState<StudentRow | null>(null);
-  const [confirmText, setConfirmText] = useState("");
   const [stage, setStage] = useState("");
   const [grade, setGrade] = useState("");
   const [classroom, setClassroom] = useState("");
@@ -92,22 +79,7 @@ export function StudentsPage() {
   const nationalities = useMemo(() => uniq("nationality"), [rows]);
   const studentStatuses = useMemo(() => uniq("status"), [rows]);
 
-  const deleteAll = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("students").delete().not("id", "is", null);
-      if (error) throw error;
-    },
-    onSuccess: async () => {
-      setConfirmText("");
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["students"] }),
-        queryClient.invalidateQueries({ queryKey: ["students-options"] }),
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
-      ]);
-      toast.success("تم حذف جميع أسماء الطلاب من السجل");
-    },
-    onError: (error: Error) => toast.error(`تعذّر حذف الطلاب: ${error.message}`),
-  });
+
 
   const extraFilter = useCallback(
     (row: Record<string, unknown>) =>
@@ -139,48 +111,7 @@ export function StudentsPage() {
               <FileSpreadsheet className="size-4" /> تحميل نموذج Excel
             </Button>
             <Button asChild variant="outline"><Link to="/integrations">استيراد من نور أو مدرستي</Link></Button>
-            <details className="rounded-lg border px-2 py-1">
-              <summary className="cursor-pointer px-1 py-1 text-[11px] font-semibold text-muted-foreground">إجراءات إدارية</summary>
-              <div className="pt-2">
-            <AlertDialog onOpenChange={(open) => !open && setConfirmText("")}>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={rows.length === 0}>
-                  <Trash2 className="size-4" /> حذف جميع الطلاب
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent dir="rtl">
-                <AlertDialogHeader className="text-right sm:text-right">
-                  <AlertDialogTitle>حذف سجل الطلاب بالكامل؟</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    سيُحذف {rows.length} طالباً دفعة واحدة، ولا يمكن التراجع عن هذا الإجراء. اكتب «حذف الكل» للتأكيد.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <Input
-                  value={confirmText}
-                  onChange={(event) => setConfirmText(event.target.value)}
-                  placeholder="اكتب: حذف الكل"
-                  autoComplete="off"
-                />
-                <AlertDialogFooter className="gap-2 sm:space-x-0">
-                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                  <AlertDialogAction
-                    disabled={confirmText.trim() !== "حذف الكل" || deleteAll.isPending}
-                    onClick={(event) => {
-                      if (confirmText.trim() !== "حذف الكل") {
-                        event.preventDefault();
-                        return;
-                      }
-                      deleteAll.mutate();
-                    }}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {deleteAll.isPending ? "جارٍ الحذف..." : "حذف نهائي"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-              </div>
-            </details>
+
           </>
         }
         filters={
