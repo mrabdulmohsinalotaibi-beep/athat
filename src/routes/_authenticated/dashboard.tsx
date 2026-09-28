@@ -106,6 +106,24 @@ function useDashboard() {
           .from("feedback_messages")
           .select("id, sender_name, category, status, assigned_to, created_at"),
       ]);
+      const queryResults = [
+        students,
+        cases,
+        attendance,
+        behavior,
+        programs,
+        calendar,
+        planTasks,
+        interviews,
+        publicRequests,
+        feedback,
+      ];
+      const failed = queryResults.find((result) => result.error);
+      if (failed?.error) {
+        console.error("[Dashboard] failed to load data", failed.error);
+        throw failed.error;
+      }
+
       return {
         students: students.data ?? [],
         cases: cases.data ?? [],
