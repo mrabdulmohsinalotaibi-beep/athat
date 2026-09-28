@@ -203,6 +203,7 @@ export function RecordPage({
     () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
     [filtered, currentPage],
   );
+  const visibleRows = paged;
 
   function toggleSort(key: string) {
     setPage(1);
@@ -502,7 +503,30 @@ export function RecordPage({
         )}
       </div>
 
-      <div ref={recordPdfRef} className="record-pdf-document rounded-xl border bg-card p-4 shadow-sm">
+      <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-sm">
+            <thead>
+              <tr className="border-b bg-muted/60 text-xs">
+                {listFields.map((f) => <th key={f.name} className="whitespace-nowrap p-3 font-bold">{f.label}</th>)}
+                <th className="p-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && <tr><td colSpan={listFields.length + 1} className="p-6 text-center text-muted-foreground">جارٍ التحميل...</td></tr>}
+              {!isLoading && visibleRows.length === 0 && <tr><td colSpan={listFields.length + 1} className="p-6 text-center text-muted-foreground">لا توجد سجلات بعد.</td></tr>}
+              {visibleRows.map((row) => (
+                <tr key={row.id} className="border-b last:border-0 hover:bg-muted/40">
+                  {listFields.map((field) => <td key={field.name} className="p-3 align-top">{displayRecordValue(row[field.name])}</td>)}
+                  <td className="p-2 text-left text-xs text-muted-foreground">•••</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div ref={recordPdfRef} className="record-pdf-document hidden rounded-xl border bg-paper p-4 text-paper-foreground print:block">
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
@@ -674,8 +698,11 @@ export function RecordPage({
           </table>
         </div>
         <OfficialFooter school={school} />
-        {pageCount > 1 && (
-          <div data-pdf-exclude="true" className="mt-4 flex items-center justify-between gap-3 text-sm">
+        <div className="hidden">{printRows.length}</div>
+      </div>
+
+      {pageCount > 1 && (
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm">
             <Button
               variant="outline"
               size="sm"
@@ -697,8 +724,6 @@ export function RecordPage({
             </Button>
           </div>
         )}
-      </div>
-
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" dir="rtl">
