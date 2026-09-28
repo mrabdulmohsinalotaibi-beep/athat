@@ -1,11 +1,14 @@
 import { useMemo, useRef, useState } from "react";
-import { FileDown, Printer, X } from "lucide-react";
+import { FileDown, Loader2, Printer, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { elementToPdf } from "@/lib/pdf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { useSchool } from "@/lib/school";
+import { generateSmartFill } from "@/lib/deepseek.functions";
 import {
   Dialog,
   DialogContent,
@@ -32,8 +35,11 @@ export function ElectronicTemplateDialog({
   fields,
 }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  const { data: school } = useSchool();
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [smartBusy, setSmartBusy] = useState(false);
+  const [smartPrompt, setSmartPrompt] = useState("");
   const normalizedFields = useMemo(
     () => (fields.length ? fields : [{ label: "الملاحظات", multiline: true }]),
     [fields],
@@ -57,7 +63,46 @@ export function ElectronicTemplateDialog({
   }
 
   function printSheet() {
+    document.body.classList.add("printing-electronic-template");
     window.setTimeout(() => window.print(), 80);
+    window.setTimeout(() => document.body.classList.remove("printing-electronic-template"), 600);
+  }
+
+  async function fillWithAi() {
+    const brief = smartPrompt.trim();
+    if (brief.length < 5 || smartBusy) return;
+    const fieldsForAi = normalizedFields.map((field) => ({
+      name: field.label,
+      label: field.label,
+      type: field.multiline ? ("textarea" as const) : ("text" as const),
+    }));
+    setSmartBusy(true);
+    try {
+      const result = await generateSmartFill({
+        data: {
+          recordType: "electronic-template",
+          recordTitle: title,
+          brief,
+          schoolName: school?.school_name ?? "",
+          fields: fieldsForAi,
+          values,
+        },
+      });
+      const suggestions = result.suggestions ?? {};
+      const usable = Object.fromEntries(
+        Object.entries(suggestions).filter(([name, text]) => !values[name]?.trim() && text.trim()),
+      );
+      setValues((current) => ({ ...current, ...usable }));
+      toast.success(
+        Object.keys(usable).length
+          ? `تمت تعبئة ${Object.keys(usable).length} حقول — راجعها يدويًا قبل الطباعة.`
+          : "لم تتوفر معلومات كافية للتعبئة.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذّرت التعبئة الذكية");
+    } finally {
+      setSmartBusy(false);
+    }
   }
 
   return (
@@ -105,6 +150,34 @@ export function ElectronicTemplateDialog({
           </div>
           <aside className="space-y-3 rounded-2xl border bg-card p-4">
             <p className="text-sm font-black">إجراءات النموذج</p>
+            <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/5 p-3">
+              <p className="flex items-center gap-2 text-xs font-black text-primary">
+                <Sparkles className="size-3.5" /> التعبئة بالذكاء الاصطناعي
+              </p>
+              <Textarea
+                rows={3}
+                value={smartPrompt}
+                onChange={(event) => setSmartPrompt(event.target.value)}
+                placeholder="اكتب ملخصًا عن الموضوع ليقترح DeepSeek الحقول المناسبة"
+                disabled={smartBusy}
+              />
+              <Button
+                className="w-full gap-2"
+                variant="secondary"
+                onClick={() => void fillWithAi()}
+                disabled={smartBusy || smartPrompt.trim().length < 5}
+              >
+                {smartBusy ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
+                {smartBusy ? "جارٍ التعبئة..." : "تعبئة الحقول"}
+              </Button>
+              <p className="text-[10px] leading-5 text-muted-foreground">
+                يمكنك تعديل كل نتيجة يدويًا. لا تكتب اسم الطالب أو رقم هويته أو جواله.
+              </p>
+            </div>
             <Button className="w-full gap-2" onClick={printSheet}>
               <Printer className="size-4" /> طباعة مباشرة A4
             </Button>
@@ -120,12 +193,7 @@ export function ElectronicTemplateDialog({
           ref={sheetRef}
           className="electronic-template-sheet print-area mx-auto hidden w-full max-w-[210mm] bg-paper p-5 text-paper-foreground print:block sm:p-8"
         >
-          <div className="official-letterhead mb-6 overflow-hidden rounded-b-2xl bg-[#1f5964] pb-3 text-white">
-            <div className="border-t-4 border-[#c0925d] px-5 py-4 text-center">
-              <p className="text-xs font-bold">منصة الذات للتوجيه الطلابي</p>
-              <h1 className="mt-2 text-xl font-black">{title}</h1>
-            </div>
-          </div>
+          <OfficialHeader school={school} title={title} reportType="نموذج إلكتروني" />
           <p className="mb-5 text-sm leading-7 text-paper-muted-foreground">{description}</p>
           <div className="grid grid-cols-2 border border-paper-border">
             {normalizedFields.map((field) => (
@@ -146,16 +214,7 @@ export function ElectronicTemplateDialog({
               </div>
             ))}
           </div>
-          <div className="mt-14 grid grid-cols-2 gap-10 text-center text-xs font-bold">
-            <div>
-              <div className="mb-10 border-b border-paper-border" />
-              الموجه الطلابي
-            </div>
-            <div>
-              <div className="mb-10 border-b border-paper-border" />
-              مدير المدرسة
-            </div>
-          </div>
+          <OfficialFooter school={school} />
         </div>
         <DialogFooter className="no-print border-t px-5 py-4 sm:px-6">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

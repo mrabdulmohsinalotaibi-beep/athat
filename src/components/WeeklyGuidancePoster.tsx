@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { BookOpenCheck, FileDown, Loader2 } from "lucide-react";
+import { BookOpenCheck, FileDown, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 import { elementToPdf } from "@/lib/pdf";
@@ -206,6 +206,9 @@ export function WeeklyGuidancePoster() {
             )}
             حفظ PDF
           </Button>
+          <Button onClick={() => window.print()} variant="outline" className="w-full">
+            <Printer className="size-4 ml-2" /> طباعة مباشرة
+          </Button>
         </div>
       </section>
 
@@ -214,7 +217,7 @@ export function WeeklyGuidancePoster() {
         <div
           ref={posterRef}
           dir="rtl"
-          className="bg-[#fffdf8] text-[#30261f] shrink-0"
+          className="weekly-poster-print print-area bg-[#fffdf8] text-[#30261f] shrink-0"
           style={{
             width: 794,
             minHeight: 1123,
@@ -258,9 +261,7 @@ export function WeeklyGuidancePoster() {
               <div className="max-w-xl">
                 <p className="text-xl font-bold leading-10">{intro}</p>
                 {title && (
-                  <p className="mt-2 text-2xl font-extrabold text-[#80583a]">
-                    &quot;{title}&quot;
-                  </p>
+                  <p className="mt-2 text-2xl font-extrabold text-[#80583a]">&quot;{title}&quot;</p>
                 )}
               </div>
               {body && <p className="max-w-xl text-lg leading-9">{body}</p>}

@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   Printer,
+  Sparkles,
   Trash2,
   Upload,
   X,
@@ -22,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
 import { elementToPdf } from "@/lib/pdf";
+import { generateSmartFill } from "@/lib/deepseek.functions";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { RecordPrintDialog } from "@/components/RecordPrintDialog";
@@ -384,6 +386,8 @@ function ProgramsPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editing, setEditing] = useState<ProgramDraft | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [attachFor, setAttachFor] = useState<ProgramRow | null>(null);
   const [printFor, setPrintFor] = useState<ProgramRow | null>(null);
@@ -595,6 +599,50 @@ function ProgramsPage() {
       toast.error(`تعذّر تصدير PDF: ${(error as Error).message}`);
     } finally {
       setPdfBusy(false);
+    }
+  }
+
+  async function fillProgramWithAi() {
+    const brief = aiPrompt.trim();
+    if (!editing || brief.length < 5 || aiBusy) return;
+    const fields = [
+      ["target_group", "الفئة المستهدفة"],
+      ["goal", "الهدف من البرنامج"],
+      ["indicator", "مؤشر / معيار النجاح"],
+      ["required_evidence", "الشواهد المطلوبة"],
+      ["notes", "الإجراءات والملاحظات"],
+    ] as const;
+    const values = Object.fromEntries(
+      fields.map(([name]) => [name, value(editing[name])]).filter(([, text]) => text.trim()),
+    );
+    const missing = fields.filter(([name]) => !value(editing[name]).trim());
+    if (!missing.length) {
+      toast.info("الحقول النصية مكتملة بالفعل ويمكنك تعديلها يدويًا.");
+      return;
+    }
+    setAiBusy(true);
+    try {
+      const result = await generateSmartFill({
+        data: {
+          recordType: "program",
+          recordTitle: "برنامج / نشاط إرشادي",
+          brief,
+          schoolName: school?.school_name ?? "",
+          fields: missing.map(([name, label]) => ({ name, label, type: "textarea" as const })),
+          values,
+        },
+      });
+      const suggestions = result.suggestions ?? {};
+      setEditing((current) => ({ ...(current ?? emptyDraft()), ...suggestions }));
+      toast.success(
+        Object.keys(suggestions).length
+          ? `تمت تعبئة ${Object.keys(suggestions).length} حقول — راجعها قبل الحفظ.`
+          : "لم تتوفر معلومات كافية للتعبئة.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذّرت التعبئة الذكية");
+    } finally {
+      setAiBusy(false);
     }
   }
 
@@ -959,12 +1007,46 @@ function ProgramsPage() {
                     </div>
                   )}
                 </DocSection>
-                <OfficialFooter school={school} />
+                <OfficialFooter school={school} repeatEveryPage={false} />
               </div>
             </div>
           </div>
 
           <div className="no-print space-y-4 border-t bg-background p-5">
+            <div className="rounded-xl border border-primary/15 bg-primary/5 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label className="flex items-center gap-2 font-black text-primary">
+                  <Sparkles className="size-4" /> التعبئة بالذكاء الاصطناعي
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  وتبقى جميع الحقول قابلة للتعديل اليدوي
+                </span>
+              </div>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <Textarea
+                  rows={2}
+                  value={aiPrompt}
+                  onChange={(event) => setAiPrompt(event.target.value)}
+                  placeholder="اكتب مختصرًا عن البرنامج وأهدافه والفئة المستهدفة"
+                  disabled={aiBusy}
+                />
+                <Button
+                  className="shrink-0 gap-2 sm:self-end"
+                  onClick={() => void fillProgramWithAi()}
+                  disabled={aiBusy || aiPrompt.trim().length < 5}
+                >
+                  {aiBusy ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-4" />
+                  )}
+                  {aiBusy ? "جارٍ التعبئة..." : "تعبئة الحقول"}
+                </Button>
+              </div>
+              <p className="mt-2 text-[10px] leading-5 text-muted-foreground">
+                لا تضع أسماء الطلاب أو أرقامهم أو أرقام الجوال في الملخص.
+              </p>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Field
                 label="نوع البرنامج"

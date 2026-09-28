@@ -76,7 +76,7 @@ export function OfficialHeader({
 
 export function OfficialFooter({
   school,
-  repeatEveryPage = true,
+  repeatEveryPage = false,
 }: {
   school?: SchoolSettings | null | undefined;
   repeatEveryPage?: boolean;
@@ -87,7 +87,7 @@ export function OfficialFooter({
 
   return (
     <div
-      className={`report-signatures mt-8 ${repeatEveryPage ? "print-repeat-footer" : ""} grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground`}
+      className={`report-signatures final-signatures mt-8 ${repeatEveryPage ? "print-repeat-footer" : ""} grid gap-8 border-t border-paper-border pt-5 text-xs font-semibold text-paper-foreground`}
       style={{ gridTemplateColumns: `repeat(${Math.max(visibleSignatures, 1)}, minmax(0, 1fr))` }}
       data-print-signature
     >

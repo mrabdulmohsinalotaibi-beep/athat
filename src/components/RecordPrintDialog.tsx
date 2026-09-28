@@ -181,7 +181,7 @@ export function RecordPrintDialog({
              underneath the letterhead or signatures. */
           body.printing-record .record-print-dialog .print-area {
             padding-top: 40mm !important;
-            padding-bottom: 46mm !important;
+            padding-bottom: 0 !important;
           }
 
           body.printing-record .record-print-dialog .print-repeat-header {
