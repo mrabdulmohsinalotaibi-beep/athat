@@ -217,7 +217,7 @@ export function StudentProfileDialog({
             </div>
           </div>
 
-          {/* ملخص عدد السجلات المرتبطة */}
+          <div data-pdf-exclude="true" className="rounded-xl border border-primary/15 bg-primary/5 p-3">\n            <p className="mb-2 text-xs font-black text-primary">إجراء جديد للطالب</p>\n            <div className="flex flex-wrap gap-2">\n              <Button asChild size="sm" variant="outline"><a href={`/cases?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ClipboardList className="size-4" /> فتح حالة</a></Button>\n              <Button asChild size="sm" variant="outline"><a href={`/interviews?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><MessageSquare className="size-4" /> إضافة جلسة</a></Button>\n              <Button asChild size="sm" variant="outline"><a href={`/referrals?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ExternalLink className="size-4" /> إنشاء إحالة</a></Button>\n            </div>\n          </div>\n\n          {/* ملخص عدد السجلات المرتبطة */}
           <div className="flex flex-wrap gap-2">
             {stats.map((s) => {
               const config = recordByKey(s.key)!;

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
@@ -94,7 +94,7 @@ export function RecordPage({
   const [smartPrompt, setSmartPrompt] = useState("");
   const { data: studentOptions = [] } = useStudentOptions();
   const [importing, setImporting] = useState(false);
-  const [attachFor, setAttachFor] = useState<Row | null>(null);
+  const [attachFor, setAttachFor] = useState<Row | null>(null);\n\n  useEffect(() => {\n    if (config.key === "students" || typeof window === "undefined") return;\n    const params = new URLSearchParams(window.location.search);\n    if (params.get("new") !== "student") return;\n    const studentId = params.get("studentId") ?? "";\n    const studentNo = params.get("studentNo") ?? "";\n    const studentName = params.get("studentName") ?? "";\n    if (!studentId && !studentNo && !studentName) return;\n    setAuto({ student_id: studentId, student_no: studentNo, student_name: studentName });\n    setEditing({ student_id: studentId, student_no: studentNo, student_name: studentName });\n  }, [config.key]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const recordPdfRef = useRef<HTMLDivElement>(null);
