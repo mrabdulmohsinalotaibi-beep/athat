@@ -101,7 +101,8 @@ export function EvidenceUploadDialog({
     }
     setBusy(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
       const uid = auth.user?.id;
       if (!uid) throw new Error("الجلسة منتهية، أعد تسجيل الدخول");
       const safe = file.name.replace(/[^\w.\-\u0600-\u06FF]/g, "_");
