@@ -1,28 +1,372 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, LockKeyhole } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ExternalLink,
+  FileText,
+  GraduationCap,
+  HeartPulse,
+  LockKeyhole,
+  Megaphone,
+  ShieldCheck,
+  Sparkles,
+  BriefcaseBusiness,
+  Brain,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { formatHijriDate } from "@/lib/date";
-import { Link } from "@tanstack/react-router";
+import { GUIDANCE_LEAFLETS, GUIDANCE_LINKS, GUIDANCE_SERVICES, PUBLIC_FORMS } from "@/lib/guidance";
+import { POST_KINDS, type PostKind } from "@/lib/posts";
 
 export const Route = createFileRoute("/blog/$token")({
-  head: () => ({ meta: [{ title: "مدونة الموجه الطلابي | منصة الذات" }] }),
-  component: PrivateBlogPage,
+  head: () => ({
+    meta: [
+      { title: "مدونة الموجه الطلابي | منصة الذات" },
+      {
+        name: "description",
+        content:
+          "الصفحة العامة للموجه الطلابي: محتوى إرشادي، خدمات، استمارات وموارد للطلاب وأولياء الأمور والمعلمين.",
+      },
+    ],
+  }),
+  component: PublicCounselorBlogPage,
 });
 
-type BlogPost = { school_name: string | null; counselor_name: string | null; title: string; kind: string | null; excerpt: string | null; body: string; cover_url: string | null; author_name: string | null; published_at: string | null; created_at: string; slug: string };
+type BlogPost = {
+  school_name: string | null;
+  counselor_name: string | null;
+  title: string;
+  kind: string | null;
+  excerpt: string | null;
+  body: string;
+  cover_url: string | null;
+  author_name: string | null;
+  published_at: string | null;
+  created_at: string;
+  slug: string;
+};
 
-function PrivateBlogPage() {
+type BlogRpcClient = {
+  rpc: (
+    name: string,
+    args: { p_token: string },
+  ) => Promise<{
+    data: unknown;
+    error: { message: string } | null;
+  }>;
+};
+
+const SERVICE_ICONS = [GraduationCap, Brain, BriefcaseBusiness, HeartPulse];
+
+function PublicCounselorBlogPage() {
   const { token } = Route.useParams();
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["private-counselor-blog", token],
+  const {
+    data = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["public-counselor-blog", token],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_private_counselor_blog", { p_token: token });
+      const { data, error } = await (supabase as unknown as BlogRpcClient).rpc(
+        "get_private_counselor_blog",
+        {
+          p_token: token,
+        },
+      );
       if (error) throw error;
       return (data ?? []) as BlogPost[];
     },
   });
   const first = data[0];
-  return <div dir="rtl" className="min-h-screen bg-background"><header className="border-b bg-card/90"><div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4"><Link to="/" className="flex items-center gap-2 text-sm font-bold text-primary"><ArrowRight className="size-4" /> الذات</Link><span className="flex items-center gap-2 text-xs text-muted-foreground"><LockKeyhole className="size-4" /> رابط خاص</span></div></header><main className="mx-auto max-w-4xl px-4 py-10 sm:py-16">{isLoading ? <p className="py-20 text-center text-muted-foreground">جارٍ تحميل المدونة…</p> : !first ? <div className="rounded-3xl border border-dashed p-12 text-center"><LockKeyhole className="mx-auto size-10 text-muted-foreground" /><h1 className="mt-4 text-2xl font-black">المدونة غير متاحة</h1><p className="mt-2 text-sm text-muted-foreground">الرابط خاص أو لم يتم نشر أي منشور فيه.</p></div> : <><header className="mb-10 rounded-3xl border bg-primary/5 p-7 text-center"><p className="text-sm font-bold text-primary">مدونة الموجه الطلابي</p><h1 className="mt-2 text-3xl font-black">{first.counselor_name || first.author_name || "الموجه الطلابي"}</h1>{first.school_name && <p className="mt-2 text-sm text-muted-foreground">{first.school_name}</p>}<p className="mx-auto mt-4 max-w-xl text-xs leading-6 text-muted-foreground">هذه الصفحة لا تظهر في الموقع العام، وتُعرض فقط لمن يملك رابط المشاركة الخاص.</p></header><div className="space-y-6">{data.map((post) => <article key={`${post.slug}-${post.created_at}`} className="rounded-3xl border bg-card p-6 shadow-sm"><h2 className="text-2xl font-black">{post.title}</h2><div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><CalendarDays className="size-4" />{formatHijriDate(post.published_at ?? post.created_at)}</div>{post.cover_url && <img src={post.cover_url} alt={post.title} className="mt-5 max-h-[460px] w-full rounded-2xl object-cover" />}{post.excerpt && <p className="mt-5 border-r-4 border-primary pr-4 text-lg font-bold leading-8 text-muted-foreground">{post.excerpt}</p>}<div className="mt-5 whitespace-pre-line text-base leading-8">{post.body}</div></article>)}</div></>}</main><footer className="border-t py-6 text-center text-xs text-muted-foreground">منصة الذات للتوجيه الطلابي</footer></div>;
+
+  if (isLoading)
+    return (
+      <div
+        dir="rtl"
+        className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground"
+      >
+        جارٍ تجهيز الصفحة العامة للموجه…
+      </div>
+    );
+  if (isError || !first)
+    return (
+      <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md rounded-3xl border border-dashed p-12 text-center">
+          <LockKeyhole className="mx-auto size-10 text-primary" />
+          <h1 className="mt-4 text-2xl font-black">الصفحة غير متاحة</h1>
+          <p className="mt-2 text-sm leading-7 text-muted-foreground">
+            الرابط غير صحيح أو لم ينشر الموجه محتوى عامًا بعد.
+          </p>
+          <Link
+            to="/"
+            className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary"
+          >
+            العودة للرئيسية <ArrowLeft className="size-4" />
+          </Link>
+        </div>
+      </div>
+    );
+
+  return (
+    <div dir="rtl" className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
+          <Link to="/" className="flex items-center gap-3">
+            <img
+              src="/brand-logo.png"
+              alt="شعار الذات"
+              className="brand-mark-well size-11 rounded-xl object-contain"
+            />
+            <div>
+              <p className="text-lg font-black text-primary">
+                {first.school_name || "مدونة الموجه الطلابي"}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                الصفحة العامة للموجه ·{" "}
+                {first.counselor_name || first.author_name || "الموجه الطلابي"}
+              </p>
+            </div>
+          </Link>
+          <div className="hidden items-center gap-2 sm:flex">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+              <Sparkles className="size-3.5" /> بوابة الإرشاد
+            </span>
+            <Link
+              to="/auth"
+              search={{ next: "/dashboard" }}
+              className="text-sm font-bold text-primary hover:underline"
+            >
+              دخول الموجه
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-bl from-primary/12 via-background to-accent/15">
+          <div className="absolute -left-20 -top-20 size-64 rounded-full border border-primary/10" />
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+            <div className="relative">
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card px-3 py-1 text-xs font-bold text-primary">
+                <Megaphone className="size-3.5" /> مدونة الموجه العامة
+              </span>
+              <h1 className="mt-5 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+                كل ما يحتاجه الطالب وولي الأمر والمعلم في مكان واحد.
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
+                محتوى الموجه، الخدمات الإرشادية، الاستمارات الإلكترونية والموارد المساعدة — مرتبة
+                لتصل إلى الخدمة المناسبة بأقل خطوات.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a
+                  href="#services"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+                >
+                  استعرض الخدمات <ArrowLeft className="size-4" />
+                </a>
+                <a
+                  href="#forms"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-primary/25 bg-card px-5 text-sm font-bold text-primary hover:bg-primary/5"
+                >
+                  الاستمارات الإلكترونية
+                </a>
+              </div>
+            </div>
+            <div className="relative rounded-3xl border border-primary/15 bg-card/85 p-6 shadow-lg">
+              <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+                <ShieldCheck className="size-5 text-primary" />
+                <div>
+                  <p className="text-sm font-black">بيانات المدرسة</p>
+                  <p className="text-xs text-muted-foreground">{first.school_name || "المدرسة"}</p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-3 text-sm">
+                <p>
+                  <span className="text-muted-foreground">الموجه الطلابي:</span>{" "}
+                  <strong>{first.counselor_name || first.author_name || "—"}</strong>
+                </p>
+                <p>
+                  <span className="text-muted-foreground">المحتوى المنشور:</span>{" "}
+                  <strong>{data.length} منشور</strong>
+                </p>
+                <p className="flex items-start gap-2 text-xs leading-6 text-muted-foreground">
+                  <LockKeyhole className="mt-1 size-3.5 shrink-0 text-primary" />
+                  المحتوى المنشور عام، أما سجلات الطلاب والطلبات فتبقى ضمن لوحة الموجه السرية.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="services"
+          className="mx-auto max-w-7xl scroll-mt-24 px-4 py-14 sm:px-8 sm:py-20"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-primary">خدمات عامة</p>
+              <h2 className="mt-1 text-3xl font-black">الخدمات الإرشادية</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
+                مجالات الدعم التي يقدمها الموجه الطلابي للطلاب وأولياء الأمور والمعلمين.
+              </p>
+            </div>
+            <Link to="/services" className="text-sm font-bold text-primary hover:underline">
+              صفحة الخدمات الكاملة
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {GUIDANCE_SERVICES.map((service, index) => {
+              const Icon = SERVICE_ICONS[index] ?? GraduationCap;
+              return (
+                <article
+                  key={service.slug}
+                  className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                >
+                  <span className="inline-flex rounded-xl bg-primary/10 p-3 text-primary">
+                    <Icon className="size-5" />
+                  </span>
+                  <h3 className="mt-4 font-black">{service.title}</h3>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">{service.summary}</p>
+                  <ul className="mt-4 space-y-2 border-t border-border/60 pt-4 text-xs leading-5">
+                    {service.items.slice(0, 3).map((item) => (
+                      <li key={item} className="flex gap-2">
+                        <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section id="forms" className="scroll-mt-24 border-y border-border/60 bg-muted/20">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20">
+            <p className="text-sm font-bold text-primary">وصول مباشر</p>
+            <h2 className="mt-1 text-3xl font-black">الاستمارات الإلكترونية</h2>
+            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+              {PUBLIC_FORMS.map((form) => (
+                <Link
+                  key={form.to}
+                  to={form.to}
+                  className="group rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition hover:-translate-y-1 hover:border-primary/40"
+                >
+                  <span className="rounded-full bg-accent/25 px-2.5 py-1 text-[11px] font-bold text-accent-foreground">
+                    {form.audience}
+                  </span>
+                  <h3 className="mt-4 font-black">{form.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{form.description}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary">
+                    فتح الاستمارة{" "}
+                    <ArrowLeft className="size-4 transition group-hover:-translate-x-1" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-primary">إرشادات وموارد</p>
+              <h2 className="mt-1 text-3xl font-black">مكتبة الموجه والطالب</h2>
+            </div>
+            <BookOpen className="size-7 text-primary/50" />
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {GUIDANCE_LEAFLETS.map((leaflet) => (
+              <article key={leaflet.title} className="rounded-2xl border bg-card p-5">
+                <span className="text-[11px] font-bold text-primary">{leaflet.category}</span>
+                <h3 className="mt-2 font-black">{leaflet.title}</h3>
+                <p className="mt-2 text-xs leading-6 text-muted-foreground">{leaflet.summary}</p>
+                <ul className="mt-4 space-y-2 text-xs leading-5 text-muted-foreground">
+                  {leaflet.points.slice(0, 2).map((point) => (
+                    <li key={point} className="flex gap-2">
+                      <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            {GUIDANCE_LINKS.map((link) => (
+              <a
+                key={link.title}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-xs font-bold hover:border-primary/40 hover:text-primary"
+              >
+                {link.title}
+                <ExternalLink className="size-3.5" />
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-t border-border/60 bg-muted/20">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold text-primary">آخر ما يقدمه الموجه</p>
+                <h2 className="mt-1 text-3xl font-black">المنشورات والإعلانات</h2>
+              </div>
+              <span className="text-xs text-muted-foreground">{data.length} منشورًا عامًا</span>
+            </div>
+            <div className="mt-8 space-y-5">
+              {data.map((post) => (
+                <article
+                  key={`${post.slug}-${post.created_at}`}
+                  className="overflow-hidden rounded-3xl border bg-card shadow-sm"
+                >
+                  <div className="grid gap-0 lg:grid-cols-[0.8fr_1.2fr]">
+                    {post.cover_url ? (
+                      <img
+                        src={post.cover_url}
+                        alt={post.title}
+                        className="h-full min-h-56 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex min-h-56 items-center justify-center bg-primary/5">
+                        <FileText className="size-12 text-primary/30" />
+                      </div>
+                    )}
+                    <div className="p-6 sm:p-8">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 font-bold text-primary">
+                          {POST_KINDS[post.kind as PostKind] ?? "منشور"}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <CalendarDays className="size-3.5" />
+                          {formatHijriDate(post.published_at ?? post.created_at)}
+                        </span>
+                      </div>
+                      <h2 className="mt-4 text-2xl font-black">{post.title}</h2>
+                      {post.excerpt && (
+                        <p className="mt-3 border-r-4 border-primary pr-4 text-sm font-bold leading-7 text-muted-foreground">
+                          {post.excerpt}
+                        </p>
+                      )}
+                      <div className="mt-4 whitespace-pre-line text-sm leading-8">{post.body}</div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
+        مدونة الموجه الطلابي · منصة الذات للتوجيه والإرشاد
+      </footer>
+    </div>
+  );
 }

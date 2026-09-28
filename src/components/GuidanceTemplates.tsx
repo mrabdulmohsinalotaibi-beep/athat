@@ -13,6 +13,7 @@ import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ElectronicTemplateDialog } from "@/components/ElectronicTemplateDialog";
 
 const QUICK_TEMPLATES = [
   {
@@ -96,6 +97,40 @@ const CATEGORY_LABELS: Record<FormCategory, string> = {
   attendance: "السلوك والمواظبة",
   reports: "البرامج والتقارير",
   committees: "اللجان والمحاضر",
+};
+
+const ELECTRONIC_FIELDS: Record<
+  string,
+  { label: string; multiline?: boolean; placeholder?: string }[]
+> = {
+  "guidance-observation": [
+    { label: "اسم الطالب / الصف" },
+    { label: "تاريخ الملاحظة", placeholder: "اليوم / الشهر / السنة" },
+    { label: "مصدر الملاحظة" },
+    { label: "وصف موضوعي للملاحظة", multiline: true },
+    { label: "الإجراء المقترح والمتابعة", multiline: true },
+  ],
+  "guidance-interview": [
+    { label: "اسم الطالب" },
+    { label: "تاريخ المقابلة" },
+    { label: "موضوع المقابلة" },
+    { label: "أبرز الملاحظات والنتيجة", multiline: true },
+    { label: "التوصيات وموعد المتابعة", multiline: true },
+  ],
+  "case-follow-up-schedule": [
+    { label: "رقم الحالة" },
+    { label: "اسم الطالب" },
+    { label: "هدف المتابعة" },
+    { label: "الخطوات والمواعيد", multiline: true },
+    { label: "نتيجة المتابعة القادمة", multiline: true },
+  ],
+  "guidance-committee-minutes": [
+    { label: "تاريخ الاجتماع" },
+    { label: "الحضور" },
+    { label: "موضوعات الاجتماع", multiline: true },
+    { label: "القرارات والتوصيات", multiline: true },
+    { label: "مسؤول التنفيذ وموعده" },
+  ],
 };
 
 const DOWNLOADABLE_FORMS: {
@@ -236,6 +271,7 @@ const DOWNLOADABLE_FORMS: {
 export function GuidanceTemplates() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<FormCategoryFilter>("all");
+  const [electronic, setElectronic] = useState<(typeof DOWNLOADABLE_FORMS)[number] | null>(null);
 
   const filteredForms = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
@@ -268,7 +304,7 @@ export function GuidanceTemplates() {
         <div>
           <h2 className="text-base font-black">مكتبة القوالب الإرشادية</h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            أربعة قوالب سريعة و18 نموذجًا منقحًا للتنزيل والتعبئة.
+            أربعة قوالب سريعة و18 نموذجًا إلكترونيًا للتعبئة والطباعة داخل المنصة.
           </p>
         </div>
       </div>
@@ -319,7 +355,7 @@ export function GuidanceTemplates() {
           <div>
             <h3 className="text-sm font-extrabold">نماذج قابلة للتنزيل</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              ملفات Word منقحة من بيانات المدرسة والأسماء والتواريخ المعبأة.
+              افتح النموذج داخل المنصة، املأه إلكترونيًا، ثم اطبعه A4 أو احفظه PDF.
             </p>
           </div>
           <span
@@ -401,32 +437,58 @@ export function GuidanceTemplates() {
                 <p className="mt-3 min-h-10 flex-1 text-[11px] leading-5 text-muted-foreground">
                   {item.description}
                 </p>
-                <Button
-                  asChild
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="mt-3 h-9 w-full text-xs"
-                >
-                  <a
-                    href={`${import.meta.env.BASE_URL}guidance-templates/${item.file}`}
-                    download={item.file}
-                    aria-label={`تنزيل ${item.title}`}
-                    data-testid={`link-download-template-${item.id}`}
+                <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-9 text-xs"
+                    onClick={() => setElectronic(item)}
+                    data-testid={`button-open-electronic-template-${item.id}`}
                   >
-                    <Download className="ml-2 size-4" aria-hidden="true" />
-                    تنزيل النموذج
-                  </a>
-                </Button>
+                    فتح إلكتروني
+                  </Button>
+                  <Button
+                    asChild
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="size-9"
+                    title={`تنزيل ${item.title}`}
+                  >
+                    <a
+                      href={`${import.meta.env.BASE_URL}guidance-templates/${item.file}`}
+                      download={item.file}
+                      aria-label={`تنزيل ${item.title}`}
+                      data-testid={`link-download-template-${item.id}`}
+                    >
+                      <Download className="size-4" aria-hidden="true" />
+                    </a>
+                  </Button>
+                </div>
               </article>
             ))}
           </div>
         )}
 
-        <p className="mt-4 rounded-xl bg-muted/50 p-3 text-[11px] leading-5 text-muted-foreground">
-          هذه ملفات ثابتة للتنزيل، ولا تُحفظ البيانات التي تعبئها فيها داخل قاعدة بيانات الموقع.
+        <p className="mt-4 rounded-xl bg-primary/5 p-3 text-[11px] leading-5 text-muted-foreground">
+          النماذج الإلكترونية مناسبة للتعبئة والطباعة الفورية. وللحفظ والمتابعة الدائمة استخدم السجل
+          المتخصص في لوحة الموجه.
         </p>
       </div>
+      {electronic && (
+        <ElectronicTemplateDialog
+          open={electronic !== null}
+          onOpenChange={(open) => !open && setElectronic(null)}
+          title={electronic.title}
+          description={electronic.description}
+          fields={
+            ELECTRONIC_FIELDS[electronic.id] ?? [
+              { label: "بيانات النموذج", multiline: true },
+              { label: "الإجراء والتوصيات", multiline: true },
+            ]
+          }
+        />
+      )}
     </section>
   );
 }

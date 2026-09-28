@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { FileDown } from "lucide-react";
+import { FileDown, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 import { useSchool } from "@/lib/school";
@@ -8,9 +8,27 @@ import { displayRecordValue } from "@/lib/display";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-const LONG_FIELDS = new Set(["summary", "notes", "observation", "decisions", "recommendations", "result", "reason", "description", "goal", "attendees", "intervention_plan"]);
+const LONG_FIELDS = new Set([
+  "summary",
+  "notes",
+  "observation",
+  "decisions",
+  "recommendations",
+  "result",
+  "reason",
+  "description",
+  "goal",
+  "attendees",
+  "intervention_plan",
+]);
 
 export function RecordPrintDialog({
   open,
@@ -32,8 +50,12 @@ export function RecordPrintDialog({
   const filled = config.fields
     .map((field) => ({ field, value: displayRecordValue(row[field.name]) }))
     .filter((item) => item.value && item.value !== "—");
-  const shortFields = filled.filter((item) => !LONG_FIELDS.has(item.field.name) && item.field.type !== "textarea");
-  const longFields = filled.filter((item) => LONG_FIELDS.has(item.field.name) || item.field.type === "textarea");
+  const shortFields = filled.filter(
+    (item) => !LONG_FIELDS.has(item.field.name) && item.field.type !== "textarea",
+  );
+  const longFields = filled.filter(
+    (item) => LONG_FIELDS.has(item.field.name) || item.field.type === "textarea",
+  );
   const title = `${config.singular} — ${config.title}`;
 
   async function exportPdf() {
@@ -47,6 +69,14 @@ export function RecordPrintDialog({
     } finally {
       setBusy(false);
     }
+  }
+
+  function printDocument() {
+    document.body.classList.add("printing-record");
+    window.setTimeout(() => {
+      window.print();
+      window.setTimeout(() => document.body.classList.remove("printing-record"), 300);
+    }, 80);
   }
 
   return (
@@ -195,19 +225,27 @@ export function RecordPrintDialog({
         }
       `}</style>
 
-      <DialogContent dir="rtl" className="record-print-dialog single-print-sheet max-h-[92vh] max-w-3xl overflow-y-auto">
+      <DialogContent
+        dir="rtl"
+        className="record-print-dialog single-print-sheet max-h-[92vh] max-w-3xl overflow-y-auto"
+      >
         <DialogHeader className="no-print">
           <DialogTitle>حفظ PDF رسمي</DialogTitle>
         </DialogHeader>
 
-        <div ref={sheetRef} className="print-area rounded-lg border bg-paper p-5 text-paper-foreground">
+        <div
+          ref={sheetRef}
+          className="print-area rounded-lg border bg-paper p-5 text-paper-foreground"
+        >
           <OfficialHeader school={school} title={title} reportType={config.singular} />
 
           <table className="mt-5 w-full text-right text-[12px]">
             <tbody>
               {shortFields.map((item) => (
                 <tr key={item.field.name} className="border-b border-paper-border last:border-0">
-                  <th className="w-44 border-l border-paper-border bg-paper-muted p-2 font-bold">{item.field.label}</th>
+                  <th className="w-44 border-l border-paper-border bg-paper-muted p-2 font-bold">
+                    {item.field.label}
+                  </th>
                   <td className="p-2">{item.value}</td>
                 </tr>
               ))}
@@ -216,8 +254,12 @@ export function RecordPrintDialog({
 
           {longFields.map((item) => (
             <section key={item.field.name} className="mt-4 break-inside-avoid">
-              <h3 className="report-summary border border-paper-border bg-paper-muted p-2 text-[12px] font-bold">{item.field.label}</h3>
-              <p className="whitespace-pre-wrap border border-t-0 border-paper-border p-3 text-[12px] leading-7">{item.value}</p>
+              <h3 className="report-summary border border-paper-border bg-paper-muted p-2 text-[12px] font-bold">
+                {item.field.label}
+              </h3>
+              <p className="whitespace-pre-wrap border border-t-0 border-paper-border p-3 text-[12px] leading-7">
+                {item.value}
+              </p>
             </section>
           ))}
 
@@ -230,6 +272,9 @@ export function RecordPrintDialog({
           </Button>
           <Button onClick={exportPdf} disabled={busy}>
             <FileDown className="size-4" /> {busy ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
+          </Button>
+          <Button variant="outline" onClick={printDocument}>
+            <Printer className="size-4" /> طباعة A4
           </Button>
         </DialogFooter>
       </DialogContent>

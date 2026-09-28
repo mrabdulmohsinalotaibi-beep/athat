@@ -11,6 +11,7 @@ import {
   Loader2,
   Pencil,
   Plus,
+  Printer,
   Trash2,
   Upload,
   X,
@@ -389,7 +390,11 @@ function ProgramsPage() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<Attachment[]>([]);
 
-  const { data: programs = [], isLoading, isError: programsFailed } = useQuery({
+  const {
+    data: programs = [],
+    isLoading,
+    isError: programsFailed,
+  } = useQuery({
     queryKey: ["programs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -482,7 +487,9 @@ function ProgramsPage() {
   }
 
   async function uploadFiles(recordId: string, recordTitle: string) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error("يجب تسجيل الدخول قبل رفع الشواهد.");
     if (!pendingFiles.length) return;
     try {
@@ -494,13 +501,18 @@ function ProgramsPage() {
           .from("evidences")
           .upload(path, file, { contentType: file.type || undefined, upsert: false });
         if (uploadError) throw uploadError;
-        const mimeType = file.type || ({
-          pdf: "application/pdf",
-          doc: "application/msword",
-          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          xls: "application/vnd.ms-excel",
-          xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        } as Record<string, string>)[file.name.split(".").pop()?.toLowerCase() ?? ""] || null;
+        const mimeType =
+          file.type ||
+          (
+            {
+              pdf: "application/pdf",
+              doc: "application/msword",
+              docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              xls: "application/vnd.ms-excel",
+              xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            } as Record<string, string>
+          )[file.name.split(".").pop()?.toLowerCase() ?? ""] ||
+          null;
 
         const { error } = await supabase.from("evidences").insert({
           name: file.name,
@@ -698,13 +710,24 @@ function ProgramsPage() {
           <Button onClick={openNew}>
             <Plus className="size-4" /> إضافة برنامج
           </Button>
-          <Button variant="outline" onClick={importMinistryPrograms} disabled={isLoading || programsFailed}>
+          <Button
+            variant="outline"
+            onClick={importMinistryPrograms}
+            disabled={isLoading || programsFailed}
+          >
             <CalendarRange className="size-4" /> الخطة الوزارية 1448هـ
           </Button>
           <Button variant="outline" onClick={exportListPdf} disabled={listPdfBusy}>
             <FileDown className="size-4" /> {listPdfBusy ? "جارٍ تجهيز PDF..." : "حفظ PDF للقائمة"}
           </Button>
-          <Button variant="destructive" onClick={deleteAll} disabled={deleteBusy || isLoading || programsFailed}>
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="size-4" /> طباعة A4
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={deleteAll}
+            disabled={deleteBusy || isLoading || programsFailed}
+          >
             <Trash2 className="size-4" /> حذف الكل
           </Button>
         </div>
@@ -723,7 +746,10 @@ function ProgramsPage() {
         />
       </div>
 
-      <div ref={listPrintRef} className="print-area overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div
+        ref={listPrintRef}
+        className="print-area overflow-hidden rounded-xl border bg-card shadow-sm"
+      >
         <div className="p-4 pb-0 print:p-6">
           <OfficialHeader
             school={school}
@@ -769,59 +795,60 @@ function ProgramsPage() {
                   </td>
                 </tr>
               )}
-              {!programsFailed && programs.map((row) => (
-                <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="p-3 font-bold">{row.name || "—"}</td>
-                  <td className="p-3">{row.ptype || "—"}</td>
-                  <td className="p-3">{row.domain || "—"}</td>
-                  <td className="p-3">{row.target_group || "—"}</td>
-                  <td className="p-3">{row.exec_status || "—"}</td>
-                  <td className="p-3">{row.beneficiaries ?? "—"}</td>
-                  <td className="no-print p-2">
-                    <div className="flex justify-end gap-1">
-                      <Button size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="size-4" /> فتح المستند
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="نسخ"
-                        onClick={() => {
-                          setEditing({ ...row, id: "", program_no: ` - نسخة` });
-                          setEditorOpen(true);
-                        }}
-                      >
-                        <Copy className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="المرفقات"
-                        onClick={() => setAttachFor(row)}
-                      >
-                        <Upload className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="حفظ PDF رسمي"
-                        onClick={() => setPrintFor(row)}
-                      >
-                        <FileDown className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="حذف"
-                        onClick={() => deleteProgram(row)}
-                        disabled={deleteBusy}
-                      >
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {!programsFailed &&
+                programs.map((row) => (
+                  <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="p-3 font-bold">{row.name || "—"}</td>
+                    <td className="p-3">{row.ptype || "—"}</td>
+                    <td className="p-3">{row.domain || "—"}</td>
+                    <td className="p-3">{row.target_group || "—"}</td>
+                    <td className="p-3">{row.exec_status || "—"}</td>
+                    <td className="p-3">{row.beneficiaries ?? "—"}</td>
+                    <td className="no-print p-2">
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" onClick={() => openEdit(row)}>
+                          <Pencil className="size-4" /> فتح المستند
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="نسخ"
+                          onClick={() => {
+                            setEditing({ ...row, id: "", program_no: ` - نسخة` });
+                            setEditorOpen(true);
+                          }}
+                        >
+                          <Copy className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="المرفقات"
+                          onClick={() => setAttachFor(row)}
+                        >
+                          <Upload className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="حفظ PDF رسمي"
+                          onClick={() => setPrintFor(row)}
+                        >
+                          <FileDown className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="حذف"
+                          onClick={() => deleteProgram(row)}
+                          disabled={deleteBusy}
+                        >
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -900,9 +927,8 @@ function ProgramsPage() {
                     <DocCell
                       label="مهمة الخطة المرتبطة"
                       value={
-                        value(
-                          planTasks.find((task) => task.id === editing?.plan_task_id)?.task
-                        ) || "غير مرتبط"
+                        value(planTasks.find((task) => task.id === editing?.plan_task_id)?.task) ||
+                        "غير مرتبط"
                       }
                     />
                     <DocCell label="الشواهد المطلوبة" value={value(editing?.required_evidence)} />

@@ -24,12 +24,12 @@ export function OfficialHeader({
     <>
       <style>{`
         @media print {
-          .print-repeat-header { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: #0d5269 !important; }
+          .print-repeat-header { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: #1f5964 !important; }
           .print-repeat-footer { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: #fff !important; }
         }
       `}</style>
-      <div className="official-letterhead print-repeat-header overflow-hidden rounded-b-[1.35rem] bg-[#0d5269] text-white pb-4">
-        <div className="grid grid-cols-1 items-center gap-3 border-t-4 border-[#159b88] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
+      <div className="official-letterhead print-repeat-header overflow-hidden rounded-b-[1.35rem] bg-[#1f5964] text-white pb-4">
+        <div className="grid grid-cols-1 items-center gap-3 border-t-4 border-[#c0925d] px-4 py-3 text-[11px] font-semibold sm:grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] sm:gap-6 sm:px-6">
           <div className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6">
             <p>المملكة العربية السعودية</p>
             <p>وزارة التعليم</p>
@@ -66,7 +66,7 @@ export function OfficialHeader({
             {period && <p>الفترة: {period}</p>}
           </div>
         </div>
-        <h2 className="mx-auto mt-3 w-fit rounded-t-lg bg-[#0a4358] px-6 py-2 text-center text-lg font-extrabold text-white">
+        <h2 className="mx-auto mt-3 w-fit rounded-t-lg bg-[#174651] px-6 py-2 text-center text-lg font-extrabold text-white">
           {title}
         </h2>
       </div>

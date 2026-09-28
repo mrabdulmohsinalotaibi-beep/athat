@@ -17,6 +17,7 @@ import {
   Upload,
   Pencil,
   Paperclip,
+  Printer,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -405,9 +406,7 @@ export function RecordPage({
 
       const suggestions = result.suggestions ?? {};
       const usable = Object.fromEntries(
-        Object.entries(suggestions).filter(
-          ([name, value]) => !currentValues[name] && value.trim(),
-        ),
+        Object.entries(suggestions).filter(([name, value]) => !currentValues[name] && value.trim()),
       );
 
       if (!Object.keys(usable).length) {
@@ -417,7 +416,9 @@ export function RecordPage({
 
       setAuto((current) => ({ ...current, ...usable }));
       setSmartPromptOpen(false);
-      toast.success(`تمت تعبئة ${Object.keys(usable).length} حقول بالذكاء الاصطناعي — راجعها قبل الحفظ.`);
+      toast.success(
+        `تمت تعبئة ${Object.keys(usable).length} حقول بالذكاء الاصطناعي — راجعها قبل الحفظ.`,
+      );
     } catch (error) {
       toast.error((error as Error).message || "تعذّرت التعبئة الذكية.");
     } finally {
@@ -456,11 +457,7 @@ export function RecordPage({
           </Button>
           {toolbarExtra}
           {!hideImport && (
-            <Button
-              variant="outline"
-              onClick={() => fileRef.current?.click()}
-              disabled={importing}
-            >
+            <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={importing}>
               <Upload className="size-4" /> استيراد Excel
             </Button>
           )}
@@ -472,6 +469,9 @@ export function RecordPage({
           </Button>
           <Button variant="outline" onClick={exportPdf} disabled={exportingPdf}>
             <FileDown className="size-4" /> {exportingPdf ? "جارٍ تجهيز PDF..." : "تصدير PDF"}
+          </Button>
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="size-4" /> طباعة A4
           </Button>
           <input
             ref={fileRef}
@@ -814,25 +814,24 @@ export function RecordPage({
                       <Label htmlFor={f.name} className="text-xs">
                         {f.label}
                       </Label>
-                      {(f.type === "text" || f.type === "textarea") &&
-                        current.trim() && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs"
-                            onClick={() => handleRewrite(f.name, f.label)}
-                            disabled={smartFilling}
-                            title="تحسين صياغة هذا الحقل بواسطة DeepSeek"
-                          >
-                            {smartFilling ? (
-                              <Loader2 className="size-3.5 animate-spin" />
-                            ) : (
-                              <Sparkles className="size-3.5" />
-                            )}
-                            تحسين الصياغة
-                          </Button>
-                        )}
+                      {(f.type === "text" || f.type === "textarea") && current.trim() && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => handleRewrite(f.name, f.label)}
+                          disabled={smartFilling}
+                          title="تحسين صياغة هذا الحقل بواسطة DeepSeek"
+                        >
+                          {smartFilling ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <Sparkles className="size-3.5" />
+                          )}
+                          تحسين الصياغة
+                        </Button>
+                      )}
                     </div>
                     {f.student ? (
                       <div className="flex items-center gap-2">
@@ -992,9 +991,7 @@ export function RecordPage({
             <DialogTitle>التعبئة الذكية</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label htmlFor="smart-fill-brief">
-              اكتب مختصرًا عن الحالة أو الموضوع
-            </Label>
+            <Label htmlFor="smart-fill-brief">اكتب مختصرًا عن الحالة أو الموضوع</Label>
             <Textarea
               id="smart-fill-brief"
               value={smartPrompt}
@@ -1005,7 +1002,8 @@ export function RecordPage({
               disabled={smartFilling}
             />
             <p className="text-xs text-muted-foreground">
-              سيستخدم الذكاء الاصطناعي هذا المختصر مع بيانات النموذج لكتابة الحقول النصية الناقصة فقط. لن يغيّر الحقول التي أدخلتها بنفسك.
+              سيستخدم الذكاء الاصطناعي هذا المختصر مع بيانات النموذج لكتابة الحقول النصية الناقصة
+              فقط. لن يغيّر الحقول التي أدخلتها بنفسك.
             </p>
           </div>
           <DialogFooter className="gap-2">

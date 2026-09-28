@@ -1,13 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  CheckSquare,
-  FileDown,
-  FileText,
-  RotateCcw,
-  Square,
-} from "lucide-react";
+import { CheckSquare, FileDown, FileText, Printer, RotateCcw, Square } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -69,10 +63,7 @@ function ReportsPage() {
   const { data: school } = useSchool();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const reportableRecords = useMemo(
-    () => RECORDS.filter((record) => record.key !== "reports"),
-    [],
-  );
+  const reportableRecords = useMemo(() => RECORDS.filter((record) => record.key !== "reports"), []);
 
   const [reportMode, setReportMode] = useState<"single" | "combined">("single");
   const [selectedSingleKey, setSelectedSingleKey] = useState("cases");
@@ -91,9 +82,7 @@ function ReportsPage() {
     queryFn: async () => {
       const results = await Promise.all(
         reportableRecords.map(async (record) => {
-          const result = await supabase
-            .from(record.table)
-            .select("*");
+          const result = await supabase.from(record.table).select("*");
           return { key: record.key, data: result.data ?? [], error: result.error };
         }),
       );
@@ -109,7 +98,7 @@ function ReportsPage() {
     staleTime: 30_000,
   });
 
-  const sections = data?.sections ?? {};
+  const sections = useMemo(() => data?.sections ?? {}, [data]);
 
   const filteredSections = useMemo(() => {
     const output: Record<string, Record<string, unknown>[]> = {};
@@ -145,9 +134,7 @@ function ReportsPage() {
 
   function toggleRecord(key: string) {
     setSelectedKeys((current) =>
-      current.includes(key)
-        ? current.filter((item) => item !== key)
-        : [...current, key],
+      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
     );
   }
 
@@ -185,8 +172,7 @@ function ReportsPage() {
     }
   }
 
-  const activeSelectedKeys =
-    reportMode === "single" ? [selectedSingleKey] : selectedKeys;
+  const activeSelectedKeys = reportMode === "single" ? [selectedSingleKey] : selectedKeys;
 
   const selectedRecords = reportableRecords.filter((record) =>
     activeSelectedKeys.includes(record.key),
@@ -208,13 +194,21 @@ function ReportsPage() {
             </div>
             <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير</h1>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم احفظ التقرير بصيغة PDF بالكليشة الرسمية وتوقيع الموجه الطلابي ومدير المدرسة.
+              اختر تقريرًا منفردًا أو اجمع عدة سجلات، ثم احفظ التقرير بصيغة PDF بالكليشة الرسمية
+              وتوقيع الموجه الطلابي ومدير المدرسة.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => void exportOfficialPdf()} disabled={isExporting || isLoading}>
+            <Button
+              type="button"
+              onClick={() => void exportOfficialPdf()}
+              disabled={isExporting || isLoading}
+            >
               <FileDown className="size-4" />
               {isExporting ? "جارٍ إنشاء PDF..." : "حفظ PDF للتقرير الرسمي"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" /> طباعة A4
             </Button>
             <Button type="button" variant="ghost" onClick={reset}>
               <RotateCcw className="size-4" />
@@ -238,7 +232,9 @@ function ReportsPage() {
                   <FileText className={`size-5 ${reportMode === "single" ? "text-primary" : ""}`} />
                   <div>
                     <p className="font-bold">تقرير منفرد</p>
-                    <p className="mt-1 text-xs text-muted-foreground">اختر سجلًا واحدًا واطبعه مباشرة.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      اختر سجلًا واحدًا واطبعه مباشرة.
+                    </p>
                   </div>
                 </div>
               </button>
@@ -248,10 +244,14 @@ function ReportsPage() {
                 className={`rounded-xl border p-4 text-right transition ${reportMode === "combined" ? "border-primary bg-primary/5" : "border-border hover:bg-muted"}`}
               >
                 <div className="flex items-center gap-3">
-                  <CheckSquare className={`size-5 ${reportMode === "combined" ? "text-primary" : ""}`} />
+                  <CheckSquare
+                    className={`size-5 ${reportMode === "combined" ? "text-primary" : ""}`}
+                  />
                   <div>
                     <p className="font-bold">تقرير مجمع</p>
-                    <p className="mt-1 text-xs text-muted-foreground">اجمع أكثر من سجل في تقرير رسمي واحد.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      اجمع أكثر من سجل في تقرير رسمي واحد.
+                    </p>
                   </div>
                 </div>
               </button>
@@ -279,8 +279,12 @@ function ReportsPage() {
               <div className="flex items-center justify-between gap-3">
                 <Label>السجلات التي ستظهر في التقرير</Label>
                 <div className="flex gap-1">
-                  <Button type="button" size="sm" variant="ghost" onClick={selectAll}>الكل</Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={clearAll}>مسح</Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={selectAll}>
+                    الكل
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={clearAll}>
+                    مسح
+                  </Button>
                 </div>
               </div>
               <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -295,7 +299,11 @@ function ReportsPage() {
                       className={`flex items-center justify-between gap-2 rounded-lg border p-3 text-right text-xs transition hover:bg-muted ${active ? "border-primary bg-primary/5" : "border-border"}`}
                     >
                       <span className="flex items-center gap-2 font-semibold">
-                        {active ? <CheckSquare className="size-4 text-primary" /> : <Square className="size-4" />}
+                        {active ? (
+                          <CheckSquare className="size-4 text-primary" />
+                        ) : (
+                          <Square className="size-4" />
+                        )}
                         {record.title}
                       </span>
                       <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{count}</span>
@@ -317,7 +325,9 @@ function ReportsPage() {
           {isError && (
             <div className="flex items-center gap-3 text-xs text-destructive">
               <span>تعذّر تحميل بيانات التقرير.</span>
-              <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>إعادة المحاولة</Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
+                إعادة المحاولة
+              </Button>
             </div>
           )}
           {data?.errors.length ? (
@@ -328,7 +338,10 @@ function ReportsPage() {
         </div>
       </section>
 
-      <div ref={printRef} className="reports-print-sheet print-area hidden bg-paper text-paper-foreground print:block">
+      <div
+        ref={printRef}
+        className="reports-print-sheet print-area hidden bg-paper text-paper-foreground print:block"
+      >
         <OfficialHeader
           school={school}
           title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"}
@@ -346,19 +359,31 @@ function ReportsPage() {
             </div>
             <div className="mt-5 rounded-xl border border-paper-border bg-paper-muted p-4">
               <div className="grid gap-2 sm:grid-cols-2 text-xs">
-                <p><strong>الفترة:</strong> {period || "—"}</p>
-                <p><strong>النطاق:</strong> {fromDate || "بداية البيانات"} إلى {toDate || "نهاية البيانات"}</p>
+                <p>
+                  <strong>الفترة:</strong> {period || "—"}
+                </p>
+                <p>
+                  <strong>النطاق:</strong> {fromDate || "بداية البيانات"} إلى{" "}
+                  {toDate || "نهاية البيانات"}
+                </p>
               </div>
             </div>
           </section>
 
           <section className="report-summary mt-6">
-            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">ملخص مؤشرات الأداء</h2>
+            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
+              ملخص مؤشرات الأداء
+            </h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {kpis.map((kpi) => (
-                <div key={kpi.key} className="rounded-xl border border-paper-border bg-paper-muted p-3">
+                <div
+                  key={kpi.key}
+                  className="rounded-xl border border-paper-border bg-paper-muted p-3"
+                >
                   <p className="text-[11px] text-muted-foreground">{kpi.title}</p>
-                  <p className="mt-1 text-xl font-black text-primary">{isPercentKpi(kpi.key) ? `${kpi.value}%` : kpi.value}</p>
+                  <p className="mt-1 text-xl font-black text-primary">
+                    {isPercentKpi(kpi.key) ? `${kpi.value}%` : kpi.value}
+                  </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">{kpi.description}</p>
                 </div>
               ))}
@@ -371,8 +396,12 @@ function ReportsPage() {
             return (
               <section key={record.key} className="report-record-section mt-8">
                 <div className="mb-3 flex items-end justify-between gap-3 border-b-2 border-paper-border pb-2">
-                  <h2 className="border-r-4 border-primary pr-3 text-base font-black">{record.title}</h2>
-                  <span className="text-xs font-bold text-muted-foreground">عدد السجلات: {rows.length}</span>
+                  <h2 className="border-r-4 border-primary pr-3 text-base font-black">
+                    {record.title}
+                  </h2>
+                  <span className="text-xs font-bold text-muted-foreground">
+                    عدد السجلات: {rows.length}
+                  </span>
                 </div>
                 {columns.length ? (
                   rows.length ? (
@@ -381,7 +410,12 @@ function ReportsPage() {
                         <thead>
                           <tr className="bg-paper-muted">
                             {columns.map((column) => (
-                              <th key={column.key} className="border border-paper-border p-1.5 font-bold">{column.label}</th>
+                              <th
+                                key={column.key}
+                                className="border border-paper-border p-1.5 font-bold"
+                              >
+                                {column.label}
+                              </th>
                             ))}
                           </tr>
                         </thead>
@@ -389,7 +423,10 @@ function ReportsPage() {
                           {rows.map((row, index) => (
                             <tr key={String(row.id ?? index)}>
                               {columns.map((column) => (
-                                <td key={column.key} className="border border-paper-border p-1.5 align-top break-words">
+                                <td
+                                  key={column.key}
+                                  className="border border-paper-border p-1.5 align-top break-words"
+                                >
                                   {displayRecordValue(row[column.key], column.type)}
                                 </td>
                               ))}
@@ -399,25 +436,34 @@ function ReportsPage() {
                       </table>
                     </div>
                   ) : (
-                    <p className="rounded-lg border border-dashed border-paper-border p-3 text-center text-xs text-muted-foreground">لا توجد بيانات ضمن النطاق المحدد.</p>
+                    <p className="rounded-lg border border-dashed border-paper-border p-3 text-center text-xs text-muted-foreground">
+                      لا توجد بيانات ضمن النطاق المحدد.
+                    </p>
                   )
                 ) : (
-                  <p className="rounded-lg border border-dashed border-paper-border p-3 text-center text-xs text-muted-foreground">لا توجد حقول قابلة للعرض في هذا السجل.</p>
+                  <p className="rounded-lg border border-dashed border-paper-border p-3 text-center text-xs text-muted-foreground">
+                    لا توجد حقول قابلة للعرض في هذا السجل.
+                  </p>
                 )}
               </section>
             );
           })}
 
           <section className="report-analysis mt-8 break-inside-avoid">
-            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">التحليل والملاحظات والتوصيات</h2>
+            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
+              التحليل والملاحظات والتوصيات
+            </h2>
             <div className="min-h-32 rounded-xl border border-paper-border p-4">
-              <p className="whitespace-pre-wrap text-sm leading-8">{narrative.trim() || "لا توجد ملاحظات أو توصيات إضافية."}</p>
+              <p className="whitespace-pre-wrap text-sm leading-8">
+                {narrative.trim() || "لا توجد ملاحظات أو توصيات إضافية."}
+              </p>
             </div>
           </section>
 
           <section className="report-approval mt-10 break-inside-avoid">
             <div className="rounded-xl border border-paper-border bg-paper-muted p-4 text-center text-xs leading-7">
-              أُعد هذا التقرير من خلال منصة الذات للتوجيه الطلابي، وتمت مراجعته واعتماده من الجهة المختصة في المدرسة.
+              أُعد هذا التقرير من خلال منصة الذات للتوجيه الطلابي، وتمت مراجعته واعتماده من الجهة
+              المختصة في المدرسة.
             </div>
           </section>
 
@@ -428,13 +474,7 @@ function ReportsPage() {
   );
 }
 
-function PrintStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: number | string;
-}) {
+function PrintStat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-xl border border-paper-border bg-paper-muted p-3 text-center">
       <p className="text-[11px] text-muted-foreground">{label}</p>
@@ -442,4 +482,3 @@ function PrintStat({
     </div>
   );
 }
-
