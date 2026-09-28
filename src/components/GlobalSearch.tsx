@@ -23,6 +23,10 @@ export function GlobalSearch() {
         supabase.from("programs").select("id, name, domain, exec_status").or(`name.ilike.${pattern},goal.ilike.${pattern}`).limit(6),
         supabase.from("plan_tasks").select("id, task, domain, exec_status").ilike("task", pattern).limit(6),
       ]);
+      const failed = [students, cases, programs, tasks].find((result) => result.error);
+      if (failed?.error) {
+        throw failed.error;
+      }
       return {
         students: students.data ?? [],
         cases: cases.data ?? [],
@@ -77,7 +81,7 @@ export function GlobalSearch() {
             </div>
             <div className="max-h-[60vh] overflow-y-auto p-3">
               {normalized.length < 2 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">اكتبي حرفين على الأقل لبدء البحث.</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">اكتب حرفين على الأقل لبدء البحث.</p>
               ) : isFetching ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">جارٍ البحث...</p>
               ) : !hasResults ? (
