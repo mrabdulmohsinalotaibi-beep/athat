@@ -106,6 +106,7 @@ function LogoField({
 function SettingsPage() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
+  const schoolFormKey = school?.updated_at ?? school?.id ?? "school-settings-loading";
   const [counselorSignature, setCounselorSignature] = useState<string | null>(null);
   const [principalSignature, setPrincipalSignature] = useState<string | null>(null);
   const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
@@ -129,26 +130,12 @@ function SettingsPage() {
         public_requests_enabled: values["public_requests_enabled"] !== "false",
         user_id: userId,
       };
-      // ابحث عن سجل الحساب مباشرةً بدل الاعتماد على id قديم أو غير متزامن
-      // مع جلسة المستخدم، ثم حدّثه أو أنشئه عند عدم وجود سجل.
-      const { data: existing, error: lookupError } = await supabase
+      // سجل واحد فقط لكل حساب: upsert يمنع إنشاء صفوف متكررة ويضمن
+      // أن الحفظ يعمل حتى بعد تحديث الجلسة أو إعادة تحميل الصفحة.
+      const { error } = await supabase
         .from("school_settings")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (lookupError) throw lookupError;
-
-      if (existing?.id) {
-        const { error } = await supabase
-          .from("school_settings")
-          .update(payload as never)
-          .eq("id", existing.id)
-          .eq("user_id", userId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("school_settings").insert(payload as never);
-        if (error) throw error;
-      }
+        .upsert(payload as never, { onConflict: "user_id" });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["school_settings"] });
@@ -224,6 +211,7 @@ function SettingsPage() {
       <section className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-4 font-bold">بيانات المدرسة والموجه</h2>
         <form
+          key={schoolFormKey}
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
