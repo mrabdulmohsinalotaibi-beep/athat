@@ -49,12 +49,13 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
   {
     id: "programs",
     title: "البرامج",
-    description: "الخطة التشغيلية والبرامج والشواهد.",
+    description: "ابدأ بالخطة، نفّذ البرنامج، أرفق الشاهد، ثم أخرج التقرير.",
     icon: ClipboardList,
     items: [
-      { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList },
-      { to: "/programs", label: "البرامج الإرشادية", icon: Sparkles },
-      { to: "/evidences", label: "الشواهد والوثائق", icon: FolderCheck },
+      { to: "/plan", label: "1. الخطة", icon: ClipboardList },
+      { to: "/programs", label: "2. البرنامج والتنفيذ", icon: Sparkles },
+      { to: "/evidences", label: "3. الشاهد", icon: FolderCheck },
+      { to: "/reports", label: "4. التقرير", icon: FileText },
     ],
   },
   {
@@ -63,7 +64,6 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     description: "التقارير وبيانات المدرسة والتكاملات.",
     icon: Settings,
     items: [
-      { to: "/reports", label: "التقارير", icon: FileText },
       { to: "/settings", label: "بيانات المدرسة", icon: Settings },
       { to: "/integrations", label: "التكاملات", icon: Globe2 },
     ],
