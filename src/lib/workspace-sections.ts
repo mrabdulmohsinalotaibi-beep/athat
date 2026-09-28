@@ -61,7 +61,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
   {
     id: "settings",
     title: "الإدارة",
-    description: "التقارير وبيانات المدرسة والتكاملات.",
+    description: "بيانات المدرسة والتكاملات الأساسية للمنصة.",
     icon: Settings,
     items: [
       { to: "/settings", label: "بيانات المدرسة", icon: Settings },

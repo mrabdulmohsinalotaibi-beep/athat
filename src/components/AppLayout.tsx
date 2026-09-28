@@ -27,10 +27,10 @@ function isPathActive(pathname: string, route: string) {
 
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-  { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases", "/attendance", "/behavior", "/referrals", "/requests"] },
-  { to: "/interviews", label: "الجلسات", icon: CalendarDays, activeRoutes: ["/interviews", "/calendar", "/messages"] },
-  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/committees", "/evidences", "/weekly-poster", "/posts"] },
-  { to: "/settings", label: "الإدارة", icon: Settings, activeRoutes: ["/settings", "/reports", "/toolkit", "/integrations", "/profile", "/subscription"] },
+  { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases"] },
+  { to: "/interviews", label: "الجلسات", icon: CalendarDays, activeRoutes: ["/interviews", "/calendar"] },
+  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/evidences", "/reports"] },
+  { to: "/settings", label: "الإدارة", icon: Settings, activeRoutes: ["/settings", "/integrations", "/profile"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
