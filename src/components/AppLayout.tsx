@@ -188,7 +188,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* محتوى الصفحة الرئيسي */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
         <header className="sticky top-0 z-20 border-b-2 border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
           <div className="grid min-h-18 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
