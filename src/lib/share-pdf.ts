@@ -27,6 +27,8 @@ export async function createPdfFile({ element, filename }: Pick<SharePdfOptions,
     backgroundColor: "#ffffff",
     logging: false,
     windowWidth: element.scrollWidth,
+    ignoreElements: (node) =>
+      node instanceof HTMLElement && node.dataset.pdfExclude === "true",
   });
 
   const pdf = new jsPDF({
