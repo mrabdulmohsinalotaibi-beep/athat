@@ -1,19 +1,3 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { formatHijriDate } from "@/lib/date";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import {
   AlertTriangle,
   CalendarCheck,
@@ -25,7 +9,6 @@ import {
   Sparkles,
   Plus,
   UserCheck,
-  TrendingUp,
   Clock,
   CheckCircle2,
   Zap,
@@ -35,11 +18,6 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
-import { computeKpis, isPercentKpi } from "@/lib/kpi";
-import { CaseCenter } from "@/components/CaseCenter";
-import { DailyWorkLog } from "@/components/DailyWorkLog";
-import { GuidanceTemplates } from "@/components/GuidanceTemplates";
-import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
 import { WorkspaceSectionLauncher } from "@/components/WorkspaceSectionLauncher";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -140,13 +118,7 @@ function useDashboard() {
   });
 }
 
-const COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
+
 
 function Dashboard() {
   const { data: school } = useSchool();
@@ -311,34 +283,10 @@ function Dashboard() {
     },
   ];
 
-  const domainData = Object.entries(
-    cases.reduce<Record<string, number>>((acc, c) => {
-      const key = (c.domain as string) || "غير محدد";
-      acc[key] = (acc[key] ?? 0) + 1;
-      return acc;
-    }, {}),
-  ).map(([name, value]) => ({ name, value }));
-
-  const attendanceData = Object.entries(
-    attendance.reduce<Record<string, number>>((acc, a) => {
-      const key = (a.case_type as string) || "غير محدد";
-      acc[key] = (acc[key] ?? 0) + 1;
-      return acc;
-    }, {}),
-  ).map(([name, value]) => ({ name, value }));
-
-  const kpis = computeKpis({
-    planTasks: data?.planTasks ?? [],
-    cases,
-    attendance,
-    interviews: data?.interviews ?? [],
-    students,
-  });
-
   const quickActions = [
     { label: "حالة طارئة", to: "/cases" as const, icon: Plus },
-    { label: "غياب جديد", to: "/attendance" as const, icon: CalendarCheck },
-    { label: "ملاحظة سلوكية سريعة", to: "/behavior" as const, icon: ShieldAlert },
+    { label: "إضافة طالب", to: "/students" as const, icon: Users },
+    { label: "برنامج جديد", to: "/programs" as const, icon: Sparkles },
     { label: "جلسة فورية", to: "/interviews" as const, icon: UserCheck },
   ];
 
@@ -463,9 +411,7 @@ function Dashboard() {
               الحالات النشطة والغياب والتأخر والإحالات المعلقة.
             </p>
           </div>
-          <Link to="/requests" className="text-xs font-bold text-primary hover:underline">
-            عرض صندوق الطلبات
-          </Link>
+
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {quickReport.map((item) => {
@@ -489,166 +435,6 @@ function Dashboard() {
           })}
         </div>
       </section>
-
-      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
-        <summary className="cursor-pointer text-sm font-bold text-foreground">
-          مؤشرات إضافية للطلاب والإنجاز
-        </summary>
-        <div className="mt-4">
-      {/* 3. Stat Grid - بطاقات الإحصائيات */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map(({ label, value, icon: Icon, to, gradient, iconColor, badge }) => (
-          <Link
-            key={label}
-            to={to}
-            className={`group relative overflow-hidden rounded-3xl border border-primary/12 bg-gradient-to-br ${gradient} p-5 shadow-[0_8px_24px_-18px_oklch(0.4_0.12_26/0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-muted-foreground">{label}</span>
-              <div
-                className={`rounded-2xl bg-background/80 p-3 shadow-sm backdrop-blur-md ${iconColor}`}
-              >
-                <Icon className="size-5" />
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-baseline justify-between">
-              <p className="text-3xl font-black tracking-tight text-foreground">
-                {isLoading ? "—" : value}
-              </p>
-              <span className="rounded-full bg-background/60 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground backdrop-blur-sm">
-                {badge}
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-        </div>
-      </details>
-
-      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
-        <summary className="cursor-pointer text-sm font-bold text-foreground">مركز الحالات</summary>
-        <div className="mt-4"><CaseCenter /></div>
-      </details>
-
-      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
-        <summary className="cursor-pointer text-sm font-bold text-foreground">
-          السجل اليومي والقوالب والمساعد
-        </summary>
-        <div className="mt-4 space-y-4">
-      <DailyWorkLog />
-
-      <GuidanceTemplates />
-
-      <AiCounselorAssistant />
-
-        </div>
-      </details>
-
-      <details className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
-        <summary className="cursor-pointer text-sm font-bold text-foreground">
-          مؤشرات الأداء والرسوم البيانية
-        </summary>
-        <div className="mt-4 space-y-4">
-      {/* 4. KPI Performance Meter - قسم مؤشرات الأداء */}
-      <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between border-b border-border/40 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="rounded-xl bg-primary/10 p-2 text-primary">
-              <TrendingUp className="size-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-black text-foreground">مؤشرات الأداء والإنجاز</h2>
-              <p className="text-[11px] font-medium text-muted-foreground">
-                متابعة دقيقة لمستهدفات الفصل الدراسي
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {kpis.map((k) => (
-            <div
-              key={k.key}
-              className="relative overflow-hidden rounded-2xl border border-border/50 bg-background/60 p-4 transition-all hover:border-primary/40"
-            >
-              <p className="text-xs font-bold text-muted-foreground">{k.label}</p>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-2xl font-black text-primary">{k.value}</span>
-                {isPercentKpi(k.key) && <span className="text-xs font-bold text-primary">%</span>}
-              </div>
-
-              {isPercentKpi(k.key) && (
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-700"
-                    style={{ width: `${Math.min(k.value, 100)}%` }}
-                  />
-                </div>
-              )}
-              <p className="mt-2.5 text-[10px] font-semibold text-muted-foreground/80">{k.hint}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 5. Visual Data Charts - الرسوم البيانية */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-black text-foreground">توزيع الحالات حسب المجال</h2>
-          {domainData.length === 0 ? (
-            <div className="flex h-56 items-center justify-center text-xs font-bold text-muted-foreground">
-              لا توجد بيانات مسجلة حالياً
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={260} minWidth={0}>
-              <PieChart>
-                <Pie
-                  data={domainData}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={85}
-                  innerRadius={45}
-                  paddingAngle={4}
-                  label
-                >
-                  {domainData.map((entry, index) => (
-                    <Cell
-                      key={entry.name}
-                      fill={COLORS[index % COLORS.length] ?? "var(--chart-1)"}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        <div className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-black text-foreground">مؤشر المواظبة والغياب</h2>
-          {attendanceData.length === 0 ? (
-            <div className="flex h-56 items-center justify-center text-xs font-bold text-muted-foreground">
-              لا توجد بيانات مسجلة حالياً
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={260} minWidth={0}>
-              <BarChart data={attendanceData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="value" fill="var(--chart-3)" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-        </div>
-      </details>
 
       {/* 6. Notifications & Agenda Cards - المتابعات والمواعيد */}
       <div className="grid gap-6 lg:grid-cols-2">
