@@ -89,6 +89,10 @@ function ReportsPage() {
           return { key: record.key, data: result.data ?? [], error: result.error };
         }),
       );
+      const failed = results.find((item) => item.error);
+      if (failed?.error) {
+        throw failed.error;
+      }
       return {
         sections: Object.fromEntries(
           results.map((item) => [item.key, item.data as Record<string, unknown>[]]),
