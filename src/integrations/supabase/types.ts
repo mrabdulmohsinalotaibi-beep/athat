@@ -1306,6 +1306,25 @@ export type Database = {
         }
         Returns: string
       }
+      submit_public_request_v2: {
+        Args: {
+          p_classroom?: string | null
+          p_details: string
+          p_is_anonymous?: boolean
+          p_kind: string
+          p_portal_token?: string | null
+          p_preferred_time?: string | null
+          p_requester_contact?: string | null
+          p_requester_name?: string | null
+          p_requester_role?: string | null
+          p_slug?: string | null
+          p_student_grade?: string | null
+          p_student_name?: string | null
+          p_topic?: string | null
+          p_urgency?: string
+        }
+        Returns: string
+      }
       submit_public_feedback: {
         Args: {
           p_category: string
