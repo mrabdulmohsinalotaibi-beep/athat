@@ -65,42 +65,28 @@ export const Route = createFileRoute("/_authenticated")({
     const next = location.pathname + location.searchStr + location.hash;
 
     let sessionUser = null;
+    let invalidSession = false;
+
     try {
       const { data, error } = await supabase.auth.getSession();
-      if (error && isInvalidSessionError(error)) {
-        await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
-        throw redirect({ to: "/auth", search: { next } });
-      }
       sessionUser = data.session?.user ?? null;
+      invalidSession = Boolean(error && isInvalidSessionError(error));
     } catch (error) {
-      // Router redirects must continue to the router.
-      if (error && typeof error === "object" && "isRedirect" in error) throw error;
-      // A temporary network failure should not crash protected routing, but
-      // without any local session we must return to sign-in.
-      if (!sessionUser) throw redirect({ to: "/auth", search: { next } });
+      invalidSession = isInvalidSessionError(error);
+    }
+
+    if (invalidSession) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+      throw redirect({ to: "/auth", search: { next } });
     }
 
     if (!sessionUser) {
       throw redirect({ to: "/auth", search: { next } });
     }
 
-    try {
-      const { data, error } = await supabase.auth.getUser();
-      if (!error && data.user) return { user: data.user };
-
-      if (error && isInvalidSessionError(error)) {
-        await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
-        throw redirect({ to: "/auth", search: { next } });
-      }
-    } catch (error) {
-      if (error && typeof error === "object" && "isRedirect" in error) throw error;
-      if (isInvalidSessionError(error)) {
-        await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
-        throw redirect({ to: "/auth", search: { next } });
-      }
-      // Keep the locally persisted session during a transient connectivity error.
-    }
-
+    // Do not block every page transition on a remote getUser() request.
+    // Supabase RLS still validates the JWT on every protected data request,
+    // while autoRefreshToken keeps the browser session current.
     return { user: sessionUser };
   },
   component: () => (
