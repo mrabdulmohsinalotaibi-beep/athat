@@ -406,7 +406,11 @@ function ProgramsPage() {
     },
   });
 
-  const { data: planTasks = [] } = useQuery({
+  const {
+    data: planTasks = [],
+    isError: planTasksFailed,
+    refetch: refetchPlanTasks,
+  } = useQuery({
     queryKey: ["plan-tasks-options"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -426,13 +430,20 @@ function ProgramsPage() {
 
   const save = useMutation({
     mutationFn: async (draft: ProgramDraft) => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData.user) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      let userId = sessionData.session?.user.id ?? "";
+      try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (!authError && authData.user) userId = authData.user.id;
+      } catch {
+        // Continue with the locally persisted session during a transient auth failure.
+      }
+      if (!userId) {
         throw new Error("يجب تسجيل الدخول قبل حفظ البرنامج.");
       }
 
       const payload = {
-        user_id: authData.user.id,
+        user_id: userId,
         program_no: draft.program_no || null,
         name: draft.name || null,
         ptype: draft.ptype || null,
@@ -491,16 +502,21 @@ function ProgramsPage() {
   }
 
   async function uploadFiles(recordId: string, recordTitle: string) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error("يجب تسجيل الدخول قبل رفع الشواهد.");
+    const { data: sessionData } = await supabase.auth.getSession();
+    let userId = sessionData.session?.user.id ?? "";
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (!authError && authData.user) userId = authData.user.id;
+    } catch {
+      // Continue with the locally persisted session during a transient auth failure.
+    }
+    if (!userId) throw new Error("يجب تسجيل الدخول قبل رفع الشواهد.");
     if (!pendingFiles.length) return;
     try {
       for (const file of pendingFiles) {
         if (file.size > 50 * 1024 * 1024) throw new Error(`الملف ${file.name} يتجاوز 50 ميجابايت.`);
         const safe = file.name.replace(/[^\w\-.\u0600-\u06FF ]/g, "_");
-        const path = `${user.id}/programs/${recordId}/${Date.now()}-${safe}`;
+        const path = `${userId}/programs/${recordId}/${Date.now()}-${safe}`;
         const { error: uploadError } = await supabase.storage
           .from("evidences")
           .upload(path, file, { contentType: file.type || undefined, upsert: false });
