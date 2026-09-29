@@ -4,9 +4,10 @@ import { PublicLayout } from "@/components/PublicLayout";
 import { PublicRequestForm } from "@/components/PublicRequestForm";
 
 export const Route = createFileRoute("/forms/referral")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    school: typeof search["school"] === "string" ? search["school"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { school?: string } => {
+    const school = typeof search["school"] === "string" ? search["school"] : "";
+    return school ? { school } : {};
+  },
   head: () => ({
     meta: [
       { title: "استمارة إحالة طالب | الذات" },
