@@ -5,6 +5,7 @@ import { recordByKey } from "@/lib/records";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   ClipboardCheck,
   HeartHandshake,
@@ -136,7 +137,7 @@ function SpecialCasesPage() {
             {overdue.slice(0, 6).map((row) => (
               <div key={row.id} className="rounded-xl border border-amber-200 bg-white p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <strong className="truncate text-sm">{row.student_name || "طالب غير محدد"}</strong>
+                  <strong className="truncate text-sm">{row["student_name"] || "طالب غير محدد"}</strong>
                   <Badge variant="outline">{row.case_status || "—"}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">موعد المتابعة: {String(row.followup_at ?? "—")}</p>
@@ -240,9 +241,9 @@ function SpecialCasesPage() {
           icon: <Workflow className="size-4" />,
           title: "متابعة الحالة",
           onClick: (row) => {
-            const studentId = encodeURIComponent(String(row.student_id ?? ""));
-            const studentNo = encodeURIComponent(String(row.student_no ?? ""));
-            const studentName = encodeURIComponent(String(row.student_name ?? ""));
+            const studentId = encodeURIComponent(String(row["student_id"] ?? ""));
+            const studentNo = encodeURIComponent(String(row["student_no"] ?? ""));
+            const studentName = encodeURIComponent(String(row["student_name"] ?? ""));
             window.location.href = `/interviews?new=student&studentId=${studentId}&studentNo=${studentNo}&studentName=${studentName}`;
           },
         }}
