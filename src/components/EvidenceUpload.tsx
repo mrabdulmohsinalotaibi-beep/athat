@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Film, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -73,7 +73,16 @@ export function EvidenceUploadDialog({
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const previewUrl = useMemo(() => file && kindOf(file.type, file.name) === "image" ? URL.createObjectURL(file) : "", [file]);
+  const previewUrl = useMemo(
+    () => (file && kindOf(file.type, file.name) === "image" ? URL.createObjectURL(file) : ""),
+    [file],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const { data: programs = [] } = useQuery({
     queryKey: ["programs-options"],
@@ -107,9 +116,14 @@ export function EvidenceUploadDialog({
     }
     setBusy(true);
     try {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      const uid = auth.user?.id;
+      const { data: sessionData } = await supabase.auth.getSession();
+      let uid = sessionData.session?.user.id ?? "";
+      try {
+        const { data: auth, error: authError } = await supabase.auth.getUser();
+        if (!authError && auth.user) uid = auth.user.id;
+      } catch {
+        // Continue with the locally persisted session on transient auth failures.
+      }
       if (!uid) throw new Error("الجلسة منتهية، أعد تسجيل الدخول");
       const safe = file.name.replace(/[^\w.\-\u0600-\u06FF]/g, "_");
       const path = `${uid}/${Date.now()}-${safe}`;
