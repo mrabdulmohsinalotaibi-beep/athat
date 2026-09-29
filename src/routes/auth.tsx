@@ -204,7 +204,7 @@ function AuthPage() {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <img
-            src="/brand-logo.svg?v=20260929d"
+            src="/brand-logo.svg?v=20260929f"
             alt="الذات ATHAT"
             className="mx-auto h-auto w-56 max-w-full"
           />
