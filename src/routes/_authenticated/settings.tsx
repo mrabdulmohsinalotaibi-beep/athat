@@ -106,7 +106,13 @@ function LogoField({
 
 function SettingsPage() {
   const queryClient = useQueryClient();
-  const { data: school } = useSchool();
+  const {
+    data: school,
+    isLoading: schoolLoading,
+    isError: schoolError,
+    error: schoolQueryError,
+    refetch: refetchSchool,
+  } = useSchool();
   const schoolFormKey = school?.updated_at ?? school?.id ?? "school-settings-loading";
   const [counselorSignature, setCounselorSignature] = useState<string | null>(null);
   const [principalSignature, setPrincipalSignature] = useState<string | null>(null);
@@ -219,6 +225,23 @@ function SettingsPage() {
         <p className="mt-1 text-sm text-muted-foreground">هذه البيانات هي المصدر الموحد للكليشة الرسمية في جميع ملفات PDF وتقارير A4.</p>
       </div>
 
+      {schoolError && (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p className="font-bold text-destructive">تعذّر تحميل بيانات المدرسة</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {schoolQueryError instanceof Error ? schoolQueryError.message : "حدث خطأ أثناء جلب إعدادات المدرسة."}
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => void refetchSchool()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       {lookupsError && (
         <div
           role="alert"
@@ -241,9 +264,14 @@ function SettingsPage() {
         <p className="mb-4 text-xs text-muted-foreground">أدخلها مرة واحدة؛ ستظهر تلقائيًا في التقارير وملف الطالب والخطة والبرامج.</p>
         <form
           key={schoolFormKey}
+          aria-busy={schoolLoading}
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
+            if (schoolLoading || schoolError) {
+              toast.error("انتظر تحميل بيانات المدرسة أو أعد المحاولة قبل الحفظ.");
+              return;
+            }
             const data = new FormData(e.currentTarget);
             const values: Record<string, string> = {};
             SCHOOL_FIELDS.forEach((f) => {
@@ -348,7 +376,7 @@ function SettingsPage() {
                 استقبال الاستمارات العامة (استشارة فردية، إحالة طالب، إبلاغ سري)
               </label>
             </div>
-            <Button type="submit" disabled={saveSchool.isPending}>
+            <Button type="submit" disabled={saveSchool.isPending || schoolLoading || schoolError}>
               {saveSchool.isPending ? "جارٍ الحفظ..." : "حفظ البيانات"}
             </Button>
           </div>
