@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   DEFAULT_MISSION,
   DEFAULT_VISION,
-  useGuidanceProfile,
 } from "@/lib/guidance";
 
 export const Route = createFileRoute("/")({
@@ -42,15 +41,13 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  const { data: profile } = useGuidanceProfile();
-
   return (
     <PublicLayout>
       <section className="mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-8 sm:pt-12">
         <div className="mb-6 flex items-center gap-4">
           <img src="/brand-icon.svg?v=20260929f" alt="شعار الذات" className="brand-mark-well size-14 shrink-0 rounded-lg object-contain" />
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-muted-foreground">{profile?.school_name || "نظام الإرشاد المدرسي"}</p>
+            <p className="text-xs font-semibold text-muted-foreground">نظام الإرشاد المدرسي</p>
             <h1 className="text-2xl font-black text-primary sm:text-3xl">الذات</h1>
           </div>
         </div>
@@ -86,11 +83,11 @@ function Landing() {
           </div>
           <div className="flex min-h-36 flex-col justify-between rounded-lg border border-border bg-card p-5 sm:min-h-40">
             <Megaphone className="size-6 text-accent" />
-            <div><h3 className="font-bold">تنبيهات وإعلانات</h3><p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs leading-6 text-muted-foreground">{profile?.announcement || "لا توجد إعلانات جديدة حالياً."}</p></div>
+            <div><h3 className="font-bold">تنبيهات وإعلانات</h3><p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs leading-6 text-muted-foreground">لا توجد إعلانات جديدة حالياً.</p></div>
           </div>
           <div className="flex min-h-36 flex-col justify-between rounded-lg bg-secondary p-5 sm:min-h-40">
             <Sparkles className="size-6 text-primary" />
-            <div><h3 className="font-bold">أوقات المقابلات</h3><p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">{profile?.office_hours || "تواصل مع الموجه الطلابي لترتيب الموعد."}</p></div>
+            <div><h3 className="font-bold">أوقات المقابلات</h3><p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">تواصل مع الموجه الطلابي لترتيب الموعد.</p></div>
           </div>
         </div>
       </section>
