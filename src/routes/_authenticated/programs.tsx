@@ -608,7 +608,9 @@ function ProgramsPage() {
       ["notes", "الإجراءات والملاحظات"],
     ] as const;
     const values = Object.fromEntries(
-      fields.map(([name]) => [name, value(editing[name])]).filter(([, text]) => text.trim()),
+      fields
+        .map(([name]) => [name, value(editing[name])] as const)
+        .filter(([, text]) => text.trim()),
     );
     const missing = fields.filter(([name]) => !value(editing[name]).trim());
     if (!missing.length) {
