@@ -61,7 +61,11 @@ const workflow = [
 ];
 
 function SpecialCasesPage() {
-  const { data: cases = [] } = useQuery({
+  const {
+    data: cases = [],
+    isError: followupError,
+    refetch: refetchFollowup,
+  } = useQuery({
     queryKey: ["cases-followup-center"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -102,6 +106,15 @@ function SpecialCasesPage() {
           </Link>
         </div>
       </section>
+
+      {followupError && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+          <span className="text-amber-800">تعذّر تحميل ملخص المتابعة، لكن سجل الحالات ما زال متاحًا.</span>
+          <Button type="button" variant="ghost" size="sm" onClick={() => void refetchFollowup()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <FollowupStat title="الحالات النشطة" value={active.length} hint="مفتوحة أو قيد المتابعة" />
