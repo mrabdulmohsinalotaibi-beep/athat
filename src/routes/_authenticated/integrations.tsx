@@ -11,6 +11,7 @@ import {
 
 import { ExternalPlatformImporter } from "@/components/ExternalPlatformImporter";
 import { NoorExportCenter } from "@/components/NoorExportCenter";
+import { NoorConnectionPanel } from "@/components/NoorConnectionPanel";
 import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
@@ -105,6 +106,7 @@ function IntegrationsPage() {
         </p>
       </div>
 
+      <NoorConnectionPanel />
       <ExternalPlatformImporter />
       <NoorExportCenter />
 
