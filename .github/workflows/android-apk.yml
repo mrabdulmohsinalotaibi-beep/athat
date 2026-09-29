@@ -1,0 +1,98 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "capacitor.config.ts"
+      - "native-shell/**"
+      - "public/brand-icon.svg"
+      - ".github/workflows/android-apk.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: athat-android-apk
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install Capacitor build tools
+        run: npm install --no-save @capacitor/core@7.4.3 @capacitor/android@7.4.3 @capacitor/cli@7.4.3
+
+      - name: Generate Android project
+        run: |
+          rm -rf android
+          npx cap add android
+          npx cap sync android
+
+      - name: Apply ATHAT launcher icon
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq librsvg2-bin
+          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
+            density="${spec%%:*}"
+            size="${spec##*:}"
+            dir="android/app/src/main/res/mipmap-${density}"
+            mkdir -p "$dir"
+            rsvg-convert -w "$size" -h "$size" public/brand-icon.svg > "$dir/ic_launcher.png"
+            cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
+          done
+          # Keep the adaptive-icon foreground consistent with the same identity.
+          for spec in "mdpi:108" "hdpi:162" "xhdpi:216" "xxhdpi:324" "xxxhdpi:432"; do
+            density="${spec%%:*}"
+            size="${spec##*:}"
+            dir="android/app/src/main/res/mipmap-${density}"
+            rsvg-convert -w "$size" -h "$size" public/brand-icon.svg > "$dir/ic_launcher_foreground.png"
+          done
+
+      - name: Build installable APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Prepare APK
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/ATHAT-Android.apk
+          sha256sum release/ATHAT-Android.apk > release/ATHAT-Android.sha256
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATHAT-Android
+          path: |
+            release/ATHAT-Android.apk
+            release/ATHAT-Android.sha256
+          if-no-files-found: error
+
+      - name: Publish stable download release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest             release/ATHAT-Android.apk             release/ATHAT-Android.sha256             --target "$GITHUB_SHA"             --title "ATHAT Android"             --notes "نسخة أندرويد قابلة للتثبيت من منصة الذات ATHAT. التطبيق يفتح النسخة المنشورة الآمنة على https://athat.app ويستفيد من نفس الحساب والبيانات."
