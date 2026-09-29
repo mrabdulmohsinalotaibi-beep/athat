@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/plan")({
 });
 
 function PlanPage() {
-  const { data } = useQuery({
+  const { data, refetch } = useQuery({
     queryKey: ["plan-execution-summary"],
     queryFn: async () => {
       const [tasks, programs, evidences] = await Promise.all([
@@ -26,9 +26,18 @@ function PlanPage() {
         supabase.from("programs").select("id,name,plan_task_id,exec_status"),
         supabase.from("evidences").select("id,linked_ref,linked_type"),
       ]);
-      const failed = [tasks, programs, evidences].find((result) => result.error);
-      if (failed?.error) throw failed.error;
-      return { tasks: tasks.data ?? [], programs: programs.data ?? [], evidences: evidences.data ?? [] };
+      const failedSources = [
+        tasks.error ? "الخطة" : null,
+        programs.error ? "البرامج" : null,
+        evidences.error ? "الشواهد" : null,
+      ].filter(Boolean) as string[];
+
+      return {
+        tasks: tasks.error ? [] : tasks.data ?? [],
+        programs: programs.error ? [] : programs.data ?? [],
+        evidences: evidences.error ? [] : evidences.data ?? [],
+        failedSources,
+      };
     },
     staleTime: 30_000,
   });
@@ -61,6 +70,17 @@ function PlanPage() {
           </div>
         </div>
       </section>
+
+      {(data?.failedSources?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+          <span className="text-amber-800">
+            تعذّر تحميل جزء من ملخص الخطة ({data?.failedSources.join("، ")}). السجل الأساسي ما زال متاحًا.
+          </span>
+          <Button type="button" variant="ghost" size="sm" onClick={() => void refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Summary title="إنجاز الخطة" value={`${progress}%`} hint={`${done} من ${tasks.length} مهمة مكتملة`} icon={<CheckCircle2 className="size-4" />} />
