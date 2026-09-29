@@ -23,9 +23,13 @@ import { GUIDANCE_LEAFLETS, GUIDANCE_LINKS, GUIDANCE_SERVICES } from "@/lib/guid
 import { POST_KINDS, type PostKind } from "@/lib/posts";
 
 export const Route = createFileRoute("/blog/$token")({
-  validateSearch: (search: Record<string, unknown>): { school?: string } => {
+  validateSearch: (search: Record<string, unknown>): { school?: string; feedback?: string } => {
     const school = typeof search["school"] === "string" ? search["school"] : "";
-    return school ? { school } : {};
+    const feedback = typeof search["feedback"] === "string" ? search["feedback"] : "";
+    return {
+      ...(school ? { school } : {}),
+      ...(feedback ? { feedback } : {}),
+    };
   },
   head: () => ({
     meta: [
@@ -59,7 +63,7 @@ const SERVICE_ICONS = [GraduationCap, Brain, BriefcaseBusiness, HeartPulse];
 
 function PublicCounselorBlogPage() {
   const { token } = Route.useParams();
-  const { school: schoolFromLink } = Route.useSearch();
+  const { school: schoolFromLink, feedback } = Route.useSearch();
   const {
     data = [],
     isLoading,
@@ -120,6 +124,7 @@ function PublicCounselorBlogPage() {
   const schoolSearch = {
     ...(effectiveSchoolSlug ? { school: effectiveSchoolSlug } : {}),
     portal: token,
+    ...(feedback ? { feedback } : {}),
   };
 
   if (isLoading)
