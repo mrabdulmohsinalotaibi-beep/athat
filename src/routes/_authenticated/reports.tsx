@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
-import { computeKpis, isPercentKpi } from "@/lib/kpi";
+import { computeKpis, isPercentKpi, type KpiInput } from "@/lib/kpi";
 import { RECORDS, type FieldDef } from "@/lib/records";
 import { displayRecordValue } from "@/lib/display";
 import { formatHijriDate } from "@/lib/date";
@@ -18,6 +18,8 @@ import { Label } from "@/components/ui/label";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 
 
+
+type ReportRow = Record<string, unknown> & { id: string };
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -84,7 +86,7 @@ function ReportsPage() {
     queryFn: async () => {
       const results = await Promise.all(
         reportableRecords.map(async (record) => {
-          const result = await supabase.from(record.table).select("*");
+          const result = await supabase.from(record.table as never).select("*");
           return { key: record.key, data: result.data ?? [], error: result.error };
         }),
       );
@@ -103,7 +105,7 @@ function ReportsPage() {
         sections: Object.fromEntries(
           results.map((item) => [
             item.key,
-            (item.error ? [] : item.data ?? []) as Record<string, unknown>[],
+            (item.error ? [] : item.data ?? []) as unknown as ReportRow[],
           ]),
         ),
         errors,
@@ -115,7 +117,7 @@ function ReportsPage() {
   const sections = useMemo(() => data?.sections ?? {}, [data]);
 
   const filteredSections = useMemo(() => {
-    const output: Record<string, Record<string, unknown>[]> = {};
+    const output: Record<string, ReportRow[]> = {};
     for (const record of reportableRecords) {
       let rows = sections[record.key] ?? [];
       const dateField = dateFieldForRecord(record.key);
@@ -132,11 +134,11 @@ function ReportsPage() {
 
   const kpis = useMemo(() => {
     const computed = computeKpis({
-      planTasks: filteredSections.plan ?? [],
-      cases: filteredSections.cases ?? [],
-      attendance: filteredSections.attendance ?? [],
-      interviews: filteredSections.interviews ?? [],
-      students: filteredSections.students ?? [],
+      planTasks: (filteredSections["plan"] ?? []) as unknown as KpiInput["planTasks"],
+      cases: (filteredSections["cases"] ?? []) as unknown as KpiInput["cases"],
+      attendance: (filteredSections["attendance"] ?? []) as unknown as KpiInput["attendance"],
+      interviews: (filteredSections["interviews"] ?? []) as unknown as KpiInput["interviews"],
+      students: (filteredSections["students"] ?? []) as unknown as KpiInput["students"],
     });
     return computed.map((kpi) => ({
       key: kpi.key,
@@ -197,12 +199,12 @@ function ReportsPage() {
     (sum, record) => sum + (filteredSections[record.key]?.length ?? 0),
     0,
   );
-  const planRows = filteredSections.plan ?? [];
-  const programRows = filteredSections.programs ?? [];
-  const evidenceRows = filteredSections.evidences ?? [];
-  const planDone = planRows.filter((row) => String(row.exec_status ?? "") === "مكتمل").length;
+  const planRows = filteredSections["plan"] ?? [];
+  const programRows = filteredSections["programs"] ?? [];
+  const evidenceRows = filteredSections["evidences"] ?? [];
+  const planDone = planRows.filter((row) => String(row["exec_status"] ?? "") === "مكتمل").length;
   const programDone = programRows.filter((row) =>
-    ["منفذ", "مكتمل"].includes(String(row.exec_status ?? "")),
+    ["منفذ", "مكتمل"].includes(String(row["exec_status"] ?? "")),
   ).length;
   const planProgress = planRows.length ? Math.round((planDone / planRows.length) * 100) : 0;
   const programProgress = programRows.length ? Math.round((programDone / programRows.length) * 100) : 0;
@@ -394,8 +396,8 @@ function ReportsPage() {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <ReportStat label="السجلات المختارة" value={selectedRecords.length} />
             <ReportStat label="إجمالي الصفوف" value={totalRows} />
-            <ReportStat label="الطلاب" value={filteredSections.students?.length ?? 0} />
-            <ReportStat label="الشواهد" value={filteredSections.evidences?.length ?? 0} />
+            <ReportStat label="الطلاب" value={filteredSections["students"]?.length ?? 0} />
+            <ReportStat label="الشواهد" value={filteredSections["evidences"]?.length ?? 0} />
           </div>
 
           {isLoading && <p className="text-xs text-muted-foreground">جارٍ تحميل السجلات...</p>}
@@ -446,8 +448,8 @@ function ReportsPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <ReportStat label="عدد السجلات" value={selectedRecords.length} />
               <ReportStat label="إجمالي الصفوف" value={totalRows} />
-              <ReportStat label="عدد الطلاب" value={filteredSections.students?.length ?? 0} />
-              <ReportStat label="عدد الشواهد" value={filteredSections.evidences?.length ?? 0} />
+              <ReportStat label="عدد الطلاب" value={filteredSections["students"]?.length ?? 0} />
+              <ReportStat label="عدد الشواهد" value={filteredSections["evidences"]?.length ?? 0} />
             </div>
             <div className="mt-5 rounded-xl border border-paper-border bg-paper-muted p-4">
               <div className="grid gap-2 sm:grid-cols-2 text-xs">
@@ -530,13 +532,13 @@ function ReportsPage() {
                         </thead>
                         <tbody>
                           {rows.map((row, index) => (
-                            <tr key={String(row.id ?? index)}>
+                            <tr key={String(row["id"] ?? index)}>
                               {columns.map((column) => (
                                 <td
                                   key={column.key}
                                   className="border border-paper-border p-1.5 align-top break-words"
                                 >
-                                  {displayRecordValue(row[column.key], column.type)}
+                                  {displayRecordValue(row[column.key])}
                                 </td>
                               ))}
                             </tr>
