@@ -66,36 +66,100 @@
     return [...unique.values()];
   }
 
-  function rowStudentName(row) {
+  function rowStudentIdentity(row) {
     const cells = [...row.querySelectorAll("td")];
-    const text = cells.map((cell) => cell.textContent?.trim() || "").filter(Boolean);
-    return text.find((value) => /[\u0600-\u06FF]/.test(value) && value.length >= 5) || "";
+    const values = cells.map((cell) => cell.textContent?.trim() || "").filter(Boolean);
+    const nationalId = values.join(" ").match(/\b[12]\d{9}\b/)?.[0] || null;
+    const name =
+      values.find(
+        (value) =>
+          /[\u0600-\u06FF]/.test(value) &&
+          value.length >= 5 &&
+          !/^\d+$/.test(value),
+      ) || "";
+    return { name, nationalId };
+  }
+
+  function matchesStudent(row, item) {
+    const identity = rowStudentIdentity(row);
+    const itemId = String(item.student_no || item.national_id || "").replace(/\D/g, "");
+    if (itemId.length === 10 && identity.nationalId) return identity.nationalId === itemId;
+    return Boolean(identity.name && item.student_name && normalize(identity.name) === normalize(item.student_name));
   }
 
   function applyAttendance(absences) {
-    const names = new Set(
-      absences
-        .map((item) => normalize(item.student_name))
-        .filter(Boolean),
-    );
+    const items = absences.filter((item) => item?.student_name || item?.student_no || item?.national_id);
     const matched = [];
-    const unmatched = new Set(names);
+    const unmatched = new Set(items.map((item, index) => String(item.id || item.student_no || item.student_name || index)));
 
     for (const table of visibleTables()) {
       for (const row of table.querySelectorAll("tr")) {
-        const name = normalize(rowStudentName(row));
-        if (!name || !names.has(name)) continue;
+        const item = items.find((candidate) => matchesStudent(row, candidate));
+        if (!item) continue;
         const checkbox = row.querySelector('input[type="checkbox"]:not(:disabled)');
         if (!checkbox) continue;
         if (!checkbox.checked) checkbox.click();
-        matched.push(name);
-        unmatched.delete(name);
+        matched.push(item);
+        unmatched.delete(String(item.id || item.student_no || item.student_name || ""));
         row.style.outline = "2px solid #8b5736";
         row.style.outlineOffset = "-2px";
       }
     }
 
     return { matched: matched.length, unmatched: [...unmatched] };
+  }
+
+  function applyBehavior(items) {
+    const results = [];
+
+    for (const item of items) {
+      const payload = item?.payload && typeof item.payload === "object" ? item.payload : item;
+      const targetRows = [...document.querySelectorAll("table tr")].filter((row) =>
+        matchesStudent(row, {
+          student_name: payload.student_name,
+          student_no: payload.student_no,
+          national_id: payload.national_id,
+        }),
+      );
+
+      if (!targetRows.length) {
+        results.push({ id: item.id, ok: false, reason: "لم تتم مطابقة الطالب" });
+        continue;
+      }
+
+      const wanted = normalize(payload.observation || payload.case_type || payload.action || "");
+      if (!wanted) {
+        results.push({ id: item.id, ok: false, reason: "السجل لا يحتوي بند سلوك واضح" });
+        continue;
+      }
+
+      let applied = false;
+      for (const row of targetRows) {
+        const selects = [...row.querySelectorAll("select:not(:disabled)")];
+        for (const select of selects) {
+          const option = [...select.options].find((candidate) => {
+            const optionText = normalize(candidate.textContent || "");
+            return optionText === wanted || (wanted.length >= 6 && optionText.includes(wanted));
+          });
+          if (!option) continue;
+          select.value = option.value;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          row.style.outline = "2px solid #8b5736";
+          row.style.outlineOffset = "-2px";
+          applied = true;
+          break;
+        }
+        if (applied) break;
+      }
+
+      results.push({
+        id: item.id,
+        ok: applied,
+        reason: applied ? null : "لم يوجد بند مطابق بوضوح في قائمة نور",
+      });
+    }
+
+    return results;
   }
 
   function runtime(message) {
@@ -235,6 +299,10 @@
       }
       if (message.type === "NOOR_APPLY_ATTENDANCE") {
         sendResponse({ ok: true, data: applyAttendance(message.payload || []) });
+        return;
+      }
+      if (message.type === "NOOR_APPLY_BEHAVIOR") {
+        sendResponse({ ok: true, data: applyBehavior(message.payload || []) });
         return;
       }
       sendResponse({ ok: false, error: "أمر صفحة غير معروف." });
