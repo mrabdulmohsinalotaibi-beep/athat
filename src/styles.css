@@ -479,12 +479,12 @@ textarea {
   display: flex;
   flex-direction: column;
   direction: rtl;
-  font-family: "Cairo Variable", "Cairo", Tahoma, Arial, sans-serif;
+  font-family: Tahoma, Arial, "Cairo Variable", "Cairo", sans-serif;
   font-kerning: normal;
   font-synthesis: none;
-  text-rendering: geometricPrecision;
+  text-rendering: optimizeLegibility;
   letter-spacing: 0;
-  word-spacing: 0;
+  word-spacing: normal;
 }
 .record-pdf-document,
 .record-pdf-document * {
@@ -498,13 +498,35 @@ textarea {
 .record-pdf-document dd,
 .record-pdf-document dt {
   direction: rtl;
-  unicode-bidi: plaintext;
+  unicode-bidi: isolate;
+  line-height: 1.8;
   word-break: normal !important;
   overflow-wrap: break-word;
   white-space: normal;
 }
 .record-pdf-document table {
   direction: rtl;
+}
+.record-pdf-document [data-pdf-block="true"] {
+  min-height: 58px;
+  height: auto;
+  overflow: visible;
+  contain: none;
+}
+.record-pdf-document [data-pdf-block="true"] > p {
+  margin-bottom: 0.35rem;
+  line-height: 1.65;
+}
+.record-pdf-document [data-pdf-block="true"] > div,
+.record-pdf-document [data-pdf-block="true"] > span {
+  display: block;
+  position: relative;
+  line-height: 1.9;
+  white-space: pre-line;
+}
+.record-pdf-document .whitespace-pre-wrap {
+  white-space: pre-line !important;
+  line-height: 1.9 !important;
 }
 .record-pdf-document .official-document-title,
 .record-pdf-document .official-title-band,
@@ -547,9 +569,9 @@ textarea {
     font-size: 10.5pt;
     line-height: 1.7;
     direction: rtl;
-    font-family: "Cairo Variable", "Cairo", Tahoma, Arial, sans-serif !important;
+    font-family: Tahoma, Arial, "Cairo Variable", "Cairo", sans-serif !important;
     letter-spacing: 0 !important;
-    word-spacing: 0 !important;
+    word-spacing: normal !important;
   }
   .record-pdf-document h1,
   .record-pdf-document h2,
