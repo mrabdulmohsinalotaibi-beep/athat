@@ -519,7 +519,7 @@ function ProgramsPage() {
         const path = `${userId}/programs/${recordId}/${Date.now()}-${safe}`;
         const { error: uploadError } = await supabase.storage
           .from("evidences")
-          .upload(path, file, { contentType: file.type || undefined, upsert: false });
+          .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
         if (uploadError) throw uploadError;
         const mimeType =
           file.type ||
