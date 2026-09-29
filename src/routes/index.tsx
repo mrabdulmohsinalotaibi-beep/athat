@@ -48,7 +48,7 @@ function Landing() {
     <PublicLayout>
       <section className="mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-8 sm:pt-12">
         <div className="mb-6 flex items-center gap-4">
-          <img src="/brand-logo.svg" alt="شعار الذات" className="brand-mark-well size-14 shrink-0 rounded-lg object-contain" />
+          <img src="/brand-icon.svg" alt="شعار الذات" className="brand-mark-well size-14 shrink-0 rounded-lg object-contain" />
           <div className="min-w-0">
             <p className="text-xs font-semibold text-muted-foreground">{profile?.school_name || "نظام الإرشاد المدرسي"}</p>
             <h1 className="text-2xl font-black text-primary sm:text-3xl">الذات</h1>
