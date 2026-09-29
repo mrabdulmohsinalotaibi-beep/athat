@@ -22,12 +22,22 @@ export function useGuidanceProfile(schoolSlug?: string | null) {
   return useQuery({
     queryKey: ["guidance_profile", slug],
     queryFn: async (): Promise<GuidanceProfile | null> => {
-      const { data, error } = await supabase.rpc("get_guidance_profile", { p_slug: slug });
-      if (error) {
-        console.error("تعذّر جلب بيانات التوجيه الطلابي العامة:", error.message);
+      try {
+        const { data, error } = await supabase.rpc("get_guidance_profile", { p_slug: slug });
+        if (error) {
+          console.warn("[public-profile] تعذّر جلب الملف العام:", error.message);
+          return null;
+        }
+        return (data?.[0] as GuidanceProfile | undefined) ?? null;
+      } catch (error) {
+        // The public homepage must remain available even when Supabase,
+        // browser storage, or the network is temporarily unavailable.
+        console.warn(
+          "[public-profile] تم تشغيل الصفحة بالبيانات الافتراضية:",
+          error instanceof Error ? error.message : error,
+        );
         return null;
       }
-      return (data?.[0] as GuidanceProfile | undefined) ?? null;
     },
     staleTime: 1000 * 60 * 10,
     retry: false,
