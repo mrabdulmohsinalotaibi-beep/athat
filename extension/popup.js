@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 let scannedStudents = [];
 let todayAttendance = [];
+let readyNoorJobs = [];
 
 function runtime(message) {
   return new Promise((resolve) => chrome.runtime.sendMessage(message, resolve));
@@ -84,6 +85,26 @@ $("applyAttendance").addEventListener("click", async () => {
   if (!response?.ok) return result(response?.error || "تعذر المطابقة.", true);
   const unmatched = response.data?.unmatched?.length || 0;
   result(`تمت مطابقة ${response.data?.matched || 0} طالب. غير المطابق: ${unmatched}. راجع الصفحة ثم اضغط «حفظ» في نور بنفسك.`);
+});
+
+$("loadNoorJobs").addEventListener("click", async () => {
+  const response = await runtime({ type: "ATHAT_READY_NOOR_JOBS" });
+  if (!response?.ok) return result(response?.error || "تعذر جلب السجلات الجاهزة.", true);
+  readyNoorJobs = Array.isArray(response.data) ? response.data : [];
+  const behaviorCount = readyNoorJobs.filter((job) => job.source_table === "behavior").length;
+  const attendanceCount = readyNoorJobs.filter((job) => job.source_table === "attendance").length;
+  result(`جاهز لنور: ${readyNoorJobs.length} سجل • سلوك ${behaviorCount} • مواظبة ${attendanceCount}.`);
+});
+
+$("applyBehavior").addEventListener("click", async () => {
+  const behaviorJobs = readyNoorJobs.filter((job) => job.source_table === "behavior");
+  if (!behaviorJobs.length) return result("اسحب السجلات الجاهزة أولاً، ولا توجد سجلات سلوك جاهزة.", true);
+  const response = await activeTabMessage({ type: "NOOR_APPLY_BEHAVIOR", payload: behaviorJobs });
+  if (!response?.ok) return result(response?.error || "تعذر تجهيز السلوك.", true);
+  const rows = Array.isArray(response.data) ? response.data : [];
+  const matched = rows.filter((item) => item.ok).length;
+  const unmatched = rows.length - matched;
+  result(`تم تجهيز ${matched} سجل سلوك. غير المطابق: ${unmatched}. راجع البنود ثم اضغط «حفظ» في نور بنفسك.`);
 });
 
 bootstrap().catch((error) => result(error.message, true));
