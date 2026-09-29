@@ -45,8 +45,8 @@ export interface PublicRequestRow {
   details: string;
   is_anonymous: boolean;
   status: string;
-  linked_table: string | null;
-  linked_record_id: string | null;
+  linked_table?: string | null;
+  linked_record_id?: string | null;
   counselor_notes: string | null;
   handled_at: string | null;
   created_at: string;
@@ -58,7 +58,9 @@ function usePublicRequests() {
     queryFn: async (): Promise<PublicRequestRow[]> => {
       const { data, error } = await supabase
         .from("public_requests")
-        .select("*")
+        .select(
+          "id,request_no,kind,requester_name,requester_role,requester_contact,student_name,student_grade,classroom,topic,urgency,preferred_time,details,is_anonymous,status,counselor_notes,handled_at,created_at",
+        )
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as PublicRequestRow[];
