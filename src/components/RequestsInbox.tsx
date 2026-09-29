@@ -50,6 +50,70 @@ export interface PublicRequestRow {
   counselor_notes: string | null;
   handled_at: string | null;
   created_at: string;
+  source?: "public_requests" | "feedback_messages";
+}
+
+function feedbackStatusToRequest(status: string): string {
+  if (status === "جديد") return "جديد";
+  if (status === "قيد المراجعة") return "قيد المعالجة";
+  if (status === "تم الرد" || status === "محفوظ") return "مغلق";
+  return "جديد";
+}
+
+function requestStatusToFeedback(status: string): string {
+  if (status === "جديد") return "جديد";
+  if (status === "مغلق") return "محفوظ";
+  if (status.startsWith("تم التحويل")) return "تم الرد";
+  return "قيد المراجعة";
+}
+
+function parseTaggedMessage(message: string, label: string): string | null {
+  const match = message.match(new RegExp(\`^\\[${label}\\]\\s*(.+)$\`, "m"));
+  return match?.[1]?.trim() || null;
+}
+
+function feedbackToRequest(row: {
+  id: string;
+  sender_name: string;
+  sender_contact: string | null;
+  sender_role: string;
+  category: string;
+  message: string;
+  status: string;
+  internal_notes: string | null;
+  created_at: string;
+}): PublicRequestRow {
+  return {
+    id: row.id,
+    request_no: `MSG-${row.id.slice(0, 8).toUpperCase()}`,
+    kind: row.category,
+    requester_name: row.sender_name || null,
+    requester_role: row.sender_role || null,
+    requester_contact: row.sender_contact || null,
+    student_name: parseTaggedMessage(row.message, "الطالب"),
+    student_grade: parseTaggedMessage(row.message, "الصف"),
+    classroom: parseTaggedMessage(row.message, "الفصل"),
+    topic: parseTaggedMessage(row.message, "الموضوع"),
+    urgency: parseTaggedMessage(row.message, "الأهمية") || "عادي",
+    preferred_time: parseTaggedMessage(row.message, "الوقت المفضل"),
+    details: row.message
+      .replace(/^\\[نوع الطلب\\].*$/gm, "")
+      .replace(/^\\[الموضوع\\].*$/gm, "")
+      .replace(/^\\[الطالب\\].*$/gm, "")
+      .replace(/^\\[الصف\\].*$/gm, "")
+      .replace(/^\\[الفصل\\].*$/gm, "")
+      .replace(/^\\[الأهمية\\].*$/gm, "")
+      .replace(/^\\[الوقت المفضل\\].*$/gm, "")
+      .trim(),
+    is_anonymous: row.sender_name === "مجهول",
+    status: feedbackStatusToRequest(row.status),
+    linked_table: null,
+    linked_record_id: null,
+    counselor_notes: row.internal_notes,
+    handled_at: null,
+    created_at: row.created_at,
+    source: "feedback_messages",
+  };
 }
 
 function usePublicRequests() {
@@ -64,9 +128,9 @@ function usePublicRequests() {
       if (userError) throw userError;
       if (!userData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
 
-      // RLS already limits rows to the signed-in counselor. Start with the
-      // newest schema, then gracefully fall back if PostgREST has not refreshed
-      // additive link columns yet.
+      let primary: PublicRequestRow[] = [];
+      let primaryError: Error | null = null;
+
       const full = await supabase
         .from("public_requests")
         .select(
@@ -74,46 +138,38 @@ function usePublicRequests() {
         )
         .order("created_at", { ascending: false });
 
-      if (!full.error) return (full.data ?? []) as PublicRequestRow[];
-
-      const core = await supabase
-        .from("public_requests")
-        .select(
-          "id,request_no,kind,requester_name,requester_role,requester_contact,student_name,student_grade,classroom,topic,urgency,preferred_time,details,is_anonymous,status,counselor_notes,handled_at,created_at",
-        )
-        .order("created_at", { ascending: false });
-
-      if (!core.error) {
-        console.warn("[public-requests] link columns unavailable; using core inbox:", full.error.message);
-        return (core.data ?? []) as PublicRequestRow[];
+      if (!full.error) {
+        primary = (full.data ?? []).map((row) => ({ ...row, source: "public_requests" as const })) as PublicRequestRow[];
+      } else {
+        primaryError = new Error(full.error.message);
       }
 
-      // Last-resort compatibility path for older deployed schemas.
-      const minimal = await supabase
-        .from("public_requests")
-        .select("id,request_no,kind,student_name,requester_name,topic,urgency,details,status,created_at")
+      const feedback = await supabase
+        .from("feedback_messages")
+        .select("id,sender_name,sender_contact,sender_role,category,message,status,internal_notes,created_at")
+        .in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"])
         .order("created_at", { ascending: false });
 
-      if (!minimal.error) {
-        console.warn("[public-requests] using minimal inbox schema:", core.error.message);
-        return (minimal.data ?? []).map((row) => ({
-          ...row,
-          requester_role: null,
-          requester_contact: null,
-          student_grade: null,
-          classroom: null,
-          preferred_time: null,
-          is_anonymous: false,
-          linked_table: null,
-          linked_record_id: null,
-          counselor_notes: null,
-          handled_at: null,
-        })) as PublicRequestRow[];
+      const legacy = feedback.error
+        ? []
+        : (feedback.data ?? []).map((row) => feedbackToRequest(row));
+
+      if (primary.length === 0 && legacy.length === 0 && primaryError && feedback.error) {
+        throw new Error(
+          `تعذّر تحميل الطلبات: ${primaryError.message}. قناة الرسائل الاحتياطية: ${feedback.error.message}`,
+        );
       }
 
-      throw new Error(
-        `تعذّر قراءة الاستشارات من قاعدة البيانات (${minimal.error.code || "DB"}): ${minimal.error.message}`,
-      );
+      const merged = [...primary, ...legacy];
+      const seen = new Set<string>();
+      return merged
+        .filter((item) => {
+          const key = `${item.source}:${item.id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     },
   });
 }
@@ -184,7 +240,7 @@ export function RequestsInbox() {
   }, [queryClient]);
 
   const update = useMutation({
-    mutationFn: async (values: { id: string; status?: string; counselor_notes?: string }) => {
+    mutationFn: async (values: { id: string; source?: PublicRequestRow["source"]; status?: string; counselor_notes?: string }) => {
       const payload: Record<string, unknown> = {};
       if (values.status) {
         payload["status"] = values.status;
@@ -194,6 +250,19 @@ export function RequestsInbox() {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!userData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+
+      if (values.source === "feedback_messages") {
+        const feedbackPayload: Record<string, unknown> = {};
+        if (values.status) feedbackPayload["status"] = requestStatusToFeedback(values.status);
+        if (values.counselor_notes !== undefined) feedbackPayload["internal_notes"] = values.counselor_notes;
+        const { error } = await supabase
+          .from("feedback_messages")
+          .update(feedbackPayload as never)
+          .eq("id", values.id)
+          .eq("user_id", userData.user.id);
+        if (error) throw error;
+        return;
+      }
 
       const { error } = await supabase
         .from("public_requests")
@@ -325,6 +394,26 @@ export function RequestsInbox() {
       if (userError) throw userError;
       if (!userData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
 
+      if (request.source === "feedback_messages") {
+        const note = [
+          request.counselor_notes?.trim(),
+          `تم التحويل إلى ${linkedTable} — رقم السجل: ${linkedRecordId}`,
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        const fallback = await supabase
+          .from("feedback_messages")
+          .update({
+            status: "تم الرد",
+            internal_notes: note,
+          })
+          .eq("id", request.id)
+          .eq("user_id", userData.user.id);
+        if (fallback.error) throw fallback.error;
+        return { linkedTable, linkedRecordId, status, linkPersisted: false };
+      }
+
       const linkedUpdate = await supabase
         .from("public_requests")
         .update({
@@ -338,12 +427,6 @@ export function RequestsInbox() {
 
       let linkPersisted = true;
       if (linkedUpdate.error) {
-        // The two link columns are additive. Until the production migration is
-        // applied, keep conversion safe by saving the converted status only.
-        console.warn(
-          "[public-requests] linked columns unavailable; saving conversion status only:",
-          linkedUpdate.error.message,
-        );
         const fallback = await supabase
           .from("public_requests")
           .update({
@@ -658,6 +741,7 @@ export function RequestsInbox() {
                 const data = new FormData(event.currentTarget);
                 update.mutate({
                   id: selected.id,
+                  source: selected.source,
                   status: String(data.get("status") ?? selected.status),
                   counselor_notes: String(data.get("counselor_notes") ?? ""),
                 });
