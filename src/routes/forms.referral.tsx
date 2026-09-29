@@ -4,9 +4,13 @@ import { PublicLayout } from "@/components/PublicLayout";
 import { PublicRequestForm } from "@/components/PublicRequestForm";
 
 export const Route = createFileRoute("/forms/referral")({
-  validateSearch: (search: Record<string, unknown>): { school?: string } => {
+  validateSearch: (search: Record<string, unknown>): { school?: string; portal?: string } => {
     const school = typeof search["school"] === "string" ? search["school"] : "";
-    return school ? { school } : {};
+    const portal = typeof search["portal"] === "string" ? search["portal"] : "";
+    return {
+      ...(school ? { school } : {}),
+      ...(portal ? { portal } : {}),
+    };
   },
   head: () => ({
     meta: [
@@ -24,7 +28,7 @@ export const Route = createFileRoute("/forms/referral")({
 });
 
 function ReferralFormPage() {
-  const { school } = Route.useSearch();
+  const { school, portal } = Route.useSearch();
   return (
     <PublicLayout
       schoolSlug={school}
@@ -34,6 +38,7 @@ function ReferralFormPage() {
       <section className="mx-auto max-w-4xl px-4 py-14 sm:px-8">
         <PublicRequestForm
           schoolSlug={school}
+          portalToken={portal}
           kind="إحالة طالب"
           heading="بيانات الإحالة"
           intro="كلما كانت الملاحظات أدق، كان التدخل الإرشادي أسرع وأكثر فاعلية."
