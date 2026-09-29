@@ -1,6 +1,13 @@
 (() => {
   const ROOT_ID = "athat-bridge-panel";
 
+  function platform() {
+    const host = location.hostname.toLowerCase();
+    if (host === "noor.moe.gov.sa" || host.endsWith(".noor.moe.gov.sa")) return "noor";
+    if (host === "schools.madrasati.sa" || host.endsWith(".madrasati.sa")) return "madrasati";
+    return "unknown";
+  }
+
   function normalize(value) {
     return String(value || "")
       .replace(/[\u064B-\u065F\u0670]/g, "")
@@ -127,6 +134,10 @@
   }
 
   async function syncTodayAttendance() {
+    if (platform() !== "noor") {
+      setPanelMessage("مزامنة غياب اليوم متاحة داخل صفحة المواظبة في نظام نور فقط.", "error");
+      return;
+    }
     setPanelMessage("جارٍ سحب مواظبة اليوم من الذات…");
     const response = await runtime({ type: "ATHAT_TODAY_ATTENDANCE" });
     if (!response?.ok) {
@@ -150,6 +161,10 @@
   function ensurePanel() {
     if (document.getElementById(ROOT_ID)) return;
 
+    const currentPlatform = platform();
+    if (currentPlatform === "unknown") return;
+    const platformLabel = currentPlatform === "noor" ? "نور" : "مدرستي";
+
     const panel = document.createElement("div");
     panel.id = ROOT_ID;
     panel.style.cssText = [
@@ -161,21 +176,27 @@
 
     panel.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;background:#3d3833;color:#fff;padding:10px 12px">
-        <div><b style="color:#d6a477">الذات | THAT</b><div style="font-size:10px;opacity:.8;margin-top:2px">مساعد نور</div></div>
+        <div><b style="color:#d6a477">الذات | THAT</b><div style="font-size:10px;opacity:.8;margin-top:2px">مساعد ${platformLabel}</div></div>
         <button id="athat-bridge-toggle" type="button" style="border:0;background:transparent;color:#fff;cursor:pointer;font-size:18px">−</button>
       </div>
       <div id="athat-bridge-body" style="padding:12px">
         <div style="font-size:11px;color:#6e655d;line-height:1.7;margin-bottom:10px">
-          يعمل داخل جلستك الحالية في نور. لا يقرأ كلمة المرور ولا رمز التحقق.
+          يعمل داخل جلستك الحالية في ${platformLabel}. لا يقرأ كلمة المرور ولا رمز التحقق.
         </div>
         <button id="athat-import-students" type="button" style="width:100%;border:1px solid #8b5736;background:#fff;color:#8b5736;border-radius:9px;padding:8px;cursor:pointer;font-weight:bold;margin-bottom:7px">
           سحب الطلاب الظاهرين إلى الذات
         </button>
-        <button id="athat-sync-attendance" type="button" style="width:100%;border:0;background:#8b5736;color:#fff;border-radius:9px;padding:9px;cursor:pointer;font-weight:bold">
+        ${
+          currentPlatform === "noor"
+            ? `<button id="athat-sync-attendance" type="button" style="width:100%;border:0;background:#8b5736;color:#fff;border-radius:9px;padding:9px;cursor:pointer;font-weight:bold">
           مزامنة غياب اليوم من الذات
-        </button>
+        </button>`
+            : ""
+        }
         <div id="athat-bridge-message" style="font-size:11px;color:#6e655d;line-height:1.7;margin-top:9px">
-          جاهز. افتح صفحة الطلاب أو المواظبة المطلوبة في نور.
+          ${currentPlatform === "noor"
+            ? "جاهز. افتح صفحة الطلاب أو المواظبة المطلوبة في نور."
+            : "جاهز. افتح كشف الطلاب أو الصفحة المدرسية المطلوبة في مدرستي."}
         </div>
       </div>
     `;
