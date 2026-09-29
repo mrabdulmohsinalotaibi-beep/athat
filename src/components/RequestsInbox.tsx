@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Inbox, ShieldAlert, Send } from "lucide-react";
+import { AlertTriangle, Inbox, Mail, MessageCircle, ShieldAlert, Send } from "lucide-react";
 import { toast } from "sonner";
 
 
 import { Button } from "@/components/ui/button";
+import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +15,7 @@ import { formatHijriDate } from "@/lib/date";
 import { useSchool } from "@/lib/school";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { normalizeSaudiPhone, shareOnWhatsApp } from "@/lib/whatsapp";
 
 
 export const REQUEST_KINDS = ["استشارة فردية", "إحالة طالب", "إبلاغ سري"] as const;
@@ -87,8 +90,7 @@ export function RequestsInbox() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-
+  const printRef = useRef<HTMLDivElement>(null);
 
   const update = useMutation({
     mutationFn: async (values: { id: string; status?: string; counselor_notes?: string }) => {
@@ -170,6 +172,50 @@ export function RequestsInbox() {
     [requests],
   );
 
+
+  function replyText(request: PublicRequestRow) {
+    return [
+      `السلام عليكم${request.requester_name ? ` ${request.requester_name}` : ""}،`,
+      `بخصوص ${request.kind} رقم ${request.request_no || "—"}`,
+      request.topic ? `الموضوع: ${request.topic}` : "",
+      request.counselor_notes?.trim()
+        ? `رد الموجه / الإجراء: ${request.counselor_notes.trim()}`
+        : "تم استلام طلبك وهو قيد المتابعة لدى التوجيه الطلابي.",
+      "",
+      school?.school_name || "التوجيه الطلابي",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  function replyWhatsApp(request: PublicRequestRow) {
+    if (request.is_anonymous) {
+      toast.info("البلاغ مجهول ولا يحتوي على وسيلة تواصل.");
+      return;
+    }
+    const phone = normalizeSaudiPhone(request.requester_contact || "");
+    if (!phone) {
+      toast.info("لا يوجد رقم جوال صالح في الطلب.");
+      return;
+    }
+    shareOnWhatsApp(replyText(request), phone);
+  }
+
+  function replyEmail(request: PublicRequestRow) {
+    if (request.is_anonymous) {
+      toast.info("البلاغ مجهول ولا يحتوي على وسيلة تواصل.");
+      return;
+    }
+    const email = request.requester_contact?.trim() || "";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.info("لا يوجد بريد إلكتروني صالح في الطلب.");
+      return;
+    }
+    const subject = encodeURIComponent(
+      `رد التوجيه الطلابي — ${request.request_no || request.kind}`,
+    );
+    window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${encodeURIComponent(replyText(request))}`;
+  }
 
   return (
     <div className="space-y-6">
@@ -298,38 +344,74 @@ export function RequestsInbox() {
                   تاريخ الورود: {formatHijriDate(selected.created_at)}
                 </p>
               </div>
-
+              <div className="flex flex-wrap gap-2" data-pdf-exclude="true">
+                <PdfPreviewButton
+                  elementRef={printRef}
+                  filename={`${selected.kind}-${selected.request_no || selected.id}`}
+                  title={`${selected.kind} — ${selected.request_no || "طلب"}`}
+                />
+                <Button type="button" size="sm" variant="outline" onClick={() => replyWhatsApp(selected)}>
+                  <MessageCircle className="size-4" /> رد واتساب
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => replyEmail(selected)}>
+                  <Mail className="size-4" /> رد بالبريد
+                </Button>
+              </div>
             </div>
 
-            {selected.is_anonymous && (
-              <p className="mt-4 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-                <ShieldAlert className="size-4" /> بلاغ مجهول: لم يفصح المُبلغ عن بياناته.
-              </p>
-            )}
-
-            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-              <Detail
-                label="مقدم الطلب"
-                value={selected.is_anonymous ? "مجهول" : selected.requester_name}
+            <div
+              ref={printRef}
+              className="record-pdf-document mt-4 rounded-xl bg-paper p-5 text-paper-foreground"
+            >
+              <OfficialHeader
+                school={school}
+                title={selected.kind}
+                reportType="طلب وارد للتوجيه الطلابي"
+                reportNo={selected.request_no || selected.id}
               />
-              <Detail label="الصفة" value={selected.requester_role} />
-              <Detail
-                label="وسيلة التواصل"
-                value={selected.is_anonymous ? "—" : selected.requester_contact}
-              />
-              <Detail label="الطالب" value={selected.student_name} />
-              <Detail label="الصف" value={selected.student_grade} />
-              <Detail label="الفصل" value={selected.classroom} />
-              <Detail label="الموضوع" value={selected.topic} />
-              <Detail label="درجة الأهمية" value={selected.urgency} />
-              <Detail label="الوقت المفضل" value={selected.preferred_time} />
-            </dl>
+              <div className="mt-5">
+                {selected.is_anonymous && (
+                  <p className="mt-4 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+                    <ShieldAlert className="size-4" /> بلاغ مجهول: لم يفصح المُبلغ عن بياناته.
+                  </p>
+                )}
 
-            <div className="mt-4">
-              <p className="text-xs font-bold text-muted-foreground">التفاصيل</p>
-              <p className="mt-1 whitespace-pre-wrap rounded-lg bg-secondary/50 p-3 text-sm leading-7">
-                {selected.details}
-              </p>
+                <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <Detail
+                    label="مقدم الطلب"
+                    value={selected.is_anonymous ? "مجهول" : selected.requester_name}
+                  />
+                  <Detail label="الصفة" value={selected.requester_role} />
+                  <Detail
+                    label="وسيلة التواصل"
+                    value={selected.is_anonymous ? "—" : selected.requester_contact}
+                  />
+                  <Detail label="الطالب" value={selected.student_name} />
+                  <Detail label="الصف" value={selected.student_grade} />
+                  <Detail label="الفصل" value={selected.classroom} />
+                  <Detail label="الموضوع" value={selected.topic} />
+                  <Detail label="درجة الأهمية" value={selected.urgency} />
+                  <Detail label="الوقت المفضل" value={selected.preferred_time} />
+                </dl>
+
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-muted-foreground">التفاصيل</p>
+                  <p className="mt-1 whitespace-pre-wrap rounded-lg bg-secondary/50 p-3 text-sm leading-7">
+                    {selected.details}
+                  </p>
+                </div>
+
+
+              </div>
+              {selected.counselor_notes?.trim() && (
+                <div className="mt-5 rounded-lg border border-paper-border p-4">
+                  <p className="text-xs font-bold text-paper-muted-foreground">رد الموجه / الإجراء</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-7">
+                    {selected.counselor_notes}
+                  </p>
+                </div>
+              )}
+              <OfficialFooter school={school} />
             </div>
 
             <form
