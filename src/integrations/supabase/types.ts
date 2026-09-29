@@ -380,6 +380,41 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_actions: {
+        Row: {
+          action: string
+          created_at: string
+          feedback_id: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          feedback_id: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_actions_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_messages: {
         Row: {
           assigned_channel: string | null
@@ -1249,7 +1284,7 @@ export type Database = {
         Args: {
           p_category: string
           p_message: string
-          p_satisfaction: number
+          p_satisfaction: number | null
           p_sender_contact: string
           p_sender_name: string
           p_sender_role: string
