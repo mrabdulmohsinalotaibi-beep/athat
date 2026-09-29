@@ -33,7 +33,7 @@ export function OfficialHeader({
               <img
                 src={school.logo_url}
                 alt="شعار المدرسة"
-                className="official-school-logo mt-2 h-16 w-28 rounded-lg bg-white/95 p-1 object-contain"
+                className="official-school-logo mt-2 h-16 w-28 rounded-lg p-1 object-contain" style={{ backgroundColor: "rgba(255,255,255,0.95)" }}
               />
             )}
           </div>
@@ -61,7 +61,7 @@ export function OfficialHeader({
             {period && <p>الفترة: {period}</p>}
           </div>
         </div>
-        <h2 className="mx-auto mt-3 w-fit rounded-t-lg border border-white/15 bg-white/10 px-7 py-2 text-center text-lg font-extrabold text-white">
+        <h2 className="official-document-title mx-auto mt-3 w-fit rounded-t-lg border px-7 py-2 text-center text-lg font-extrabold text-white" style={{ borderColor: "rgba(255,255,255,0.18)", backgroundColor: "rgba(255,255,255,0.10)" }}>
           {title}
         </h2>
       </div>
