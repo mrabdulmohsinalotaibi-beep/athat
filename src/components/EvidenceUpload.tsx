@@ -262,7 +262,13 @@ export function EvidenceGallery() {
   const queryClient = useQueryClient();
   const [preview, setPreview] = useState<{ url: string; kind: string; name: string } | null>(null);
 
-  const { data: items = [], isLoading } = useQuery({
+  const {
+    data: items = [],
+    isLoading,
+    isError,
+    error: evidenceError,
+    refetch: refetchEvidence,
+  } = useQuery({
     queryKey: ["evidence-files"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -273,9 +279,12 @@ export function EvidenceGallery() {
       if (error) throw error;
       const rows = data ?? [];
       const paths = rows.map((r) => String(r.file_path));
-      const signed = paths.length
-        ? (await supabase.storage.from("evidences").createSignedUrls(paths, 3600)).data ?? []
-        : [];
+      let signed: Array<{ signedUrl?: string | null }> = [];
+      if (paths.length) {
+        const signedResult = await supabase.storage.from("evidences").createSignedUrls(paths, 3600);
+        if (signedResult.error) throw signedResult.error;
+        signed = signedResult.data ?? [];
+      }
       return rows.map((r, i) => ({
         ...r,
         url: signed[i]?.signedUrl ?? "",
@@ -296,6 +305,18 @@ export function EvidenceGallery() {
   }
 
   if (isLoading) return <p className="text-sm text-muted-foreground">جارٍ تحميل الشواهد...</p>;
+  if (isError)
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center text-sm">
+        <p className="font-bold text-destructive">تعذّر تحميل ملفات الشواهد</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {evidenceError instanceof Error ? evidenceError.message : "حدث خطأ أثناء تجهيز روابط الملفات."}
+        </p>
+        <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void refetchEvidence()}>
+          إعادة المحاولة
+        </Button>
+      </div>
+    );
   if (!items.length)
     return (
       <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
