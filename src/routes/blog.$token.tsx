@@ -99,7 +99,10 @@ function PublicCounselorBlogPage() {
       Boolean(row.title && row.body && row.slug && row.created_at),
   );
   const effectiveSchoolSlug = first?.public_slug || schoolFromLink || "";
-  const schoolSearch = effectiveSchoolSlug ? { school: effectiveSchoolSlug } : {};
+  const schoolSearch = {
+    ...(effectiveSchoolSlug ? { school: effectiveSchoolSlug } : {}),
+    portal: token,
+  };
 
   if (isLoading)
     return (
