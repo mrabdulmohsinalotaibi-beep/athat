@@ -51,6 +51,7 @@ export function PublicRequestForm({
 }: PublicRequestFormProps) {
   const [anonymous, setAnonymous] = useState(false);
   const [requestNo, setRequestNo] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const submit = useMutation({
     mutationFn: async (values: Record<string, string>) => {
@@ -101,7 +102,8 @@ export function PublicRequestForm({
       return fallback.requestNo;
     },
     onSuccess: (no) => {
-      setRequestNo(no ?? "—");
+      setSubmitted(true);
+      setRequestNo(no?.trim() || "تم الاستلام");
       toast.success("تم إرسال الاستمارة بنجاح");
     },
     onError: (error: Error) => {
@@ -142,6 +144,7 @@ export function PublicRequestForm({
             variant="outline"
             onClick={() => {
               setRequestNo(null);
+              setSubmitted(false);
               setAnonymous(false);
             }}
           >
@@ -176,6 +179,7 @@ export function PublicRequestForm({
             toast.error("يرجى كتابة تفاصيل أوضح (١٠ أحرف على الأقل)");
             return;
           }
+          if (submit.isPending || submitted) return;
           submit.mutate(values);
         }}
       >
@@ -323,8 +327,8 @@ export function PublicRequestForm({
         </div>
 
         <div className="sm:col-span-2">
-          <Button type="submit" disabled={submit.isPending} className="font-bold">
-            {submit.isPending ? "جارٍ الإرسال…" : "إرسال الاستمارة"}
+          <Button type="submit" disabled={submit.isPending || submitted} className="font-bold">
+            {submit.isPending ? "جارٍ الإرسال…" : submitted ? "تم الإرسال" : "إرسال الاستمارة"}
           </Button>
         </div>
       </form>
