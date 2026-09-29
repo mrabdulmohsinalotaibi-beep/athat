@@ -16,9 +16,9 @@ export function OfficialHeader({
 }: {
   school?: SchoolSettings | null | undefined;
   title: string;
-  reportType?: string;
-  reportNo?: string;
-  period?: string;
+  reportType?: string | undefined;
+  reportNo?: string | undefined;
+  period?: string | undefined;
 }) {
   return (
     <>
