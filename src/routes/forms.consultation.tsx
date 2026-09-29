@@ -4,6 +4,9 @@ import { PublicLayout } from "@/components/PublicLayout";
 import { PublicRequestForm } from "@/components/PublicRequestForm";
 
 export const Route = createFileRoute("/forms/consultation")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    school: typeof search["school"] === "string" ? search["school"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "طلب استشارة فردية | الذات" },
@@ -19,13 +22,16 @@ export const Route = createFileRoute("/forms/consultation")({
 });
 
 function ConsultationFormPage() {
+  const { school } = Route.useSearch();
   return (
     <PublicLayout
+      schoolSlug={school}
       title="طلب استشارة فردية"
       subtitle="للطلاب وأولياء الأمور: احجز موعداً مع الموجه الطلابي لمناقشة موضوع أكاديمي أو سلوكي أو نفسي أو مهني."
     >
       <section className="mx-auto max-w-4xl px-4 py-14 sm:px-8">
         <PublicRequestForm
+          schoolSlug={school}
           kind="استشارة فردية"
           heading="بيانات طلب الاستشارة"
           intro="أكمل البيانات التالية وسيتواصل معك الموجه الطلابي لتحديد موعد المقابلة."
