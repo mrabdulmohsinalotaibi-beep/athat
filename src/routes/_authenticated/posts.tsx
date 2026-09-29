@@ -241,7 +241,7 @@ function PublicLinkCard() {
 
       const { data, error } = await supabase
         .from("school_settings")
-        .select("id,private_blog_token")
+        .select("id,private_blog_token,public_slug")
         .eq("user_id", userId)
         .order("created_at")
         .limit(1)
@@ -252,7 +252,9 @@ function PublicLinkCard() {
     },
   });
   const current = row?.private_blog_token ?? "";
-  const url = row?.private_blog_token ? `${typeof window !== "undefined" ? window.location.origin : ""}/blog/${row.private_blog_token}` : "";
+  const url = row?.private_blog_token
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/blog/${row.private_blog_token}${row.public_slug ? `?school=${encodeURIComponent(row.public_slug)}` : ""}`
+    : "";
 
   return (
     <div className="rounded-2xl border bg-card p-5">
