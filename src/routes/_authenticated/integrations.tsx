@@ -155,7 +155,7 @@ function IntegrationsPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="flex items-center gap-2 text-lg font-black">
-              <Puzzle className="size-5 text-primary" /> Athat Bridge — الاتصال المباشر داخل نور
+              <Chrome className="size-5 text-primary" /> Athat Bridge — الاتصال المباشر داخل نور
             </p>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
               الإضافة تعمل داخل صفحة نور التي فتحتها وسجلت الدخول إليها بنفسك. تقرأ الجدول
@@ -164,7 +164,7 @@ function IntegrationsPage() {
             </p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-2 text-xs font-black text-emerald-700">
-            <MonitorUp className="size-4" /> Chrome / Edge على الكمبيوتر
+            <MousePointerClick className="size-4" /> Chrome / Edge على الكمبيوتر
           </span>
         </div>
         <div className="mt-4 grid gap-2 text-xs sm:grid-cols-4">
