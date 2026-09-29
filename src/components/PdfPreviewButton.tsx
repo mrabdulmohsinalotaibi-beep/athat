@@ -1,8 +1,8 @@
 import { useEffect, useState, type RefObject } from "react";
-import { Eye, Download, Share2, Loader2 } from "lucide-react";
+import { Eye, Download, Share2, Loader2, ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
 
-import { createPdfFile, downloadPdfFile } from "@/lib/share-pdf";
+import { createPdfFile, downloadPdfFile, savePdfFile } from "@/lib/share-pdf";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,15 +50,16 @@ export function PdfPreviewButton({
 
   async function downloadDirect() {
     if (file) {
-      downloadPdfFile(file);
+      const result = await savePdfFile(file);
+      if (result !== "cancelled") toast.success("تم تجهيز ملف PDF للحفظ.");
       return;
     }
     if (!elementRef.current || loading) return;
     setLoading(true);
     try {
       const nextFile = await createPdfFile({ element: elementRef.current, filename });
-      downloadPdfFile(nextFile);
-      toast.success("تم تنزيل ملف PDF.");
+      const result = await savePdfFile(nextFile);
+      if (result !== "cancelled") toast.success("تم تجهيز ملف PDF للحفظ.");
     } catch (error) {
       toast.error((error as Error).message || "تعذّر تنزيل ملف PDF.");
     } finally {
@@ -87,6 +88,14 @@ export function PdfPreviewButton({
     }
   }
 
+  function openFullPreview() {
+    if (!url) return;
+    const nextWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (!nextWindow) {
+      toast.info("اسمح بفتح النوافذ المنبثقة لعرض المستند في صفحة مستقلة.");
+    }
+  }
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
@@ -110,20 +119,39 @@ export function PdfPreviewButton({
           </DialogHeader>
           <div className="min-h-0 flex-1 overflow-hidden rounded-xl border bg-muted/30">
             {url ? (
-              <iframe
-                src={url}
-                title={title}
+              <object
+                data={url}
+                type="application/pdf"
+                aria-label={title}
                 className="h-full min-h-[70vh] w-full border-0 bg-white"
-              />
+              >
+                <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 p-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    لا يدعم هذا المتصفح عرض PDF داخل النافذة.
+                  </p>
+                  <Button type="button" onClick={openFullPreview}>
+                    <ExternalLink className="size-4" />
+                    فتح المستند
+                  </Button>
+                </div>
+              </object>
             ) : (
               <div className="flex h-full min-h-[70vh] items-center justify-center text-sm text-muted-foreground">
                 جارٍ تجهيز المعاينة...
               </div>
             )}
           </div>
-          <DialogFooter className="sticky bottom-0 z-10 gap-2 border-t bg-background/95 pt-3 backdrop-blur">
-            <Button type="button" variant="outline" onClick={() => file && downloadPdfFile(file)} disabled={!file}>
-              <Download className="size-4" /> تنزيل PDF
+          <DialogFooter className="sticky bottom-0 z-10 flex-wrap gap-2 border-t bg-background/95 pt-3 backdrop-blur">
+            <Button type="button" variant="outline" onClick={openFullPreview} disabled={!url}>
+              <ExternalLink className="size-4" /> فتح كامل
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => file && void savePdfFile(file)}
+              disabled={!file}
+            >
+              <Save className="size-4" /> حفظ PDF
             </Button>
             <Button type="button" onClick={() => void share()} disabled={!file}>
               <Share2 className="size-4" /> مشاركة PDF
