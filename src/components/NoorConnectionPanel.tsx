@@ -8,6 +8,10 @@ import {
   Loader2,
   LockKeyhole,
   RefreshCw,
+  Users,
+  CalendarCheck2,
+  ClipboardList,
+  FileCheck2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -42,6 +46,24 @@ export function NoorConnectionPanel() {
             {state === "waiting" ? "فتح نور مرة أخرى" : "بدء جلسة نور"}
           </Button>
         </div>
+      </div>
+
+      <div className="grid gap-3 border-b p-5 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          [Users, "طلاب وفصول", "سحب من نور عند السماح"],
+          [CalendarCheck2, "مواظبة", "سحب الغياب والتأخر المصرح"],
+          [ClipboardList, "توجيه طلابي", "تجهيز الحالات والمقابلات"],
+          [FileCheck2, "توثيق", "حفظ المرجع ونتيجة الرفع"],
+        ].map(([Icon, title, hint]) => {
+          const IconComponent = Icon as typeof Users;
+          return (
+            <div key={String(title)} className="rounded-xl border bg-background p-3">
+              <IconComponent className="size-4 text-primary" />
+              <p className="mt-2 text-sm font-black">{String(title)}</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{String(hint)}</p>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid gap-0 lg:grid-cols-[1.15fr_.85fr]">
