@@ -32,16 +32,32 @@ function useDashboard() {
         supabase.from("interviews").select("id, student_name, topic, followup_at"),
         supabase.from("evidences").select("id, linked_ref, linked_type"),
       ]);
-      const failed = [students, cases, programs, calendar, planTasks, interviews, evidences].find((result) => result.error);
-      if (failed?.error) throw failed.error;
+      const sources = [
+        ["students", students],
+        ["cases", cases],
+        ["programs", programs],
+        ["calendar", calendar],
+        ["planTasks", planTasks],
+        ["interviews", interviews],
+        ["evidences", evidences],
+      ] as const;
+
+      const failedSources = sources
+        .filter(([, result]) => Boolean(result.error))
+        .map(([name, result]) => {
+          console.warn(`[dashboard] تعذّر تحميل ${name}:`, result.error?.message);
+          return name;
+        });
+
       return {
-        students: students.data ?? [],
-        cases: cases.data ?? [],
-        programs: programs.data ?? [],
-        calendar: calendar.data ?? [],
-        planTasks: planTasks.data ?? [],
-        interviews: interviews.data ?? [],
-        evidences: evidences.data ?? [],
+        students: students.error ? [] : students.data ?? [],
+        cases: cases.error ? [] : cases.data ?? [],
+        programs: programs.error ? [] : programs.data ?? [],
+        calendar: calendar.error ? [] : calendar.data ?? [],
+        planTasks: planTasks.error ? [] : planTasks.data ?? [],
+        interviews: interviews.error ? [] : interviews.data ?? [],
+        evidences: evidences.error ? [] : evidences.data ?? [],
+        failedSources,
       };
     },
     staleTime: 30_000,
@@ -130,6 +146,24 @@ function Dashboard() {
       </div>
 
       <WorkspaceSectionLauncher />
+
+      {(data?.failedSources?.length ?? 0) > 0 && (
+        <section className="flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-black text-amber-800">بعض بيانات لوحة التحكم لم تُحمّل</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              بقية الأقسام ما زالت متاحة ويمكنك متابعة العمل بشكل طبيعي.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="shrink-0 rounded-xl border bg-card px-4 py-2 text-xs font-bold"
+          >
+            إعادة المحاولة
+          </button>
+        </section>
+      )}
 
       {(overdueCases.length > 0 || latePlan.length > 0 || programsMissingEvidence.length > 0) && (
         <section className="rounded-2xl border bg-card p-4 shadow-sm">
