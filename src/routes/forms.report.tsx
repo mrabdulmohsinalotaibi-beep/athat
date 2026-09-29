@@ -4,12 +4,16 @@ import { PublicLayout } from "@/components/PublicLayout";
 import { PublicRequestForm } from "@/components/PublicRequestForm";
 
 export const Route = createFileRoute("/forms/report")({
-  validateSearch: (search: Record<string, unknown>): { school?: string; portal?: string } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { school?: string; portal?: string; feedback?: string } => {
     const school = typeof search["school"] === "string" ? search["school"] : "";
     const portal = typeof search["portal"] === "string" ? search["portal"] : "";
+    const feedback = typeof search["feedback"] === "string" ? search["feedback"] : "";
     return {
       ...(school ? { school } : {}),
       ...(portal ? { portal } : {}),
+      ...(feedback ? { feedback } : {}),
     };
   },
   head: () => ({
@@ -27,7 +31,7 @@ export const Route = createFileRoute("/forms/report")({
 });
 
 function ReportFormPage() {
-  const { school, portal } = Route.useSearch();
+  const { school, portal, feedback } = Route.useSearch();
   return (
     <PublicLayout
       schoolSlug={school}
@@ -38,6 +42,7 @@ function ReportFormPage() {
         <PublicRequestForm
           schoolSlug={school}
           portalToken={portal}
+          feedbackToken={feedback}
           kind="إبلاغ سري"
           heading="بيانات البلاغ"
           intro="ذكر تفاصيل دقيقة (المكان والوقت والأشخاص) يساعد على التدخل السريع."
