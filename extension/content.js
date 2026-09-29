@@ -91,18 +91,117 @@
     return { matched: matched.length, unmatched: [...unmatched] };
   }
 
+  function runtime(message) {
+    return new Promise((resolve) => chrome.runtime.sendMessage(message, resolve));
+  }
+
+  function setPanelMessage(text, tone = "normal") {
+    const el = document.getElementById("athat-bridge-message");
+    if (!el) return;
+    el.textContent = text;
+    el.style.color =
+      tone === "error" ? "#b42318" : tone === "success" ? "#2f6f4e" : "#6e655d";
+  }
+
+  async function importVisibleStudents() {
+    const students = scanStudents();
+    const valid = students.filter(
+      (student) => student.full_name && student.national_id?.length === 10,
+    );
+    if (!valid.length) {
+      setPanelMessage("لم أجد طلابًا باسم وهوية من 10 أرقام في الجدول الظاهر.", "error");
+      return;
+    }
+
+    setPanelMessage(`تمت قراءة ${valid.length} طالب. جارٍ الإضافة إلى الذات…`);
+    const response = await runtime({ type: "ATHAT_IMPORT_STUDENTS", payload: valid });
+    if (!response?.ok) {
+      setPanelMessage(response?.error || "تعذر استيراد الطلاب.", "error");
+      return;
+    }
+
+    setPanelMessage(
+      `تمت إضافة ${response.inserted ?? 0} طالب إلى الذات، وتجاوز ${response.skipped ?? 0} موجود/مكرر.`,
+      "success",
+    );
+  }
+
+  async function syncTodayAttendance() {
+    setPanelMessage("جارٍ سحب مواظبة اليوم من الذات…");
+    const response = await runtime({ type: "ATHAT_TODAY_ATTENDANCE" });
+    if (!response?.ok) {
+      setPanelMessage(response?.error || "تعذر سحب مواظبة اليوم.", "error");
+      return;
+    }
+
+    const attendance = Array.isArray(response.data) ? response.data : [];
+    if (!attendance.length) {
+      setPanelMessage("لا توجد سجلات مواظبة لليوم في الذات.", "error");
+      return;
+    }
+
+    const applied = applyAttendance(attendance);
+    setPanelMessage(
+      `طابقت ${applied.matched} طالب في الصفحة. غير المطابق: ${applied.unmatched.length}. راجع ثم اضغط حفظ في نور.`,
+      applied.matched ? "success" : "error",
+    );
+  }
+
   function ensurePanel() {
     if (document.getElementById(ROOT_ID)) return;
+
     const panel = document.createElement("div");
     panel.id = ROOT_ID;
     panel.style.cssText = [
       "position:fixed","left:18px","bottom:18px","z-index:2147483647",
-      "background:#fff","color:#29241f","border:1px solid #cfc4b6",
-      "border-radius:14px","padding:10px 12px","box-shadow:0 10px 30px rgba(0,0,0,.18)",
-      "font:13px Arial,Tahoma,sans-serif","direction:rtl","max-width:280px"
+      "width:300px","background:#fff","color:#29241f","border:1px solid #cfc4b6",
+      "border-radius:16px","box-shadow:0 14px 38px rgba(0,0,0,.20)",
+      "font:13px Arial,Tahoma,sans-serif","direction:rtl","overflow:hidden"
     ].join(";");
-    panel.innerHTML = '<b style="color:#8b5736">Athat Bridge</b><div style="font-size:11px;margin-top:4px;color:#6e655d">جاهز داخل الصفحة الحالية — الحفظ النهائي يبقى عليك.</div>';
+
+    panel.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#3d3833;color:#fff;padding:10px 12px">
+        <div><b style="color:#d6a477">الذات | THAT</b><div style="font-size:10px;opacity:.8;margin-top:2px">مساعد نور</div></div>
+        <button id="athat-bridge-toggle" type="button" style="border:0;background:transparent;color:#fff;cursor:pointer;font-size:18px">−</button>
+      </div>
+      <div id="athat-bridge-body" style="padding:12px">
+        <div style="font-size:11px;color:#6e655d;line-height:1.7;margin-bottom:10px">
+          يعمل داخل جلستك الحالية في نور. لا يقرأ كلمة المرور ولا رمز التحقق.
+        </div>
+        <button id="athat-import-students" type="button" style="width:100%;border:1px solid #8b5736;background:#fff;color:#8b5736;border-radius:9px;padding:8px;cursor:pointer;font-weight:bold;margin-bottom:7px">
+          سحب الطلاب الظاهرين إلى الذات
+        </button>
+        <button id="athat-sync-attendance" type="button" style="width:100%;border:0;background:#8b5736;color:#fff;border-radius:9px;padding:9px;cursor:pointer;font-weight:bold">
+          مزامنة غياب اليوم من الذات
+        </button>
+        <div id="athat-bridge-message" style="font-size:11px;color:#6e655d;line-height:1.7;margin-top:9px">
+          جاهز. افتح صفحة الطلاب أو المواظبة المطلوبة في نور.
+        </div>
+      </div>
+    `;
+
     document.documentElement.appendChild(panel);
+
+    const body = panel.querySelector("#athat-bridge-body");
+    const toggle = panel.querySelector("#athat-bridge-toggle");
+    toggle?.addEventListener("click", () => {
+      if (!(body instanceof HTMLElement) || !(toggle instanceof HTMLElement)) return;
+      const hidden = body.style.display === "none";
+      body.style.display = hidden ? "block" : "none";
+      toggle.textContent = hidden ? "−" : "+";
+    });
+
+    panel.querySelector("#athat-import-students")?.addEventListener("click", () => {
+      void importVisibleStudents().catch((error) =>
+        setPanelMessage(error instanceof Error ? error.message : String(error), "error"),
+      );
+    });
+
+    panel.querySelector("#athat-sync-attendance")?.addEventListener("click", () => {
+      void syncTodayAttendance().catch((error) =>
+        setPanelMessage(error instanceof Error ? error.message : String(error), "error"),
+      );
+    });
   }
 
   ensurePanel();
