@@ -157,19 +157,19 @@ function PublicCounselorBlogPage() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+      <header className="athat-site-header sticky top-0 z-40 border-b border-[#555555] bg-[#3C3C3C] text-[#F1E9DD] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="/brand-icon.svg?v=20260929d"
+              src="/brand-icon.svg?v=20260929f"
               alt="شعار الذات"
               className="brand-mark-well size-11 rounded-xl object-contain"
             />
             <div>
-              <p className="text-lg font-black text-primary">
+              <p className="text-lg font-black text-[#F1E9DD]">
                 {first.school_name || "مدونة الموجه الطلابي"}
               </p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[10px] text-[#D5CEC2]">
                 الصفحة العامة للموجه ·{" "}
                 {first.counselor_name || first.author_name || "الموجه الطلابي"}
               </p>
