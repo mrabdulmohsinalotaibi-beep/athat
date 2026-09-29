@@ -4,13 +4,13 @@
   "description": "منصة الذات لإدارة أعمال الموجه الطلابي ودعم التوجيه النفسي والتربوي.",
   "icons": [
     {
-      "src": "/icon-192x192.png?v=20260930a",
+      "src": "/icon-192x192.png?v=20260930b",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512x512.png?v=20260930a",
+      "src": "/icon-512x512.png?v=20260930b",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
