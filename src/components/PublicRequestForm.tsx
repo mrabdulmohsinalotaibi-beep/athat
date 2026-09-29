@@ -113,6 +113,19 @@ export function PublicRequestForm({
     },
   });
 
+  if (!schoolSlug?.trim()) {
+    return (
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 text-center">
+        <ShieldCheck className="mx-auto size-10 text-amber-700" />
+        <h2 className="mt-4 text-xl font-black">رابط الاستمارة غير مرتبط بمدرسة</h2>
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
+          افتح هذه الاستمارة من مدونة الموجه الطلابي أو رابط المدرسة حتى يصل الطلب إلى
+          الموجه الصحيح.
+        </p>
+      </div>
+    );
+  }
+
   if (requestNo) {
     return (
       <div className="rounded-2xl border border-primary/25 bg-primary/5 p-8 text-center">
