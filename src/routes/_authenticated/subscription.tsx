@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Crown, Sparkles, Send, Clock } from "lucide-react";
+import { Check, Crown, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/subscription")({
   head: () => ({ meta: [
@@ -25,14 +24,6 @@ const allUnlockedFeatures = [
 ];
 
 function SubscriptionPage() {
-  const [requestSent, setRequestSent] = useState(false);
-  const [customMessage, setCustomMessage] = useState("");
-
-  const handleUpgradeRequest = (e: React.FormEvent) => {
-    e.preventDefault();
-    setRequestSent(true);
-  };
-
   return (
     <div className="mx-auto max-w-4xl space-y-7">
       <div>
@@ -72,27 +63,12 @@ function SubscriptionPage() {
           </div>
         </div>
 
-        {/* قسم إرسال ملاحظة أو طلب اهتمام مسبق للباقات المستقبلية */}
         <div className="mt-8 border-t pt-6">
-          <h3 className="text-sm font-bold text-foreground mb-2">ترغب في حجز مكانك أو إرسال مقترح للباقات القادمة؟</h3>
-          {requestSent ? (
-            <div className="rounded-md bg-emerald-500/10 p-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-              شكراً لك! تم تسجيل اهتمامك وملاحظتك بنجاح، وسيتم إشعارك فور تفعيل نظام الاشتراكات.
-            </div>
-          ) : (
-            <form onSubmit={handleUpgradeRequest} className="space-y-3">
-              <textarea
-                placeholder="أكتب أي مقترح أو ملاحظة حول الباقات المستقبلية (اختياري)..."
-                value={customMessage}
-                onChange={(e) => setCustomMessage(e.target.value)}
-                className="w-full rounded-md border bg-background p-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                rows={2}
-              />
-              <Button type="submit" className="w-full sm:w-auto gap-2">
-                <Send className="size-4" /> تسجیل الاهتمام بالباقات القادمة
-              </Button>
-            </form>
-          )}
+          <h3 className="text-sm font-bold text-foreground">الاشتراكات المستقبلية</h3>
+          <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-500/5 p-4 text-sm leading-7 text-muted-foreground">
+            التسجيل الإلكتروني للاهتمام بالباقات لم يُفعّل بعد. لن تعرض المنصة رسالة نجاح إلا بعد
+            ربط الطلب بقاعدة البيانات وصلاحيات الإدارة بشكل فعلي.
+          </p>
         </div>
       </div>
     </div>
