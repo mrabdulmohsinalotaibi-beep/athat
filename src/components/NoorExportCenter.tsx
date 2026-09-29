@@ -11,7 +11,7 @@ const NOOR_URL = "https://noor.moe.gov.sa/Noor/Login.aspx";
 type SourceTable = "counseling_cases" | "interviews" | "behavior";
 type JobStatus = "ready" | "paused" | "submitted" | "failed";
 type Job = { id: string; source_table: SourceTable; source_id: string; payload: Json; status: JobStatus; noor_reference: string | null; last_error: string | null; pause_reason: string | null; updated_at: string };
-type SourceRow = { table: SourceTable; id: string; label: string; payload: Record<string, unknown> };
+type SourceRow = { table: SourceTable; id: string; label: string; payload: Json };
 
 const statusLabel: Record<JobStatus, string> = { ready: "جاهز للترحيل", paused: "متوقف لتدخل يدوي", submitted: "تم الرفع والتوثيق", failed: "فشل ويحتاج مراجعة" };
 const statusClass: Record<JobStatus, string> = { ready: "bg-primary/10 text-primary", paused: "bg-amber-500/10 text-amber-700", submitted: "bg-emerald-500/10 text-emerald-700", failed: "bg-destructive/10 text-destructive" };
