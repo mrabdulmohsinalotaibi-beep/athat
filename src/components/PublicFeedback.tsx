@@ -28,7 +28,7 @@ export function PublicFeedback({ token }: { token: string }) {
       return;
     }
     setBusy(true);
-    const { error } = await (supabase as any).rpc("submit_public_feedback", {
+    const { error } = await supabase.rpc("submit_public_feedback", {
       p_token: token,
       p_sender_name: senderName.trim() || "مستفيد",
       p_sender_contact: senderContact.trim(),
