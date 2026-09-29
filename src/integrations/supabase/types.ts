@@ -1240,6 +1240,23 @@ export type Database = {
           vision: string
         }[]
       }
+      get_private_counselor_portal: {
+        Args: { p_token: string }
+        Returns: {
+          author_name: string | null
+          body: string | null
+          counselor_name: string | null
+          cover_url: string | null
+          created_at: string | null
+          excerpt: string | null
+          kind: string | null
+          public_slug: string | null
+          published_at: string | null
+          school_name: string | null
+          slug: string | null
+          title: string | null
+        }[]
+      }
       get_private_counselor_blog: {
         Args: { p_token: string }
         Returns: {
