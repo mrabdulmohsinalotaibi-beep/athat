@@ -210,56 +210,83 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
-        <header className="athat-topbar sticky top-0 z-20 border-b border-[#555555] bg-[#3C3C3C] text-[#F1E9DD] shadow-sm backdrop-blur-xl">
-          <div className="grid min-h-18 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 lg:px-8">
-            <div className="flex min-w-0 items-center gap-3">
+        <header className="athat-topbar sticky top-0 z-20 border-b border-[#555555] bg-[#3C3C3C] text-[#F1E9DD] shadow-sm">
+          <div className="mx-auto flex min-h-[88px] w-full items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label="فتح القائمة الجانبية"
                 onClick={() => setOpen(true)}
-                className="lg:hidden"
+                className="shrink-0 text-[#F1E9DD] hover:bg-white/10 hover:text-white lg:hidden"
               >
                 <Menu className="size-5" />
               </Button>
-              <img
-                src="/brand-icon.svg?v=20260929f"
-                alt="شعار الذات"
-                className="brand-mark-well hidden size-16 rounded-xl p-0.5 object-contain ring-1 ring-primary/15 sm:block"
-              />
+
+              <div className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-[#3C3C3C] shadow-[0_10px_30px_-18px_rgba(0,0,0,.9)]">
+                <img
+                  src="/brand-icon.svg?v=20260929f"
+                  alt="شعار الذات"
+                  className="size-[68px] object-cover sm:size-[76px]"
+                />
+              </div>
+
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
-                <p className="truncate text-xs text-[#D5CEC2]">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <p className="truncate text-base font-black tracking-tight text-[#F1E9DD] sm:text-lg">
+                    {school?.school_name || "اسم المدرسة غير محدد"}
+                  </p>
+                  <span className="hidden rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-[#E6DED2] sm:inline-flex">
+                    منصة الذات
+                  </span>
+                </div>
+                <p className="mt-0.5 truncate text-[11px] font-medium text-[#D8D0C4] sm:text-xs">
                   {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
                 </p>
+                <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#CEC6BB] sm:flex">
+                  <span>الموجه الطلابي: <b className="font-bold text-[#F1E9DD]">{school?.counselor_name || "—"}</b></span>
+                  <span className="text-white/25">•</span>
+                  <span>{school?.academic_year || "العام الدراسي"}</span>
+                  <span className="text-white/25">•</span>
+                  <span>{school?.semester || "الفصل الدراسي"}</span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <GlobalSearch />
+
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <div className="hidden md:block"><GlobalSearch /></div>
               <div className="relative">
-                <Button variant="ghost" size="icon" aria-label="التنبيهات" onClick={() => setAlertsOpen((value) => !value)} className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="التنبيهات"
+                  onClick={() => setAlertsOpen((value) => !value)}
+                  className="relative text-[#F1E9DD] hover:bg-white/10 hover:text-white"
+                >
                   <Bell className="size-5" />
-                  {alertCount > 0 && <span className="absolute -left-1 -top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-[10px] font-black leading-5 text-destructive-foreground">{alertCount > 99 ? "99+" : alertCount}</span>}
+                  {alertCount > 0 && (
+                    <span className="absolute -left-1 -top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-[10px] font-black leading-5 text-destructive-foreground">
+                      {alertCount > 99 ? "99+" : alertCount}
+                    </span>
+                  )}
                 </Button>
                 {alertsOpen && (
-                  <div className="absolute left-0 top-12 z-50 w-72 rounded-xl border bg-card p-3 shadow-xl">
+                  <div className="absolute left-0 top-12 z-50 w-72 rounded-xl border border-border bg-card p-3 text-card-foreground shadow-xl">
                     <p className="text-sm font-black">تنبيهات العمل</p>
-                    <p className="mt-1 text-xs text-[#D5CEC2]">{alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}</p>
-                    <Button asChild size="sm" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}><Link to="/dashboard">فتح مركز مهام اليوم</Link></Button>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}
+                    </p>
+                    <Button asChild size="sm" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}>
+                      <Link to="/dashboard">فتح مركز مهام اليوم</Link>
+                    </Button>
                   </div>
                 )}
-              </div>
-              <div className="hidden text-xs text-muted-foreground sm:block">
-                <p>الموجه الطلابي: {school?.counselor_name || "—"}</p>
-                <p>
-                  {school?.academic_year || "العام الدراسي"} · {school?.semester || "الفصل الدراسي"}
-                </p>
               </div>
               <Button
                 asChild
                 variant="outline"
                 size="sm"
-                className="gap-2 border-primary/25 bg-secondary/40"
+                className="h-10 gap-2 border-white/20 bg-white/8 text-[#F1E9DD] hover:bg-white/14 hover:text-white"
               >
                 <Link to="/profile" title="حسابي الشخصي">
                   <UserRound className="size-4 shrink-0" />
@@ -269,7 +296,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-
         <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
           {currentSection && (
             <nav
