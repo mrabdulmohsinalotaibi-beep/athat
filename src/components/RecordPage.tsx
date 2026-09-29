@@ -189,7 +189,7 @@ export function RecordPage({
     toast.success("تم حذف الخيار من القائمة");
   }
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, isError: rowsError, error: rowsQueryError, refetch: refetchRows } = useQuery({
     queryKey: [config.table],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -501,6 +501,23 @@ export function RecordPage({
       </div>
 
       {filters && <div className="flex flex-wrap items-end gap-3">{filters}</div>}
+      {rowsError && (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p className="font-bold text-destructive">تعذّر تحميل ${config.title}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {rowsQueryError instanceof Error ? rowsQueryError.message : "حدث خطأ أثناء جلب البيانات."}
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => void refetchRows()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
 
       <div className="relative w-full sm:max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
