@@ -160,12 +160,34 @@ function PostsManager() {
 }
 
 function PublicLinkCard() {
-  const { data: row } = useQuery({
+  const {
+    data: row,
+    isError,
+    error: linkError,
+    refetch,
+  } = useQuery({
     queryKey: ["my-public-slug"],
     queryFn: async () => {
-      const { data: u, error: authError } = await supabase.auth.getUser();
-      if (authError || !u.user) throw authError || new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا.");
-      const { data, error } = await (supabase as any).from("school_settings").select("id,private_blog_token").eq("user_id", u.user.id).order("created_at").limit(1).maybeSingle();
+      const { data: sessionData } = await supabase.auth.getSession();
+      let userId = sessionData.session?.user.id ?? "";
+
+      try {
+        const { data: userData, error: authError } = await supabase.auth.getUser();
+        if (!authError && userData.user) userId = userData.user.id;
+      } catch {
+        // Continue with the locally persisted session on transient auth failures.
+      }
+
+      if (!userId) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا.");
+
+      const { data, error } = await supabase
+        .from("school_settings")
+        .select("id,private_blog_token")
+        .eq("user_id", userId)
+        .order("created_at")
+        .limit(1)
+        .maybeSingle();
+
       if (error) throw error;
       return data;
     },
@@ -176,6 +198,16 @@ function PublicLinkCard() {
   return (
     <div className="rounded-2xl border bg-card p-5">
       <p className="font-bold">رابط مدونتك الخاصة</p>
+      {isError && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
+          <span className="text-destructive">
+            {linkError instanceof Error ? linkError.message : "تعذّر تحميل رابط المدونة."}
+          </span>
+          <Button type="button" variant="ghost" size="sm" onClick={() => void refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span dir="ltr" className="text-sm text-muted-foreground">/blog/</span>
         <Input dir="ltr" className="max-w-xs" placeholder="سيظهر بعد تطبيق الهجرة" value={current} readOnly />
