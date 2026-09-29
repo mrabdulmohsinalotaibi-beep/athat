@@ -34,10 +34,16 @@ export function DailyWorkLog() {
   const [date, setDate] = useState(today());
   const [payload, setPayload] = useState<DailyPayload>(EMPTY);
   const [saving, setSaving] = useState(false);
-  const { data: recent = [], isLoading } = useQuery({
+  const {
+    data: recent = [],
+    isLoading,
+    isError,
+    error: recentError,
+    refetch: refetchRecent,
+  } = useQuery({
     queryKey: ["daily-work-log"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("reports")
         .select("id, report_date, summary, created_at")
         .eq("report_type", "سجل يومي")
@@ -62,7 +68,7 @@ export function DailyWorkLog() {
       referrals: Number(payload.referrals) || 0,
       activities: Number(payload.activities) || 0,
     });
-    const { error } = await (supabase as any).from("reports").insert({
+    const { error } = await supabase.from("reports").insert({
       report_type: "سجل يومي",
       report_date: date,
       report_no: `DAILY-${date}`,
@@ -152,6 +158,15 @@ export function DailyWorkLog() {
         <p className="mb-2 text-xs font-black">آخر السجلات المحفوظة</p>
         {isLoading ? (
           <p className="text-xs text-muted-foreground">جارٍ التحميل...</p>
+        ) : isError ? (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-destructive">
+              {recentError instanceof Error ? recentError.message : "تعذّر تحميل السجلات اليومية."}
+            </span>
+            <Button type="button" variant="ghost" size="sm" onClick={() => void refetchRecent()}>
+              إعادة المحاولة
+            </Button>
+          </div>
         ) : recent.length === 0 ? (
           <p className="text-xs text-muted-foreground">سيظهر سجل اليوم هنا بعد أول عملية حفظ.</p>
         ) : (
