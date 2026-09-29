@@ -295,13 +295,16 @@ export function EvidenceGallery() {
 
   async function removeItem(id: string, path: string) {
     if (!confirm("هل تريد حذف هذا الشاهد وملفه؟")) return;
-    const { error: storageError } = await supabase.storage.from("evidences").remove([path]);
-    if (storageError) { toast.error(`تعذّر حذف الملف: ${storageError.message}`); return; }
     const { error } = await supabase.from("evidences").delete().eq("id", id);
-    if (error) { toast.error(`تم حذف الملف لكن تعذّر حذف سجل الشاهد: ${error.message}`); return; }
+    if (error) { toast.error(`تعذّر حذف سجل الشاهد: ${error.message}`); return; }
+    const { error: storageError } = await supabase.storage.from("evidences").remove([path]);
+    if (storageError) {
+      console.warn("[evidences] تعذّر تنظيف الملف بعد حذف السجل:", storageError.message);
+      toast.warning("تم حذف الشاهد من السجل، وتعذّر تنظيف الملف من التخزين.");
+    }
     queryClient.invalidateQueries({ queryKey: ["evidence-files"] });
     queryClient.invalidateQueries({ queryKey: ["evidences"] });
-    toast.success("تم حذف الشاهد");
+    if (!storageError) toast.success("تم حذف الشاهد");
   }
 
   if (isLoading) return <p className="text-sm text-muted-foreground">جارٍ تحميل الشواهد...</p>;
