@@ -53,7 +53,7 @@ export function OfficialHeader({
       </div>
 
       <div className="official-title-band mx-7 border-y border-[#d8d2c8] py-3.5 text-center">
-        <p className="text-[9px] font-bold tracking-wide text-[#756f67]">
+        <p className="text-[9px] font-bold text-[#756f67]">
           {reportType || "مستند رسمي"}
         </p>
         <h2 className="official-document-title mx-auto mt-1 max-w-[92%] text-[19px] font-black leading-relaxed text-[#2f2f2f]">
@@ -129,7 +129,7 @@ export function OfficialFooter({
 
       <div data-pdf-footer="true" className="official-footer-line mx-auto mt-4 w-[94%] text-center">
         <div className="h-px w-full bg-[#d8d2c8]" />
-        <p className="py-2 text-[8.5px] font-medium tracking-wide text-[#77716a]">
+        <p className="py-2 text-[8.5px] font-medium text-[#77716a]">
           <span className="font-black text-[#3c3c3c]">{school?.school_name || "المدرسة"}</span>
           <span className="mx-2 text-[#b0a79a]">|</span>
           <span>منصة الذات · ATHAT</span>
