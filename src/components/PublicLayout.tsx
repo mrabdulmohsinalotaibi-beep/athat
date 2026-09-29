@@ -20,13 +20,15 @@ export function PublicLayout({
   children,
   title,
   subtitle,
+  schoolSlug,
 }: {
   children: ReactNode;
   title?: string;
   subtitle?: string;
+  schoolSlug?: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { data: profile } = useGuidanceProfile();
+  const { data: profile } = useGuidanceProfile(schoolSlug);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
