@@ -59,6 +59,7 @@ type Draft = {
 type PortalLinkRow = {
   private_blog_token: string;
   public_slug: string | null;
+  public_feedback_token: string | null;
 };
 
 const EMPTY_ARTICLE: Draft = {
@@ -313,7 +314,7 @@ function PortalLinksPanel() {
 
       const { data, error: queryError } = await supabase
         .from("school_settings")
-        .select("private_blog_token,public_slug")
+        .select("private_blog_token,public_slug,public_feedback_token")
         .eq("user_id", userId)
         .order("created_at")
         .limit(1)
@@ -327,9 +328,11 @@ function PortalLinksPanel() {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const token = row?.private_blog_token ?? "";
   const school = row?.public_slug ?? "";
+  const feedbackToken = row?.public_feedback_token ?? "";
   const qs = new URLSearchParams();
   if (school) qs.set("school", school);
   if (token) qs.set("portal", token);
+  if (feedbackToken) qs.set("feedback", feedbackToken);
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
 
   const links = [
@@ -338,7 +341,12 @@ function PortalLinksPanel() {
       title: "رابط المدونة العامة",
       description: "ترسله للطلاب وأولياء الأمور للاطلاع على المنشورات والمقالات والخدمات.",
       icon: Globe,
-      url: token ? `${origin}/blog/${token}${school ? `?school=${encodeURIComponent(school)}` : ""}` : "",
+      url: token
+        ? `${origin}/blog/${token}?${new URLSearchParams({
+            ...(school ? { school } : {}),
+            ...(feedbackToken ? { feedback: feedbackToken } : {}),
+          }).toString()}`
+        : "",
     },
     {
       key: "consultation",
