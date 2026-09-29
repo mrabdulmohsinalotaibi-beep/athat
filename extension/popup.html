@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Athat Bridge</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">الذات <span>ATHAT</span></div>
+      <small>جسر نور ومدرستي</small>
+    </header>
+
+    <section id="setup" class="card">
+      <h2>ربط الإضافة بمنصة الذات</h2>
+      <label>Supabase URL<input id="supabaseUrl" type="url" placeholder="https://xxxx.supabase.co" /></label>
+      <label>Publishable key<input id="publishableKey" type="password" placeholder="sb_publishable_..." /></label>
+      <label>البريد الإلكتروني<input id="email" type="email" autocomplete="username" /></label>
+      <label>كلمة مرور الذات<input id="password" type="password" autocomplete="current-password" /></label>
+      <button id="login">تسجيل الدخول إلى الذات</button>
+      <p class="note">لا تحفظ الإضافة كلمة المرور. يتم الاحتفاظ بجلسة الدخول المؤقتة فقط.</p>
+    </section>
+
+    <section id="connected" class="card hidden">
+      <div class="status"><span class="dot"></span><b>متصل بمنصة الذات</b></div>
+      <button id="scanStudents" class="secondary">قراءة كشف الطلاب الظاهر</button>
+      <button id="pushStudents">إضافة الطلاب الظاهرين إلى الذات</button>
+      <hr />
+      <button id="loadAttendance" class="secondary">سحب غياب اليوم من الذات</button>
+      <button id="applyAttendance">مطابقة الغائبين في صفحة نور</button>
+      <p id="result" class="result"></p>
+      <button id="logout" class="ghost">إنهاء جلسة الذات</button>
+    </section>
+
+    <footer>
+      لا تتجاوز الإضافة تسجيل الدخول أو رمز التحقق، ولا تضغط «حفظ» النهائي في نور.
+    </footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
