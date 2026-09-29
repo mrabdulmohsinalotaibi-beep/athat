@@ -17,11 +17,12 @@ export interface GuidanceProfile {
 }
 
 /** الملف التعريفي العام للتوجيه الطلابي كما يظهر لزوار الموقع (بدون بيانات سرية). */
-export function useGuidanceProfile() {
+export function useGuidanceProfile(schoolSlug?: string | null) {
+  const slug = schoolSlug?.trim() || null;
   return useQuery({
-    queryKey: ["guidance_profile"],
+    queryKey: ["guidance_profile", slug],
     queryFn: async (): Promise<GuidanceProfile | null> => {
-      const { data, error } = await supabase.rpc("get_guidance_profile", { p_slug: null });
+      const { data, error } = await supabase.rpc("get_guidance_profile", { p_slug: slug });
       if (error) {
         console.error("تعذّر جلب بيانات التوجيه الطلابي العامة:", error.message);
         return null;
