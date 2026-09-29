@@ -64,8 +64,9 @@ export async function createPdfFile({
     const renderOptions: NonNullable<Parameters<typeof html2canvas>[1]> = {
       scale: Math.max(2, scale),
       useCORS: true,
-      // foreignObject rendering is unreliable for Arabic/PDF capture on iOS Safari.
-      foreignObjectRendering: !isIOSLike(),
+      // Keep one rendering path on every device. foreignObjectRendering can
+      // compress Arabic line boxes and cause overlapping text in Safari/Android.
+      foreignObjectRendering: false,
       backgroundColor: "#ffffff",
       logging: false,
       // Force a stable desktop/A4 layout even when export is started on mobile.
@@ -120,9 +121,9 @@ export async function createPdfFile({
         safeStyle.textContent = `
           [data-pdf-capture-target="true"],
           [data-pdf-capture-target="true"] * {
-            font-family: "Cairo Variable", "Cairo", Tahoma, Arial, sans-serif !important;
+            font-family: Tahoma, Arial, "Cairo Variable", "Cairo", sans-serif !important;
             letter-spacing: 0 !important;
-            word-spacing: 0 !important;
+            word-spacing: normal !important;
             font-kerning: normal !important;
             font-synthesis: none !important;
             text-shadow: none !important;
@@ -139,12 +140,29 @@ export async function createPdfFile({
           [data-pdf-capture-target="true"] dd,
           [data-pdf-capture-target="true"] dt {
             direction: rtl !important;
-            unicode-bidi: plaintext !important;
+            unicode-bidi: isolate !important;
             letter-spacing: 0 !important;
-            word-spacing: 0 !important;
+            word-spacing: normal !important;
+            line-height: 1.8 !important;
             word-break: normal !important;
             overflow-wrap: break-word !important;
             white-space: normal !important;
+            height: auto !important;
+            min-height: 0 !important;
+          }
+          [data-pdf-capture-target="true"] [data-pdf-block="true"] {
+            height: auto !important;
+            min-height: 58px !important;
+            overflow: visible !important;
+            contain: none !important;
+          }
+          [data-pdf-capture-target="true"] [data-pdf-block="true"] > * {
+            position: relative !important;
+            line-height: 1.8 !important;
+          }
+          [data-pdf-capture-target="true"] .whitespace-pre-wrap {
+            white-space: pre-line !important;
+            line-height: 1.9 !important;
           }
           [data-pdf-capture-target="true"] .official-school-logo {
             background-color: rgba(255,255,255,.95) !important;
