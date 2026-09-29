@@ -19,7 +19,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { formatHijriDate } from "@/lib/date";
-import { GUIDANCE_LEAFLETS, GUIDANCE_LINKS, GUIDANCE_SERVICES, PUBLIC_FORMS } from "@/lib/guidance";
+import { GUIDANCE_LEAFLETS, GUIDANCE_LINKS, GUIDANCE_SERVICES } from "@/lib/guidance";
 import { POST_KINDS, type PostKind } from "@/lib/posts";
 
 export const Route = createFileRoute("/blog/$token")({
@@ -98,6 +98,24 @@ function PublicCounselorBlogPage() {
     (row): row is BlogPortalRow & { title: string; body: string; slug: string; created_at: string } =>
       Boolean(row.title && row.body && row.slug && row.created_at),
   );
+  const articles = posts.filter((row) => row.kind === "article");
+  const updates = posts.filter((row) => row.kind !== "article");
+  const publicForms = [
+    {
+      to: "/forms/consultation" as const,
+      title: "طلب استشارة فردية",
+      audience: "طالب / ولي أمر",
+      description: "اطلب مقابلة أو استشارة مع الموجه الطلابي بخصوص موضوع أكاديمي أو سلوكي أو نفسي أو مهني.",
+      icon: HeartPulse,
+    },
+    {
+      to: "/forms/report" as const,
+      title: "إبلاغ سري",
+      audience: "سري وآمن",
+      description: "بلّغ بسرية عن تنمر أو مشكلة تمس سلامة الطالب، ويمكن الإبلاغ دون ذكر الاسم.",
+      icon: ShieldCheck,
+    },
+  ];
   const effectiveSchoolSlug = first?.public_slug || schoolFromLink || "";
   const schoolSearch = {
     ...(effectiveSchoolSlug ? { school: effectiveSchoolSlug } : {}),
@@ -270,26 +288,36 @@ function PublicCounselorBlogPage() {
           <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20">
             <p className="text-sm font-bold text-primary">وصول مباشر</p>
             <h2 className="mt-1 text-3xl font-black">الاستمارات الإلكترونية</h2>
-            <div className="mt-8 grid gap-4 lg:grid-cols-3">
-              {PUBLIC_FORMS.map((form) => (
-                <Link
-                  key={form.to}
-                  to={form.to}
-                  search={schoolSearch}
-                  className="group rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition hover:-translate-y-1 hover:border-primary/40"
-                >
-                  <span className="rounded-full bg-accent/25 px-2.5 py-1 text-[11px] font-bold text-accent-foreground">
-                    {form.audience}
-                  </span>
-                  <h3 className="mt-4 font-black">{form.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{form.description}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary">
-                    فتح الاستمارة{" "}
-                    <ArrowLeft className="size-4 transition group-hover:-translate-x-1" />
-                  </span>
-                </Link>
-              ))}
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {publicForms.map((form) => {
+                const Icon = form.icon;
+                return (
+                  <Link
+                    key={form.to}
+                    to={form.to}
+                    search={schoolSearch}
+                    className="group rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition hover:-translate-y-1 hover:border-primary/40"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="rounded-xl bg-primary/10 p-2.5 text-primary">
+                        <Icon className="size-5" />
+                      </span>
+                      <span className="rounded-full bg-accent/25 px-2.5 py-1 text-[11px] font-bold text-accent-foreground">
+                        {form.audience}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 font-black">{form.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{form.description}</p>
+                    <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary">
+                      فتح الاستمارة <ArrowLeft className="size-4 transition group-hover:-translate-x-1" />
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
+            <p className="mt-5 rounded-xl border border-dashed bg-card/60 p-4 text-xs leading-6 text-muted-foreground">
+              إحالة الطالب للمعلمين تتم من رابط خاص يرسله الموجه الطلابي للهيئة التعليمية، ولا يظهر في الصفحة العامة.
+            </p>
           </div>
         </section>
 
@@ -334,61 +362,99 @@ function PublicCounselorBlogPage() {
           </div>
         </section>
 
-        <section className="border-t border-border/60 bg-muted/20">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold text-primary">آخر ما يقدمه الموجه</p>
-                <h2 className="mt-1 text-3xl font-black">المنشورات والإعلانات</h2>
-              </div>
-              <span className="text-xs text-muted-foreground">{posts.length} منشورًا عامًا</span>
-            </div>
-            <div className="mt-8 space-y-5">
-              {posts.map((post) => (
-                <article
-                  key={`${post.slug}-${post.created_at}`}
-                  className="overflow-hidden rounded-3xl border bg-card shadow-sm"
-                >
-                  <div className="grid gap-0 lg:grid-cols-[0.8fr_1.2fr]">
-                    {post.cover_url ? (
-                      <img
-                        src={post.cover_url}
-                        alt={post.title}
-                        className="h-full min-h-56 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex min-h-56 items-center justify-center bg-primary/5">
-                        <FileText className="size-12 text-primary/30" />
-                      </div>
-                    )}
-                    <div className="p-6 sm:p-8">
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span className="rounded-full bg-primary/10 px-2.5 py-1 font-bold text-primary">
-                          {POST_KINDS[post.kind as PostKind] ?? "منشور"}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <CalendarDays className="size-3.5" />
-                          {formatHijriDate(post.published_at ?? post.created_at)}
-                        </span>
-                      </div>
-                      <h2 className="mt-4 text-2xl font-black">{post.title}</h2>
-                      {post.excerpt && (
-                        <p className="mt-3 border-r-4 border-primary pr-4 text-sm font-bold leading-7 text-muted-foreground">
-                          {post.excerpt}
-                        </p>
-                      )}
-                      <div className="mt-4 whitespace-pre-line text-sm leading-8">{post.body}</div>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        <PublicContentSection
+          eyebrow="آخر التحديثات"
+          title="المنشورات والإعلانات"
+          count={updates.length}
+          items={updates}
+        />
+
+        <PublicContentSection
+          eyebrow="محتوى إرشادي"
+          title="المقالات"
+          count={articles.length}
+          items={articles}
+          alternate
+        />
       </main>
       <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
         مدونة الموجه الطلابي · منصة الذات للتوجيه والإرشاد
       </footer>
     </div>
+  );
+}
+
+function PublicContentSection({
+  eyebrow,
+  title,
+  count,
+  items,
+  alternate = false,
+}: {
+  eyebrow: string;
+  title: string;
+  count: number;
+  items: Array<BlogPortalRow & { title: string; body: string; slug: string; created_at: string }>;
+  alternate?: boolean;
+}) {
+  return (
+    <section className={alternate ? "border-t border-border/60 bg-background" : "border-t border-border/60 bg-muted/20"}>
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-bold text-primary">{eyebrow}</p>
+            <h2 className="mt-1 text-3xl font-black">{title}</h2>
+          </div>
+          <span className="text-xs text-muted-foreground">{count} منشور</span>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="mt-8 rounded-2xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">
+            لا يوجد محتوى منشور في هذا القسم حتى الآن.
+          </p>
+        ) : (
+          <div className="mt-8 space-y-5">
+            {items.map((post) => (
+              <article
+                key={`${post.slug}-${post.created_at}`}
+                className="overflow-hidden rounded-3xl border bg-card shadow-sm"
+              >
+                <div className="grid gap-0 lg:grid-cols-[0.8fr_1.2fr]">
+                  {post.cover_url ? (
+                    <img
+                      src={post.cover_url}
+                      alt={post.title}
+                      className="h-full min-h-56 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex min-h-56 items-center justify-center bg-primary/5">
+                      <FileText className="size-12 text-primary/30" />
+                    </div>
+                  )}
+                  <div className="p-6 sm:p-8">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span className="rounded-full bg-primary/10 px-2.5 py-1 font-bold text-primary">
+                        {POST_KINDS[post.kind as PostKind] ?? "منشور"}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="size-3.5" />
+                        {formatHijriDate(post.published_at ?? post.created_at)}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-2xl font-black">{post.title}</h3>
+                    {post.excerpt && (
+                      <p className="mt-3 border-r-4 border-primary pr-4 text-sm font-bold leading-7 text-muted-foreground">
+                        {post.excerpt}
+                      </p>
+                    )}
+                    <div className="mt-4 whitespace-pre-line text-sm leading-8">{post.body}</div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
