@@ -99,8 +99,8 @@ function PublicCounselorBlogPage() {
   });
   const first = data[0];
   const posts = data.filter(
-    (row): row is BlogPortalRow & { title: string; body: string; slug: string; created_at: string } =>
-      Boolean(row.title && row.body && row.slug && row.created_at),
+    (row): row is BlogPortalRow & { title: string; slug: string; created_at: string } =>
+      Boolean(row.title && row.slug && row.created_at && (row.body?.trim() || row.cover_url)),
   );
   const articles = posts.filter((row) => row.kind === "article");
   const updates = posts.filter((row) => row.kind !== "article");
@@ -399,7 +399,7 @@ function PublicContentSection({
   eyebrow: string;
   title: string;
   count: number;
-  items: Array<BlogPortalRow & { title: string; body: string; slug: string; created_at: string }>;
+  items: Array<BlogPortalRow & { title: string; slug: string; created_at: string }>;
   alternate?: boolean;
 }) {
   return (
@@ -419,44 +419,69 @@ function PublicContentSection({
           </p>
         ) : (
           <div className="mt-8 space-y-5">
-            {items.map((post) => (
-              <article
-                key={`${post.slug}-${post.created_at}`}
-                className="overflow-hidden rounded-3xl border bg-card shadow-sm"
-              >
-                <div className="grid gap-0 lg:grid-cols-[0.8fr_1.2fr]">
-                  {post.cover_url ? (
-                    <img
-                      src={post.cover_url}
-                      alt={post.title}
-                      className="h-full min-h-56 w-full object-cover"
-                    />
+            {items.map((post) => {
+              const imageOnly = Boolean(post.cover_url && !post.body?.trim() && !post.excerpt?.trim());
+
+              return (
+                <article
+                  key={`${post.slug}-${post.created_at}`}
+                  className="overflow-hidden rounded-3xl border bg-card shadow-sm"
+                >
+                  {imageOnly ? (
+                    <div>
+                      <img
+                        src={post.cover_url ?? ""}
+                        alt={post.title}
+                        className="max-h-[900px] w-full bg-muted/20 object-contain"
+                      />
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-xs text-muted-foreground sm:px-6">
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 font-bold text-primary">
+                          {POST_KINDS[post.kind as PostKind] ?? "منشور"}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <CalendarDays className="size-3.5" />
+                          {formatHijriDate(post.published_at ?? post.created_at)}
+                        </span>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="flex min-h-56 items-center justify-center bg-primary/5">
-                      <FileText className="size-12 text-primary/30" />
+                    <div className="grid gap-0 lg:grid-cols-[0.8fr_1.2fr]">
+                      {post.cover_url ? (
+                        <img
+                          src={post.cover_url}
+                          alt={post.title}
+                          className="h-full min-h-56 w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex min-h-56 items-center justify-center bg-primary/5">
+                          <FileText className="size-12 text-primary/30" />
+                        </div>
+                      )}
+                      <div className="p-6 sm:p-8">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span className="rounded-full bg-primary/10 px-2.5 py-1 font-bold text-primary">
+                            {POST_KINDS[post.kind as PostKind] ?? "منشور"}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <CalendarDays className="size-3.5" />
+                            {formatHijriDate(post.published_at ?? post.created_at)}
+                          </span>
+                        </div>
+                        <h3 className="mt-4 text-2xl font-black">{post.title}</h3>
+                        {post.excerpt && (
+                          <p className="mt-3 border-r-4 border-primary pr-4 text-sm font-bold leading-7 text-muted-foreground">
+                            {post.excerpt}
+                          </p>
+                        )}
+                        {post.body?.trim() && (
+                          <div className="mt-4 whitespace-pre-line text-sm leading-8">{post.body}</div>
+                        )}
+                      </div>
                     </div>
                   )}
-                  <div className="p-6 sm:p-8">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span className="rounded-full bg-primary/10 px-2.5 py-1 font-bold text-primary">
-                        {POST_KINDS[post.kind as PostKind] ?? "منشور"}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <CalendarDays className="size-3.5" />
-                        {formatHijriDate(post.published_at ?? post.created_at)}
-                      </span>
-                    </div>
-                    <h3 className="mt-4 text-2xl font-black">{post.title}</h3>
-                    {post.excerpt && (
-                      <p className="mt-3 border-r-4 border-primary pr-4 text-sm font-bold leading-7 text-muted-foreground">
-                        {post.excerpt}
-                      </p>
-                    )}
-                    <div className="mt-4 whitespace-pre-line text-sm leading-8">{post.body}</div>
-                  </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         )}
       </div>
