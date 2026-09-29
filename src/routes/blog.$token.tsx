@@ -36,28 +36,19 @@ export const Route = createFileRoute("/blog/$token")({
   component: PublicCounselorBlogPage,
 });
 
-type BlogPost = {
+type BlogPortalRow = {
   school_name: string | null;
   counselor_name: string | null;
-  title: string;
+  public_slug: string | null;
+  title: string | null;
   kind: string | null;
   excerpt: string | null;
-  body: string;
+  body: string | null;
   cover_url: string | null;
   author_name: string | null;
   published_at: string | null;
-  created_at: string;
-  slug: string;
-};
-
-type BlogRpcClient = {
-  rpc: (
-    name: string,
-    args: { p_token: string },
-  ) => Promise<{
-    data: unknown;
-    error: { message: string } | null;
-  }>;
+  created_at: string | null;
+  slug: string | null;
 };
 
 const SERVICE_ICONS = [GraduationCap, Brain, BriefcaseBusiness, HeartPulse];
@@ -71,17 +62,20 @@ function PublicCounselorBlogPage() {
   } = useQuery({
     queryKey: ["public-counselor-blog", token],
     queryFn: async () => {
-      const { data, error } = await (supabase as unknown as BlogRpcClient).rpc(
-        "get_private_counselor_blog",
-        {
-          p_token: token,
-        },
+      const { data, error } = await supabase.rpc(
+        "get_private_counselor_portal",
+        { p_token: token },
       );
       if (error) throw error;
-      return (data ?? []) as BlogPost[];
+      return (data ?? []) as BlogPortalRow[];
     },
   });
   const first = data[0];
+  const posts = data.filter(
+    (row): row is BlogPortalRow & { title: string; body: string; slug: string; created_at: string } =>
+      Boolean(row.title && row.body && row.slug && row.created_at),
+  );
+  const schoolSearch = first?.public_slug ? { school: first.public_slug } : {};
 
   if (isLoading)
     return (
@@ -137,7 +131,7 @@ function PublicCounselorBlogPage() {
             </span>
             <Link
               to="/auth"
-              search={{ next: "/dashboard" }}
+              search={{ next: "/dashboard", mode: "signin" }}
               className="text-sm font-bold text-primary hover:underline"
             >
               دخول الموجه
@@ -191,7 +185,7 @@ function PublicCounselorBlogPage() {
                 </p>
                 <p>
                   <span className="text-muted-foreground">المحتوى المنشور:</span>{" "}
-                  <strong>{data.length} منشور</strong>
+                  <strong>{posts.length} منشور</strong>
                 </p>
                 <p className="flex items-start gap-2 text-xs leading-6 text-muted-foreground">
                   <LockKeyhole className="mt-1 size-3.5 shrink-0 text-primary" />
@@ -254,6 +248,7 @@ function PublicCounselorBlogPage() {
                 <Link
                   key={form.to}
                   to={form.to}
+                  search={schoolSearch}
                   className="group rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition hover:-translate-y-1 hover:border-primary/40"
                 >
                   <span className="rounded-full bg-accent/25 px-2.5 py-1 text-[11px] font-bold text-accent-foreground">
@@ -319,10 +314,10 @@ function PublicCounselorBlogPage() {
                 <p className="text-sm font-bold text-primary">آخر ما يقدمه الموجه</p>
                 <h2 className="mt-1 text-3xl font-black">المنشورات والإعلانات</h2>
               </div>
-              <span className="text-xs text-muted-foreground">{data.length} منشورًا عامًا</span>
+              <span className="text-xs text-muted-foreground">{posts.length} منشورًا عامًا</span>
             </div>
             <div className="mt-8 space-y-5">
-              {data.map((post) => (
+              {posts.map((post) => (
                 <article
                   key={`${post.slug}-${post.created_at}`}
                   className="overflow-hidden rounded-3xl border bg-card shadow-sm"
