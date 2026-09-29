@@ -101,7 +101,7 @@
         if (!checkbox.checked) checkbox.click();
         matched.push(item);
         unmatched.delete(String(item.id || item.student_no || item.student_name || ""));
-        row.style.outline = "2px solid #8b5736";
+        row.style.outline = "2px solid #5b46a6";
         row.style.outlineOffset = "-2px";
       }
     }
@@ -144,7 +144,7 @@
           if (!option) continue;
           select.value = option.value;
           select.dispatchEvent(new Event("change", { bubbles: true }));
-          row.style.outline = "2px solid #8b5736";
+          row.style.outline = "2px solid #5b46a6";
           row.style.outlineOffset = "-2px";
           applied = true;
           break;
@@ -247,12 +247,12 @@
         <div style="font-size:11px;color:#6e655d;line-height:1.7;margin-bottom:10px">
           يعمل داخل جلستك الحالية في ${platformLabel}. لا يقرأ كلمة المرور ولا رمز التحقق.
         </div>
-        <button id="athat-import-students" type="button" style="width:100%;border:1px solid #8b5736;background:#fff;color:#8b5736;border-radius:9px;padding:8px;cursor:pointer;font-weight:bold;margin-bottom:7px">
+        <button id="athat-import-students" type="button" style="width:100%;border:1px solid #5b46a6;background:#fff;color:#5b46a6;border-radius:9px;padding:8px;cursor:pointer;font-weight:bold;margin-bottom:7px">
           سحب الطلاب الظاهرين إلى الذات
         </button>
         ${
           currentPlatform === "noor"
-            ? `<button id="athat-sync-attendance" type="button" style="width:100%;border:0;background:#8b5736;color:#fff;border-radius:9px;padding:9px;cursor:pointer;font-weight:bold">
+            ? `<button id="athat-sync-attendance" type="button" style="width:100%;border:0;background:#5b46a6;color:#fff;border-radius:9px;padding:9px;cursor:pointer;font-weight:bold">
           مزامنة غياب اليوم من الذات
         </button>`
             : ""
