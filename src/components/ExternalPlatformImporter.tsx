@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -105,6 +106,7 @@ function prepareRows(rows: Row[]) {
 }
 
 export function ExternalPlatformImporter() {
+  const queryClient = useQueryClient();
   const [source, setSource] = useState<SourceKey>("noor");
   const [paste, setPaste] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
@@ -188,6 +190,9 @@ export function ExternalPlatformImporter() {
       if (error) throw error;
 
       const skipped = prepared.records.length - newRecords.length;
+      await queryClient.invalidateQueries({ queryKey: ["students"] });
+      await queryClient.invalidateQueries({ queryKey: ["student-options"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-core"] });
       toast.success(`تم استيراد ${newRecords.length} طالب إلى «الذات».`);
       setMessage(
         `اكتمل الاستيراد: ${newRecords.length} جديد، ${skipped} موجود مسبقًا. لم يتم حذف أو استبدال أي طالب قائم.`,
