@@ -99,7 +99,12 @@ export function PublicRequestForm({
         },
       });
 
-      return fallback.requestNo;
+      if (typeof fallback === "string") return fallback;
+      if (fallback && typeof fallback === "object" && "requestNo" in fallback) {
+        const value = (fallback as { requestNo?: unknown }).requestNo;
+        return typeof value === "string" ? value : "تم الاستلام";
+      }
+      return "تم الاستلام";
     },
     onSuccess: (no) => {
       setSubmitted(true);
