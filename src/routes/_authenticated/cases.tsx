@@ -80,7 +80,7 @@ function SpecialCasesPage() {
   const today = new Date().toISOString().slice(0, 10);
   const active = cases.filter((row) => row.case_status !== "مغلقة");
   const overdue = active.filter((row) => row.followup_at && String(row.followup_at).slice(0, 10) <= today);
-  const urgent = active.filter((row) => ["عاجلة", "عاجل", "مرتفعة"].includes(String(row.priority ?? "")));
+  const urgent = active.filter((row) => ["عالية", "عاجلة", "عاجل", "مرتفعة"].includes(String(row.priority ?? "")));
   const withNextAction = active.filter((row) => String(row.next_action ?? "").trim());
 
   return (
