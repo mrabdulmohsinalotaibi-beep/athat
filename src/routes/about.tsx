@@ -90,12 +90,14 @@ function AboutPage() {
           ))}
         </ol>
 
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild className="font-bold">
-            <Link to="/forms/consultation">طلب استشارة فردية</Link>
-          </Button>
-          <Button asChild variant="outline" className="font-semibold">
-            <Link to="/services">الخدمات الإرشادية</Link>
+        <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-sm leading-7 text-muted-foreground">
+          <p className="font-bold text-foreground">طلب الخدمات الإلكترونية</p>
+          <p className="mt-1">
+            الاستشارات والإحالات والبلاغات تُرسل من مدونة الموجه الطلابي الخاصة بالمدرسة؛
+            استخدم الرابط الذي تشاركه المدرسة لضمان وصول الطلب للموجه الصحيح.
+          </p>
+          <Button asChild variant="outline" className="mt-4 font-semibold">
+            <Link to="/services">عرض الخدمات الإرشادية</Link>
           </Button>
         </div>
       </section>
