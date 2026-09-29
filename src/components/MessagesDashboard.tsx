@@ -246,6 +246,37 @@ export default function MessagesDashboard() {
       ).toFixed(1)
     : "—";
 
+  function sendWhatsApp() {
+    if (!selected.length) return;
+    shareOnWhatsApp(
+      deliveryText(selected, school?.school_name || "التوجيه الطلابي"),
+    );
+  }
+
+  function sendEmail() {
+    if (!selected.length) return;
+    const emails = Array.from(
+      new Set(
+        selected
+          .map((item) => item.sender_contact?.trim() ?? "")
+          .filter((contact) => isEmail(contact)),
+      ),
+    );
+
+    if (!emails.length) {
+      toast.info("لا تحتوي المشاركات المحددة على بريد إلكتروني صالح.");
+      return;
+    }
+
+    const subject = encodeURIComponent(
+      `مشاركات التوجيه الطلابي — ${school?.school_name || "منصة الذات"}`,
+    );
+    const body = encodeURIComponent(
+      deliveryText(selected, school?.school_name || "التوجيه الطلابي"),
+    );
+    window.location.href = `mailto:${emails.join(",")}?subject=${subject}&body=${body}`;
+  }
+
   function toggle(id: string) {
     setSelectedIds((current) =>
       current.includes(id)
