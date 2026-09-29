@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FileText, Globe, HeartHandshake, Lock, Pencil, Plus, ShieldAlert, Trash2 } from "lucide-react";
+import { BookOpenCheck, FileText, Globe, HeartHandshake, Lock, Pencil, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,23 +111,45 @@ function PostsManager() {
             <HeartHandshake className="size-5 text-primary" />
             <p className="mt-2 font-black">طلبات الاستشارة</p>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              طلبات الطلاب وأولياء الأمور للمقابلات والدعم الفردي.
+              تتحول إلى مقابلة إرشادية مرتبطة بسجل الجلسات.
             </p>
+            <Button asChild variant="ghost" size="sm" className="mt-3 px-0 text-primary">
+              <Link to="/interviews">فتح سجل الجلسات</Link>
+            </Button>
           </div>
           <div className="rounded-xl border bg-card p-4">
             <FileText className="size-5 text-primary" />
             <p className="mt-2 font-black">إحالات الطلاب</p>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              إحالات المعلمين والإدارة مع الملاحظات والإجراءات السابقة.
+              تتحول مباشرة إلى سجل إحالة قابل للمتابعة والطباعة.
             </p>
+            <Button asChild variant="ghost" size="sm" className="mt-3 px-0 text-primary">
+              <Link to="/referrals">فتح سجل الإحالات</Link>
+            </Button>
           </div>
           <div className="rounded-xl border bg-card p-4">
             <ShieldAlert className="size-5 text-primary" />
             <p className="mt-2 font-black">البلاغات السرية</p>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              بلاغات التنمر والسلامة مع المحافظة على السرية.
+              تنشئ حالة إرشادية وسجل متابعة سلوكية عند التحويل.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button asChild variant="ghost" size="sm" className="px-0 text-primary">
+                <Link to="/cases">الحالات</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="px-0 text-primary">
+                <Link to="/behavior">السلوك</Link>
+              </Button>
+            </div>
           </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/reports"><BookOpenCheck className="size-4" /> التقارير والطباعة</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/evidences">الشواهد والمرفقات</Link>
+          </Button>
         </div>
       </section>
 
