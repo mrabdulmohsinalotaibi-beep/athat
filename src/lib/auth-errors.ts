@@ -1,5 +1,11 @@
 /** Maps Supabase email-auth errors to clear Arabic text. */
-export function arabicAuthError(message: string): string {
+export function arabicAuthError(error: unknown): string {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "خطأ غير معروف";
   const m = message.toLowerCase();
 
   if (m.includes("invalid login credentials")) return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
