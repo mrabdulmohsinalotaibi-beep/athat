@@ -204,6 +204,31 @@ export function RequestsInbox() {
           .select("id")
           .single();
         if (error) throw error;
+
+        const { error: behaviorError } = await supabase.from("behavior").insert({
+          student_name: request.student_name || "طالب غير محدد",
+          bdate: today,
+          observation: request.topic || "بلاغ سري",
+          referral_source: request.is_anonymous
+            ? "بلاغ سري"
+            : request.requester_role || "إبلاغ إلكتروني",
+          action: "فتح حالة إرشادية ومتابعة السلوك",
+          result: request.counselor_notes || null,
+          notes: [
+            request.details,
+            `وارد من بلاغ رقم ${request.request_no ?? "—"}`,
+            `مرتبط بالحالة: ${data.id}`,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        });
+        if (behaviorError) {
+          console.warn(
+            "[public-requests] counseling case created but behavior record failed:",
+            behaviorError.message,
+          );
+        }
+
         linkedTable = "counseling_cases";
         linkedRecordId = data.id;
         status = "تم التحويل لحالة";
