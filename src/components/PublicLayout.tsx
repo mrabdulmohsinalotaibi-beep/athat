@@ -37,7 +37,7 @@ export function PublicLayout({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
-              src="/brand-logo.png"
+              src="/brand-logo.svg"
               alt="شعار الذات"
               className="brand-mark-well size-11 rounded-lg object-contain"
             />
