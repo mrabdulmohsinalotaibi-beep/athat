@@ -507,7 +507,7 @@ export function RecordPage({
           className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
         >
           <div>
-            <p className="font-bold text-destructive">تعذّر تحميل ${config.title}</p>
+            <p className="font-bold text-destructive">تعذّر تحميل {config.title}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {rowsQueryError instanceof Error ? rowsQueryError.message : "حدث خطأ أثناء جلب البيانات."}
             </p>
