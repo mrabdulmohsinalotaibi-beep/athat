@@ -7,6 +7,8 @@ import {
   FileSpreadsheet,
   ShieldCheck,
   Workflow,
+  Chrome,
+  MousePointerClick,
 } from "lucide-react";
 
 import { ExternalPlatformImporter } from "@/components/ExternalPlatformImporter";
@@ -105,6 +107,49 @@ function IntegrationsPage() {
           التصدير الرسمي والمراجعة البشرية والتوثيق داخل المنصة.
         </p>
       </div>
+
+      <section className="rounded-2xl border border-primary/20 bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="flex items-center gap-2 text-xl font-black">
+              <Chrome className="size-5 text-primary" /> Athat Bridge
+            </p>
+            <p className="mt-1 max-w-3xl text-sm leading-7 text-muted-foreground">
+              الإضافة المباشرة تعمل داخل صفحة نور أو مدرستي المفتوحة، بنفس النمط العملي
+              لإضافات التكامل المدرسي: تقرأ الجدول الذي تراه بصلاحيتك، تسحب بيانات «الذات»،
+              وتعبئ عناصر الصفحة قبل أن تعتمد الحفظ بنفسك.
+            </p>
+          </div>
+          <div className="rounded-xl border bg-muted/30 px-4 py-3 text-xs">
+            <p className="flex items-center gap-2 font-black">
+              <MousePointerClick className="size-4 text-primary" /> المسار المباشر
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              Chrome Extension • جلسة المستخدم • بدون تجاوز رمز التحقق
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border p-3 text-xs">
+            <b>نور ← الذات</b>
+            <p className="mt-1 leading-6 text-muted-foreground">
+              قراءة كشف الطلاب الظاهر واستيراد الطلاب الجدد مع منع التكرار.
+            </p>
+          </div>
+          <div className="rounded-xl border p-3 text-xs">
+            <b>الذات ← نور</b>
+            <p className="mt-1 leading-6 text-muted-foreground">
+              سحب مواظبة اليوم ومطابقة أسماء الطلاب وتحديدهم داخل صفحة نور.
+            </p>
+          </div>
+          <div className="rounded-xl border p-3 text-xs">
+            <b>اعتماد بشري</b>
+            <p className="mt-1 leading-6 text-muted-foreground">
+              لا تضغط الإضافة «حفظ» النهائي تلقائيًا؛ تراجع ثم تعتمد أنت.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <NoorConnectionPanel />
       <ExternalPlatformImporter />
