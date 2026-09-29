@@ -24,16 +24,19 @@ export function GlobalSearch() {
         supabase.from("plan_tasks").select("id, task, domain, exec_status").ilike("task", pattern).limit(6),
         supabase.from("evidences").select("id, name, etype, linked_type, linked_ref, doc_status").or(`name.ilike.${pattern},description.ilike.${pattern},linked_ref.ilike.${pattern}`).limit(6),
       ]);
-      const failed = [students, cases, programs, tasks, evidences].find((result) => result.error);
-      if (failed?.error) {
-        throw failed.error;
-      }
+      const results = [students, cases, programs, tasks, evidences];
+      results.forEach((result, index) => {
+        if (result.error) {
+          console.warn("[global-search] source failed", index, result.error.message);
+        }
+      });
+
       return {
-        students: students.data ?? [],
-        cases: cases.data ?? [],
-        programs: programs.data ?? [],
-        tasks: tasks.data ?? [],
-        evidences: evidences.data ?? [],
+        students: students.error ? [] : students.data ?? [],
+        cases: cases.error ? [] : cases.data ?? [],
+        programs: programs.error ? [] : programs.data ?? [],
+        tasks: tasks.error ? [] : tasks.data ?? [],
+        evidences: evidences.error ? [] : evidences.data ?? [],
       };
     },
   });
@@ -93,7 +96,8 @@ export function GlobalSearch() {
                   {data?.students.length ? <ResultGroup title="الطلاب" icon={Users} items={data.students.map((item: any) => ({ title: item.full_name || "طالب", detail: `${item.student_no || "بدون رقم"} · ${item.grade || ""}`, to: "/students" }))} onSelect={go} /> : null}
                   {data?.cases.length ? <ResultGroup title="الحالات الإرشادية" icon={HeartHandshake} items={data.cases.map((item: any) => ({ title: item.student_name || "حالة إرشادية", detail: `${item.domain || "مجال غير محدد"} · ${item.case_status || "مفتوحة"}`, to: "/cases" }))} onSelect={go} /> : null}
                   {data?.programs.length ? <ResultGroup title="البرامج والأنشطة" icon={FileText} items={data.programs.map((item: any) => ({ title: item.name || "برنامج", detail: `${item.domain || ""} · ${item.exec_status || ""}`, to: "/programs" }))} onSelect={go} /> : null}
-                  {data?.tasks.length ? <ResultGroup title="مهام الخطة" icon={ClipboardList} items={data.tasks.map((item: any) => ({ title: item.task || "مهمة", detail: `${item.domain || ""} · ${item.exec_status || ""}`, to: "/plan" }))} onSelect={go} /> : null}\n                  {data?.evidences.length ? <ResultGroup title="الشواهد والوثائق" icon={FolderCheck} items={data.evidences.map((item: any) => ({ title: item.name || "شاهد", detail: `${item.etype || item.linked_type || "وثيقة"} · ${item.doc_status || item.linked_ref || ""}`, to: "/evidences" }))} onSelect={go} /> : null}
+                  {data?.tasks.length ? <ResultGroup title="مهام الخطة" icon={ClipboardList} items={data.tasks.map((item: any) => ({ title: item.task || "مهمة", detail: `${item.domain || ""} · ${item.exec_status || ""}`, to: "/plan" }))} onSelect={go} /> : null}
+                  {data?.evidences.length ? <ResultGroup title="الشواهد والوثائق" icon={FolderCheck} items={data.evidences.map((item: any) => ({ title: item.name || "شاهد", detail: `${item.etype || item.linked_type || "وثيقة"} · ${item.doc_status || item.linked_ref || ""}`, to: "/evidences" }))} onSelect={go} /> : null}
                 </div>
               )}
             </div>
