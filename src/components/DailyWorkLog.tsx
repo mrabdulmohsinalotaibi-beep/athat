@@ -105,7 +105,10 @@ export function DailyWorkLog() {
           التاريخ
           <div className="relative mt-1.5">
             <CalendarDays className="pointer-events-none absolute right-3 top-2.5 size-4 text-muted-foreground" />
-            <div className="relative">\n              <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="pr-9 text-transparent caret-transparent" aria-label="التاريخ" />\n              <span className="pointer-events-none absolute inset-y-0 right-10 flex items-center text-sm font-semibold text-foreground">{formatHijriDate(date)}</span>\n            </div>
+            <div className="relative">
+              <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="pr-9 text-transparent caret-transparent" aria-label="التاريخ" />
+              <span className="pointer-events-none absolute inset-y-0 right-10 flex items-center text-sm font-semibold text-foreground">{formatHijriDate(date)}</span>
+            </div>
           </div>
         </label>
         {[
