@@ -29,6 +29,7 @@ export interface PublicRequestFormProps {
   privacyNote: string;
   schoolSlug?: string | undefined;
   portalToken?: string | undefined;
+  feedbackToken?: string | undefined;
 }
 
 const URGENCY_OPTIONS = ["عادي", "مهم", "عاجل"] as const;
@@ -50,6 +51,7 @@ export function PublicRequestForm({
   privacyNote,
   schoolSlug,
   portalToken,
+  feedbackToken,
 }: PublicRequestFormProps) {
   const [anonymous, setAnonymous] = useState(false);
   const [requestNo, setRequestNo] = useState<string | null>(null);
@@ -77,11 +79,12 @@ export function PublicRequestForm({
       const { data, error } = await supabase.rpc("submit_public_request_v2", args);
       if (!error) return typeof data === "string" ? data : null;
 
-      const missingRpc =
-        /Could not find the function|schema cache|PGRST202/i.test(error.message);
-      if (!missingRpc) throw error;
+      const missingRequestChannel =
+        /Could not find the function|schema cache|PGRST202|PGRST205|public_requests/i.test(error.message);
 
-      // Backward-compatible fallback while the new RPC is propagating.
+      if (!missingRequestChannel) throw error;
+
+      // Backward-compatible attempt for deployments where the first request RPC exists.
       const legacyArgs = {
         p_kind: args.p_kind,
         p_details: args.p_details,
@@ -99,6 +102,47 @@ export function PublicRequestForm({
       };
       const legacy = await supabase.rpc("submit_public_request", legacyArgs);
       if (!legacy.error) return typeof legacy.data === "string" ? legacy.data : null;
+
+      const legacyMissing =
+        /Could not find the function|schema cache|PGRST202|PGRST205|public_requests/i.test(
+          legacy.error.message,
+        );
+
+      // Production compatibility: the existing feedback_messages channel is already
+      // deployed. Use it as the guaranteed inbox until public_requests is deployed.
+      if (legacyMissing && feedbackToken?.trim()) {
+        const lines = [
+          `[نوع الطلب] ${kind}`,
+          args.p_topic ? `[الموضوع] ${args.p_topic}` : "",
+          args.p_student_name ? `[الطالب] ${args.p_student_name}` : "",
+          args.p_student_grade ? `[الصف] ${args.p_student_grade}` : "",
+          args.p_classroom ? `[الفصل] ${args.p_classroom}` : "",
+          args.p_urgency ? `[الأهمية] ${args.p_urgency}` : "",
+          args.p_preferred_time ? `[الوقت المفضل] ${args.p_preferred_time}` : "",
+          "",
+          args.p_details,
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        const feedback = await supabase.rpc("submit_public_feedback", {
+          p_token: feedbackToken.trim(),
+          p_sender_name: anonymous ? "مجهول" : args.p_requester_name || "مستفيد",
+          p_sender_contact: anonymous ? "" : args.p_requester_contact || "",
+          p_sender_role: args.p_requester_role || (anonymous ? "مجهول" : "مستفيد"),
+          p_category: kind,
+          p_satisfaction: null,
+          p_message: lines,
+        });
+
+        if (!feedback.error) {
+          return typeof feedback.data === "string"
+            ? feedback.data
+            : feedback.data
+              ? String(feedback.data)
+              : "تم الاستلام";
+        }
+      }
 
       const fallback = await submitPublicRequestFallback({
         data: {
@@ -143,7 +187,7 @@ export function PublicRequestForm({
     },
   });
 
-  if (!schoolSlug?.trim() && !portalToken?.trim()) {
+  if (!schoolSlug?.trim() && !portalToken?.trim() && !feedbackToken?.trim()) {
     return (
       <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 text-center">
         <ShieldCheck className="mx-auto size-10 text-amber-700" />
