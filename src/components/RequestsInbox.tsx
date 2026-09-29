@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Inbox, Mail, MessageCircle, ShieldAlert, Send } from "lucide-react";
@@ -153,6 +153,35 @@ export function RequestsInbox() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!active || !data.user) return;
+      channel = supabase
+        .channel(`public-requests-${data.user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "public_requests",
+            filter: `user_id=eq.${data.user.id}`,
+          },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["public_requests"] });
+          },
+        )
+        .subscribe();
+    });
+
+    return () => {
+      active = false;
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const update = useMutation({
     mutationFn: async (values: { id: string; status?: string; counselor_notes?: string }) => {
