@@ -17,3 +17,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: TypeScript audit
+        continue-on-error: true
+        run: npx tsc --noEmit --pretty false
