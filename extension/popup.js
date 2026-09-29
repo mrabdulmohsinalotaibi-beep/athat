@@ -66,7 +66,9 @@ $("pushStudents").addEventListener("click", async () => {
   if (!valid.length) return result("لا توجد سجلات تحمل اسمًا وهوية من 10 أرقام.", true);
   const response = await runtime({ type: "ATHAT_IMPORT_STUDENTS", payload: valid });
   if (!response?.ok) return result(response?.error || "تعذر الاستيراد.", true);
-  result(`تم إرسال ${valid.length} طالب إلى «الذات». المكرر لن يضاف مرة أخرى.`);
+  result(
+    `تمت إضافة ${response.inserted ?? valid.length} طالب إلى «الذات». تم تجاوز ${response.skipped ?? 0} سجل موجود أو مكرر.`,
+  );
 });
 
 $("loadAttendance").addEventListener("click", async () => {
