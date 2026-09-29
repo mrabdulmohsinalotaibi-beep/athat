@@ -67,5 +67,5 @@ export const submitPublicRequestFallback = createServerFn({ method: "POST" })
       .single();
 
     if (error) throw error;
-    return { requestNo: row.request_no ?? "—" };
+    return row.request_no ?? "تم الاستلام";
   });
