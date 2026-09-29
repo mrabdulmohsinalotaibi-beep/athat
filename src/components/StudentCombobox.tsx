@@ -53,7 +53,13 @@ export function StudentCombobox({
   onType: (name: string) => void;
   onClear?: () => void;
 }) {
-  const { data: students = [], isLoading } = useStudentOptions();
+  const {
+    data: students = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useStudentOptions();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
 
@@ -110,7 +116,17 @@ export function StudentCombobox({
         </div>
         <div className="max-h-64 overflow-y-auto p-1">
           {isLoading && <p className="p-3 text-center text-xs text-muted-foreground">جارٍ التحميل...</p>}
-          {!isLoading && results.length === 0 && (
+          {isError && (
+            <div className="p-3 text-center text-xs">
+              <p className="text-destructive">
+                {error instanceof Error ? error.message : "تعذّر تحميل كشف الطلاب."}
+              </p>
+              <Button type="button" variant="ghost" size="sm" className="mt-1" onClick={() => void refetch()}>
+                إعادة المحاولة
+              </Button>
+            </div>
+          )}
+          {!isLoading && !isError && results.length === 0 && (
             <p className="p-3 text-center text-xs text-muted-foreground">لا يوجد طالب مطابق في كشف الطلاب.</p>
           )}
           {results.map((s) => (
