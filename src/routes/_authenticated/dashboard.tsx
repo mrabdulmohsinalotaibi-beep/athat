@@ -76,7 +76,8 @@ function Dashboard() {
   const latePlan = planTasks.filter((item) => item.due_date && String(item.due_date) < day && item.exec_status !== "مكتمل");
   const missingEvidence = planTasks.filter((item) => item.doc_status === "ناقص");
   const programs = data?.programs ?? [];
-  const donePrograms = programs.filter((item) => item.exec_status === "مكتمل").length;
+  const isProgramDone = (status: unknown) => ["منفذ", "مكتمل"].includes(String(status ?? ""));
+  const donePrograms = programs.filter((item) => isProgramDone(item.exec_status)).length;
   const programEvidenceRefs = new Set(
     (data?.evidences ?? [])
       .filter((item) => item.linked_type === "برنامج")
@@ -84,7 +85,7 @@ function Dashboard() {
   );
   const programsMissingEvidence = programs.filter(
     (program) =>
-      program.exec_status === "مكتمل" &&
+      isProgramDone(program.exec_status) &&
       !programEvidenceRefs.has(String(program.id)) &&
       !programEvidenceRefs.has(String(program.name ?? "")),
   );
