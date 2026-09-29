@@ -884,6 +884,8 @@ export type Database = {
           id: string
           is_anonymous: boolean
           kind: string
+          linked_record_id: string | null
+          linked_table: string | null
           preferred_time: string | null
           request_no: string | null
           requester_contact: string | null
@@ -906,6 +908,8 @@ export type Database = {
           id?: string
           is_anonymous?: boolean
           kind: string
+          linked_record_id?: string | null
+          linked_table?: string | null
           preferred_time?: string | null
           request_no?: string | null
           requester_contact?: string | null
@@ -928,6 +932,8 @@ export type Database = {
           id?: string
           is_anonymous?: boolean
           kind?: string
+          linked_record_id?: string | null
+          linked_table?: string | null
           preferred_time?: string | null
           request_no?: string | null
           requester_contact?: string | null
