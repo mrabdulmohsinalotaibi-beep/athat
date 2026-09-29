@@ -126,8 +126,8 @@ export function StudentProfileDialog({
 
   const phone = normalizeSaudiPhone(student?.["guardian_phone"]);
   const motherPhone = normalizeSaudiPhone(student?.["mother_phone"]);
-  const cases = sections.cases ?? [];
-  const interviews = sections.interviews ?? [];
+  const cases = sections["cases"] ?? [];
+  const interviews = sections["interviews"] ?? [];
   const activeCases = cases.filter((row) => !["مغلقة", "مغلق", "مكتمل"].includes(String(row["case_status"] ?? "")));
   const today = new Date().toISOString().slice(0, 10);
   const overdueFollowups = activeCases.filter((row) => {
