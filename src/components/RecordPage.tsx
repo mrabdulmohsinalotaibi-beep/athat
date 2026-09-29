@@ -769,7 +769,7 @@ export function RecordPage({
                   return (
                     <div
                       key={field.name}
-                      className={`border-b border-[var(--paper-border)] p-3 ${field.type === "textarea" ? "sm:col-span-2" : ""}`}
+                      data-pdf-block="true" className={`border-b border-[var(--paper-border)] p-3 ${field.type === "textarea" ? "sm:col-span-2" : ""}`}
                     >
                       <p className="mb-1 text-[11px] font-bold text-[var(--paper-muted-foreground)]">{field.label}</p>
                       <div className="whitespace-pre-wrap break-words text-sm leading-7">{value || "—"}</div>
