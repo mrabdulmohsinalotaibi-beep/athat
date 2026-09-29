@@ -575,6 +575,7 @@ export type Database = {
       }
       noor_export_jobs: {
         Row: {
+          attempts: number
           created_at: string
           id: string
           last_error: string | null
@@ -589,6 +590,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempts?: number
           created_at?: string
           id?: string
           last_error?: string | null
@@ -603,6 +605,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          attempts?: number
           created_at?: string
           id?: string
           last_error?: string | null
