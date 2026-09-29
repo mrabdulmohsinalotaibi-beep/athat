@@ -62,12 +62,30 @@ function PublicCounselorBlogPage() {
   } = useQuery({
     queryKey: ["public-counselor-blog", token],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc(
+      const portal = await supabase.rpc(
         "get_private_counselor_portal",
         { p_token: token },
       );
-      if (error) throw error;
-      return (data ?? []) as BlogPortalRow[];
+
+      if (!portal.error) {
+        return (portal.data ?? []) as BlogPortalRow[];
+      }
+
+      // Keep the current production blog available until the additive portal
+      // migration is applied. The old RPC does not expose public_slug, so the
+      // forms still work but cannot be school-bound until migration deployment.
+      console.warn(
+        "[counselor-blog] portal RPC unavailable, falling back:",
+        portal.error.message,
+      );
+      const legacy = await supabase.rpc("get_private_counselor_blog", {
+        p_token: token,
+      });
+      if (legacy.error) throw legacy.error;
+      return (legacy.data ?? []).map((row) => ({
+        ...row,
+        public_slug: null,
+      })) as BlogPortalRow[];
     },
   });
   const first = data[0];
