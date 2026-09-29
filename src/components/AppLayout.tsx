@@ -101,7 +101,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-0.5 ring-2 ring-sidebar-primary/40">
-              <img src="/brand-icon.svg?v=20260929d" alt="شعار الذات" className="size-full object-contain" />
+              <img src="/brand-icon.svg?v=20260929f" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
               <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
@@ -210,7 +210,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
-        <header className="athat-topbar sticky top-0 z-20 border-b border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
+        <header className="athat-topbar sticky top-0 z-20 border-b border-[#555555] bg-[#3C3C3C] text-[#F1E9DD] shadow-sm backdrop-blur-xl">
           <div className="grid min-h-18 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <Button
@@ -223,13 +223,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Menu className="size-5" />
               </Button>
               <img
-                src="/brand-icon.svg?v=20260929d"
+                src="/brand-icon.svg?v=20260929f"
                 alt="شعار الذات"
                 className="brand-mark-well hidden size-16 rounded-xl p-0.5 object-contain ring-1 ring-primary/15 sm:block"
               />
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">{school?.school_name || "اسم المدرسة غير محدد"}</p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="truncate text-xs text-[#D5CEC2]">
                   {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
                 </p>
               </div>
@@ -244,7 +244,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {alertsOpen && (
                   <div className="absolute left-0 top-12 z-50 w-72 rounded-xl border bg-card p-3 shadow-xl">
                     <p className="text-sm font-black">تنبيهات العمل</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}</p>
+                    <p className="mt-1 text-xs text-[#D5CEC2]">{alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}</p>
                     <Button asChild size="sm" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}><Link to="/dashboard">فتح مركز مهام اليوم</Link></Button>
                   </div>
                 )}
