@@ -738,7 +738,7 @@ export function RecordPage({
         <DialogContent className="max-h-[96vh] max-w-5xl overflow-y-auto p-3 sm:p-5" dir="rtl">
           <DialogHeader data-pdf-exclude="true">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <DialogTitle>مستند ${config.singular}</DialogTitle>
+              <DialogTitle>{`مستند ${config.singular}`}</DialogTitle>
               <PdfPreviewButton
                 elementRef={singleDocumentRef}
                 filename={`${config.singular}-${String(documentRow?.id ?? "مستند").slice(0, 8)}`}
@@ -753,7 +753,7 @@ export function RecordPage({
                 school={school}
                 title={config.singular}
                 reportType={config.title}
-                documentNo={String(
+                reportNo={String(
                   documentRow["case_no"] ??
                   documentRow["program_no"] ??
                   documentRow["referral_no"] ??
