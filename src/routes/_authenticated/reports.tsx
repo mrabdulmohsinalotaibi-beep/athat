@@ -88,17 +88,25 @@ function ReportsPage() {
           return { key: record.key, data: result.data ?? [], error: result.error };
         }),
       );
-      const failed = results.find((item) => item.error);
-      if (failed?.error) {
-        throw failed.error;
-      }
+      const errors = results
+        .filter((item) => item.error)
+        .map((item) => ({
+          key: item.key,
+          message: item.error?.message ?? "خطأ غير معروف",
+        }));
+
+      errors.forEach((item) => {
+        console.warn(`[reports] تعذّر تحميل ${item.key}:`, item.message);
+      });
+
       return {
         sections: Object.fromEntries(
-          results.map((item) => [item.key, item.data as Record<string, unknown>[]]),
+          results.map((item) => [
+            item.key,
+            (item.error ? [] : item.data ?? []) as Record<string, unknown>[],
+          ]),
         ),
-        errors: results
-          .filter((item) => item.error)
-          .map((item) => ({ key: item.key, message: item.error?.message ?? "خطأ غير معروف" })),
+        errors,
       };
     },
     staleTime: 30_000,
@@ -389,7 +397,21 @@ function ReportsPage() {
           </div>
 
           {isLoading && <p className="text-xs text-muted-foreground">جارٍ تحميل السجلات...</p>}
-          {isError && (
+          {(data?.errors?.length ?? 0) > 0 && (
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-black text-amber-800">بعض السجلات لم تُحمّل في التقرير</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              تم إبقاء بقية الأقسام متاحة، ويمكن إعادة المحاولة دون فقد أي بيانات.
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
+      {isError && (
             <div className="flex items-center gap-3 text-xs text-destructive">
               <span>تعذّر تحميل بيانات التقرير.</span>
               <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
