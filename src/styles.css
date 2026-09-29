@@ -63,87 +63,87 @@
   --radius: 0.75rem;
 
   /* هوية الذات الجديدة: علم النفس + التوجيه الطلابي + الهدوء والثقة */
-  --background: #f4f4f8;
-  --foreground: #18182b;
+  --background: #f3f4f7;
+  --foreground: #151724;
   --card: #ffffff;
-  --card-foreground: #18182b;
+  --card-foreground: #151724;
   --popover: #ffffff;
-  --popover-foreground: #18182b;
-  --primary: #40377f;
+  --popover-foreground: #151724;
+  --primary: #34345f;
   --primary-foreground: #ffffff;
-  --secondary: #e7e7f0;
-  --secondary-foreground: #27234f;
-  --muted: #ececf2;
-  --muted-foreground: #666679;
-  --accent: #6659a2;
+  --secondary: #e5e7ed;
+  --secondary-foreground: #24263f;
+  --muted: #e9ebf0;
+  --muted-foreground: #626678;
+  --accent: #55527f;
   --accent-foreground: #ffffff;
   --destructive: #b43e5b;
   --destructive-foreground: #ffffff;
-  --border: #d4d4df;
-  --input: #c4c4d1;
-  --ring: #5f5597;
-  --chart-1: #40377f;
-  --chart-2: #6659a2;
-  --chart-3: #25274f;
-  --chart-4: #7c78a8;
-  --chart-5: #596685;
-  --sidebar: #0e1020;
+  --border: #d0d3dc;
+  --input: #c2c6d1;
+  --ring: #55527f;
+  --chart-1: #34345f;
+  --chart-2: #55527f;
+  --chart-3: #252a4a;
+  --chart-4: #77799b;
+  --chart-5: #53627c;
+  --sidebar: #090c15;
   --sidebar-foreground: #f3f0ff;
-  --sidebar-primary: #9a91cc;
-  --sidebar-primary-foreground: #0c0d1a;
-  --sidebar-accent: #222443;
+  --sidebar-primary: #9691bd;
+  --sidebar-primary-foreground: #090b13;
+  --sidebar-accent: #1a2031;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #343653;
-  --sidebar-ring: #7f76b2;
-  --brand-mark-surface: #111321;
-  --brand-mark-border: #4f4b77;
+  --sidebar-border: #30364a;
+  --sidebar-ring: #72739d;
+  --brand-mark-surface: #070912;
+  --brand-mark-border: #464b69;
   --paper: #ffffff;
   --paper-foreground: #25203e;
   --paper-muted: #f4f2f9;
   --paper-muted-foreground: #6f6882;
   --paper-border: #d9d4e7;
-  --letterhead-primary: #252750;
-  --letterhead-secondary: #5f5597;
+  --letterhead-primary: #252a4a;
+  --letterhead-secondary: #55527f;
   --letterhead-soft: #ececf3;
   --shadow-soft: 0 16px 38px -24px rgb(54 42 112 / 0.28);
   --shadow-card: 0 10px 28px -22px rgb(63 48 126 / 0.24);
 }
 .dark {
   color-scheme: dark;
-  --background: #0b0d18;
+  --background: #070912;
   --foreground: #f4f1ff;
-  --card: #141625;
+  --card: #111521;
   --card-foreground: #f4f1ff;
-  --popover: #141625;
+  --popover: #111521;
   --popover-foreground: #f4f1ff;
-  --primary: #a39bd0;
-  --primary-foreground: #0d0f1d;
-  --secondary: #23263a;
+  --primary: #9b96c2;
+  --primary-foreground: #090b13;
+  --secondary: #1d2230;
   --secondary-foreground: #f0ecff;
-  --muted: #1f2233;
+  --muted: #191e2a;
   --muted-foreground: #b8b0ca;
-  --accent: #756aa8;
+  --accent: #6d6b96;
   --accent-foreground: #ffffff;
   --destructive: #df6880;
   --destructive-foreground: #ffffff;
-  --border: #35384e;
-  --input: #44475e;
-  --ring: #8d84ba;
+  --border: #303647;
+  --input: #3d4357;
+  --ring: #7e7ba8;
   --chart-1: #b19bea;
   --chart-2: #8e76d4;
   --chart-3: #d0c5f7;
   --chart-4: #707bb1;
   --chart-5: #6554a8;
-  --sidebar: #080a13;
+  --sidebar: #05070c;
   --sidebar-foreground: #f3f0ff;
   --sidebar-primary: #c1b0f3;
   --sidebar-primary-foreground: #15112a;
-  --sidebar-accent: #1b1e33;
+  --sidebar-accent: #151a29;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #303349;
-  --sidebar-ring: #7f76b2;
-  --brand-mark-surface: #080a12;
-  --brand-mark-border: #494d72;
+  --sidebar-border: #292f40;
+  --sidebar-ring: #72739d;
+  --brand-mark-surface: #05070c;
+  --brand-mark-border: #3d435e;
   --shadow-soft: 0 16px 38px -24px rgb(0 0 0 / 0.62);
   --shadow-card: 0 10px 28px -22px rgb(0 0 0 / 0.52);
 }
@@ -208,7 +208,7 @@ select {
     background: transparent;
   }
 .dashboard-panel {
-    box-shadow: 0 10px 28px -22px rgba(91, 70, 166, 0.28);
+    box-shadow: 0 10px 28px -22px rgba(52, 52, 95, 0.28);
     transition:
       border-color 180ms ease,
       box-shadow 180ms ease,
@@ -216,7 +216,7 @@ select {
   }
 .dashboard-panel:hover {
     border-color: var(--primary);
-    box-shadow: 0 16px 34px -24px rgba(91, 70, 166, 0.34);
+    box-shadow: 0 16px 34px -24px rgba(52, 52, 95, 0.34);
   }
 .app-shell main > div > .rounded-xl,
 .app-shell main > div > .rounded-lg {
@@ -494,7 +494,7 @@ textarea {
 /* ATHAT psychology identity — indigo / violet / lavender */
 .athat-premium-shell {
   background:
-    radial-gradient(circle at 82% 0%, rgb(64 55 127 / 0.12), transparent 30rem),
+    radial-gradient(circle at 82% 0%, rgb(52 52 95 / 0.12), transparent 30rem),
     linear-gradient(180deg,  #f4f4f8 0%, var(--background) 26rem);
 }
 .athat-sidebar {
@@ -512,7 +512,7 @@ textarea {
   border: 1px solid rgb(169 146 234 / 0.34);
   background:
     radial-gradient(circle at 10% 20%, rgb(169 146 234 / 0.22), transparent 18rem),
-    linear-gradient(135deg, #111321 0%, #242743 58%, #3f3b72 100%);
+    linear-gradient(135deg, #111321 0%, #1c2233 58%, #34345f 100%);
   color: #f7f4ff;
 }
 .dashboard-shell > section:first-child::after {
@@ -528,13 +528,13 @@ textarea {
     0 0 0 3rem rgb(169 146 234 / 0.03);
 }
 .dashboard-shell > .grid > a {
-  border-color: rgb(64 55 127 / 0.22);
+  border-color: rgb(52 52 95 / 0.22);
   background: linear-gradient(145deg, var(--card), color-mix(in srgb, var(--card) 94%, #d9d0f5));
   box-shadow: 0 12px 28px -24px rgb(60 45 125 / 0.42);
 }
 .dashboard-shell > .grid > a:hover {
   transform: translateY(-2px);
-  border-color: rgb(64 55 127 / 0.52);
+  border-color: rgb(52 52 95 / 0.52);
   box-shadow: 0 18px 34px -25px rgb(60 45 125 / 0.52);
 }
 @media (max-width: 767px) {
@@ -556,8 +556,8 @@ textarea {
 .public-screen,
 .app-screen {
   background-image:
-    radial-gradient(circle at 88% 4%, rgb(102 89 162 / 0.08), transparent 24rem),
-    radial-gradient(circle at 10% 90%, rgb(64 55 127 / 0.05), transparent 28rem);
+    radial-gradient(circle at 88% 4%, rgb(85 82 127 / 0.08), transparent 24rem),
+    radial-gradient(circle at 10% 90%, rgb(52 52 95 / 0.05), transparent 28rem);
 }
 button:focus-visible,
 a:focus-visible,
@@ -567,6 +567,6 @@ select:focus-visible {
   outline-color: var(--ring);
 }
 ::selection {
-  background: rgb(102 89 162 / 0.28);
+  background: rgb(85 82 127 / 0.28);
   color: var(--foreground);
 }
