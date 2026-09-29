@@ -68,6 +68,41 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
       }
 
+      if (message.type === "ATHAT_READY_NOOR_JOBS") {
+        const response = await authFetch(
+          "/rest/v1/noor_export_jobs?select=id,source_table,source_id,payload,status,noor_reference&status=eq.ready&order=updated_at.desc&limit=200",
+        );
+        const data = await response.json().catch(() => []);
+        if (!response.ok) throw new Error(data?.message || "تعذر جلب السجلات الجاهزة لنور.");
+        sendResponse({ ok: true, data: Array.isArray(data) ? data : [] });
+        return;
+      }
+
+      if (message.type === "ATHAT_MARK_NOOR_JOB") {
+        const { id, status = "submitted", noor_reference = null } = message.payload || {};
+        if (!id) throw new Error("معرف عملية نور مفقود.");
+        const response = await authFetch(
+          `/rest/v1/noor_export_jobs?id=eq.${encodeURIComponent(id)}`,
+          {
+            method: "PATCH",
+            headers: { Prefer: "return=minimal" },
+            body: JSON.stringify({
+              status,
+              noor_reference,
+              submitted_at: status === "submitted" ? new Date().toISOString() : null,
+              last_error: null,
+              pause_reason: null,
+            }),
+          },
+        );
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.message || "تعذر تحديث حالة عملية نور.");
+        }
+        sendResponse({ ok: true });
+        return;
+      }
+
       if (message.type === "ATHAT_IMPORT_STUDENTS") {
         const rows = Array.isArray(message.payload) ? message.payload : [];
         if (!rows.length) throw new Error("لا توجد بيانات طلاب صالحة.");
