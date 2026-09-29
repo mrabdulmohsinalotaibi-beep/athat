@@ -30,12 +30,19 @@ function safeNext(url: unknown, origin: string): string {
 }
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { next?: string; mode?: ScreenMode } => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    const rawMode = search["mode"];
+    const mode: ScreenMode =
+      rawMode === "signup" || rawMode === "recover" || rawMode === "reset"
+        ? rawMode
+        : "signin";
     return {
-      next: safeNext(search.next, origin),
-      mode: (search.mode as ScreenMode) || "signin",
+      next: safeNext(search["next"], origin),
+      mode,
     };
   },
   beforeLoad: async ({ search }) => {
@@ -44,7 +51,7 @@ export const Route = createFileRoute("/auth")({
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        throw redirect({ to: search.next || "/dashboard" });
+        throw redirect({ to: search["next"] || "/dashboard" });
       }
     } catch (error) {
       // Do not let an auth-service/configuration error prevent the login page
@@ -57,7 +64,9 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { next, mode: initialMode } = Route.useSearch();
+  const search = Route.useSearch();
+  const next = search["next"] ?? "";
+  const initialMode: ScreenMode = search["mode"] ?? "signin";
 
   const [mode, setMode] = useState<ScreenMode>(initialMode);
   const [busy, setBusy] = useState<BusyState>("");
