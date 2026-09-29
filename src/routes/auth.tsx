@@ -202,7 +202,17 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
-        <div className="space-y-2 text-center">
+        <div className="text-center">
+          <img
+            src="/brand-logo.svg"
+            alt="الذات ATHAT"
+            className="mx-auto h-auto w-56 max-w-full"
+          />
+          <p className="mt-2 text-xs font-bold tracking-wide text-primary">
+            علم النفس · التوجيه الطلابي · النمو
+          </p>
+        </div>
+        <div className="space-y-2 rounded-3xl border bg-card p-6 text-center shadow-[var(--shadow-soft)]">
           <h1 className="text-3xl font-bold tracking-tight">
             {mode === "signin" && "تسجيل الدخول"}
             {mode === "signup" && "إنشاء حساب"}
@@ -217,6 +227,8 @@ function AuthPage() {
           </p>
         </div>
 
+        </div>
+
         <form
           onSubmit={
             mode === "signin"
@@ -227,7 +239,7 @@ function AuthPage() {
                   ? handleRecover
                   : handleReset
           }
-          className="space-y-4"
+          className="space-y-4 rounded-3xl border bg-card p-6 shadow-[var(--shadow-card)]"
         >
           {mode !== "reset" && (
             <div className="space-y-2">
