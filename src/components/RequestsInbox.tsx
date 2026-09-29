@@ -56,6 +56,9 @@ function usePublicRequests() {
   return useQuery({
     queryKey: ["public_requests"],
     retry: 1,
+    refetchOnWindowFocus: "always",
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
     queryFn: async (): Promise<PublicRequestRow[]> => {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
