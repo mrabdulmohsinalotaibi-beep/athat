@@ -23,6 +23,10 @@ import { GUIDANCE_LEAFLETS, GUIDANCE_LINKS, GUIDANCE_SERVICES, PUBLIC_FORMS } fr
 import { POST_KINDS, type PostKind } from "@/lib/posts";
 
 export const Route = createFileRoute("/blog/$token")({
+  validateSearch: (search: Record<string, unknown>): { school?: string } => {
+    const school = typeof search["school"] === "string" ? search["school"] : "";
+    return school ? { school } : {};
+  },
   head: () => ({
     meta: [
       { title: "مدونة الموجه الطلابي | منصة الذات" },
@@ -55,6 +59,7 @@ const SERVICE_ICONS = [GraduationCap, Brain, BriefcaseBusiness, HeartPulse];
 
 function PublicCounselorBlogPage() {
   const { token } = Route.useParams();
+  const { school: schoolFromLink } = Route.useSearch();
   const {
     data = [],
     isLoading,
@@ -93,7 +98,8 @@ function PublicCounselorBlogPage() {
     (row): row is BlogPortalRow & { title: string; body: string; slug: string; created_at: string } =>
       Boolean(row.title && row.body && row.slug && row.created_at),
   );
-  const schoolSearch = first?.public_slug ? { school: first.public_slug } : {};
+  const effectiveSchoolSlug = first?.public_slug || schoolFromLink || "";
+  const schoolSearch = effectiveSchoolSlug ? { school: effectiveSchoolSlug } : {};
 
   if (isLoading)
     return (
