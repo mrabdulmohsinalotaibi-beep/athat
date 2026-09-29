@@ -65,7 +65,13 @@ function isOverdue(item: CaseRow) {
 export function CaseCenter() {
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<"all" | "overdue">("all");
-  const { data: cases = [], isLoading } = useQuery({
+  const {
+    data: cases = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["case-center"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -89,7 +95,7 @@ export function CaseCenter() {
   );
 
   async function moveCase(id: string, status: string) {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("counseling_cases")
       .update({
         case_status: status,
@@ -146,6 +152,16 @@ export function CaseCenter() {
       {isLoading ? (
         <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
           جارٍ تحميل مركز المتابعة...
+        </div>
+      ) : isError ? (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
+          <p className="text-sm font-bold text-destructive">تعذّر تحميل مركز متابعة الحالات</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {error instanceof Error ? error.message : "حدث خطأ أثناء جلب الحالات."}
+          </p>
+          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void refetch()}>
+            إعادة المحاولة
+          </Button>
         </div>
       ) : visibleCases.length === 0 ? (
         <div className="rounded-2xl border border-dashed p-8 text-center">
