@@ -33,9 +33,9 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg" },
+      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg" },
+      { rel: "apple-touch-icon", href: "/brand-icon.svg" },
     ],
   }),
   component: Landing,
