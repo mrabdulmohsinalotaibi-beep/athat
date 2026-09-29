@@ -48,16 +48,16 @@ export async function createPdfFile({
       onclone: (clonedDocument: Document) => {
         const root = clonedDocument.documentElement;
         root.style.setProperty("--background", "#f3f0ea");
-        root.style.setProperty("--foreground", "#29241f");
-        root.style.setProperty("--card", "#fbf9f5");
-        root.style.setProperty("--border", "#cfc4b6");
-        root.style.setProperty("--primary", "#8b5736");
-        root.style.setProperty("--ring", "#9b623d");
+        root.style.setProperty("--foreground", "#211d3b");
+        root.style.setProperty("--card", "#ffffff");
+        root.style.setProperty("--border", "#dcd7eb");
+        root.style.setProperty("--primary", "#5b46a6");
+        root.style.setProperty("--ring", "#8068c7");
         root.style.setProperty("--paper", "#ffffff");
-        root.style.setProperty("--paper-foreground", "#2c2824");
+        root.style.setProperty("--paper-foreground", "#25203e");
         root.style.setProperty("--paper-muted", "#f1ede7");
         root.style.setProperty("--paper-muted-foreground", "#6e655d");
-        root.style.setProperty("--paper-border", "#cfc4b6");
+        root.style.setProperty("--paper-border", "#dcd7eb");
         root.style.setProperty("--letterhead-primary", "#3d3833");
         root.style.setProperty("--letterhead-secondary", "#a6673f");
 
@@ -131,11 +131,11 @@ export async function createPdfFile({
               const value = style[prop];
               if (!value || !/oklab|oklch|color-mix/i.test(value)) continue;
 
-              if (prop === "color") node.style.color = "#2c2824";
+              if (prop === "color") node.style.color = "#25203e";
               else if (prop === "backgroundColor") node.style.backgroundColor = "transparent";
               else if (prop === "fill") node.style.fill = "currentColor";
               else if (prop === "stroke") node.style.stroke = "currentColor";
-              else node.style.borderColor = "#cfc4b6";
+              else node.style.borderColor = "#dcd7eb";
             }
           });
       },
