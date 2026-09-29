@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Stethoscope,
   UsersRound,
+  Workflow,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/cases")({
