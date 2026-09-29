@@ -727,7 +727,7 @@ function ProgramsPage() {
 
       <div className="grid gap-3 md:grid-cols-4">
         <Stat title="إجمالي البرامج" value={programs.length} />
-        <Stat title="منفذ" value={programs.filter((p) => p.exec_status === "منفذ").length} />
+        <Stat title="منفذ" value={programs.filter((p) => ["منفذ", "مكتمل"].includes(String(p.exec_status ?? ""))).length} />
         <Stat
           title="قيد التنفيذ"
           value={programs.filter((p) => p.exec_status === "قيد التنفيذ").length}
