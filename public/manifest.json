@@ -4,7 +4,7 @@
   "description": "منصة الذات لإدارة أعمال الموجه الطلابي ودعم التوجيه النفسي والتربوي.",
   "icons": [
     {
-      "src": "/brand-icon.svg?v=20260929d",
+      "src": "/brand-icon.svg?v=20260929f",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
@@ -14,8 +14,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#070912",
-  "theme_color": "#34345F",
+  "background_color": "#3C3C3C",
+  "theme_color": "#3C3C3C",
   "dir": "rtl",
   "lang": "ar"
 }
