@@ -30,12 +30,28 @@ function PostsManager() {
   const { data: school } = useSchool();
   const [draft, setDraft] = useState<Draft | null>(null);
 
-  const { data: posts = [] } = useQuery({
+  const {
+    data: posts = [],
+    isError: postsError,
+    error: postsQueryError,
+    refetch: refetchPosts,
+  } = useQuery({
     queryKey: ["my-posts"],
     queryFn: async () => {
-      const { data: u, error: authError } = await supabase.auth.getUser();
-      if (authError || !u.user) throw authError || new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا.");
-      const { data, error } = await supabase.from("posts").select("*").eq("user_id", u.user?.id ?? "").order("created_at", { ascending: false });
+      const { data: sessionData } = await supabase.auth.getSession();
+      let userId = sessionData.session?.user.id ?? "";
+      try {
+        const { data: u, error: authError } = await supabase.auth.getUser();
+        if (!authError && u.user) userId = u.user.id;
+      } catch {
+        // Continue with the locally persisted session on transient auth failures.
+      }
+      if (!userId) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا.");
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -80,6 +96,23 @@ function PostsManager() {
       </div>
 
       <PublicLinkCard />
+      {postsError && (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p className="font-bold text-destructive">تعذّر تحميل المنشورات</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {postsQueryError instanceof Error ? postsQueryError.message : "حدث خطأ أثناء جلب المنشورات."}
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => void refetchPosts()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
 
       {draft && (
         <div className="space-y-4 rounded-2xl border bg-card p-5 shadow-sm">
