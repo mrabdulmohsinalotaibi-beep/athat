@@ -103,7 +103,13 @@ export function RecordAttachmentsDialog({
     };
   }, [pendingPreview]);
   const [preview, setPreview] = useState<{ url: string; kind: string; name: string } | null>(null);
-  const { data: items = [], isLoading } = useRecordAttachments(open ? recordId : null);
+  const {
+    data: items = [],
+    isLoading,
+    isError,
+    error: attachmentsError,
+    refetch: refetchAttachments,
+  } = useRecordAttachments(open ? recordId : null);
 
   async function upload(file: File) {
     if (!recordId) return;
@@ -235,7 +241,17 @@ export function RecordAttachmentsDialog({
           </div>
 
           {isLoading && <p className="text-sm text-muted-foreground">جارٍ تحميل المرفقات...</p>}
-          {!isLoading && items.length === 0 && (
+          {isError && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs">
+              <span className="text-destructive">
+                {attachmentsError instanceof Error ? attachmentsError.message : "تعذّر تحميل المرفقات."}
+              </span>
+              <Button type="button" variant="ghost" size="sm" onClick={() => void refetchAttachments()}>
+                إعادة المحاولة
+              </Button>
+            </div>
+          )}
+          {!isLoading && !isError && items.length === 0 && (
             <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">لا توجد مرفقات لهذا السجل بعد.</p>
           )}
 
