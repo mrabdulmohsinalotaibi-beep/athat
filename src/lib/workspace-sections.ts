@@ -15,6 +15,7 @@ import {
   ExternalLink,
   UsersRound,
   Wrench,
+  Inbox,
 } from "lucide-react";
 
 export type WorkspaceSectionItem = {
@@ -74,6 +75,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
       { to: "/behavior", label: "السلوك والمتابعة", icon: ShieldAlert },
       { to: "/referrals", label: "الإحالات", icon: ExternalLink },
       { to: "/committees", label: "اللجان والاجتماعات", icon: UsersRound },
+      { to: "/requests", label: "الاستشارات الواردة", icon: Inbox },
       { to: "/toolkit", label: "النماذج والأدوات", icon: Wrench },
       { to: "/messages", label: "الآراء والرسائل", icon: HeartHandshake },
       { to: "/weekly-poster", label: "اللوحة الأسبوعية", icon: Sparkles },
