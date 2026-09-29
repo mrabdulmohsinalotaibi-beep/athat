@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  FileText,
   UserRound,
   Users,
 } from "lucide-react";
@@ -29,9 +30,9 @@ function isPathActive(pathname: string, route: string) {
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
   { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases"] },
-  { to: "/interviews", label: "الجلسات", icon: CalendarDays, activeRoutes: ["/interviews", "/calendar"] },
-  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/evidences", "/reports"] },
-  { to: "/settings", label: "الإدارة", icon: Settings, activeRoutes: ["/settings", "/integrations", "/profile"] },
+  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/evidences"] },
+  { to: "/reports", label: "التقارير", icon: FileText, activeRoutes: ["/reports"] },
+  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/integrations", "/profile", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/messages", "/weekly-poster", "/posts", "/requests"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -89,11 +90,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="app-shell app-screen flex min-h-screen bg-background">
+    <div className="app-shell app-screen athat-premium-shell flex min-h-screen bg-background">
       {/* القائمة الجانبية */}
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-hidden border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
+          "athat-sidebar fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-hidden border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -209,7 +210,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
-        <header className="sticky top-0 z-20 border-b-2 border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
+        <header className="athat-topbar sticky top-0 z-20 border-b border-primary/20 bg-card/95 shadow-sm backdrop-blur-xl">
           <div className="grid min-h-18 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <Button
