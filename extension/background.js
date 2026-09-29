@@ -71,14 +71,53 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (message.type === "ATHAT_IMPORT_STUDENTS") {
         const rows = Array.isArray(message.payload) ? message.payload : [];
         if (!rows.length) throw new Error("لا توجد بيانات طلاب صالحة.");
-        const response = await authFetch("/rest/v1/students?on_conflict=national_id", {
+
+        const ids = rows
+          .map((row) => String(row.national_id || "").replace(/\D/g, ""))
+          .filter((id) => id.length === 10);
+
+        const uniqueIds = [...new Set(ids)];
+        const existingResponse = await authFetch(
+          `/rest/v1/students?select=national_id&national_id=in.(${uniqueIds.map(encodeURIComponent).join(",")})`,
+        );
+        const existingData = await existingResponse.json().catch(() => []);
+        if (!existingResponse.ok) {
+          throw new Error(existingData?.message || "تعذر التحقق من الطلاب الموجودين.");
+        }
+
+        const existingIds = new Set(
+          (Array.isArray(existingData) ? existingData : [])
+            .map((row) => String(row.national_id || ""))
+            .filter(Boolean),
+        );
+
+        const seen = new Set();
+        const fresh = rows.filter((row) => {
+          const id = String(row.national_id || "").replace(/\D/g, "");
+          if (id.length !== 10 || existingIds.has(id) || seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+
+        if (!fresh.length) {
+          sendResponse({ ok: true, data: [], inserted: 0, skipped: rows.length });
+          return;
+        }
+
+        const response = await authFetch("/rest/v1/students", {
           method: "POST",
-          headers: { Prefer: "resolution=ignore-duplicates,return=representation" },
-          body: JSON.stringify(rows),
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify(fresh),
         });
         const data = await response.json().catch(() => []);
         if (!response.ok) throw new Error(data?.message || "تعذر استيراد الطلاب.");
-        sendResponse({ ok: true, data });
+
+        sendResponse({
+          ok: true,
+          data,
+          inserted: fresh.length,
+          skipped: rows.length - fresh.length,
+        });
         return;
       }
 
