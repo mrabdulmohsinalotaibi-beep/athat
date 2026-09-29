@@ -4,12 +4,16 @@ import { PublicLayout } from "@/components/PublicLayout";
 import { PublicRequestForm } from "@/components/PublicRequestForm";
 
 export const Route = createFileRoute("/forms/referral")({
-  validateSearch: (search: Record<string, unknown>): { school?: string; portal?: string } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { school?: string; portal?: string; feedback?: string } => {
     const school = typeof search["school"] === "string" ? search["school"] : "";
     const portal = typeof search["portal"] === "string" ? search["portal"] : "";
+    const feedback = typeof search["feedback"] === "string" ? search["feedback"] : "";
     return {
       ...(school ? { school } : {}),
       ...(portal ? { portal } : {}),
+      ...(feedback ? { feedback } : {}),
     };
   },
   head: () => ({
@@ -28,7 +32,7 @@ export const Route = createFileRoute("/forms/referral")({
 });
 
 function ReferralFormPage() {
-  const { school, portal } = Route.useSearch();
+  const { school, portal, feedback } = Route.useSearch();
   return (
     <PublicLayout
       schoolSlug={school}
@@ -39,6 +43,7 @@ function ReferralFormPage() {
         <PublicRequestForm
           schoolSlug={school}
           portalToken={portal}
+          feedbackToken={feedback}
           kind="إحالة طالب"
           heading="بيانات الإحالة"
           intro="كلما كانت الملاحظات أدق، كان التدخل الإرشادي أسرع وأكثر فاعلية."
