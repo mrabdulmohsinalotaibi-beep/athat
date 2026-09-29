@@ -47,19 +47,19 @@ export async function createPdfFile({
         node instanceof HTMLElement && node.dataset["pdfExclude"] === "true",
       onclone: (clonedDocument: Document) => {
         const root = clonedDocument.documentElement;
-        root.style.setProperty("--background", "#f3f0ea");
-        root.style.setProperty("--foreground", "#211d3b");
+        root.style.setProperty("--background", "#f7f5f1");
+        root.style.setProperty("--foreground", "#2f2f2f");
         root.style.setProperty("--card", "#ffffff");
-        root.style.setProperty("--border", "#dcd7eb");
-        root.style.setProperty("--primary", "#5b46a6");
-        root.style.setProperty("--ring", "#8068c7");
+        root.style.setProperty("--border", "#d8d2c8");
+        root.style.setProperty("--primary", "#3c3c3c");
+        root.style.setProperty("--ring", "#3c3c3c");
         root.style.setProperty("--paper", "#ffffff");
-        root.style.setProperty("--paper-foreground", "#25203e");
-        root.style.setProperty("--paper-muted", "#f1ede7");
-        root.style.setProperty("--paper-muted-foreground", "#6e655d");
-        root.style.setProperty("--paper-border", "#dcd7eb");
-        root.style.setProperty("--letterhead-primary", "#3d3833");
-        root.style.setProperty("--letterhead-secondary", "#a6673f");
+        root.style.setProperty("--paper-foreground", "#2f2f2f");
+        root.style.setProperty("--paper-muted", "#f3efe8");
+        root.style.setProperty("--paper-muted-foreground", "#6a6762");
+        root.style.setProperty("--paper-border", "#d8d2c8");
+        root.style.setProperty("--letterhead-primary", "#3c3c3c");
+        root.style.setProperty("--letterhead-secondary", "#8a8175");
 
         const target = clonedDocument.querySelector<HTMLElement>(
           '[data-pdf-capture-target="true"]',
@@ -79,7 +79,7 @@ export async function createPdfFile({
           const points = new Set<number>();
           target
             .querySelectorAll<HTMLElement>(
-              '.official-letterhead, [data-pdf-block="true"], tr, .final-signatures',
+              '.official-letterhead, [data-pdf-block="true"], tr, .final-signatures, .official-document-footer',
             )
             .forEach((node) => {
               const rect = node.getBoundingClientRect();
@@ -100,8 +100,10 @@ export async function createPdfFile({
             background-color: rgba(255,255,255,.95) !important;
           }
           [data-pdf-capture-target="true"] .official-document-title {
-            background-color: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
+            color: #3c3c3c !important;
+          }
+          [data-pdf-capture-target="true"] .official-document-footer {
+            margin-top: auto !important;
           }
         `;
         clonedDocument.head.appendChild(safeStyle);
@@ -131,11 +133,11 @@ export async function createPdfFile({
               const value = style[prop];
               if (!value || !/oklab|oklch|color-mix/i.test(value)) continue;
 
-              if (prop === "color") node.style.color = "#25203e";
+              if (prop === "color") node.style.color = "#2f2f2f";
               else if (prop === "backgroundColor") node.style.backgroundColor = "transparent";
               else if (prop === "fill") node.style.fill = "currentColor";
               else if (prop === "stroke") node.style.stroke = "currentColor";
-              else node.style.borderColor = "#dcd7eb";
+              else node.style.borderColor = "#d8d2c8";
             }
           });
       },
