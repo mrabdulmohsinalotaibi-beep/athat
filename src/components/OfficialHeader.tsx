@@ -52,7 +52,6 @@ export function OfficialHeader({
             className="flex min-h-24 w-full flex-col items-center justify-center text-center leading-6"
             dir="rtl"
           >
-            <p>التاريخ: {todayDate()}</p>
             <p>العام الدراسي: {school?.academic_year || "—"}</p>
             <p>الفصل الدراسي: {school?.semester || "—"}</p>
             <p>نوع المستند: {reportType || title}</p>
