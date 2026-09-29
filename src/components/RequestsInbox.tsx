@@ -97,13 +97,13 @@ function feedbackToRequest(row: {
     urgency: parseTaggedMessage(row.message, "الأهمية") || "عادي",
     preferred_time: parseTaggedMessage(row.message, "الوقت المفضل"),
     details: row.message
-      .replace(/^\\[نوع الطلب\\].*$/gm, "")
-      .replace(/^\\[الموضوع\\].*$/gm, "")
-      .replace(/^\\[الطالب\\].*$/gm, "")
-      .replace(/^\\[الصف\\].*$/gm, "")
-      .replace(/^\\[الفصل\\].*$/gm, "")
-      .replace(/^\\[الأهمية\\].*$/gm, "")
-      .replace(/^\\[الوقت المفضل\\].*$/gm, "")
+      .replace(/^\[نوع الطلب\].*$/gm, "")
+      .replace(/^\[الموضوع\].*$/gm, "")
+      .replace(/^\[الطالب\].*$/gm, "")
+      .replace(/^\[الصف\].*$/gm, "")
+      .replace(/^\[الفصل\].*$/gm, "")
+      .replace(/^\[الأهمية\].*$/gm, "")
+      .replace(/^\[الوقت المفضل\].*$/gm, "")
       .trim(),
     is_anonymous: row.sender_name === "مجهول",
     status: feedbackStatusToRequest(row.status),
