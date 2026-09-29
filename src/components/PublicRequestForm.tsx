@@ -26,6 +26,7 @@ export interface PublicRequestFormProps {
   showStudentFields?: boolean;
   showPreferredTime?: boolean;
   privacyNote: string;
+  schoolSlug?: string;
 }
 
 const URGENCY_OPTIONS = ["عادي", "مهم", "عاجل"] as const;
@@ -45,6 +46,7 @@ export function PublicRequestForm({
   showStudentFields = true,
   showPreferredTime = false,
   privacyNote,
+  schoolSlug,
 }: PublicRequestFormProps) {
   const [anonymous, setAnonymous] = useState(false);
   const [requestNo, setRequestNo] = useState<string | null>(null);
@@ -64,6 +66,7 @@ export function PublicRequestForm({
         p_urgency: values["urgency"] ?? "عادي",
         p_preferred_time: values["preferred_time"] ?? null,
         p_is_anonymous: anonymous,
+        p_slug: schoolSlug?.trim() || null,
       });
       if (error) throw error;
       return typeof data === "string" ? data : null;
