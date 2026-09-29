@@ -57,16 +57,34 @@ export function UserProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  const { data: user, isLoading: userLoading } = useQuery({
+  const {
+    data: user,
+    isLoading: userLoading,
+    isError: userError,
+    error: userQueryError,
+    refetch: refetchUser,
+  } = useQuery({
     queryKey: ["auth-user"],
     queryFn: async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) throw error || new Error("لم يتم العثور على جلسة دخول.");
-      return data.user;
+      const { data: sessionData } = await supabase.auth.getSession();
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (!error && data.user) return data.user;
+      } catch {
+        // Keep a locally persisted valid session during a transient auth/network failure.
+      }
+      if (sessionData.session?.user) return sessionData.session.user;
+      throw new Error("لم يتم العثور على جلسة دخول.");
     },
   });
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    isError: profileError,
+    error: profileQueryError,
+    refetch: refetchProfile,
+  } = useQuery({
     queryKey: ["user-profile", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
@@ -181,6 +199,32 @@ export function UserProfilePage() {
     return (
       <div className="rounded-3xl border bg-card p-8 text-center text-sm text-muted-foreground">
         جارٍ تحميل الملف الشخصي...
+      </div>
+    );
+  }
+
+  if (userError || profileError) {
+    const message =
+      userQueryError instanceof Error
+        ? userQueryError.message
+        : profileQueryError instanceof Error
+          ? profileQueryError.message
+          : "تعذّر تحميل بيانات الحساب.";
+
+    return (
+      <div className="mx-auto max-w-3xl rounded-3xl border border-destructive/30 bg-card p-8 text-center">
+        <h2 className="text-lg font-black text-destructive">تعذّر تحميل الحساب</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+        <Button
+          type="button"
+          className="mt-5"
+          onClick={() => {
+            void refetchUser();
+            void refetchProfile();
+          }}
+        >
+          إعادة المحاولة
+        </Button>
       </div>
     );
   }
