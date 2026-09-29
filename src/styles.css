@@ -478,6 +478,46 @@ textarea {
   min-height: 277mm;
   display: flex;
   flex-direction: column;
+  direction: rtl;
+  font-family: "Cairo Variable", "Cairo", Tahoma, Arial, sans-serif;
+  font-kerning: normal;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  letter-spacing: 0;
+  word-spacing: 0;
+}
+.record-pdf-document,
+.record-pdf-document * {
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+}
+.record-pdf-document p,
+.record-pdf-document li,
+.record-pdf-document td,
+.record-pdf-document th,
+.record-pdf-document dd,
+.record-pdf-document dt {
+  direction: rtl;
+  unicode-bidi: plaintext;
+  word-break: normal !important;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+.record-pdf-document table {
+  direction: rtl;
+}
+.record-pdf-document .official-document-title,
+.record-pdf-document .official-title-band,
+.record-pdf-document .official-footer-line,
+.record-pdf-document .official-ministry-block {
+  unicode-bidi: isolate;
+}
+.record-pdf-document .official-document-title {
+  line-height: 1.65;
+}
+.record-pdf-document .official-authority-block,
+.record-pdf-document .official-document-meta {
+  line-height: 1.9;
 }
 .record-pdf-document > .official-letterhead:first-child,
 .record-pdf-document > div:first-child > .official-letterhead:first-child {
@@ -505,7 +545,11 @@ textarea {
 @media print {
   .record-pdf-document {
     font-size: 10.5pt;
-    line-height: 1.55;
+    line-height: 1.7;
+    direction: rtl;
+    font-family: "Cairo Variable", "Cairo", Tahoma, Arial, sans-serif !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
   }
   .record-pdf-document h1,
   .record-pdf-document h2,
