@@ -82,7 +82,7 @@ function StatCard({
 export function RequestsInbox() {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
-  const { data: requests = [], isLoading } = usePublicRequests();
+  const { data: requests = [], isLoading, isError, error, refetch } = usePublicRequests();
   const [kindFilter, setKindFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -173,6 +173,23 @@ export function RequestsInbox() {
 
   return (
     <div className="space-y-6">
+      {isError && (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p className="font-bold text-destructive">تعذّر تحميل صندوق الطلبات</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {error instanceof Error ? error.message : "تعذّر الاتصال ببيانات الطلبات."}
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="إجمالي الطلبات" value={stats.total} hint="الواردة من الاستمارات العامة" />
         <StatCard label="طلبات جديدة" value={stats.fresh} hint="بانتظار المراجعة" tone="amber" />
