@@ -208,15 +208,15 @@ select {
     background: transparent;
   }
 .dashboard-panel {
-    box-shadow: 0 10px 28px -22px color-mix(in oklab, var(--primary) 45%, transparent);
+    box-shadow: 0 10px 28px -22px rgba(139, 87, 54, 0.28);
     transition:
       border-color 180ms ease,
       box-shadow 180ms ease,
       transform 180ms ease;
   }
 .dashboard-panel:hover {
-    border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
-    box-shadow: 0 16px 34px -24px color-mix(in oklab, var(--primary) 55%, transparent);
+    border-color: var(--primary);
+    box-shadow: 0 16px 34px -24px rgba(139, 87, 54, 0.34);
   }
 .app-shell main > div > .rounded-xl,
 .app-shell main > div > .rounded-lg {
@@ -224,7 +224,7 @@ select {
   }
 .app-shell main a.rounded-xl,
 .app-shell main .rounded-xl.border.bg-card {
-    border-color: color-mix(in oklab, var(--border) 86%, var(--primary));
+    border-color: var(--border);
   }
 .official-letterhead {
     position: relative;
