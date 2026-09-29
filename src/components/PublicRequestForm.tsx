@@ -28,6 +28,7 @@ export interface PublicRequestFormProps {
   showPreferredTime?: boolean;
   privacyNote: string;
   schoolSlug?: string | undefined;
+  portalToken?: string | undefined;
 }
 
 const URGENCY_OPTIONS = ["عادي", "مهم", "عاجل"] as const;
@@ -48,6 +49,7 @@ export function PublicRequestForm({
   showPreferredTime = false,
   privacyNote,
   schoolSlug,
+  portalToken,
 }: PublicRequestFormProps) {
   const [anonymous, setAnonymous] = useState(false);
   const [requestNo, setRequestNo] = useState<string | null>(null);
@@ -69,14 +71,34 @@ export function PublicRequestForm({
         p_preferred_time: values["preferred_time"] ?? null,
         p_is_anonymous: anonymous,
         p_slug: schoolSlug?.trim() || null,
+        p_portal_token: portalToken?.trim() || null,
       };
 
-      const { data, error } = await supabase.rpc("submit_public_request", args);
+      const { data, error } = await supabase.rpc("submit_public_request_v2", args);
       if (!error) return typeof data === "string" ? data : null;
 
       const missingRpc =
         /Could not find the function|schema cache|PGRST202/i.test(error.message);
       if (!missingRpc) throw error;
+
+      // Backward-compatible fallback while the new RPC is propagating.
+      const legacyArgs = {
+        p_kind: args.p_kind,
+        p_details: args.p_details,
+        p_requester_name: args.p_requester_name,
+        p_requester_role: args.p_requester_role,
+        p_requester_contact: args.p_requester_contact,
+        p_student_name: args.p_student_name,
+        p_student_grade: args.p_student_grade,
+        p_classroom: args.p_classroom,
+        p_topic: args.p_topic,
+        p_urgency: args.p_urgency,
+        p_preferred_time: args.p_preferred_time,
+        p_is_anonymous: args.p_is_anonymous,
+        p_slug: args.p_slug,
+      };
+      const legacy = await supabase.rpc("submit_public_request", legacyArgs);
+      if (!legacy.error) return typeof legacy.data === "string" ? legacy.data : null;
 
       const fallback = await submitPublicRequestFallback({
         data: {
@@ -96,6 +118,7 @@ export function PublicRequestForm({
           preferredTime: args.p_preferred_time,
           isAnonymous: anonymous,
           schoolSlug: args.p_slug,
+          portalToken: args.p_portal_token,
         },
       });
 
@@ -120,7 +143,7 @@ export function PublicRequestForm({
     },
   });
 
-  if (!schoolSlug?.trim()) {
+  if (!schoolSlug?.trim() && !portalToken?.trim()) {
     return (
       <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 text-center">
         <ShieldCheck className="mx-auto size-10 text-amber-700" />
