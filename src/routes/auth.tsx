@@ -18,14 +18,17 @@ type BusyState = "" | "email" | "recover" | "reset";
  * يمنع Open Redirect عبر: //evil.com، https:evil.com، /\evil.com، %0d، إلخ.
  */
 function safeNext(url: unknown, origin: string): string {
-  if (typeof url !== "string" || url.length === 0) return "/";
+  if (typeof url !== "string" || url.length === 0) return "";
   try {
     const parsed = new URL(url, origin);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "/";
-    if (parsed.origin !== origin) return "/";
-    return parsed.pathname + parsed.search + parsed.hash;
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
+    if (parsed.origin !== origin) return "";
+    const destination = parsed.pathname + parsed.search + parsed.hash;
+    // Never redirect back to the auth screens after a successful sign-in.
+    if (parsed.pathname === "/auth" || parsed.pathname === "/login") return "";
+    return destination;
   } catch {
-    return "/";
+    return "";
   }
 }
 
@@ -50,17 +53,19 @@ export const Route = createFileRoute("/auth")({
     // away from the reset screen before the user has chosen a new password.
     if (search["mode"] === "reset") return;
 
-    // Keep the sign-in route accessible even when Supabase is temporarily
-    // unavailable (for example, in an unconfigured preview environment).
+    // Read auth first, then redirect outside the try/catch. This avoids
+    // accidentally swallowing TanStack Router's redirect object.
+    let hasSession = false;
     try {
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        throw redirect({ to: search["next"] || "/dashboard" });
-      }
-    } catch (error) {
-      // Do not let an auth-service/configuration error prevent the login page
-      // from rendering; the form will surface the actionable auth error.
-      if (error && typeof error === "object" && "isRedirect" in error) throw error;
+      hasSession = Boolean(data.session?.user);
+    } catch {
+      // Keep the sign-in page available during temporary auth/network errors.
+      return;
+    }
+
+    if (hasSession) {
+      throw redirect({ to: search["next"] || "/dashboard" });
     }
   },
   component: AuthPage,
