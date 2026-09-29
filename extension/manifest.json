@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Athat Bridge — نور ومدرستي",
+  "version": "0.1.0",
+  "description": "جسر منصة الذات داخل صفحات نور ومدرستي للمزامنة المصرح بها بواسطة المستخدم.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://noor.moe.gov.sa/*",
+    "https://schools.madrasati.sa/*",
+    "https://*.supabase.co/*"
+  ],
+  "action": {
+    "default_title": "Athat Bridge",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://noor.moe.gov.sa/*",
+        "https://schools.madrasati.sa/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
