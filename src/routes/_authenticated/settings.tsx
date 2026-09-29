@@ -146,7 +146,7 @@ function SettingsPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const { data: lookups = [] } = useQuery({
+  const { data: lookups = [], isError: lookupsError, error: lookupsQueryError, refetch: refetchLookups } = useQuery({
     queryKey: ["lookups"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -211,6 +211,23 @@ function SettingsPage() {
         <h1 className="text-2xl font-extrabold">بيانات المدرسة والمستندات</h1>
         <p className="mt-1 text-sm text-muted-foreground">هذه البيانات هي المصدر الموحد للكليشة الرسمية في جميع ملفات PDF وتقارير A4.</p>
       </div>
+
+      {lookupsError && (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p className="font-bold text-destructive">تعذّر تحميل القوائم المخصصة</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lookupsQueryError instanceof Error ? lookupsQueryError.message : "حدث خطأ أثناء جلب القوائم."}
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => void refetchLookups()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
 
       <section className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-1 font-bold">بيانات المدرسة والموجه</h2>
