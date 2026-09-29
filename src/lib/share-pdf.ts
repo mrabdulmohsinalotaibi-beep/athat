@@ -17,23 +17,6 @@ function safeFilename(value: string) {
   );
 }
 
-function collectBreakPoints(element: HTMLElement, canvasScale: number) {
-  const rootRect = element.getBoundingClientRect();
-  const points = new Set<number>();
-
-  element
-    .querySelectorAll<HTMLElement>(
-      '.official-letterhead, [data-pdf-block="true"], tr, .final-signatures',
-    )
-    .forEach((node) => {
-      const rect = node.getBoundingClientRect();
-      const bottom = Math.round((rect.bottom - rootRect.top) * canvasScale);
-      if (bottom > 0) points.add(bottom);
-    });
-
-  return [...points].sort((a, b) => a - b);
-}
-
 /**
  * Generates an A4 PDF from an official document element.
  *
@@ -49,6 +32,8 @@ export async function createPdfFile({
   const scale = Math.min(2, window.devicePixelRatio || 1);
   const previousCaptureFlag = element.dataset.pdfCaptureTarget;
   element.dataset.pdfCaptureTarget = "true";
+  let clonedTargetWidth = 0;
+  let clonedBreakPoints: number[] = [];
 
   try {
     const renderOptions: NonNullable<Parameters<typeof html2canvas>[1]> = {
@@ -88,6 +73,20 @@ export async function createPdfFile({
           target.style.margin = "0";
           target.style.boxShadow = "none";
           target.style.overflow = "visible";
+
+          const targetRect = target.getBoundingClientRect();
+          clonedTargetWidth = Math.max(1, targetRect.width);
+          const points = new Set<number>();
+          target
+            .querySelectorAll<HTMLElement>(
+              '.official-letterhead, [data-pdf-block="true"], tr, .final-signatures',
+            )
+            .forEach((node) => {
+              const rect = node.getBoundingClientRect();
+              const bottom = Math.round(rect.bottom - targetRect.top);
+              if (bottom > 0) points.add(bottom);
+            });
+          clonedBreakPoints = [...points].sort((a, b) => a - b);
         }
 
         const safeStyle = clonedDocument.createElement("style");
@@ -175,13 +174,15 @@ export async function createPdfFile({
         imageHeight,
       );
     } else {
-      const rootRect = element.getBoundingClientRect();
-      const canvasScale = canvas.width / Math.max(1, rootRect.width);
+      const cloneToCanvasScale =
+        canvas.width / Math.max(1, clonedTargetWidth || canvas.width);
       const pageCapacityPx = Math.max(
         1,
         Math.floor((contentHeight * canvas.width) / contentWidth),
       );
-      const breakPoints = collectBreakPoints(element, canvasScale);
+      const breakPoints = clonedBreakPoints.map((point) =>
+        Math.round(point * cloneToCanvasScale),
+      );
 
       let sourceY = 0;
       let pageIndex = 0;
