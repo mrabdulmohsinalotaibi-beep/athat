@@ -18,7 +18,11 @@ export const Route = createFileRoute("/_authenticated/interviews")({
 });
 
 function InterviewsPage() {
-  const { data: interviews = [] } = useQuery({
+  const {
+    data: interviews = [],
+    isError: summaryError,
+    refetch: refetchSummary,
+  } = useQuery({
     queryKey: ["interviews-followup-hub"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,10 +40,10 @@ function InterviewsPage() {
     const date = String(row.followup_at ?? "").slice(0, 10);
     return date && date <= today;
   });
-  const upcoming = interviews
+  const upcomingAll = interviews
     .filter((row) => String(row.followup_at ?? "").slice(0, 10) > today)
-    .sort((a, b) => String(a.followup_at).localeCompare(String(b.followup_at)))
-    .slice(0, 5);
+    .sort((a, b) => String(a.followup_at).localeCompare(String(b.followup_at)));
+  const upcoming = upcomingAll.slice(0, 5);
   const withRecommendations = interviews.filter((row) => String(row.recommendations ?? "").trim()).length;
 
   return (
@@ -57,6 +61,15 @@ function InterviewsPage() {
           <Button asChild size="sm" variant="outline"><Link to="/students"><Users className="size-4" /> ملفات الطلاب</Link></Button>
         </div>
       </section>
+
+      {summaryError && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+          <span className="text-amber-800">تعذّر تحميل ملخص الجلسات، لكن سجل الجلسات ما زال متاحًا.</span>
+          <Button type="button" variant="ghost" size="sm" onClick={() => void refetchSummary()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat title="جلسات هذا الشهر" value={monthSessions.length} icon={<MessageSquare className="size-4" />} />
