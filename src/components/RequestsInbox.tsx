@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Inbox, Mail, MessageCircle, ShieldAlert, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,7 +20,14 @@ import { normalizeSaudiPhone, shareOnWhatsApp } from "@/lib/whatsapp";
 
 
 export const REQUEST_KINDS = ["استشارة فردية", "إحالة طالب", "إبلاغ سري"] as const;
-export const REQUEST_STATUSES = ["جديد", "قيد المعالجة", "تم التحويل لحالة", "مغلق"] as const;
+export const REQUEST_STATUSES = [
+  "جديد",
+  "قيد المعالجة",
+  "تم التحويل لمقابلة",
+  "تم التحويل لإحالة",
+  "تم التحويل لحالة",
+  "مغلق",
+] as const;
 
 export interface PublicRequestRow {
   id: string;
@@ -37,6 +45,8 @@ export interface PublicRequestRow {
   details: string;
   is_anonymous: boolean;
   status: string;
+  linked_table: string | null;
+  linked_record_id: string | null;
   counselor_notes: string | null;
   handled_at: string | null;
   created_at: string;
@@ -113,36 +123,111 @@ export function RequestsInbox() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const convertToCase = useMutation({
+  const convertToRecord = useMutation({
     mutationFn: async (request: PublicRequestRow) => {
-      const { error } = await supabase.from("counseling_cases").insert({
-        student_name: request.student_name || request.requester_name || "طالب",
-        domain: request.kind === "إبلاغ سري" ? "سلوكي" : "إنمائي",
-        referral_source:
-          request.kind === "إحالة طالب"
-            ? "المعلم"
-            : request.requester_role === "ولي أمر"
-              ? "ولي الأمر"
-              : "الطالب نفسه",
-        case_status: "مفتوحة",
-        priority:
-          request.urgency === "عاجل" ? "عالية" : request.urgency === "مهم" ? "متوسطة" : "منخفضة",
-        summary: `${request.topic ? `${request.topic} — ` : ""}${request.details}`,
-        opened_at: new Date().toISOString().slice(0, 10),
-        notes: `محوّلة من ${request.kind} رقم ${request.request_no ?? ""}`.trim(),
-      } as never);
-      if (error) throw error;
+      if (request.linked_record_id) {
+        throw new Error("هذا الطلب مرتبط بسجل داخلي بالفعل.");
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      let linkedTable: "interviews" | "referrals" | "counseling_cases";
+      let linkedRecordId = "";
+      let status = "";
+
+      if (request.kind === "استشارة فردية") {
+        const { data, error } = await supabase
+          .from("interviews")
+          .insert({
+            student_name: request.student_name || request.requester_name || "طالب",
+            participant: request.requester_name,
+            topic: request.topic || "استشارة فردية",
+            itype: request.requester_role || "استشارة فردية",
+            idate: today,
+            notes: [
+              request.details,
+              request.preferred_time ? `الوقت المفضل: ${request.preferred_time}` : "",
+              `وارد من طلب رقم ${request.request_no ?? "—"}`,
+            ]
+              .filter(Boolean)
+              .join("\n"),
+            recommendations: request.counselor_notes,
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        linkedTable = "interviews";
+        linkedRecordId = data.id;
+        status = "تم التحويل لمقابلة";
+      } else if (request.kind === "إحالة طالب") {
+        const { data, error } = await supabase
+          .from("referrals")
+          .insert({
+            student_name: request.student_name || request.requester_name || "طالب",
+            referral_date: today,
+            reason: [request.topic, request.details].filter(Boolean).join(" — "),
+            referred_to: "التوجيه الطلابي",
+            status: "جديدة",
+            notes: [
+              request.requester_name ? `المحيل: ${request.requester_name}` : "",
+              request.requester_role ? `الصفة: ${request.requester_role}` : "",
+              `وارد من طلب رقم ${request.request_no ?? "—"}`,
+            ]
+              .filter(Boolean)
+              .join("\n"),
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        linkedTable = "referrals";
+        linkedRecordId = data.id;
+        status = "تم التحويل لإحالة";
+      } else {
+        const { data, error } = await supabase
+          .from("counseling_cases")
+          .insert({
+            student_name: request.student_name || "طالب غير محدد",
+            domain: "سلوكي",
+            referral_source: request.is_anonymous
+              ? "بلاغ سري"
+              : request.requester_role || "بلاغ سري",
+            case_status: "مفتوحة",
+            priority:
+              request.urgency === "عاجل"
+                ? "عالية"
+                : request.urgency === "مهم"
+                  ? "متوسطة"
+                  : "منخفضة",
+            summary: [request.topic, request.details].filter(Boolean).join(" — "),
+            opened_at: today,
+            notes: `محوّلة من بلاغ رقم ${request.request_no ?? "—"}`,
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        linkedTable = "counseling_cases";
+        linkedRecordId = data.id;
+        status = "تم التحويل لحالة";
+      }
+
       const { error: statusError } = await supabase
         .from("public_requests")
-        .update({ status: "تم التحويل لحالة", handled_at: new Date().toISOString() } as never)
+        .update({
+          status,
+          handled_at: new Date().toISOString(),
+          linked_table: linkedTable,
+          linked_record_id: linkedRecordId,
+        })
         .eq("id", request.id);
+
       if (statusError) throw statusError;
+
+      return { linkedTable, linkedRecordId, status };
     },
-    onSuccess: () => {
+    onSuccess: ({ linkedTable }) => {
       queryClient.invalidateQueries({ queryKey: ["public_requests"] });
-      queryClient.invalidateQueries({ queryKey: ["counseling_cases"] });
+      queryClient.invalidateQueries({ queryKey: [linkedTable] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("تم تحويل الطلب إلى حالة إرشادية");
+      toast.success("تم إنشاء السجل وربطه بالطلب");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -172,6 +257,19 @@ export function RequestsInbox() {
     [requests],
   );
 
+
+  function linkedRoute(request: PublicRequestRow) {
+    if (request.linked_table === "interviews") return "/interviews";
+    if (request.linked_table === "referrals") return "/referrals";
+    if (request.linked_table === "counseling_cases") return "/cases";
+    return null;
+  }
+
+  function conversionLabel(request: PublicRequestRow) {
+    if (request.kind === "استشارة فردية") return "تحويل إلى مقابلة إرشادية";
+    if (request.kind === "إحالة طالب") return "تحويل إلى سجل إحالة";
+    return "تحويل إلى حالة إرشادية";
+  }
 
   function replyText(request: PublicRequestRow) {
     return [
@@ -461,14 +559,22 @@ export function RequestsInbox() {
                 <Button type="submit" disabled={update.isPending}>
                   حفظ التحديث
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={convertToCase.isPending}
-                  onClick={() => convertToCase.mutate(selected)}
-                >
-                  <Send className="size-4" /> تحويل إلى حالة إرشادية
-                </Button>
+                {selected.linked_record_id && linkedRoute(selected) ? (
+                  <Button asChild type="button" variant="outline">
+                    <Link to={linkedRoute(selected)!}>
+                      <Send className="size-4" /> فتح السجل المرتبط
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={convertToRecord.isPending}
+                    onClick={() => convertToRecord.mutate(selected)}
+                  >
+                    <Send className="size-4" /> {conversionLabel(selected)}
+                  </Button>
+                )}
               </div>
             </form>
           </div>
