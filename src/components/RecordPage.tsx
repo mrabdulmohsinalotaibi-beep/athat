@@ -774,7 +774,9 @@ export function RecordPage({
                   documentRow["case_no"] ??
                   documentRow["program_no"] ??
                   documentRow["referral_no"] ??
+                  documentRow["report_no"] ??
                   documentRow["meeting_no"] ??
+                  documentRow["seq"] ??
                   documentRow["student_no"] ??
                   documentRow["id"] ??
                   "",
