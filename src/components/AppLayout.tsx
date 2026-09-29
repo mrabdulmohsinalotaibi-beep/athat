@@ -101,7 +101,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-0.5 ring-2 ring-sidebar-primary/40">
-              <img src="/brand-logo.png" alt="شعار الذات" className="size-full object-contain" />
+              <img src="/brand-logo.svg" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
               <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
@@ -223,7 +223,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Menu className="size-5" />
               </Button>
               <img
-                src="/brand-logo.png"
+                src="/brand-logo.svg"
                 alt="شعار الذات"
                 className="brand-mark-well hidden size-16 rounded-xl p-0.5 object-contain ring-1 ring-primary/15 sm:block"
               />
