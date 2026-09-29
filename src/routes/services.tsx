@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ArrowLeft,
   Brain,
   Briefcase,
   Check,
@@ -11,7 +10,6 @@ import {
 } from "lucide-react";
 
 import { PublicLayout } from "@/components/PublicLayout";
-import { Button } from "@/components/ui/button";
 import { GUIDANCE_SERVICES } from "@/lib/guidance";
 
 export const Route = createFileRoute("/services")({
@@ -117,15 +115,7 @@ function ServicesPage() {
                   ))}
                 </ul>
 
-                <div className="mt-6 border-t border-border/60 pt-4">
-                  <Link
-                    to="/forms/consultation"
-                    className="inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-bold text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    اطلب استشارة فردية
-                    <ArrowLeft className="size-4" aria-hidden="true" />
-                  </Link>
-                </div>
+
               </article>
             );
           })}
@@ -143,16 +133,12 @@ function ServicesPage() {
               </p>
             </div>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-            <Button asChild className="min-h-11 gap-2 font-bold">
-              <Link to="/forms/consultation">
-                طلب استشارة فردية
-                <ArrowLeft className="size-4" aria-hidden="true" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="min-h-11 font-semibold">
-              <Link to="/forms/referral">إحالة طالب (للمعلمين)</Link>
-            </Button>
+          <div className="rounded-xl border border-primary/20 bg-card px-4 py-3 text-sm leading-7 text-muted-foreground">
+            <p className="font-bold text-foreground">التقديم من مدونة الموجه</p>
+            <p className="mt-1">
+              استخدم رابط مدونة الموجه الطلابي الذي تشاركه المدرسة لطلب الاستشارة أو الإحالة أو الإبلاغ؛
+              بذلك يرتبط الطلب مباشرة بسجل الموجه والمدرسة الصحيحة.
+            </p>
           </div>
         </div>
       </section>
