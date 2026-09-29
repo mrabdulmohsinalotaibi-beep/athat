@@ -30,8 +30,8 @@ export async function createPdfFile({
   filename,
 }: Pick<SharePdfOptions, "element" | "filename">) {
   const scale = Math.min(2, window.devicePixelRatio || 1);
-  const previousCaptureFlag = element.dataset.pdfCaptureTarget;
-  element.dataset.pdfCaptureTarget = "true";
+  const previousCaptureFlag = element.dataset["pdfCaptureTarget"];
+  element.dataset["pdfCaptureTarget"] = "true";
   let clonedTargetWidth = 0;
   let clonedBreakPoints: number[] = [];
 
@@ -44,7 +44,7 @@ export async function createPdfFile({
       // Force a stable desktop/A4 layout even when export is started on mobile.
       windowWidth: Math.max(1200, element.scrollWidth, element.clientWidth),
       ignoreElements: (node: Element) =>
-        node instanceof HTMLElement && node.dataset.pdfExclude === "true",
+        node instanceof HTMLElement && node.dataset["pdfExclude"] === "true",
       onclone: (clonedDocument: Document) => {
         const root = clonedDocument.documentElement;
         root.style.setProperty("--background", "#f3f0ea");
@@ -246,8 +246,8 @@ export async function createPdfFile({
       type: "application/pdf",
     });
   } finally {
-    if (previousCaptureFlag === undefined) delete element.dataset.pdfCaptureTarget;
-    else element.dataset.pdfCaptureTarget = previousCaptureFlag;
+    if (previousCaptureFlag === undefined) delete element.dataset["pdfCaptureTarget"];
+    else element.dataset["pdfCaptureTarget"] = previousCaptureFlag;
   }
 }
 
