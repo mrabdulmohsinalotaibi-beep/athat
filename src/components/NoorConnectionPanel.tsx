@@ -134,7 +134,7 @@ export function NoorConnectionPanel() {
 
         <aside className="border-t bg-muted/20 p-5 lg:border-r lg:border-t-0">
           <div className="flex items-center justify-between gap-2">
-            <p className="font-black">حالة الموصل المباشر</p>
+            <p className="font-black">حالة التكامل المباشر</p>
             <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
               connectorReady
                 ? "bg-emerald-500/10 text-emerald-700"
@@ -150,14 +150,12 @@ export function NoorConnectionPanel() {
           <div className="mt-4 space-y-3 text-xs">
             <Status ok label="فتح نظام نور الرسمي" />
             <Status ok={state === "waiting"} label="بدء جلسة تسجيل الدخول بواسطة المستخدم" />
-            <Status ok={connectorReady} label="تهيئة موصل نور المعتمد" />
-            <Status ok={canRead} label="صلاحية قراءة البيانات" />
-            <Status ok={canWrite} label="صلاحية رفع البيانات" />
+            <Status label="تثبيت إضافة «ذات — مساعد نور» في المتصفح" />
+            <Status ok={connectorReady || canRead} label="قراءة البيانات عبر مسار معتمد/مهيأ" />
+            <Status ok={connectorReady || canWrite} label="تجهيز الرفع مع بقاء الحفظ بيد المستخدم" />
           </div>
           <div className="mt-5 rounded-xl border border-primary/15 bg-background p-3 text-xs leading-6 text-muted-foreground">
-            {connectorReady
-              ? "الموصل مهيأ على الخادم. تفعيل القراءة أو الرفع يعتمد على الصلاحيات الممنوحة."
-              : "حتى اعتماد وتهيئة الموصل المباشر، استخدم الاستيراد بالملف والتجهيز اليدوي الموجودين أسفل هذه اللوحة. لن تعرض «الذات» اتصالًا ناجحًا غير حقيقي."}
+            إضافة المتصفح هي المسار المباشر المشابه لإتقان: تعمل داخل نور بجلسة المستخدم ولا تحتاج كلمة مرور نور داخل «الذات». إلى أن تُنشر الإضافة وتُقترن بحساب المدرسة، يبقى الاستيراد بالملف متاحًا كمسار احتياطي.
           </div>
           {state === "waiting" && (
             <Button
