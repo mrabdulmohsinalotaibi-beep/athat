@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { submitPublicRequestFallback } from "@/lib/public-request.functions";
 
 export type PublicRequestKind = "استشارة فردية" | "إحالة طالب" | "إبلاغ سري";
 
@@ -53,7 +54,7 @@ export function PublicRequestForm({
 
   const submit = useMutation({
     mutationFn: async (values: Record<string, string>) => {
-      const { data, error } = await supabase.rpc("submit_public_request", {
+      const args = {
         p_kind: kind,
         p_details: values["details"] ?? "",
         p_requester_name: anonymous ? null : (values["requester_name"] ?? null),
@@ -67,15 +68,49 @@ export function PublicRequestForm({
         p_preferred_time: values["preferred_time"] ?? null,
         p_is_anonymous: anonymous,
         p_slug: schoolSlug?.trim() || null,
+      };
+
+      const { data, error } = await supabase.rpc("submit_public_request", args);
+      if (!error) return typeof data === "string" ? data : null;
+
+      const missingRpc =
+        /Could not find the function|schema cache|PGRST202/i.test(error.message);
+      if (!missingRpc) throw error;
+
+      const fallback = await submitPublicRequestFallback({
+        data: {
+          kind,
+          details: args.p_details,
+          requesterName: args.p_requester_name,
+          requesterRole: args.p_requester_role,
+          requesterContact: args.p_requester_contact,
+          studentName: args.p_student_name,
+          studentGrade: args.p_student_grade,
+          classroom: args.p_classroom,
+          topic: args.p_topic,
+          urgency:
+            args.p_urgency === "مهم" || args.p_urgency === "عاجل"
+              ? args.p_urgency
+              : "عادي",
+          preferredTime: args.p_preferred_time,
+          isAnonymous: anonymous,
+          schoolSlug: args.p_slug,
+        },
       });
-      if (error) throw error;
-      return typeof data === "string" ? data : null;
+
+      return fallback.requestNo;
     },
     onSuccess: (no) => {
       setRequestNo(no ?? "—");
       toast.success("تم إرسال الاستمارة بنجاح");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => {
+      const message =
+        /Missing Supabase environment variable|SUPABASE_SERVICE_ROLE_KEY/i.test(error.message)
+          ? "تعذّر إرسال الاستمارة لأن خدمة استقبال الطلبات لم تُربط بقاعدة البيانات على الخادم."
+          : error.message;
+      toast.error(message);
+    },
   });
 
   if (requestNo) {
