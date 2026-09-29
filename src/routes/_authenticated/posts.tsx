@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Globe, Lock, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Globe, HeartHandshake, Lock, Pencil, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { POST_KINDS, formatPostDate, kindLabel, makeSlug } from "@/lib/posts";
 import { useSchool } from "@/lib/school";
+import { RequestsInbox } from "@/components/RequestsInbox";
 
 export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
@@ -96,6 +97,42 @@ function PostsManager() {
       </div>
 
       <PublicLinkCard />
+      <section className="rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 shadow-sm">
+        <div>
+          <p className="text-xs font-bold text-primary">مركز خدمات الموجه</p>
+          <h2 className="mt-1 text-xl font-black">الخدمات والطلبات المرتبطة بسجلاتك</h2>
+          <p className="mt-2 text-sm leading-7 text-muted-foreground">
+            الاستشارة والإحالة والبلاغ تصل إلى هذا الصندوق مباشرة؛ افتح الطلب، اطبعه A4،
+            أضف ردك أو الإجراء، ثم حوّله إلى حالة إرشادية عند الحاجة.
+          </p>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border bg-card p-4">
+            <HeartHandshake className="size-5 text-primary" />
+            <p className="mt-2 font-black">طلبات الاستشارة</p>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              طلبات الطلاب وأولياء الأمور للمقابلات والدعم الفردي.
+            </p>
+          </div>
+          <div className="rounded-xl border bg-card p-4">
+            <FileText className="size-5 text-primary" />
+            <p className="mt-2 font-black">إحالات الطلاب</p>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              إحالات المعلمين والإدارة مع الملاحظات والإجراءات السابقة.
+            </p>
+          </div>
+          <div className="rounded-xl border bg-card p-4">
+            <ShieldAlert className="size-5 text-primary" />
+            <p className="mt-2 font-black">البلاغات السرية</p>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              بلاغات التنمر والسلامة مع المحافظة على السرية.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <RequestsInbox />
+
       {postsError && (
         <div
           role="alert"
