@@ -540,7 +540,7 @@ async function compressPostImage(file: File): Promise<File> {
 }
 
 async function postImageDataUrl(file: File): Promise<string> {
-  const blob = await renderPostImage(file, 850_000);
+  const blob = await renderPostImage(file, 650_000);
   return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () =>
@@ -549,6 +549,23 @@ async function postImageDataUrl(file: File): Promise<string> {
         : reject(new Error("تعذّر تجهيز الصورة للحفظ."));
     reader.onerror = () => reject(new Error("تعذّر تجهيز الصورة للحفظ."));
     reader.readAsDataURL(blob);
+  });
+}
+
+async function canDisplayPublicImage(url: string): Promise<boolean> {
+  if (!url || url.startsWith("data:image/")) return Boolean(url);
+  return await new Promise<boolean>((resolve) => {
+    const image = new Image();
+    const timeout = window.setTimeout(() => resolve(false), 7000);
+    image.onload = () => {
+      window.clearTimeout(timeout);
+      resolve(true);
+    };
+    image.onerror = () => {
+      window.clearTimeout(timeout);
+      resolve(false);
+    };
+    image.src = url;
   });
 }
 
@@ -584,55 +601,33 @@ function ContentEditor({
       const uid = auth.user?.id;
       if (!uid) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا.");
 
-      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
+      // ضغط الصورة أولاً يجعل الرفع من الجوال أكثر ثباتاً ويمنع فشل الملفات الكبيرة.
+      const uploadFile = await compressPostImage(file);
       const fileId = `${Date.now()}-${crypto.randomUUID()}`;
-      const primaryPath = `${uid}/posts/${fileId}.${safeExtension}`;
+      const storagePath = `${uid}/posts/${fileId}.webp`;
 
-      // Preferred bucket for public post media.
-      const primaryUpload = await supabase.storage
+      const upload = await supabase.storage
         .from("post-media")
-        .upload(primaryPath, file, {
-          contentType: file.type,
-          cacheControl: "3600",
+        .upload(storagePath, uploadFile, {
+          contentType: uploadFile.type,
+          cacheControl: "31536000",
           upsert: false,
         });
 
       let publicUrl = "";
-
-      if (!primaryUpload.error) {
-        publicUrl = supabase.storage.from("post-media").getPublicUrl(primaryPath).data.publicUrl;
-      } else {
-        // Older production databases may not yet have post-media or its policies.
-        // Try the existing public avatar bucket, then fall back to an embedded,
-        // compressed image so the user is never blocked by Storage RLS.
-        try {
-          const fallbackFile = await compressPostImage(file);
-          const fallbackPath = `${uid}/posts/${fileId}.webp`;
-          const fallbackUpload = await supabase.storage
-            .from("user-avatars")
-            .upload(fallbackPath, fallbackFile, {
-              contentType: fallbackFile.type,
-              cacheControl: "3600",
-              upsert: false,
-            });
-
-          if (!fallbackUpload.error) {
-            publicUrl = supabase.storage.from("user-avatars").getPublicUrl(fallbackPath).data.publicUrl;
-          }
-        } catch {
-          // Continue to the embedded-image fallback below.
-        }
-
-        if (!publicUrl) {
-          publicUrl = await postImageDataUrl(file);
-        }
+      if (!upload.error) {
+        const candidate = supabase.storage.from("post-media").getPublicUrl(storagePath).data.publicUrl;
+        if (await canDisplayPublicImage(candidate)) publicUrl = candidate;
       }
 
-      if (!publicUrl) throw new Error("تعذّر تجهيز الصورة. جرّب صورة أخرى.");
+      // إذا لم تكن حاوية التخزين منشورة بعد في البيئة الحالية، نحفظ نسخة
+      // مضغوطة داخل السجل نفسه بدل حفظ رابط مكسور لا يظهر في المدونة.
+      if (!publicUrl) {
+        publicUrl = await postImageDataUrl(file);
+      }
 
       onChange({ ...draft, cover_url: publicUrl });
-      toast.success("تم إرفاق الصورة بنجاح");
+      toast.success("تم إرفاق الصورة وتظهر الآن في المنشور");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذّر رفع الصورة");
     } finally {
@@ -696,12 +691,26 @@ function ContentEditor({
           </div>
         </div>
 
-        <Input
+        <label
+          htmlFor="post-image-upload"
+          className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/35 bg-primary/[0.04] px-4 py-5 text-center transition hover:border-primary/60 hover:bg-primary/[0.07]"
+        >
+          <ImageIcon className="size-7 text-primary" />
+          <span className="text-sm font-black text-primary">
+            {uploading ? "جارٍ تجهيز الصورة…" : "اضغط هنا لإرفاق الصورة مباشرة"}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            من الكاميرا أو الاستديو — وسيتم ضغطها وتجهيزها تلقائيًا
+          </span>
+        </label>
+        <input
+          id="post-image-upload"
+          className="sr-only"
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
           disabled={uploading}
           onChange={(e) => {
-            const file = e.target.files?.[0] ?? null;
+            const file = e.currentTarget.files?.[0] ?? null;
             void uploadImage(file);
             e.currentTarget.value = "";
           }}
@@ -719,7 +728,7 @@ function ContentEditor({
             <img
               src={draft.cover_url}
               alt="معاينة الصورة"
-              className="max-h-[420px] w-full object-contain"
+              className="max-h-[620px] w-full bg-black/[0.02] object-contain"
             />
             <div className="flex flex-wrap items-center justify-between gap-2 p-3">
               <span className="text-xs text-muted-foreground">معاينة الصورة المرفقة</span>
