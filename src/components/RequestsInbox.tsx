@@ -55,14 +55,26 @@ export interface PublicRequestRow {
 function usePublicRequests() {
   return useQuery({
     queryKey: ["public_requests"],
+    retry: 1,
     queryFn: async (): Promise<PublicRequestRow[]> => {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+
       const { data, error } = await supabase
         .from("public_requests")
         .select(
-          "id,request_no,kind,requester_name,requester_role,requester_contact,student_name,student_grade,classroom,topic,urgency,preferred_time,details,is_anonymous,status,counselor_notes,handled_at,created_at",
+          "id,request_no,kind,requester_name,requester_role,requester_contact,student_name,student_grade,classroom,topic,urgency,preferred_time,details,is_anonymous,status,linked_table,linked_record_id,counselor_notes,handled_at,created_at",
         )
+        .eq("user_id", userData.user.id)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+
+      if (error) {
+        const message = /relation .*public_requests.* does not exist|schema cache/i.test(error.message)
+          ? "جدول الاستشارات غير متاح حالياً. أعد المحاولة بعد اكتمال تحديث قاعدة البيانات."
+          : error.message;
+        throw new Error(message);
+      }
       return (data ?? []) as PublicRequestRow[];
     },
   });
@@ -112,10 +124,15 @@ export function RequestsInbox() {
         payload["handled_at"] = values.status === "جديد" ? null : new Date().toISOString();
       }
       if (values.counselor_notes !== undefined) payload["counselor_notes"] = values.counselor_notes;
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+
       const { error } = await supabase
         .from("public_requests")
         .update(payload as never)
-        .eq("id", values.id);
+        .eq("id", values.id)
+        .eq("user_id", userData.user.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -237,6 +254,10 @@ export function RequestsInbox() {
       }
 
       const handledAt = new Date().toISOString();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+
       const linkedUpdate = await supabase
         .from("public_requests")
         .update({
@@ -245,7 +266,8 @@ export function RequestsInbox() {
           linked_table: linkedTable,
           linked_record_id: linkedRecordId,
         })
-        .eq("id", request.id);
+        .eq("id", request.id)
+        .eq("user_id", userData.user.id);
 
       let linkPersisted = true;
       if (linkedUpdate.error) {
@@ -261,7 +283,8 @@ export function RequestsInbox() {
             status,
             handled_at: handledAt,
           })
-          .eq("id", request.id);
+          .eq("id", request.id)
+          .eq("user_id", userData.user.id);
         if (fallback.error) throw fallback.error;
         linkPersisted = false;
       }
