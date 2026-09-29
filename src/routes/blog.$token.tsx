@@ -445,13 +445,15 @@ function PublicContentSection({
                       </div>
                     </div>
                   ) : (
-                    <div className="grid gap-0 lg:grid-cols-[0.8fr_1.2fr]">
+                    <div>
                       {post.cover_url ? (
-                        <img
-                          src={post.cover_url}
-                          alt={post.title}
-                          className="h-full min-h-56 w-full object-cover"
-                        />
+                        <div className="bg-muted/15 p-2 sm:p-4">
+                          <img
+                            src={post.cover_url}
+                            alt={post.title}
+                            className="mx-auto max-h-[1000px] w-full rounded-2xl object-contain"
+                          />
+                        </div>
                       ) : (
                         <div className="flex min-h-56 items-center justify-center bg-primary/5">
                           <FileText className="size-12 text-primary/30" />
