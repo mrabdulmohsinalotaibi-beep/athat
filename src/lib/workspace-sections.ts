@@ -75,6 +75,10 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
       { to: "/referrals", label: "الإحالات", icon: ExternalLink },
       { to: "/committees", label: "اللجان والاجتماعات", icon: UsersRound },
       { to: "/toolkit", label: "النماذج والأدوات", icon: Wrench },
+      { to: "/requests", label: "الطلبات الواردة", icon: FileText },
+      { to: "/messages", label: "الآراء والرسائل", icon: HeartHandshake },
+      { to: "/weekly-poster", label: "اللوحة الأسبوعية", icon: Sparkles },
+      { to: "/posts", label: "مدونة الموجه", icon: Globe2 },
     ],
   },
   {
