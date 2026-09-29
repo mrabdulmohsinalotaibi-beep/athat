@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ذات — مساعد نور</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f3f0ea;color:#29241f}
+    main{padding:18px}.card{background:#fff;border:1px solid #ded8d0;border-radius:16px;padding:16px;margin-bottom:12px}
+    h1{font-size:20px;margin:0 0 6px}.muted{color:#756d65;font-size:12px;line-height:1.7}
+    button,a.btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;border:0;border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer;text-decoration:none}
+    button{background:#8b5736;color:#fff}.secondary{background:#eee8e1;color:#29241f}.full{width:100%}.row{display:flex;gap:8px;flex-wrap:wrap}
+    .status{padding:8px 10px;border-radius:10px;background:#f5efe8;font-size:12px}.ok{background:#e8f5ec;color:#176b39}
+    textarea{width:100%;box-sizing:border-box;min-height:130px;border:1px solid #d9d2ca;border-radius:10px;padding:10px;direction:ltr}
+    #results{font-size:12px;line-height:1.8}
+  </style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1>ذات — مساعد نور</h1>
+    <div class="muted">يعمل داخل جلسة نور المفتوحة لديك. لا يقرأ كلمة المرور ولا يضغط «حفظ» نيابة عنك.</div>
+  </div>
+  <div class="card">
+    <div id="pageStatus" class="status">جارٍ فحص صفحة نور…</div>
+    <div class="row" style="margin-top:10px">
+      <button id="scan">قراءة الطلاب الظاهرين</button>
+      <a class="btn secondary" href="https://athat.app/integrations" target="_blank">فتح ذات</a>
+    </div>
+    <div id="students" class="muted" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <strong>تجربة تجهيز الغياب</strong>
+    <p class="muted">ألصق JSON من «ذات» مؤقتًا إلى أن يكتمل الاقتران المباشر. المطابقة بالهوية ثم الاسم. راجع الصفحة واضغط حفظ بنفسك.</p>
+    <textarea id="payload" placeholder='[{"name":"اسم الطالب","nationalId":"1234567890"}]'></textarea>
+    <button id="fill" class="full" style="margin-top:8px">مطابقة وتجهيز في الصفحة</button>
+    <div id="results" style="margin-top:10px"></div>
+  </div>
+</main>
+<script src="sidepanel.js"></script>
+</body>
+</html>
