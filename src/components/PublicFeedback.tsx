@@ -3,6 +3,7 @@ import { CheckCircle2, MessageSquareText, Send, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { submitPublicFeedbackFallback } from "@/lib/public-feedback.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +29,7 @@ export function PublicFeedback({ token }: { token: string }) {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.rpc("submit_public_feedback", {
+    const args = {
       p_token: token,
       p_sender_name: senderName.trim() || "مستفيد",
       p_sender_contact: senderContact.trim(),
@@ -36,13 +37,43 @@ export function PublicFeedback({ token }: { token: string }) {
       p_category: category,
       p_satisfaction: satisfaction,
       p_message: message.trim(),
-    });
-    setBusy(false);
+    };
 
+    const { error } = await supabase.rpc("submit_public_feedback", args);
     if (error) {
-      toast.error(error.message || "تعذّر إرسال المشاركة.");
-      return;
+      const missingRpc =
+        /Could not find the function|schema cache|PGRST202/i.test(error.message);
+      if (!missingRpc) {
+        setBusy(false);
+        toast.error(error.message || "تعذّر إرسال المشاركة.");
+        return;
+      }
+
+      try {
+        await submitPublicFeedbackFallback({
+          data: {
+            token,
+            senderName: args.p_sender_name,
+            senderContact: args.p_sender_contact,
+            senderRole: args.p_sender_role,
+            category: args.p_category,
+            satisfaction: args.p_satisfaction,
+            message: args.p_message,
+          },
+        });
+      } catch (fallbackError) {
+        setBusy(false);
+        const message =
+          fallbackError instanceof Error ? fallbackError.message : "تعذّر إرسال المشاركة.";
+        toast.error(
+          /Missing Supabase environment variable|SUPABASE_SERVICE_ROLE_KEY/i.test(message)
+            ? "تعذّر إرسال المشاركة لأن خدمة الرسائل لم تُربط بقاعدة البيانات على الخادم."
+            : message,
+        );
+        return;
+      }
     }
+    setBusy(false);
     setSent(true);
     setSenderName("");
     setSenderContact("");
