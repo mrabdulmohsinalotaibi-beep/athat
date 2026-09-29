@@ -26,7 +26,7 @@ export interface PublicRequestFormProps {
   showStudentFields?: boolean;
   showPreferredTime?: boolean;
   privacyNote: string;
-  schoolSlug?: string;
+  schoolSlug?: string | undefined;
 }
 
 const URGENCY_OPTIONS = ["عادي", "مهم", "عاجل"] as const;
