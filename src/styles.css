@@ -63,87 +63,87 @@
   --radius: 0.75rem;
 
   /* هوية الذات الجديدة: علم النفس + التوجيه الطلابي + الهدوء والثقة */
-  --background: #f3f4f7;
-  --foreground: #151724;
+  --background: #f7f5f1;
+  --foreground: #2f2f2f;
   --card: #ffffff;
-  --card-foreground: #151724;
+  --card-foreground: #2f2f2f;
   --popover: #ffffff;
-  --popover-foreground: #151724;
-  --primary: #34345f;
-  --primary-foreground: #ffffff;
-  --secondary: #e5e7ed;
-  --secondary-foreground: #24263f;
-  --muted: #e9ebf0;
-  --muted-foreground: #626678;
-  --accent: #55527f;
-  --accent-foreground: #ffffff;
+  --popover-foreground: #2f2f2f;
+  --primary: #3c3c3c;
+  --primary-foreground: #f1e9dd;
+  --secondary: #ebe6dc;
+  --secondary-foreground: #3c3c3c;
+  --muted: #f3efe8;
+  --muted-foreground: #6a6762;
+  --accent: #d9d0c2;
+  --accent-foreground: #f1e9dd;
   --destructive: #b43e5b;
   --destructive-foreground: #ffffff;
-  --border: #d0d3dc;
-  --input: #c2c6d1;
-  --ring: #55527f;
-  --chart-1: #34345f;
-  --chart-2: #55527f;
-  --chart-3: #252a4a;
-  --chart-4: #77799b;
-  --chart-5: #53627c;
-  --sidebar: #090c15;
-  --sidebar-foreground: #f3f0ff;
-  --sidebar-primary: #9691bd;
-  --sidebar-primary-foreground: #090b13;
-  --sidebar-accent: #1a2031;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #30364a;
-  --sidebar-ring: #72739d;
-  --brand-mark-surface: #070912;
-  --brand-mark-border: #464b69;
+  --border: #d8d2c8;
+  --input: #d8d2c8;
+  --ring: #3c3c3c;
+  --chart-1: #3c3c3c;
+  --chart-2: #6a6762;
+  --chart-3: #8a8175;
+  --chart-4: #b9ad9e;
+  --chart-5: #d9d0c2;
+  --sidebar: #3c3c3c;
+  --sidebar-foreground: #f1e9dd;
+  --sidebar-primary: #f1e9dd;
+  --sidebar-primary-foreground: #3c3c3c;
+  --sidebar-accent: #2f2f2f;
+  --sidebar-accent-foreground: #f1e9dd;
+  --sidebar-border: #555555;
+  --sidebar-ring: #f1e9dd;
+  --brand-mark-surface: #3c3c3c;
+  --brand-mark-border: #555555;
   --paper: #ffffff;
   --paper-foreground: #25203e;
   --paper-muted: #f4f2f9;
   --paper-muted-foreground: #6f6882;
   --paper-border: #d9d4e7;
-  --letterhead-primary: #252a4a;
-  --letterhead-secondary: #55527f;
-  --letterhead-soft: #ececf3;
+  --letterhead-primary: #3c3c3c;
+  --letterhead-secondary: #8a8175;
+  --letterhead-soft: #f3efe8;
   --shadow-soft: 0 16px 38px -24px rgb(54 42 112 / 0.28);
   --shadow-card: 0 10px 28px -22px rgb(63 48 126 / 0.24);
 }
 .dark {
   color-scheme: dark;
-  --background: #070912;
-  --foreground: #f4f1ff;
-  --card: #111521;
-  --card-foreground: #f4f1ff;
-  --popover: #111521;
-  --popover-foreground: #f4f1ff;
-  --primary: #9b96c2;
-  --primary-foreground: #090b13;
-  --secondary: #1d2230;
-  --secondary-foreground: #f0ecff;
-  --muted: #191e2a;
-  --muted-foreground: #b8b0ca;
-  --accent: #6d6b96;
-  --accent-foreground: #ffffff;
+  --background: #2f2f2f;
+  --foreground: #f1e9dd;
+  --card: #3c3c3c;
+  --card-foreground: #f1e9dd;
+  --popover: #3c3c3c;
+  --popover-foreground: #f1e9dd;
+  --primary: #f1e9dd;
+  --primary-foreground: #3c3c3c;
+  --secondary: #474747;
+  --secondary-foreground: #f1e9dd;
+  --muted: #404040;
+  --muted-foreground: #d0c8bc;
+  --accent: #5a5a5a;
+  --accent-foreground: #f1e9dd;
   --destructive: #df6880;
   --destructive-foreground: #ffffff;
-  --border: #303647;
-  --input: #3d4357;
-  --ring: #7e7ba8;
+  --border: #555555;
+  --input: #555555;
+  --ring: #f1e9dd;
   --chart-1: #b19bea;
   --chart-2: #8e76d4;
   --chart-3: #d0c5f7;
   --chart-4: #707bb1;
   --chart-5: #6554a8;
-  --sidebar: #05070c;
-  --sidebar-foreground: #f3f0ff;
-  --sidebar-primary: #c1b0f3;
-  --sidebar-primary-foreground: #15112a;
-  --sidebar-accent: #151a29;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #292f40;
-  --sidebar-ring: #72739d;
-  --brand-mark-surface: #05070c;
-  --brand-mark-border: #3d435e;
+  --sidebar: #2f2f2f;
+  --sidebar-foreground: #f1e9dd;
+  --sidebar-primary: #f1e9dd;
+  --sidebar-primary-foreground: #2f2f2f;
+  --sidebar-accent: #3c3c3c;
+  --sidebar-accent-foreground: #f1e9dd;
+  --sidebar-border: #555555;
+  --sidebar-ring: #f1e9dd;
+  --brand-mark-surface: #2f2f2f;
+  --brand-mark-border: #555555;
   --shadow-soft: 0 16px 38px -24px rgb(0 0 0 / 0.62);
   --shadow-card: 0 10px 28px -22px rgb(0 0 0 / 0.52);
 }
@@ -491,29 +491,27 @@ textarea {
 }
 
 
-/* ATHAT psychology identity — indigo / violet / lavender */
+/* ATHAT charcoal / warm ivory identity */
 .athat-premium-shell {
   background:
-    radial-gradient(circle at 82% 0%, rgb(52 52 95 / 0.12), transparent 30rem),
-    linear-gradient(180deg,  #f4f4f8 0%, var(--background) 26rem);
+    linear-gradient(180deg, #f7f5f1 0%, var(--background) 26rem);
 }
 .athat-sidebar {
-  background:
-    radial-gradient(circle at 50% 0%, rgb(163 155 208 / 0.16), transparent 18rem),
-    linear-gradient(180deg, #0f0b22 0%, #0e1020 48%, #0b0d18 100%);
-  box-shadow: -18px 0 50px -38px rgb(0 0 0 / 0.75);
+  background: linear-gradient(180deg, #3c3c3c 0%, #343434 52%, #2f2f2f 100%);
+  box-shadow: -18px 0 50px -38px rgb(0 0 0 / 0.60);
 }
 .athat-topbar {
-  box-shadow: 0 12px 30px -26px rgb(43 31 91 / 0.42);
+  background: #3c3c3c;
+  color: #f1e9dd;
+  border-color: #555555;
+  box-shadow: 0 12px 30px -26px rgb(0 0 0 / 0.5);
 }
 .dashboard-shell > section:first-child {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgb(169 146 234 / 0.34);
-  background:
-    radial-gradient(circle at 10% 20%, rgb(169 146 234 / 0.22), transparent 18rem),
-    linear-gradient(135deg, #111321 0%, #1c2233 58%, #34345f 100%);
-  color: #f7f4ff;
+  border: 1px solid rgb(85 85 85 / 0.55);
+  background: linear-gradient(135deg, #2f2f2f 0%, #3c3c3c 58%, #4a4a4a 100%);
+  color: #f1e9dd;
 }
 .dashboard-shell > section:first-child::after {
   position: absolute;
@@ -569,4 +567,19 @@ select:focus-visible {
 ::selection {
   background: rgb(85 82 127 / 0.28);
   color: var(--foreground);
+}
+
+/* Header identity matched to the supplied logo background */
+.athat-site-header {
+  background: #3c3c3c !important;
+  color: #f1e9dd !important;
+  border-color: #555555 !important;
+}
+.athat-site-header a,
+.athat-site-header button {
+  color: inherit;
+}
+.athat-site-header .text-primary,
+.athat-topbar .text-primary {
+  color: #f1e9dd !important;
 }
