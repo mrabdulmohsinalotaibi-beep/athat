@@ -16,8 +16,8 @@ import { RequestsInbox } from "@/components/RequestsInbox";
 export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
     meta: [
-      { title: "مدونة الموجه | منصة الذات" },
-      { name: "description", content: "إدارة منشورات الموجه الخاصة ومشاركتها عبر رابط شخصي." },
+      { title: "مدونة الموجه والخدمات | منصة الذات" },
+      { name: "description", content: "إدارة خدمات الموجه وطلباته الواردة ومنشوراته، مع الطباعة والرد والمتابعة." },
     ],
   }),
   component: PostsManager,
@@ -90,8 +90,8 @@ function PostsManager() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black">مدونة الموجه</h1>
-          <p className="text-sm text-muted-foreground">انشر ما تختاره في مدونتك الخاصة وشارك رابطها مع من تسمح له بالاطلاع.</p>
+          <h1 className="text-2xl font-black">مدونة الموجه والخدمات</h1>
+          <p className="text-sm text-muted-foreground">مركز موحد لخدمات الموجه والطلبات الواردة والمنشورات التي يشاركها مع المدرسة.</p>
         </div>
         <Button onClick={() => setDraft({ ...EMPTY })} className="gap-2"><Plus className="size-4" />منشور جديد</Button>
       </div>
