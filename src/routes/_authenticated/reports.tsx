@@ -201,7 +201,9 @@ function ReportsPage() {
   const programRows = filteredSections.programs ?? [];
   const evidenceRows = filteredSections.evidences ?? [];
   const planDone = planRows.filter((row) => String(row.exec_status ?? "") === "مكتمل").length;
-  const programDone = programRows.filter((row) => String(row.exec_status ?? "") === "مكتمل").length;
+  const programDone = programRows.filter((row) =>
+    ["منفذ", "مكتمل"].includes(String(row.exec_status ?? "")),
+  ).length;
   const planProgress = planRows.length ? Math.round((planDone / planRows.length) * 100) : 0;
   const programProgress = programRows.length ? Math.round((programDone / programRows.length) * 100) : 0;
 
