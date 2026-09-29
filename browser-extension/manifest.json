@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "ذات — مساعد نور",
+  "version": "0.1.0",
+  "description": "مساعد منصة الذات داخل نظام نور لتسهيل مطابقة وتجهيز سجلات التوجيه والمواظبة.",
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://noor.moe.gov.sa/*",
+    "https://*.noor.moe.gov.sa/*",
+    "https://athat.app/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://noor.moe.gov.sa/*",
+        "https://*.noor.moe.gov.sa/*"
+      ],
+      "js": [
+        "noor-adapter.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "ذات — مساعد نور"
+  }
+}
