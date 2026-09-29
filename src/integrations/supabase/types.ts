@@ -704,6 +704,7 @@ export type Database = {
           notes: string | null
           program_no: string | null
           ptype: string | null
+          plan_task_id: string | null
           required_evidence: string | null
           start_date: string | null
           target_group: string | null
@@ -726,6 +727,7 @@ export type Database = {
           notes?: string | null
           program_no?: string | null
           ptype?: string | null
+          plan_task_id?: string | null
           required_evidence?: string | null
           start_date?: string | null
           target_group?: string | null
@@ -748,6 +750,7 @@ export type Database = {
           notes?: string | null
           program_no?: string | null
           ptype?: string | null
+          plan_task_id?: string | null
           required_evidence?: string | null
           start_date?: string | null
           target_group?: string | null
@@ -755,7 +758,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "programs_plan_task_id_fkey"
+            columns: ["plan_task_id"]
+            isOneToOne: false
+            referencedRelation: "plan_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referrals: {
         Row: {
@@ -825,6 +836,75 @@ export type Database = {
           },
         ]
       }
+      public_requests: {
+        Row: {
+          classroom: string | null
+          counselor_notes: string | null
+          created_at: string
+          details: string
+          handled_at: string | null
+          id: string
+          is_anonymous: boolean
+          kind: string
+          preferred_time: string | null
+          request_no: string | null
+          requester_contact: string | null
+          requester_name: string | null
+          requester_role: string | null
+          status: string
+          student_grade: string | null
+          student_name: string | null
+          topic: string | null
+          updated_at: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          classroom?: string | null
+          counselor_notes?: string | null
+          created_at?: string
+          details: string
+          handled_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          kind: string
+          preferred_time?: string | null
+          request_no?: string | null
+          requester_contact?: string | null
+          requester_name?: string | null
+          requester_role?: string | null
+          status?: string
+          student_grade?: string | null
+          student_name?: string | null
+          topic?: string | null
+          updated_at?: string
+          urgency?: string
+          user_id?: string
+        }
+        Update: {
+          classroom?: string | null
+          counselor_notes?: string | null
+          created_at?: string
+          details?: string
+          handled_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          kind?: string
+          preferred_time?: string | null
+          request_no?: string | null
+          requester_contact?: string | null
+          requester_name?: string | null
+          requester_role?: string | null
+          status?: string
+          student_grade?: string | null
+          student_name?: string | null
+          topic?: string | null
+          updated_at?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -876,6 +956,9 @@ export type Database = {
       school_settings: {
         Row: {
           academic_year: string | null
+          announcement: string | null
+          contact_email: string | null
+          contact_phone: string | null
           counselor_name: string | null
           counselor_signature: string | null
           created_at: string
@@ -883,19 +966,29 @@ export type Database = {
           education_office: string | null
           id: string
           logo_url: string | null
+          ministry_logo_url: string | null
+          mission: string | null
+          office_hours: string | null
           principal_name: string | null
           principal_signature: string | null
+          public_requests_enabled: boolean
           private_blog_token: string
           public_feedback_token: string
           public_slug: string | null
           school_name: string | null
           semester: string | null
+          show_counselor_on_documents: boolean
+          show_principal_on_documents: boolean
           theme: string
+          vision: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           academic_year?: string | null
+          announcement?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           counselor_name?: string | null
           counselor_signature?: string | null
           created_at?: string
@@ -903,19 +996,32 @@ export type Database = {
           education_office?: string | null
           id?: string
           logo_url?: string | null
+          ministry_logo_url?: string | null
+          mission?: string | null
+          office_hours?: string | null
+          ministry_logo_url?: string | null
+          mission?: string | null
+          office_hours?: string | null
           principal_name?: string | null
           principal_signature?: string | null
+          public_requests_enabled?: boolean
           private_blog_token?: string
           public_feedback_token?: string
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
+          show_counselor_on_documents?: boolean
+          show_principal_on_documents?: boolean
           theme?: string
+          vision?: string | null
           updated_at?: string
           user_id?: string
         }
         Update: {
           academic_year?: string | null
+          announcement?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           counselor_name?: string | null
           counselor_signature?: string | null
           created_at?: string
@@ -925,12 +1031,16 @@ export type Database = {
           logo_url?: string | null
           principal_name?: string | null
           principal_signature?: string | null
+          public_requests_enabled?: boolean
           private_blog_token?: string
           public_feedback_token?: string
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
+          show_counselor_on_documents?: boolean
+          show_principal_on_documents?: boolean
           theme?: string
+          vision?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1076,6 +1186,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_guidance_profile: {
+        Args: { p_slug?: string | null }
+        Returns: {
+          announcement: string
+          contact_email: string
+          contact_phone: string
+          counselor_name: string
+          education_dept: string
+          logo_url: string
+          mission: string
+          office_hours: string
+          requests_enabled: boolean
+          school_name: string
+          vision: string
+        }[]
+      }
       get_private_counselor_blog: {
         Args: { p_token: string }
         Returns: {
@@ -1100,6 +1226,24 @@ export type Database = {
           school_name: string
           user_id: string
         }[]
+      }
+      submit_public_request: {
+        Args: {
+          p_classroom?: string | null
+          p_details: string
+          p_is_anonymous?: boolean
+          p_kind: string
+          p_preferred_time?: string | null
+          p_requester_contact?: string | null
+          p_requester_name?: string | null
+          p_requester_role?: string | null
+          p_slug?: string | null
+          p_student_grade?: string | null
+          p_student_name?: string | null
+          p_topic?: string | null
+          p_urgency?: string
+        }
+        Returns: string
       }
       submit_public_feedback: {
         Args: {
