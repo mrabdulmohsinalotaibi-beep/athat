@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { getNoorConnectorStatus } from "@/lib/noor-connector.functions";
 
 const NOOR_URL = "https://noor.moe.gov.sa/Noor/Login.aspx";
 
@@ -22,6 +24,16 @@ type ConnectionState = "idle" | "waiting";
 
 export function NoorConnectionPanel() {
   const [state, setState] = useState<ConnectionState>("idle");
+  const connectorQuery = useQuery({
+    queryKey: ["noor-connector-status"],
+    queryFn: async () => getNoorConnectorStatus(),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const connector = connectorQuery.data;
+  const connectorReady = Boolean(connector?.configured);
+  const canRead = Boolean(connector?.canRead);
+  const canWrite = Boolean(connector?.canWrite);
 
   function openNoor() {
     window.open(NOOR_URL, "_blank", "noopener,noreferrer");
@@ -95,8 +107,9 @@ export function NoorConnectionPanel() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button
               type="button"
-              disabled
-              className="rounded-2xl border p-4 text-right opacity-60"
+              disabled={!canRead}
+              className={`rounded-2xl border p-4 text-right transition ${canRead ? "hover:border-primary/40 hover:bg-primary/5" : "opacity-60"}`}
+              title={canRead ? "الموصل جاهز للقراءة" : "تحتاج صلاحية قراءة معتمدة من نور"}
             >
               <ArrowDownToLine className="size-5 text-primary" />
               <p className="mt-3 font-black">سحب من نور إلى الذات</p>
@@ -106,8 +119,9 @@ export function NoorConnectionPanel() {
             </button>
             <button
               type="button"
-              disabled
-              className="rounded-2xl border p-4 text-right opacity-60"
+              disabled={!canWrite}
+              className={`rounded-2xl border p-4 text-right transition ${canWrite ? "hover:border-primary/40 hover:bg-primary/5" : "opacity-60"}`}
+              title={canWrite ? "الموصل جاهز للرفع" : "تحتاج صلاحية كتابة معتمدة من نور"}
             >
               <ArrowUpFromLine className="size-5 text-primary" />
               <p className="mt-3 font-black">رفع من الذات إلى نور</p>
@@ -119,17 +133,31 @@ export function NoorConnectionPanel() {
         </div>
 
         <aside className="border-t bg-muted/20 p-5 lg:border-r lg:border-t-0">
-          <p className="font-black">حالة الموصل المباشر</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-black">حالة الموصل المباشر</p>
+            <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+              connectorReady
+                ? "bg-emerald-500/10 text-emerald-700"
+                : "bg-amber-500/10 text-amber-700"
+            }`}>
+              {connectorQuery.isLoading
+                ? "جارٍ التحقق"
+                : connectorReady
+                  ? "مهيأ"
+                  : "غير مهيأ"}
+            </span>
+          </div>
           <div className="mt-4 space-y-3 text-xs">
             <Status ok label="فتح نظام نور الرسمي" />
-            <Status ok label="تسجيل الدخول بواسطة المستخدم" />
-            <Status label="اكتشاف جلسة نور المعتمدة" />
-            <Status label="صلاحية قراءة البيانات" />
-            <Status label="صلاحية رفع البيانات" />
+            <Status ok={state === "waiting"} label="بدء جلسة تسجيل الدخول بواسطة المستخدم" />
+            <Status ok={connectorReady} label="تهيئة موصل نور المعتمد" />
+            <Status ok={canRead} label="صلاحية قراءة البيانات" />
+            <Status ok={canWrite} label="صلاحية رفع البيانات" />
           </div>
           <div className="mt-5 rounded-xl border border-primary/15 bg-background p-3 text-xs leading-6 text-muted-foreground">
-            حتى اعتماد الموصل المباشر، استخدم الاستيراد بالملف والتجهيز اليدوي الموجودين أسفل
-            هذه اللوحة. لن تعرض «الذات» اتصالًا ناجحًا غير حقيقي.
+            {connectorReady
+              ? "الموصل مهيأ على الخادم. تفعيل القراءة أو الرفع يعتمد على الصلاحيات الممنوحة."
+              : "حتى اعتماد وتهيئة الموصل المباشر، استخدم الاستيراد بالملف والتجهيز اليدوي الموجودين أسفل هذه اللوحة. لن تعرض «الذات» اتصالًا ناجحًا غير حقيقي."}
           </div>
           {state === "waiting" && (
             <Button
