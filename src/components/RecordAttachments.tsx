@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Film, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -89,7 +89,19 @@ export function RecordAttachmentsDialog({
   const cameraRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const pendingPreview = useMemo(() => pendingFile && kindOf(pendingFile.type, pendingFile.name) === "image" ? URL.createObjectURL(pendingFile) : "", [pendingFile]);
+  const pendingPreview = useMemo(
+    () =>
+      pendingFile && kindOf(pendingFile.type, pendingFile.name) === "image"
+        ? URL.createObjectURL(pendingFile)
+        : "",
+    [pendingFile],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (pendingPreview) URL.revokeObjectURL(pendingPreview);
+    };
+  }, [pendingPreview]);
   const [preview, setPreview] = useState<{ url: string; kind: string; name: string } | null>(null);
   const { data: items = [], isLoading } = useRecordAttachments(open ? recordId : null);
 
@@ -106,9 +118,14 @@ export function RecordAttachmentsDialog({
     }
     setBusy(true);
     try {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      const uid = auth.user?.id;
+      const { data: sessionData } = await supabase.auth.getSession();
+      let uid = sessionData.session?.user.id ?? "";
+      try {
+        const { data: auth, error: authError } = await supabase.auth.getUser();
+        if (!authError && auth.user) uid = auth.user.id;
+      } catch {
+        // Continue with the locally persisted session on transient auth failures.
+      }
       if (!uid) throw new Error("الجلسة منتهية، أعد تسجيل الدخول");
       const safe = file.name.replace(/[^\w.\-\u0600-\u06FF]/g, "_");
       const path = `${uid}/${recordId}/${Date.now()}-${safe}`;
