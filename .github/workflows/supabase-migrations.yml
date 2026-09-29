@@ -39,7 +39,8 @@ jobs:
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Supabase production migrations were not applied because SUPABASE_ACCESS_TOKEN and/or SUPABASE_DB_PASSWORD are missing."
+            echo "::error::Supabase production migrations were NOT applied because SUPABASE_ACCESS_TOKEN and/or SUPABASE_DB_PASSWORD are missing."
+            exit 1
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
