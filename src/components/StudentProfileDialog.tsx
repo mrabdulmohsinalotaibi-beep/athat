@@ -61,46 +61,57 @@ export function StudentProfileDialog({
 
   // نجلب كل السجلات المرتبطة بهذا الطالب من كل الجداول المرتبطة باسمه دفعة واحدة
   const { data: sections = {}, isLoading } = useQuery({
-    queryKey: ["student-profile", fullName, studentNo],
-    enabled: open && !!fullName,
+    queryKey: ["student-profile", studentId, fullName, studentNo],
+    enabled: open && Boolean(studentId || studentNo || fullName),
     queryFn: async () => {
-      const result: Record<string, Row[]> = {};
-      for (const section of LINKED_SECTIONS) {
-        const config = recordByKey(section.key);
-        if (!config) continue;
-        // New records use student_id, while historical records still match by the
-        // student number/name. Keep both paths so no older information disappears.
-        const [linked, legacy] = await Promise.all([
-          studentId
-            ? supabase
-                .from(config.table as never)
-                .select("*")
-                .eq("student_id", studentId)
-            : Promise.resolve({ data: [], error: null }),
-          studentNo
-            ? supabase
-                .from(config.table as never)
-                .select("*")
-                .eq("student_no", studentNo)
-            : supabase
-                .from(config.table as never)
-                .select("*")
-                .eq("student_name", fullName),
-        ]);
-        const merged = [
-          ...((linked.data ?? []) as unknown as Row[]),
-          ...((legacy.data ?? []) as unknown as Row[]),
-        ];
-        const unique = new Map(merged.map((row) => [row.id, row]));
-        const rows = Array.from(unique.values()).sort((a, b) => {
-          const dateA = String(a[section.dateField] ?? a["created_at"] ?? "");
-          const dateB = String(b[section.dateField] ?? b["created_at"] ?? "");
-          return dateB.localeCompare(dateA, "ar");
-        });
+      const entries = await Promise.all(
+        LINKED_SECTIONS.map(async (section) => {
+          const config = recordByKey(section.key);
 
-        result[section.key] = rows;
-      }
-      return result;
+          // New records use student_id, while historical records still match by
+          // student number/name. Query every section in parallel so opening a
+          // student file does not wait for each table sequentially.
+          const [linked, legacy] = await Promise.all([
+            studentId
+              ? supabase
+                  .from(config.table as never)
+                  .select("*")
+                  .eq("student_id", studentId)
+              : Promise.resolve({ data: [], error: null }),
+            studentNo
+              ? supabase
+                  .from(config.table as never)
+                  .select("*")
+                  .eq("student_no", studentNo)
+              : supabase
+                  .from(config.table as never)
+                  .select("*")
+                  .eq("student_name", fullName),
+          ]);
+
+          if (linked.error) {
+            console.warn(`[student-profile] ${section.key} student_id:`, linked.error.message);
+          }
+          if (legacy.error) {
+            console.warn(`[student-profile] ${section.key} legacy:`, legacy.error.message);
+          }
+
+          const merged = [
+            ...((linked.error ? [] : linked.data ?? []) as unknown as Row[]),
+            ...((legacy.error ? [] : legacy.data ?? []) as unknown as Row[]),
+          ];
+          const unique = new Map(merged.map((row) => [row.id, row]));
+          const rows = Array.from(unique.values()).sort((a, b) => {
+            const dateA = String(a[section.dateField] ?? a["created_at"] ?? "");
+            const dateB = String(b[section.dateField] ?? b["created_at"] ?? "");
+            return dateB.localeCompare(dateA, "ar");
+          });
+
+          return [section.key, rows] as const;
+        }),
+      );
+
+      return Object.fromEntries(entries) as Record<string, Row[]>;
     },
   });
 
