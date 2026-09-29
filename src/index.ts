@@ -6,7 +6,6 @@ export { OfficialHeader, OfficialFooter } from "./components/OfficialHeader";
 export { PlanGate } from "./components/PlanGate";
 export { RecordAttachmentsDialog } from "./components/RecordAttachments";
 export { RecordPage } from "./components/RecordPage";
-export { RecordPrintDialog } from "./components/RecordPrintDialog";
 export { SignaturePad } from "./components/SignaturePad";
 export { StudentCombobox } from "./components/StudentCombobox";
 export { StudentsPage } from "./components/StudentsPage";
