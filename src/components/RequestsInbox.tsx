@@ -125,8 +125,8 @@ export function RequestsInbox() {
 
   const convertToRecord = useMutation({
     mutationFn: async (request: PublicRequestRow) => {
-      if (request.linked_record_id) {
-        throw new Error("هذا الطلب مرتبط بسجل داخلي بالفعل.");
+      if (request.linked_record_id || request.status.startsWith("تم التحويل")) {
+        throw new Error("هذا الطلب تم تحويله إلى سجل داخلي بالفعل.");
       }
 
       const today = new Date().toISOString().slice(0, 10);
@@ -209,25 +209,47 @@ export function RequestsInbox() {
         status = "تم التحويل لحالة";
       }
 
-      const { error: statusError } = await supabase
+      const handledAt = new Date().toISOString();
+      const linkedUpdate = await supabase
         .from("public_requests")
         .update({
           status,
-          handled_at: new Date().toISOString(),
+          handled_at: handledAt,
           linked_table: linkedTable,
           linked_record_id: linkedRecordId,
         })
         .eq("id", request.id);
 
-      if (statusError) throw statusError;
+      let linkPersisted = true;
+      if (linkedUpdate.error) {
+        // The two link columns are additive. Until the production migration is
+        // applied, keep conversion safe by saving the converted status only.
+        console.warn(
+          "[public-requests] linked columns unavailable; saving conversion status only:",
+          linkedUpdate.error.message,
+        );
+        const fallback = await supabase
+          .from("public_requests")
+          .update({
+            status,
+            handled_at: handledAt,
+          })
+          .eq("id", request.id);
+        if (fallback.error) throw fallback.error;
+        linkPersisted = false;
+      }
 
-      return { linkedTable, linkedRecordId, status };
+      return { linkedTable, linkedRecordId, status, linkPersisted };
     },
-    onSuccess: ({ linkedTable }) => {
+    onSuccess: ({ linkedTable, linkPersisted }) => {
       queryClient.invalidateQueries({ queryKey: ["public_requests"] });
       queryClient.invalidateQueries({ queryKey: [linkedTable] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("تم إنشاء السجل وربطه بالطلب");
+      if (linkPersisted) {
+        toast.success("تم إنشاء السجل وربطه بالطلب");
+      } else {
+        toast.success("تم إنشاء السجل وحفظ حالة التحويل");
+      }
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -564,6 +586,10 @@ export function RequestsInbox() {
                     <Link to={linkedRoute(selected)!}>
                       <Send className="size-4" /> فتح السجل المرتبط
                     </Link>
+                  </Button>
+                ) : selected.status.startsWith("تم التحويل") ? (
+                  <Button type="button" variant="outline" disabled>
+                    <Send className="size-4" /> تم إنشاء السجل
                   </Button>
                 ) : (
                   <Button
