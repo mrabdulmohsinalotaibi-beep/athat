@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 360" role="img" aria-labelledby="title desc">
+<title id="title">الذات ATHAT</title>
+<desc id="desc">هوية منصة الذات لعلم النفس والتوجيه الطلابي</desc>
+<defs>
+  <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#171331"/>
+    <stop offset=".55" stop-color="#3d2f82"/>
+    <stop offset="1" stop-color="#7660c4"/>
+  </linearGradient>
+  <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset=".5" stop-color="#e5e7f4"/>
+    <stop offset="1" stop-color="#b8bed8"/>
+  </linearGradient>
+</defs>
+<g transform="translate(25 20)">
+  <rect x="0" y="0" width="320" height="320" rx="82" fill="url(#ink)"/>
+  <circle cx="160" cy="160" r="116" fill="none" stroke="#b8afe3" stroke-width="4" opacity=".55"/>
+  <path d="M160 48s-47 34-46 87c1 27 19 48 46 57 27-9 45-30 46-57 1-53-46-87-46-87Z" fill="#cfc4f7" stroke="#f5f2ff" stroke-width="4"/>
+  <path d="M108 84c-34 15-58 45-58 82 0 33 19 61 47 77 12-16 20-36 20-58 0-38-19-73-9-101Z" fill="#6f58b8" stroke="#bcaeea" stroke-width="4"/>
+  <path d="M212 84c34 15 58 45 58 82 0 33-19 61-47 77-12-16-20-36-20-58 0-38 19-73 9-101Z" fill="#6f58b8" stroke="#bcaeea" stroke-width="4"/>
+  <circle cx="160" cy="207" r="62" fill="#15122e" stroke="#8f7bd2" stroke-width="4"/>
+  <path d="M126 171c0 40 9 64 34 64s34-24 34-64M160 158v98M135 256h50" fill="none" stroke="url(#silver)" stroke-width="16" stroke-linecap="round"/>
+</g>
+<g fill="url(#ink)">
+  <text x="395" y="170" font-family="Cairo, Tajawal, Arial, sans-serif" font-size="126" font-weight="900">الذات</text>
+  <text x="402" y="258" font-family="Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="13">ATHAT</text>
+</g>
+<text x="405" y="310" fill="#756e8f" font-family="Cairo, Tajawal, Arial, sans-serif" font-size="28" font-weight="600">علم النفس • التوجيه الطلابي • النمو</text>
+</svg>
