@@ -151,6 +151,36 @@ function IntegrationsPage() {
         </div>
       </section>
 
+      <section className="rounded-2xl border border-primary/20 bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="flex items-center gap-2 text-lg font-black">
+              <Puzzle className="size-5 text-primary" /> Athat Bridge — الاتصال المباشر داخل نور
+            </p>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              الإضافة تعمل داخل صفحة نور التي فتحتها وسجلت الدخول إليها بنفسك. تقرأ الجدول
+              الظاهر، تطابق الطلاب بالهوية ثم الاسم، وتسحب السجلات الجاهزة من «الذات» لتجهيزها
+              في نور. الاعتماد النهائي والحفظ يبقيان بيد المستخدم.
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-2 text-xs font-black text-emerald-700">
+            <MonitorUp className="size-4" /> Chrome / Edge على الكمبيوتر
+          </span>
+        </div>
+        <div className="mt-4 grid gap-2 text-xs sm:grid-cols-4">
+          {[
+            "1. تثبيت Athat Bridge",
+            "2. فتح نور وتسجيل الدخول",
+            "3. فتح صفحة الرصد المطلوبة",
+            "4. مطابقة ثم مراجعة وحفظ",
+          ].map((step) => (
+            <div key={step} className="rounded-xl border bg-muted/20 p-3 font-bold">
+              {step}
+            </div>
+          ))}
+        </div>
+      </section>
+
       <NoorConnectionPanel />
       <ExternalPlatformImporter />
       <NoorExportCenter />
