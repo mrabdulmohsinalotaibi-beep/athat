@@ -29,7 +29,7 @@ export const submitPublicRequestFallback = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let settings = null as { user_id: string; public_requests_enabled: boolean | null } | null;
-    let settingsError: Error | null = null;
+    let settingsError: { message: string } | null = null;
 
     if (data.portalToken?.trim()) {
       const result = await supabaseAdmin
