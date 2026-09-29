@@ -68,80 +68,7 @@ function requestStatusToFeedback(status: string): string {
 }
 
 function parseTaggedMessage(message: string, label: string): string | null {
-  const escapedLabel = label.replace(/[.*+?^$()|[\]\\]/g, "\\function parseTaggedMessage(message: string, label: string): string | null {
-  const match = message.match(new RegExp(\`^\\[${label}\\]\\s*(.+)$\`, "m"));
-  return match?.[1]?.trim() || null;
-}");
-  const match = message.match(new RegExp(`^\\[${escapedLabel}\\]\\s*(.+)import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Inbox, Mail, MessageCircle, ShieldAlert, Send } from "lucide-react";
-import { toast } from "sonner";
-
-
-import { Button } from "@/components/ui/button";
-import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
-import { PdfPreviewButton } from "@/components/PdfPreviewButton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { formatHijriDate } from "@/lib/date";
-
-import { useSchool } from "@/lib/school";
-import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
-import { normalizeSaudiPhone, shareOnWhatsApp } from "@/lib/whatsapp";
-
-
-export const REQUEST_KINDS = ["استشارة فردية", "إحالة طالب", "إبلاغ سري"] as const;
-export const REQUEST_STATUSES = [
-  "جديد",
-  "قيد المعالجة",
-  "تم التحويل لمقابلة",
-  "تم التحويل لإحالة",
-  "تم التحويل لحالة",
-  "مغلق",
-] as const;
-
-export interface PublicRequestRow {
-  id: string;
-  request_no: string | null;
-  kind: string;
-  requester_name: string | null;
-  requester_role: string | null;
-  requester_contact: string | null;
-  student_name: string | null;
-  student_grade: string | null;
-  classroom: string | null;
-  topic: string | null;
-  urgency: string;
-  preferred_time: string | null;
-  details: string;
-  is_anonymous: boolean;
-  status: string;
-  linked_table?: string | null;
-  linked_record_id?: string | null;
-  counselor_notes: string | null;
-  handled_at: string | null;
-  created_at: string;
-  source?: "public_requests" | "feedback_messages";
-}
-
-function feedbackStatusToRequest(status: string): string {
-  if (status === "جديد") return "جديد";
-  if (status === "قيد المراجعة") return "قيد المعالجة";
-  if (status === "تم الرد" || status === "محفوظ") return "مغلق";
-  return "جديد";
-}
-
-function requestStatusToFeedback(status: string): string {
-  if (status === "جديد") return "جديد";
-  if (status === "مغلق") return "محفوظ";
-  if (status.startsWith("تم التحويل")) return "تم الرد";
-  return "قيد المراجعة";
-}
-
-, "m"));
+  const match = message.match(new RegExp("^\\[" + label + "\\]\\s*(.+)$", "m"));
   return match?.[1]?.trim() || null;
 }
 
@@ -170,13 +97,13 @@ function feedbackToRequest(row: {
     urgency: parseTaggedMessage(row.message, "الأهمية") || "عادي",
     preferred_time: parseTaggedMessage(row.message, "الوقت المفضل"),
     details: row.message
-      .replace(/^\[نوع الطلب\].*$/gm, "")
-      .replace(/^\[الموضوع\].*$/gm, "")
-      .replace(/^\[الطالب\].*$/gm, "")
-      .replace(/^\[الصف\].*$/gm, "")
-      .replace(/^\[الفصل\].*$/gm, "")
-      .replace(/^\[الأهمية\].*$/gm, "")
-      .replace(/^\[الوقت المفضل\].*$/gm, "")
+      .replace(/^\\[نوع الطلب\\].*$/gm, "")
+      .replace(/^\\[الموضوع\\].*$/gm, "")
+      .replace(/^\\[الطالب\\].*$/gm, "")
+      .replace(/^\\[الصف\\].*$/gm, "")
+      .replace(/^\\[الفصل\\].*$/gm, "")
+      .replace(/^\\[الأهمية\\].*$/gm, "")
+      .replace(/^\\[الوقت المفضل\\].*$/gm, "")
       .trim(),
     is_anonymous: row.sender_name === "مجهول",
     status: feedbackStatusToRequest(row.status),
