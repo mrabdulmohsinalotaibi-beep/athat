@@ -4,12 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 
 const NOOR_URL = "https://noor.moe.gov.sa/Noor/Login.aspx";
 type SourceTable = "counseling_cases" | "interviews" | "behavior";
 type JobStatus = "ready" | "paused" | "submitted" | "failed";
-type Job = { id: string; source_table: SourceTable; source_id: string; payload: Record<string, unknown>; status: JobStatus; noor_reference: string | null; last_error: string | null; pause_reason: string | null; updated_at: string };
+type Job = { id: string; source_table: SourceTable; source_id: string; payload: Json; status: JobStatus; noor_reference: string | null; last_error: string | null; pause_reason: string | null; updated_at: string };
 type SourceRow = { table: SourceTable; id: string; label: string; payload: Record<string, unknown> };
 
 const statusLabel: Record<JobStatus, string> = { ready: "جاهز للترحيل", paused: "متوقف لتدخل يدوي", submitted: "تم الرفع والتوثيق", failed: "فشل ويحتاج مراجعة" };
@@ -43,7 +44,7 @@ export function NoorExportCenter() {
           label: String(
             row["student_name"] || row["title"] || row["observation"] || "سجل توجيهي",
           ),
-          payload: row,
+          payload: row as unknown as Json,
         }));
 
       return [
