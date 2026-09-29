@@ -175,20 +175,21 @@ export function RecordAttachmentsDialog({
 
   async function removeItem(id: string, path: string) {
     if (!confirm("هل تريد حذف هذا المرفق وملفه؟")) return;
-    const { error: storageError } = await supabase.storage.from("evidences").remove([path]);
-    if (storageError) {
-      toast.error(`تعذّر حذف الملف من التخزين: ${storageError.message}`);
+    const { error } = await supabase.from("evidences").delete().eq("id", id);
+    if (error) {
+      toast.error(`تعذّر حذف سجل المرفق: ${error.message}`);
       return;
     }
 
-    const { error } = await supabase.from("evidences").delete().eq("id", id);
-    if (error) {
-      toast.error(`تم حذف الملف لكن تعذّر حذف سجل المرفق: ${error.message}`);
-      return;
+    const { error: storageError } = await supabase.storage.from("evidences").remove([path]);
+    if (storageError) {
+      console.warn("[attachments] تعذّر تنظيف الملف بعد حذف السجل:", storageError.message);
+      toast.warning("تم حذف المرفق من السجل، وتعذّر تنظيف الملف من التخزين.");
     }
     await queryClient.invalidateQueries({ queryKey: ["record-attachments", recordId] });
     queryClient.invalidateQueries({ queryKey: ["evidence-files"] });
-    toast.success("تم حذف المرفق");
+    queryClient.invalidateQueries({ queryKey: ["evidences"] });
+    if (!storageError) toast.success("تم حذف المرفق");
   }
 
   return (
