@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, ClipboardCheck, DownloadCloud, ShieldCheck } from "lucide-react";
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  CheckCircle2,
+  Database,
+  FileSpreadsheet,
+  ShieldCheck,
+  Workflow,
+} from "lucide-react";
 
 import { ExternalPlatformImporter } from "@/components/ExternalPlatformImporter";
 import { NoorExportCenter } from "@/components/NoorExportCenter";
@@ -8,8 +16,12 @@ import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
 export const Route = createFileRoute("/_authenticated/integrations")({
   head: () => ({
     meta: [
-      { title: "مدرستي ونور | منصة الذات" },
-      { name: "description", content: "جلب البيانات وتجهيز أعمال التوجيه للترحيل إلى نور." },
+      { title: "مركز نور ومدرستي | منصة الذات" },
+      {
+        name: "description",
+        content:
+          "استيراد بيانات الطلاب من نور ومدرستي إلى الذات، وتجهيز أعمال التوجيه وتوثيق ترحيلها إلى نور.",
+      },
     ],
   }),
   component: IntegrationsPage,
@@ -17,58 +29,97 @@ export const Route = createFileRoute("/_authenticated/integrations")({
 
 function IntegrationsPage() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6" dir="rtl">
-      <div className="rounded-3xl border border-primary/15 bg-gradient-to-bl from-primary/10 via-card to-accent/10 p-6 shadow-sm sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-              <ShieldCheck className="size-3.5" /> مركز التكامل والتجهيز
+    <div className="mx-auto max-w-7xl space-y-6" dir="rtl">
+      <section className="overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-bl from-primary/10 via-card to-accent/10 p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">
+              <Workflow className="size-3.5" /> مركز التكامل المدرسي
             </span>
-            <h1 className="mt-4 text-3xl font-black">مدرستي ونور</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-              انقل بياناتك بطريقة منظمة، راجعها قبل الحفظ، وجهّز سجلات التوجيه للترحيل إلى نور دون
-              تجاوز تسجيل الدخول أو رمز التحقق.
+            <h1 className="mt-4 text-3xl font-black sm:text-4xl">نور ومدرستي × الذات</h1>
+            <p className="mt-3 text-sm leading-8 text-muted-foreground sm:text-base">
+              نقطة عمل واحدة لجلب بيانات الطلاب إلى «الذات»، مراجعتها وتنظيفها، ثم تجهيز أعمال
+              التوجيه التي تحتاج توثيقًا في نور مع سجل يمنع التكرار ويحفظ حالة كل عملية.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-2xl border bg-card/80 p-3">
-              <DownloadCloud className="mx-auto size-4 text-primary" />
-              <p className="mt-2 font-bold">استيراد</p>
-            </div>
-            <div className="rounded-2xl border bg-card/80 p-3">
-              <ClipboardCheck className="mx-auto size-4 text-primary" />
-              <p className="mt-2 font-bold">مراجعة</p>
-            </div>
-            <div className="rounded-2xl border bg-card/80 p-3">
-              <CheckCircle2 className="mx-auto size-4 text-primary" />
-              <p className="mt-2 font-bold">توثيق</p>
-            </div>
+
+          <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+            {[
+              [FileSpreadsheet, "ملف رسمي"],
+              [ArrowDownToLine, "استيراد"],
+              [Database, "سجلات الذات"],
+              [ArrowUpFromLine, "تجهيز نور"],
+            ].map(([Icon, label]) => {
+              const IconComponent = Icon as typeof FileSpreadsheet;
+              return (
+                <div key={String(label)} className="rounded-2xl border bg-card/80 p-3">
+                  <IconComponent className="mx-auto size-4 text-primary" />
+                  <p className="mt-2 font-bold">{String(label)}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-3 lg:grid-cols-3">
+        <div className="rounded-2xl border bg-card p-5">
+          <p className="flex items-center gap-2 text-sm font-black">
+            <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">1</span>
+            استيراد آمن
+          </p>
+          <p className="mt-2 text-xs leading-6 text-muted-foreground">
+            ارفع Excel/CSV المصدّر من نور أو مدرستي. تتم مطابقة الأعمدة وتنظيف الهوية والجوال
+            وكشف التكرار قبل الحفظ.
+          </p>
+        </div>
+        <div className="rounded-2xl border bg-card p-5">
+          <p className="flex items-center gap-2 text-sm font-black">
+            <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">2</span>
+            العمل داخل الذات
+          </p>
+          <p className="mt-2 text-xs leading-6 text-muted-foreground">
+            تصبح بيانات الطالب أساسًا للحالات والمقابلات والسلوك والمواظبة والشواهد والتقارير
+            بدل إعادة إدخالها في كل سجل.
+          </p>
+        </div>
+        <div className="rounded-2xl border bg-card p-5">
+          <p className="flex items-center gap-2 text-sm font-black">
+            <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">3</span>
+            تجهيز وتوثيق نور
+          </p>
+          <p className="mt-2 text-xs leading-6 text-muted-foreground">
+            حدد السجلات المطلوبة، جهزها، افتح نور للإدخال النظامي، ثم وثّق المرجع والحالة داخل
+            الذات حتى لا تتكرر العملية.
+          </p>
+        </div>
+      </section>
+
+      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 text-sm leading-7">
+        <p className="flex items-center gap-2 font-black text-emerald-800">
+          <ShieldCheck className="size-4" /> تكامل يحافظ على صلاحيات الأنظمة الرسمية
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          لا تحفظ «الذات» كلمة مرور نور أو مدرستي ولا تتجاوز رمز التحقق. التكامل يعتمد على
+          التصدير الرسمي والمراجعة البشرية والتوثيق داخل المنصة.
+        </p>
       </div>
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-2xl border bg-card p-4">
-          <p className="text-sm font-black">1. صدّر من المصدر</p>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            استخدم ملف Excel/CSV الرسمي من مدرستي أو نور، أو الصق الجدول كما هو.
-          </p>
-        </div>
-        <div className="rounded-2xl border bg-card p-4">
-          <p className="text-sm font-black">2. راجع المطابقة</p>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            تتحول عناوين الأعمدة إلى حقول منصة الذات وتظهر معاينة قبل الحفظ.
-          </p>
-        </div>
-        <div className="rounded-2xl border bg-card p-4">
-          <p className="text-sm font-black">3. وثّق الرفع</p>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            بعد الإكمال اليدوي في نور، سجّل رقم المرجع وحالة العملية لمنع التكرار.
-          </p>
-        </div>
-      </div>
+
       <ExternalPlatformImporter />
       <NoorExportCenter />
-      <AiCounselorAssistant compact />
+
+      <section className="rounded-2xl border bg-card p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <CheckCircle2 className="size-5 text-primary" />
+          <div>
+            <h2 className="font-black">مساعد المراجعة التربوية</h2>
+            <p className="text-xs text-muted-foreground">
+              استخدمه لمراجعة الصياغة قبل اعتماد السجل أو ترحيله، وليس لاستبدال قرار الموجه.
+            </p>
+          </div>
+        </div>
+        <AiCounselorAssistant compact />
+      </section>
     </div>
   );
 }
