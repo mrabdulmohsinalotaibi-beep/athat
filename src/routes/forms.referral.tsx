@@ -4,6 +4,9 @@ import { PublicLayout } from "@/components/PublicLayout";
 import { PublicRequestForm } from "@/components/PublicRequestForm";
 
 export const Route = createFileRoute("/forms/referral")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    school: typeof search["school"] === "string" ? search["school"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "استمارة إحالة طالب | الذات" },
@@ -20,13 +23,16 @@ export const Route = createFileRoute("/forms/referral")({
 });
 
 function ReferralFormPage() {
+  const { school } = Route.useSearch();
   return (
     <PublicLayout
+      schoolSlug={school}
       title="استمارة إحالة طالب"
       subtitle="خاصة بالمعلمين: أحل الطالب إلى التوجيه الطلابي مع توضيح الملاحظات والإجراءات التي سبق اتخاذها."
     >
       <section className="mx-auto max-w-4xl px-4 py-14 sm:px-8">
         <PublicRequestForm
+          schoolSlug={school}
           kind="إحالة طالب"
           heading="بيانات الإحالة"
           intro="كلما كانت الملاحظات أدق، كان التدخل الإرشادي أسرع وأكثر فاعلية."
