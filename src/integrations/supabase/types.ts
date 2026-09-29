@@ -971,18 +971,18 @@ export type Database = {
           office_hours: string | null
           principal_name: string | null
           principal_signature: string | null
-          public_requests_enabled: boolean
           private_blog_token: string
           public_feedback_token: string
+          public_requests_enabled: boolean
           public_slug: string | null
           school_name: string | null
           semester: string | null
           show_counselor_on_documents: boolean
           show_principal_on_documents: boolean
           theme: string
-          vision: string | null
           updated_at: string
           user_id: string
+          vision: string | null
         }
         Insert: {
           academic_year?: string | null
@@ -999,23 +999,20 @@ export type Database = {
           ministry_logo_url?: string | null
           mission?: string | null
           office_hours?: string | null
-          ministry_logo_url?: string | null
-          mission?: string | null
-          office_hours?: string | null
           principal_name?: string | null
           principal_signature?: string | null
-          public_requests_enabled?: boolean
           private_blog_token?: string
           public_feedback_token?: string
+          public_requests_enabled?: boolean
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
           show_counselor_on_documents?: boolean
           show_principal_on_documents?: boolean
           theme?: string
-          vision?: string | null
           updated_at?: string
           user_id?: string
+          vision?: string | null
         }
         Update: {
           academic_year?: string | null
@@ -1029,20 +1026,23 @@ export type Database = {
           education_office?: string | null
           id?: string
           logo_url?: string | null
+          ministry_logo_url?: string | null
+          mission?: string | null
+          office_hours?: string | null
           principal_name?: string | null
           principal_signature?: string | null
-          public_requests_enabled?: boolean
           private_blog_token?: string
           public_feedback_token?: string
+          public_requests_enabled?: boolean
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
           show_counselor_on_documents?: boolean
           show_principal_on_documents?: boolean
           theme?: string
-          vision?: string | null
           updated_at?: string
           user_id?: string
+          vision?: string | null
         }
         Relationships: []
       }
