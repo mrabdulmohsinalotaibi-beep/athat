@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">الذات - رمز علم النفس والتوجيه الطلابي</title>
+<desc id="desc">زهرة نمو نفسية مع رمز ساي وشبكة ترمز للتوجيه والاتصال</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#15112f"/>
+    <stop offset="0.52" stop-color="#32256d"/>
+    <stop offset="1" stop-color="#6d56b5"/>
+  </linearGradient>
+  <linearGradient id="petal" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e8e1ff"/>
+    <stop offset="0.55" stop-color="#aa96eb"/>
+    <stop offset="1" stop-color="#6b54b5"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset="0.5" stop-color="#d9dcef"/>
+    <stop offset="1" stop-color="#aeb6d6"/>
+  </linearGradient>
+</defs>
+<rect width="512" height="512" rx="118" fill="url(#bg)"/>
+<circle cx="256" cy="256" r="184" fill="none" stroke="#b8afe3" stroke-width="5" opacity=".62"/>
+<circle cx="256" cy="72" r="9" fill="#d9ceff"/>
+<circle cx="440" cy="256" r="9" fill="#d9ceff"/>
+<circle cx="256" cy="440" r="9" fill="#d9ceff"/>
+<circle cx="72" cy="256" r="9" fill="#d9ceff"/>
+<path d="M256 76C256 76 188 126 190 202c1 38 27 69 66 82 39-13 65-44 66-82 2-76-66-126-66-126Z" fill="url(#petal)" stroke="#f4f1ff" stroke-width="5"/>
+<path d="M177 128c-49 21-83 65-83 118 0 47 27 88 68 110 18-23 29-52 29-84 0-55-27-105-14-144Z" fill="#7660c4" stroke="#c9bdf4" stroke-width="5"/>
+<path d="M335 128c49 21 83 65 83 118 0 47-27 88-68 110-18-23-29-52-29-84 0-55 27-105 14-144Z" fill="#7660c4" stroke="#c9bdf4" stroke-width="5"/>
+<path d="M118 230c-31 31-43 75-27 115 18 44 59 73 105 78 6-29 2-59-10-88-20-49-56-83-68-105Z" fill="#4d3b96" stroke="#a895df" stroke-width="5"/>
+<path d="M394 230c31 31 43 75 27 115-18 44-59 73-105 78-6-29-2-59 10-88 20-49 56-83 68-105Z" fill="#4d3b96" stroke="#a895df" stroke-width="5"/>
+<circle cx="256" cy="323" r="92" fill="#171431" opacity=".9" stroke="#8f7bd2" stroke-width="5"/>
+<path d="M203 268c0 58 13 93 53 93s53-35 53-93M256 250v144M218 394h76" fill="none" stroke="url(#metal)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M226 292h60" stroke="#f5f3ff" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+</svg>
