@@ -50,10 +50,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
       ]);
-      if (cases.error) throw cases.error;
-      if (tasks.error) throw tasks.error;
-      const dueCases = (cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;
-      const attentionTasks = (tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;
+      // Alerts are supplementary UI. A missing/temporarily unavailable table
+      // must never prevent the rest of the application from opening.
+      if (cases.error) console.warn("[alerts] counseling_cases:", cases.error.message);
+      if (tasks.error) console.warn("[alerts] plan_tasks:", tasks.error.message);
+      const dueCases = (cases.error ? [] : cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;
+      const attentionTasks = (tasks.error ? [] : tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;
       return dueCases + attentionTasks;
     },
     staleTime: 60_000,
