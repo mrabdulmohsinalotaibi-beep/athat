@@ -64,21 +64,56 @@ function usePublicRequests() {
       if (userError) throw userError;
       if (!userData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
 
-      const { data, error } = await supabase
+      // RLS already limits rows to the signed-in counselor. Start with the
+      // newest schema, then gracefully fall back if PostgREST has not refreshed
+      // additive link columns yet.
+      const full = await supabase
         .from("public_requests")
         .select(
           "id,request_no,kind,requester_name,requester_role,requester_contact,student_name,student_grade,classroom,topic,urgency,preferred_time,details,is_anonymous,status,linked_table,linked_record_id,counselor_notes,handled_at,created_at",
         )
-        .eq("user_id", userData.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        const message = /relation .*public_requests.* does not exist|schema cache/i.test(error.message)
-          ? "جدول الاستشارات غير متاح حالياً. أعد المحاولة بعد اكتمال تحديث قاعدة البيانات."
-          : error.message;
-        throw new Error(message);
+      if (!full.error) return (full.data ?? []) as PublicRequestRow[];
+
+      const core = await supabase
+        .from("public_requests")
+        .select(
+          "id,request_no,kind,requester_name,requester_role,requester_contact,student_name,student_grade,classroom,topic,urgency,preferred_time,details,is_anonymous,status,counselor_notes,handled_at,created_at",
+        )
+        .order("created_at", { ascending: false });
+
+      if (!core.error) {
+        console.warn("[public-requests] link columns unavailable; using core inbox:", full.error.message);
+        return (core.data ?? []) as PublicRequestRow[];
       }
-      return (data ?? []) as PublicRequestRow[];
+
+      // Last-resort compatibility path for older deployed schemas.
+      const minimal = await supabase
+        .from("public_requests")
+        .select("id,request_no,kind,student_name,requester_name,topic,urgency,details,status,created_at")
+        .order("created_at", { ascending: false });
+
+      if (!minimal.error) {
+        console.warn("[public-requests] using minimal inbox schema:", core.error.message);
+        return (minimal.data ?? []).map((row) => ({
+          ...row,
+          requester_role: null,
+          requester_contact: null,
+          student_grade: null,
+          classroom: null,
+          preferred_time: null,
+          is_anonymous: false,
+          linked_table: null,
+          linked_record_id: null,
+          counselor_notes: null,
+          handled_at: null,
+        })) as PublicRequestRow[];
+      }
+
+      throw new Error(
+        `تعذّر قراءة الاستشارات من قاعدة البيانات (${minimal.error.code || "DB"}): ${minimal.error.message}`,
+      );
     },
   });
 }
