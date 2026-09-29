@@ -46,6 +46,10 @@ export const Route = createFileRoute("/auth")({
     };
   },
   beforeLoad: async ({ search }) => {
+    // Recovery links create a temporary authenticated session. Never redirect
+    // away from the reset screen before the user has chosen a new password.
+    if (search["mode"] === "reset") return;
+
     // Keep the sign-in route accessible even when Supabase is temporarily
     // unavailable (for example, in an unconfigured preview environment).
     try {
@@ -78,12 +82,22 @@ function AuthPage() {
     setMode(initialMode);
   }, [initialMode]);
 
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("reset");
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy("email");
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
       if (error) throw error;
@@ -102,18 +116,32 @@ function AuthPage() {
       toast.error("كلمتا المرور غير متطابقتين");
       return;
     }
+    if (password.length < 8) {
+      toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+      return;
+    }
     setBusy("email");
     try {
       const origin = window.location.origin;
-      const { error } = await supabase.auth.signUp({
-        email,
+      const normalizedEmail = email.trim().toLowerCase();
+      const { data, error } = await supabase.auth.signUp({
+        email: normalizedEmail,
         password,
         options: {
-          emailRedirectTo: `${origin}${next || "/dashboard"}`,
+          // Always return through the auth route so Supabase can finish the
+          // confirmation exchange before entering protected pages.
+          emailRedirectTo: `${origin}/auth?next=${encodeURIComponent(next || "/dashboard")}`,
         },
       });
       if (error) throw error;
-      toast.success("تم إنشاء الحساب، تحقق من بريدك الإلكتروني");
+
+      if (data.session) {
+        toast.success("تم إنشاء الحساب وتسجيل الدخول بنجاح");
+        navigate({ to: next || "/dashboard" });
+        return;
+      }
+
+      toast.success("تم إنشاء الحساب. افتح رسالة التأكيد في بريدك ثم سجّل الدخول.");
       setMode("signin");
     } catch (err) {
       toast.error(arabicAuthError(err));
@@ -127,7 +155,8 @@ function AuthPage() {
     setBusy("recover");
     try {
       const origin = window.location.origin;
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const normalizedEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${origin}/auth?mode=reset`,
       });
       if (error) throw error;
@@ -144,6 +173,10 @@ function AuthPage() {
     e.preventDefault();
     if (password !== confirmPassword) {
       toast.error("كلمتا المرور غير متطابقتين");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
       return;
     }
     setBusy("reset");
@@ -199,6 +232,8 @@ function AuthPage() {
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   dir="ltr"
                   required
                   value={email}
@@ -218,6 +253,8 @@ function AuthPage() {
                 <Input
                   id="password"
                   type="password"
+                  minLength={8}
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   dir="ltr"
                   required
                   value={password}
@@ -237,6 +274,8 @@ function AuthPage() {
                 <Input
                   id="confirmPassword"
                   type="password"
+                  minLength={8}
+                  autoComplete="new-password"
                   dir="ltr"
                   required
                   value={confirmPassword}
