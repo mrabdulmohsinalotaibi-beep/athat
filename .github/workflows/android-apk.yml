@@ -32,6 +32,12 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Restore stable Android debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: athat-android-debug-keystore-v1
+
       - name: Install project dependencies
         run: npm ci
 
