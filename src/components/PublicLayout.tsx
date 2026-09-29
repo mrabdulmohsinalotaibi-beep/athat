@@ -25,7 +25,7 @@ export function PublicLayout({
   children: ReactNode;
   title?: string;
   subtitle?: string;
-  schoolSlug?: string;
+  schoolSlug?: string | undefined;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: profile } = useGuidanceProfile(schoolSlug);
