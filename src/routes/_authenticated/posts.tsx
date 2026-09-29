@@ -12,6 +12,8 @@ import {
   Lock,
   Megaphone,
   MessageCircleQuestion,
+  ImageIcon,
+  Loader2,
   Pencil,
   Plus,
   School,
@@ -115,11 +117,14 @@ function CounselorPortalManager() {
 
   const save = useMutation({
     mutationFn: async (d: Draft) => {
-      if (!d.title.trim()) throw new Error("اكتب عنوان المحتوى.");
-      if (!d.body.trim()) throw new Error("اكتب محتوى المقال أو المنشور.");
+      if (!d.body.trim() && !d.cover_url.trim()) {
+        throw new Error("أضف نصًا أو صورة للمنشور.");
+      }
+      const fallbackTitle = d.kind === "article" ? "مقال مصور" : "منشور مصور";
+      const finalTitle = d.title.trim() || fallbackTitle;
 
       const row = {
-        title: d.title.trim(),
+        title: finalTitle,
         kind: d.kind,
         excerpt: d.excerpt.trim() || null,
         body: d.body.trim(),
@@ -133,7 +138,7 @@ function CounselorPortalManager() {
 
       const result = d.id
         ? await supabase.from("posts").update(row).eq("id", d.id)
-        : await supabase.from("posts").insert({ ...row, slug: makeSlug(d.title) });
+        : await supabase.from("posts").insert({ ...row, slug: makeSlug(finalTitle) });
 
       if (result.error) throw result.error;
     },
@@ -504,15 +509,62 @@ function ContentEditor({
   onCancel: () => void;
   saving: boolean;
 }) {
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadImage(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("اختر ملف صورة فقط.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("حجم الصورة يجب ألا يتجاوز 10 ميجابايت.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا.");
+
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `${uid}/posts/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("post-media")
+        .upload(path, file, {
+          contentType: file.type,
+          cacheControl: "3600",
+          upsert: false,
+        });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("post-media").getPublicUrl(path);
+      if (!data.publicUrl) throw new Error("تعذّر إنشاء رابط الصورة.");
+
+      onChange({ ...draft, cover_url: data.publicUrl });
+      toast.success("تم رفع الصورة وإرفاقها بالمحتوى");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذّر رفع الصورة");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <section className="space-y-4 rounded-3xl border border-primary/20 bg-card p-5 shadow-sm">
       <div>
         <p className="text-xs font-black text-primary">{draft.kind === "article" ? "مقال" : "منشور"}</p>
         <h2 className="mt-1 text-xl font-black">{draft.id ? "تعديل المحتوى" : "إضافة محتوى جديد"}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          يمكنك نشر نص مع صورة، أو صورة فقط بدون كتابة محتوى.
+        </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>العنوان</Label>
+          <Label>العنوان (اختياري للمنشور المصور)</Label>
           <Input value={draft.title} onChange={(e) => onChange({ ...draft, title: e.target.value })} />
         </div>
         <div className="space-y-2">
@@ -533,28 +585,89 @@ function ContentEditor({
         <Input
           value={draft.excerpt}
           onChange={(e) => onChange({ ...draft, excerpt: e.target.value })}
-          placeholder="سطر مختصر يظهر قبل فتح المحتوى"
+          placeholder="اختياري — سطر مختصر يظهر قبل فتح المحتوى"
         />
       </div>
       <div className="space-y-2">
         <Label>المحتوى</Label>
-        <Textarea rows={10} value={draft.body} onChange={(e) => onChange({ ...draft, body: e.target.value })} />
-      </div>
-      <div className="space-y-2">
-        <Label>رابط صورة الغلاف (اختياري)</Label>
-        <Input
-          dir="ltr"
-          placeholder="https://..."
-          value={draft.cover_url}
-          onChange={(e) => onChange({ ...draft, cover_url: e.target.value })}
+        <Textarea
+          rows={8}
+          value={draft.body}
+          onChange={(e) => onChange({ ...draft, body: e.target.value })}
+          placeholder="اختياري إذا كان المنشور أو الإعلان عبارة عن صورة فقط"
         />
       </div>
+
+      <div className="space-y-3 rounded-2xl border border-dashed bg-muted/20 p-4">
+        <div className="flex items-center gap-2">
+          <ImageIcon className="size-5 text-primary" />
+          <div>
+            <Label>صورة المقال / الإعلان / المنشور</Label>
+            <p className="text-[11px] text-muted-foreground">
+              ارفع الصورة مباشرة من الجهاز أو الجوال. JPG وPNG وWEBP حتى 10 ميجابايت.
+            </p>
+          </div>
+        </div>
+
+        <Input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          disabled={uploading}
+          onChange={(e) => {
+            const file = e.target.files?.[0] ?? null;
+            void uploadImage(file);
+            e.currentTarget.value = "";
+          }}
+        />
+
+        {uploading && (
+          <div className="flex items-center gap-2 text-xs font-bold text-primary">
+            <Loader2 className="size-4 animate-spin" />
+            جارٍ رفع الصورة…
+          </div>
+        )}
+
+        {draft.cover_url && (
+          <div className="overflow-hidden rounded-2xl border bg-background">
+            <img
+              src={draft.cover_url}
+              alt="معاينة الصورة"
+              className="max-h-[420px] w-full object-contain"
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3">
+              <span className="text-xs text-muted-foreground">معاينة الصورة المرفقة</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => onChange({ ...draft, cover_url: "" })}
+              >
+                إزالة الصورة
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <details className="text-xs text-muted-foreground">
+          <summary className="cursor-pointer font-bold">أو استخدم رابط صورة خارجي</summary>
+          <Input
+            className="mt-2"
+            dir="ltr"
+            placeholder="https://..."
+            value={draft.cover_url}
+            onChange={(e) => onChange({ ...draft, cover_url: e.target.value })}
+          />
+        </details>
+      </div>
+
       <div className="flex items-center gap-3">
         <Switch checked={draft.is_public} onCheckedChange={(value) => onChange({ ...draft, is_public: value })} />
         <span className="text-sm">{draft.is_public ? "يظهر في المدونة العامة" : "مسودة خاصة لا تظهر للعامة"}</span>
       </div>
       <div className="flex gap-2">
-        <Button onClick={onSave} disabled={saving}>{saving ? "جارٍ الحفظ…" : "حفظ"}</Button>
+        <Button onClick={onSave} disabled={saving || uploading}>
+          {saving ? "جارٍ الحفظ…" : "حفظ"}
+        </Button>
         <Button variant="outline" onClick={onCancel}>إلغاء</Button>
       </div>
     </section>
@@ -599,7 +712,15 @@ function ContentSection({
         )}
         {items.map((item) => (
           <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-background p-4">
-            <div className="min-w-0">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {item.cover_url && (
+                <img
+                  src={item.cover_url}
+                  alt={item.title}
+                  className="size-16 shrink-0 rounded-xl border object-cover"
+                />
+              )}
+              <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">{kindLabel(item.kind)}</span>
                 {item.is_public ? (
@@ -611,6 +732,10 @@ function ContentSection({
               </div>
               <h3 className="mt-1 truncate font-black">{item.title}</h3>
               {item.excerpt && <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{item.excerpt}</p>}
+              {!item.body && item.cover_url && (
+                <p className="mt-1 text-xs font-bold text-primary">منشور مصور</p>
+              )}
+              </div>
             </div>
             <div className="flex gap-1">
               <Button size="icon" variant="ghost" title="تعديل" onClick={() => onEdit(item)}>
