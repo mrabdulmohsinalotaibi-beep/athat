@@ -97,13 +97,13 @@ function Landing() {
           <article className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-primary">رؤيتنا</h2>
             <p className="mt-3 text-sm leading-8 text-muted-foreground">
-              {profile?.vision || DEFAULT_VISION}
+              {DEFAULT_VISION}
             </p>
           </article>
           <article className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-primary">رسالتنا</h2>
             <p className="mt-3 text-sm leading-8 text-muted-foreground">
-              {profile?.mission || DEFAULT_MISSION}
+              {DEFAULT_MISSION}
             </p>
           </article>
         </div>
