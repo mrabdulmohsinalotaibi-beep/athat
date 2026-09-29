@@ -73,7 +73,15 @@ function PostPage() {
               </div>
               <Button type="button" onClick={shareOnWhatsApp} className="mt-7 gap-2 bg-[#25D366] font-bold text-white shadow-lg shadow-[#25D366]/20 hover:bg-[#1da851]"><MessageCircle className="size-4" /> مشاركة المنشور عبر واتساب</Button>
             </div>
-            {post.cover_url && <img src={post.cover_url} alt={post.title} className="mx-auto mt-10 max-h-[520px] w-full rounded-3xl object-cover shadow-xl" />}
+            {post.cover_url && (
+              <div className="mt-10 overflow-hidden rounded-3xl border bg-card p-2 shadow-xl sm:p-4">
+                <img
+                  src={post.cover_url}
+                  alt={post.title}
+                  className="mx-auto max-h-[1100px] w-full rounded-2xl object-contain"
+                />
+              </div>
+            )}
             <div className="mx-auto max-w-3xl">
               {post.excerpt && <p className="mt-10 border-r-4 border-accent pr-5 text-lg font-bold leading-9 text-foreground/80">{post.excerpt}</p>}
               <div className="mt-8 whitespace-pre-line text-base leading-9 text-foreground/90 sm:text-lg">{post.body}</div>
