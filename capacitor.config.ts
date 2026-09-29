@@ -5,10 +5,7 @@ const config: CapacitorConfig = {
   appName: "الذات",
   webDir: "native-shell",
   server: {
-    url: "https://athat.app/",
-    cleartext: false,
     androidScheme: "https",
-    allowNavigation: ["athat.app", "*.athat.app"],
   },
   android: {
     allowMixedContent: false,
