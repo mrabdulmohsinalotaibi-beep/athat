@@ -136,11 +136,7 @@ export function PublicRequestForm({
         });
 
         if (!feedback.error) {
-          return typeof feedback.data === "string"
-            ? feedback.data
-            : feedback.data
-              ? String(feedback.data)
-              : "تم الاستلام";
+          return "تم الاستلام";
         }
       }
 
