@@ -115,9 +115,16 @@ function SettingsPage() {
   const [editingLookup, setEditingLookup] = useState<{ id: string; value: string } | null>(null);
   const saveSchool = useMutation({
     mutationFn: async (values: Record<string, string>) => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      const userId = authData.user?.id;
+      const { data: sessionData } = await supabase.auth.getSession();
+      let userId = sessionData.session?.user.id ?? "";
+
+      try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (!authError && authData.user) userId = authData.user.id;
+      } catch {
+        // Keep the locally persisted session during a transient auth/network failure.
+      }
+
       if (!userId) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا ثم حاول الحفظ");
 
       const payload = {
