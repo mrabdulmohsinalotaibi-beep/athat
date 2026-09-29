@@ -227,8 +227,6 @@ function AuthPage() {
           </p>
         </div>
 
-        </div>
-
         <form
           onSubmit={
             mode === "signin"
