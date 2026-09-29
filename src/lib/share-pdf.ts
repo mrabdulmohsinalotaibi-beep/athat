@@ -36,9 +36,28 @@ export async function createPdfFile({
   let clonedBreakPoints: number[] = [];
 
   try {
+    // Arabic glyph shaping can break when capture starts before the webfont has
+    // finished loading. Wait explicitly for Cairo and one paint cycle.
+    if (typeof document !== "undefined" && "fonts" in document) {
+      try {
+        await document.fonts.ready;
+        await Promise.all([
+          document.fonts.load('400 16px "Cairo Variable"'),
+          document.fonts.load('600 16px "Cairo Variable"'),
+          document.fonts.load('700 16px "Cairo Variable"'),
+        ]);
+      } catch {
+        // The PDF can still fall back to the system Arabic font.
+      }
+    }
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+
     const renderOptions: NonNullable<Parameters<typeof html2canvas>[1]> = {
-      scale,
+      scale: Math.max(2, scale),
       useCORS: true,
+      foreignObjectRendering: true,
       backgroundColor: "#ffffff",
       logging: false,
       // Force a stable desktop/A4 layout even when export is started on mobile.
@@ -93,8 +112,31 @@ export async function createPdfFile({
         safeStyle.textContent = `
           [data-pdf-capture-target="true"],
           [data-pdf-capture-target="true"] * {
-            box-shadow: none !important;
+            font-family: "Cairo Variable", "Cairo", Tahoma, Arial, sans-serif !important;
+            letter-spacing: 0 !important;
+            word-spacing: 0 !important;
+            font-kerning: normal !important;
+            font-synthesis: none !important;
             text-shadow: none !important;
+            box-shadow: none !important;
+          }
+          [data-pdf-capture-target="true"] {
+            direction: rtl !important;
+            text-rendering: geometricPrecision !important;
+          }
+          [data-pdf-capture-target="true"] p,
+          [data-pdf-capture-target="true"] li,
+          [data-pdf-capture-target="true"] td,
+          [data-pdf-capture-target="true"] th,
+          [data-pdf-capture-target="true"] dd,
+          [data-pdf-capture-target="true"] dt {
+            direction: rtl !important;
+            unicode-bidi: plaintext !important;
+            letter-spacing: 0 !important;
+            word-spacing: 0 !important;
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            white-space: normal !important;
           }
           [data-pdf-capture-target="true"] .official-school-logo {
             background-color: rgba(255,255,255,.95) !important;
