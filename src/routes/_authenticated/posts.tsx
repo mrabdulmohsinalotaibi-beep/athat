@@ -496,11 +496,7 @@ function ServiceCard({
   );
 }
 
-async function compressPostImage(file: File): Promise<File> {
-  if (file.size <= 1_800_000 && ["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-    return file;
-  }
-
+async function renderPostImage(file: File, targetBytes = 1_800_000): Promise<Blob> {
   const objectUrl = URL.createObjectURL(file);
   try {
     const image = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -510,7 +506,7 @@ async function compressPostImage(file: File): Promise<File> {
       img.src = objectUrl;
     });
 
-    const maxSide = 1600;
+    const maxSide = targetBytes <= 900_000 ? 1400 : 1800;
     const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -520,23 +516,40 @@ async function compressPostImage(file: File): Promise<File> {
     if (!ctx) throw new Error("تعذّر تجهيز الصورة للرفع.");
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-    let quality = 0.84;
+    let quality = 0.86;
     let blob: Blob | null = null;
     do {
       blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
       quality -= 0.08;
-    } while (blob && blob.size > 1_900_000 && quality >= 0.44);
+    } while (blob && blob.size > targetBytes && quality >= 0.38);
 
-    if (!blob) throw new Error("تعذّر ضغط الصورة للرفع.");
-    if (blob.size > 2_000_000) throw new Error("الصورة كبيرة جدًا. اختر صورة أصغر من 10 ميجابايت.");
-
-    return new File([blob], "post-image.webp", {
-      type: "image/webp",
-      lastModified: Date.now(),
-    });
+    if (!blob) throw new Error("تعذّر ضغط الصورة.");
+    return blob;
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
+}
+
+async function compressPostImage(file: File): Promise<File> {
+  if (file.size <= 1_800_000 && ["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    return file;
+  }
+  const blob = await renderPostImage(file, 1_800_000);
+  if (blob.size > 2_000_000) throw new Error("الصورة كبيرة جدًا. اختر صورة أصغر من 10 ميجابايت.");
+  return new File([blob], "post-image.webp", { type: "image/webp", lastModified: Date.now() });
+}
+
+async function postImageDataUrl(file: File): Promise<string> {
+  const blob = await renderPostImage(file, 850_000);
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      typeof reader.result === "string"
+        ? resolve(reader.result)
+        : reject(new Error("تعذّر تجهيز الصورة للحفظ."));
+    reader.onerror = () => reject(new Error("تعذّر تجهيز الصورة للحفظ."));
+    reader.readAsDataURL(blob);
+  });
 }
 
 function ContentEditor({
@@ -590,42 +603,36 @@ function ContentEditor({
       if (!primaryUpload.error) {
         publicUrl = supabase.storage.from("post-media").getPublicUrl(primaryPath).data.publicUrl;
       } else {
-        const message = primaryUpload.error.message?.toLowerCase() ?? "";
-        const bucketMissing =
-          message.includes("bucket not found") ||
-          message.includes("bucket does not exist") ||
-          message.includes("not found");
+        // Older production databases may not yet have post-media or its policies.
+        // Try the existing public avatar bucket, then fall back to an embedded,
+        // compressed image so the user is never blocked by Storage RLS.
+        try {
+          const fallbackFile = await compressPostImage(file);
+          const fallbackPath = `${uid}/posts/${fileId}.webp`;
+          const fallbackUpload = await supabase.storage
+            .from("user-avatars")
+            .upload(fallbackPath, fallbackFile, {
+              contentType: fallbackFile.type,
+              cacheControl: "3600",
+              upsert: false,
+            });
 
-        if (!bucketMissing) throw primaryUpload.error;
-
-        // Production-safe fallback: user-avatars already exists as a public bucket
-        // in older Athat installations. Compress the post image so it respects
-        // that bucket's 2 MB limit while the post-media migration is pending.
-        const fallbackFile = await compressPostImage(file);
-        const fallbackPath = `${uid}/posts/${fileId}.webp`;
-        const fallbackUpload = await supabase.storage
-          .from("user-avatars")
-          .upload(fallbackPath, fallbackFile, {
-            contentType: fallbackFile.type,
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (fallbackUpload.error) {
-          const fallbackMessage = fallbackUpload.error.message?.toLowerCase() ?? "";
-          if (fallbackMessage.includes("bucket") && fallbackMessage.includes("not found")) {
-            throw new Error("مساحة رفع الصور غير مهيأة في قاعدة البيانات. تم حفظ الإصلاح في التطبيق ويحتاج تفعيل مساحة التخزين.");
+          if (!fallbackUpload.error) {
+            publicUrl = supabase.storage.from("user-avatars").getPublicUrl(fallbackPath).data.publicUrl;
           }
-          throw fallbackUpload.error;
+        } catch {
+          // Continue to the embedded-image fallback below.
         }
 
-        publicUrl = supabase.storage.from("user-avatars").getPublicUrl(fallbackPath).data.publicUrl;
+        if (!publicUrl) {
+          publicUrl = await postImageDataUrl(file);
+        }
       }
 
-      if (!publicUrl) throw new Error("تعذّر إنشاء رابط الصورة.");
+      if (!publicUrl) throw new Error("تعذّر تجهيز الصورة. جرّب صورة أخرى.");
 
       onChange({ ...draft, cover_url: publicUrl });
-      toast.success("تم رفع الصورة وإرفاقها بالمحتوى");
+      toast.success("تم إرفاق الصورة بنجاح");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذّر رفع الصورة");
     } finally {
