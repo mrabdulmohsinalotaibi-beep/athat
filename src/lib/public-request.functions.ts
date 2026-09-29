@@ -15,6 +15,7 @@ const requestSchema = z.object({
   preferredTime: z.string().max(120).nullable().optional(),
   isAnonymous: z.boolean().default(false),
   schoolSlug: z.string().max(160).nullable().optional(),
+  portalToken: z.string().max(220).nullable().optional(),
 });
 
 function clean(value: string | null | undefined) {
@@ -27,17 +28,32 @@ export const submitPublicRequestFallback = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    let settingsQuery = supabaseAdmin
-      .from("school_settings")
-      .select("user_id,public_requests_enabled,updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(1);
+    let settings = null as { user_id: string; public_requests_enabled: boolean | null } | null;
+    let settingsError: Error | null = null;
 
-    if (data.schoolSlug?.trim()) {
-      settingsQuery = settingsQuery.eq("public_slug", data.schoolSlug.trim());
+    if (data.portalToken?.trim()) {
+      const result = await supabaseAdmin
+        .from("school_settings")
+        .select("user_id,public_requests_enabled")
+        .eq("private_blog_token", data.portalToken.trim())
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      settings = result.data;
+      settingsError = result.error;
     }
 
-    const { data: settings, error: settingsError } = await settingsQuery.maybeSingle();
+    if (!settings && !settingsError && data.schoolSlug?.trim()) {
+      const result = await supabaseAdmin
+        .from("school_settings")
+        .select("user_id,public_requests_enabled")
+        .eq("public_slug", data.schoolSlug.trim())
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      settings = result.data;
+      settingsError = result.error;
+    }
     if (settingsError) throw settingsError;
     if (!settings?.user_id) {
       throw new Error("لم يتم تفعيل استقبال الطلبات لهذه المدرسة بعد.");
