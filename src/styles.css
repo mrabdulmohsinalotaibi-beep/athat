@@ -98,10 +98,10 @@
   --brand-mark-surface: #3c3c3c;
   --brand-mark-border: #555555;
   --paper: #ffffff;
-  --paper-foreground: #25203e;
-  --paper-muted: #f4f2f9;
-  --paper-muted-foreground: #6f6882;
-  --paper-border: #d9d4e7;
+  --paper-foreground: #2f2f2f;
+  --paper-muted: #f7f5f1;
+  --paper-muted-foreground: #756f67;
+  --paper-border: #d8d2c8;
   --letterhead-primary: #3c3c3c;
   --letterhead-secondary: #8a8175;
   --letterhead-soft: #f3efe8;
@@ -228,15 +228,34 @@ select {
   }
 .official-letterhead {
     position: relative;
+    overflow: hidden;
+    padding-bottom: 1rem;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
   }
-.official-letterhead::after {
+.official-letterhead-accent {
+    height: 4px;
+    background: linear-gradient(90deg, #3c3c3c 0 78%, #8a8175 78% 100%);
+  }
+.official-title-band {
+    position: relative;
+  }
+.official-title-band::after {
     position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 1px;
+    bottom: -1px;
+    left: 50%;
+    width: 54px;
+    height: 2px;
     content: "";
-    background: var(--paper-border);
+    transform: translateX(-50%);
+    background: #8a8175;
+  }
+.official-document-meta {
+    color: #5f5a54;
+  }
+.official-school-seal {
+    pointer-events: none;
   }
 }
 html {
@@ -401,6 +420,9 @@ textarea {
   .record-pdf-document [data-radix-accordion-trigger] { pointer-events: none; }
   .record-pdf-document .report-signatures { margin-top: 6mm; }
   .official-document-footer { margin-top: auto; padding-top: 4mm; }
+  .official-letterhead { padding-bottom: 4mm; }
+  .official-header-grid { padding: 4mm 7mm 3mm; }
+  .official-title-band { margin-inline: 7mm; padding-block: 3mm; }
   .record-pdf-document .overflow-x-auto { width: 100%; overflow: visible; margin: 0; padding: 0; }
   .record-pdf-document table { width: 100%; min-width: 0; table-layout: auto; border-collapse: collapse; }
   .record-pdf-document thead { display: table-header-group; }
@@ -465,6 +487,13 @@ textarea {
   margin-top: auto;
   break-inside: avoid;
   page-break-inside: avoid;
+  color: #36322e;
+}
+.official-signature-block {
+  position: relative;
+}
+.official-footer-line {
+  letter-spacing: 0;
 }
 .record-pdf-document table th {
   font-weight: 800;
