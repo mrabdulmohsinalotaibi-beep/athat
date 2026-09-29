@@ -7,6 +7,13 @@ export type SharePdfOptions = {
   title?: string;
 };
 
+function isIOSLike() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /iPad|iPhone|iPod/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
 function safeFilename(value: string) {
   return (
     value
@@ -57,7 +64,8 @@ export async function createPdfFile({
     const renderOptions: NonNullable<Parameters<typeof html2canvas>[1]> = {
       scale: Math.max(2, scale),
       useCORS: true,
-      foreignObjectRendering: true,
+      // foreignObject rendering is unreliable for Arabic/PDF capture on iOS Safari.
+      foreignObjectRendering: !isIOSLike(),
       backgroundColor: "#ffffff",
       logging: false,
       // Force a stable desktop/A4 layout even when export is started on mobile.
@@ -293,6 +301,72 @@ export async function createPdfFile({
     if (previousCaptureFlag === undefined) delete element.dataset["pdfCaptureTarget"];
     else element.dataset["pdfCaptureTarget"] = previousCaptureFlag;
   }
+}
+
+export async function savePdfFile(file: File) {
+  // Chromium/desktop: use the native save dialog when available.
+  if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
+    try {
+      const picker = (
+        window as Window & {
+          showSaveFilePicker?: (options: {
+            suggestedName?: string;
+            types?: Array<{
+              description: string;
+              accept: Record<string, string[]>;
+            }>;
+          }) => Promise<{
+            createWritable: () => Promise<{
+              write: (data: Blob) => Promise<void>;
+              close: () => Promise<void>;
+            }>;
+          }>;
+        }
+      ).showSaveFilePicker;
+
+      if (picker) {
+        const handle = await picker({
+          suggestedName: file.name,
+          types: [
+            {
+              description: "PDF",
+              accept: { "application/pdf": [".pdf"] },
+            },
+          ],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(file);
+        await writable.close();
+        return "saved" as const;
+      }
+    } catch (error) {
+      if ((error as Error).name === "AbortError") return "cancelled" as const;
+      // Continue to mobile/browser fallbacks.
+    }
+  }
+
+  // iPhone/iPad: the share sheet is the reliable way to save a generated PDF
+  // into Files, Books, AirDrop, or another supported destination.
+  if (
+    isIOSLike() &&
+    typeof navigator !== "undefined" &&
+    typeof navigator.share === "function" &&
+    typeof navigator.canShare === "function" &&
+    navigator.canShare({ files: [file] })
+  ) {
+    try {
+      await navigator.share({
+        title: file.name.replace(/\.pdf$/i, ""),
+        files: [file],
+      });
+      return "shared" as const;
+    } catch (error) {
+      if ((error as Error).name === "AbortError") return "cancelled" as const;
+    }
+  }
+
+  downloadPdfFile(file);
+  return "downloaded" as const;
 }
 
 export async function sharePdfFile({
