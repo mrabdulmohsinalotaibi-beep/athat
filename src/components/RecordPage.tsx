@@ -465,12 +465,19 @@ export function RecordPage({
       return;
     }
 
+    // Read the live form first so text typed immediately before Smart Fill is
+    // treated as user-owned content and is never overwritten by AI suggestions.
     const currentValues: Record<string, string> = {};
+    const form = document.getElementById("record-form");
+    const liveData = form instanceof HTMLFormElement ? new FormData(form) : null;
+
     config.fields
       .filter((field) => !field.generated)
       .forEach((field) => {
-        const value = auto[field.name] ?? String(editing?.[field.name] ?? "");
-        if (value.trim()) currentValues[field.name] = value;
+        const liveValue = liveData?.get(field.name);
+        const fallback = auto[field.name] ?? String(editing?.[field.name] ?? "");
+        const value = typeof liveValue === "string" ? liveValue : fallback;
+        if (value.trim()) currentValues[field.name] = value.trim();
       });
 
     const fillableFields = config.fields.filter(
