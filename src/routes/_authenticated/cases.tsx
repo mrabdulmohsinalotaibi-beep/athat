@@ -162,7 +162,7 @@ function SpecialCasesPage() {
           <div className="mt-3 flex flex-wrap gap-2">
             <Link to="/students" className="text-xs font-bold text-primary">ملفات الطلاب</Link>
             <span className="text-muted-foreground">•</span>
-            <Link to="/interviews" className="text-xs font-bold text-primary">الجلسات الإرشادية</Link>
+            <Link to="/interviews" className="text-xs font-bold text-primary">المقابلات الطلابية</Link>
           </div>
         </section>
       )}
