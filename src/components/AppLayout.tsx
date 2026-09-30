@@ -26,6 +26,29 @@ function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
 }
 
+function AlertLink({
+  to,
+  label,
+  count,
+  close,
+}: {
+  to: string;
+  label: string;
+  count: number;
+  close: () => void;
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={close}
+      className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2 transition hover:border-primary/35 hover:bg-primary/[0.04]"
+    >
+      <span className="font-bold">{label}</span>
+      <span className="min-w-6 rounded-full bg-primary/10 px-1.5 py-0.5 text-center text-[10px] font-black text-primary">{count}</span>
+    </Link>
+  );
+}
+
 
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
@@ -45,27 +68,66 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const visibleSections = WORKSPACE_SECTIONS;
   const visibleBottomNavigation = bottomNavigation;
-  const { data: alertCount = 0 } = useQuery({
-    queryKey: ["app-alert-count"],
+  const { data: alertSummary } = useQuery({
+    queryKey: ["app-alert-summary"],
     queryFn: async () => {
       const day = new Date().toISOString().slice(0, 10);
-      const [cases, tasks, schoolTasks] = await Promise.all([
+      const { data: context, error: contextError } = await (supabase as any).rpc("get_my_school_context");
+      if (contextError) console.warn("[alerts] school context:", contextError.message);
+
+      const memberId = String(context?.membership?.id ?? "");
+      const isSchoolAdmin = Boolean(context?.membership?.is_admin);
+      const pendingMembers = isSchoolAdmin
+        ? (context?.members ?? []).filter((member: any) => member.member_status === "pending").length
+        : 0;
+
+      const [cases, tasks, schoolTasks, handoffs] = await Promise.all([
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
-        (supabase as any).from("school_tasks").select("id,status,due_date"),
+        (supabase as any).from("school_tasks").select("id,status,due_date,creator_member_id,assignee_member_id"),
+        (supabase as any).from("school_report_handoffs").select("id,status,recipient_member_id"),
       ]);
+
       // Alerts are supplementary UI. A missing/temporarily unavailable table
       // must never prevent the rest of the application from opening.
       if (cases.error) console.warn("[alerts] counseling_cases:", cases.error.message);
       if (tasks.error) console.warn("[alerts] plan_tasks:", tasks.error.message);
       if (schoolTasks.error) console.warn("[alerts] school_tasks:", schoolTasks.error.message);
-      const dueCases = (cases.error ? [] : cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;
-      const attentionTasks = (tasks.error ? [] : tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;
-      const dueSchoolTasks = (schoolTasks.error ? [] : schoolTasks.data ?? []).filter((item: any) => item.due_date && String(item.due_date).slice(0, 10) <= day && !["مكتملة", "معتمدة", "ملغاة"].includes(String(item.status ?? ""))).length;
-      return dueCases + attentionTasks + dueSchoolTasks;
+      if (handoffs.error) console.warn("[alerts] school_report_handoffs:", handoffs.error.message);
+
+      const dueCases = (cases.error ? [] : cases.data ?? []).filter(
+        (item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day,
+      ).length;
+      const attentionPlan = (tasks.error ? [] : tasks.data ?? []).filter(
+        (item) =>
+          (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") ||
+          item.doc_status === "ناقص",
+      ).length;
+      const visibleSchoolTasks = schoolTasks.error ? [] : schoolTasks.data ?? [];
+      const dueSchoolTasks = visibleSchoolTasks.filter(
+        (item: any) =>
+          item.assignee_member_id === memberId &&
+          item.due_date &&
+          String(item.due_date).slice(0, 10) <= day &&
+          !["مكتملة", "معتمدة", "ملغاة"].includes(String(item.status ?? "")),
+      ).length;
+      const approvals = visibleSchoolTasks.filter(
+        (item: any) =>
+          item.status === "مكتملة" &&
+          (item.creator_member_id === memberId || isSchoolAdmin),
+      ).length;
+      const unreadReports = (handoffs.error ? [] : handoffs.data ?? []).filter(
+        (item: any) => item.recipient_member_id === memberId && item.status === "sent",
+      ).length;
+
+      const total = dueCases + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers;
+      return { total, dueCases, attentionPlan, dueSchoolTasks, approvals, unreadReports, pendingMembers };
     },
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
+  const alertCount = alertSummary?.total ?? 0;
   const currentSection = visibleSections.find((section) =>
     section.items.some((item) => isPathActive(pathname, item.to)),
   );
@@ -277,12 +339,24 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 </Button>
                 {alertsOpen && (
                   <div className="absolute left-0 top-12 z-50 w-72 rounded-xl border border-border bg-card p-3 text-card-foreground shadow-xl">
-                    <p className="text-sm font-black">تنبيهات العمل</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}
-                    </p>
-                    <Button asChild size="sm" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}>
-                      <Link to="/dashboard">فتح مركز مهام اليوم</Link>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-black">مركز التنبيهات</p>
+                      {alertCount > 0 && <span className="rounded-full bg-destructive/10 px-2 py-1 text-[10px] font-black text-destructive">{alertCount} إجراء</span>}
+                    </div>
+                    {alertCount ? (
+                      <div className="mt-3 space-y-1.5 text-xs">
+                        {(alertSummary?.dueCases ?? 0) > 0 && <AlertLink to="/cases" label="متابعات حالات مستحقة" count={alertSummary?.dueCases ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.attentionPlan ?? 0) > 0 && <AlertLink to="/plan" label="مهام خطة تحتاج إجراء" count={alertSummary?.attentionPlan ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.dueSchoolTasks ?? 0) > 0 && <AlertLink to="/school-tasks" label="مهام مدرسية مسندة لك" count={alertSummary?.dueSchoolTasks ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.approvals ?? 0) > 0 && <AlertLink to="/school-tasks" label="إنجازات تنتظر اعتمادك" count={alertSummary?.approvals ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.unreadReports ?? 0) > 0 && <AlertLink to="/school-inbox" label="تقارير إدارية غير مقروءة" count={alertSummary?.unreadReports ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.pendingMembers ?? 0) > 0 && <AlertLink to="/school-team" label="طلبات انضمام للفريق" count={alertSummary?.pendingMembers ?? 0} close={() => setAlertsOpen(false)} />}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-muted-foreground">لا توجد عناصر تحتاج إجراء حاليًا.</p>
+                    )}
+                    <Button asChild size="sm" variant="outline" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}>
+                      <Link to="/dashboard">فتح لوحة العمل</Link>
                     </Button>
                   </div>
                 )}
