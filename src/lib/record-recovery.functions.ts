@@ -2,9 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const VERIFIED_EMAIL_HASH =
-  "f85fb6c59825f60fcd934e427128495266b9031d300f51d8fb33aa6f1f209d00";
-
 const RECORD_TABLES = [
   "students",
   "counseling_cases",
@@ -26,64 +23,63 @@ const RECORD_TABLES = [
   "noor_export_jobs",
 ] as const;
 
-async function sha256(value: string) {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+function normEmail(value: unknown) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
 
+/**
+ * Recover rows that still exist in production but are owned by an older auth UID.
+ *
+ * Safety rule: legacy ownership is accepted only when a legacy profile/school row
+ * contains the SAME email as the currently authenticated account. We never
+ * reassign rows by school name, counselor name, student names, or other fuzzy data.
+ */
 export const recoverLegacyRecords = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData.user?.email) {
+    const email = normEmail(userData.user?.email);
+
+    if (userError || !email) {
       throw new Error("تعذّر التحقق من الحساب الحالي.");
     }
 
-    const emailHash = await sha256(userData.user.email.trim().toLowerCase());
-    if (emailHash !== VERIFIED_EMAIL_HASH) {
-      return { recovered: false, reason: "not_target_account", total: 0, tables: {} };
-    }
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    // Candidate legacy owner IDs must be tied to the verified school/counselor
-    // identity. Current user is excluded. This avoids claiming unrelated data.
     const candidateIds = new Set<string>();
 
-    const { data: schools } = await (supabaseAdmin as any)
-      .from("school_settings")
-      .select("user_id,school_name,counselor_name,contact_email")
-      .or(
-        [
-          "school_name.eq.متوسطة العلاء بن الحضرمي",
-          "counselor_name.eq.عبدالمحسن العتيبي",
-          "contact_email.eq." + userData.user.email,
-        ].join(","),
-      );
+    // 1) Legacy profile rows: strongest identity link.
+    try {
+      const { data } = await (supabaseAdmin as any)
+        .from("user_profiles")
+        .select("id,professional_email")
+        .ilike("professional_email", email);
 
-    for (const row of schools ?? []) {
-      const id = typeof row?.user_id === "string" ? row.user_id : "";
-      if (id && id !== userId) candidateIds.add(id);
+      for (const row of data ?? []) {
+        const id = typeof row?.id === "string" ? row.id : "";
+        if (id && id !== userId && normEmail(row?.professional_email) === email) {
+          candidateIds.add(id);
+        }
+      }
+    } catch (error) {
+      console.warn("[record-recovery] user_profiles identity lookup:", error);
     }
 
-    const { data: profiles } = await (supabaseAdmin as any)
-      .from("user_profiles")
-      .select("id,full_name,professional_email,school_name")
-      .or(
-        [
-          "school_name.eq.متوسطة العلاء بن الحضرمي",
-          "full_name.eq.عبدالمحسن العتيبي",
-          "professional_email.eq." + userData.user.email,
-        ].join(","),
-      );
+    // 2) Legacy school rows: exact contact email only.
+    try {
+      const { data } = await (supabaseAdmin as any)
+        .from("school_settings")
+        .select("user_id,contact_email")
+        .ilike("contact_email", email);
 
-    for (const row of profiles ?? []) {
-      const id = typeof row?.id === "string" ? row.id : "";
-      if (id && id !== userId) candidateIds.add(id);
+      for (const row of data ?? []) {
+        const id = typeof row?.user_id === "string" ? row.user_id : "";
+        if (id && id !== userId && normEmail(row?.contact_email) === email) {
+          candidateIds.add(id);
+        }
+      }
+    } catch (error) {
+      console.warn("[record-recovery] school identity lookup:", error);
     }
 
     if (!candidateIds.size) {
@@ -103,7 +99,6 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
           .select("id");
 
         if (error) {
-          // Older deployments may not have every optional table. Skip safely.
           console.warn("[record-recovery]", table, error.message);
           continue;
         }
@@ -116,8 +111,7 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
       }
     }
 
-    // Merge school settings conservatively: keep the current row if present,
-    // otherwise move the best legacy row to the current account.
+    // Restore/merge school settings without overwriting non-empty current values.
     try {
       const { data: currentSchool } = await (supabaseAdmin as any)
         .from("school_settings")
@@ -139,11 +133,11 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
           for (const [key, value] of Object.entries(legacySchool)) {
             if (["id", "user_id", "created_at", "updated_at"].includes(key)) continue;
             const current = currentSchool[key];
-            const currentEmpty =
+            const empty =
               current === null ||
               current === undefined ||
               (typeof current === "string" && !current.trim());
-            if (currentEmpty && value !== null && value !== undefined && value !== "") {
+            if (empty && value !== null && value !== undefined && value !== "") {
               patch[key] = value;
             }
           }
