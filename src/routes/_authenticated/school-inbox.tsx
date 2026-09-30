@@ -110,6 +110,8 @@ function SchoolInboxPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["school-report-handoffs"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
     },
     onError: (error) => toast.error((error as Error).message),
   });
@@ -124,6 +126,8 @@ function SchoolInboxPage() {
     onSuccess: async () => {
       setSelectedId(null);
       await queryClient.invalidateQueries({ queryKey: ["school-report-handoffs"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
       toast.success("تمت أرشفة التقرير.");
     },
     onError: (error) => toast.error((error as Error).message),
