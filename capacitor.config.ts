@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: false,
-    backgroundColor: "#3C3C3C",
+    backgroundColor: "#073B4C",
   },
 };
 
