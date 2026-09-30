@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { FileSpreadsheet, FolderOpen, Upload } from "lucide-react";
@@ -106,23 +106,19 @@ export function StudentsPage() {
   const studentStatuses = useMemo(() => uniq("status"), [rows]);
 
 
-
-  const extraFilter = useCallback(
-    (row: Record<string, unknown>) =>
-      (!stage || String(row["stage"] ?? "") === stage) &&
-      (!grade || String(row["grade"] ?? "") === grade) &&
-      (!classroom || String(row["classroom"] ?? "") === classroom) &&
-      (!nationality || String(row["nationality"] ?? "") === nationality) &&
-      (!studentStatus || String(row["status"] ?? "") === studentStatus),
-    [stage, grade, classroom, nationality, studentStatus],
-  );
-
   return (
     <>
       <RecordPage
         config={config}
         hideImport
-        extraFilter={extraFilter}
+        serverPagination
+        serverFilters={{
+          stage,
+          grade,
+          classroom,
+          nationality,
+          status: studentStatus,
+        }}
         rowAction={{
           icon: <FolderOpen className="size-4" />,
           title: "فتح ملف الطالب",
