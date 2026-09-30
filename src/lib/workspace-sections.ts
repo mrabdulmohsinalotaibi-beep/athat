@@ -14,7 +14,8 @@ import {
   ShieldAlert,
   ExternalLink,
   UsersRound,
-  Wrench
+  Wrench,
+  ShieldCheck
 } from "lucide-react";
 
 export type WorkspaceSectionItem = {
@@ -88,6 +89,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     items: [
       { to: "/settings", label: "بيانات المدرسة", icon: Settings },
       { to: "/integrations", label: "التكاملات", icon: Globe2 },
+      { to: "/trash", label: "حماية البيانات", icon: ShieldCheck },
     ],
   },
 ];
