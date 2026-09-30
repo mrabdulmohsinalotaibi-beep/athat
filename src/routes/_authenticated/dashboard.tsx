@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
+import { featureForPath, useGlobalAppSettings } from "@/lib/admin";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -110,7 +111,13 @@ function useDashboard() {
 function Dashboard() {
   const { data: school } = useSchool();
   const { data, isLoading, isError, refetch, isFetching } = useDashboard();
+  const { data: globalSettings } = useGlobalAppSettings();
   const day = today();
+
+  const routeEnabled = (route: string) => {
+    const feature = featureForPath(route);
+    return !feature || globalSettings?.feature_flags?.[feature] !== false;
+  };
 
   const activeCases = (data?.cases ?? []).filter((item) => item.case_status !== "مغلقة");
   const overdueCases = activeCases.filter(
@@ -200,7 +207,7 @@ function Dashboard() {
       to: "/posts" as const,
       icon: Inbox,
     },
-  ];
+  ].filter((item) => routeEnabled(item.to));
 
   const shortcuts = [
     {
@@ -245,7 +252,7 @@ function Dashboard() {
       to: "/posts" as const,
       icon: BookOpen,
     },
-  ];
+  ].filter((item) => routeEnabled(item.to));
 
   const actions = [
     ...overdueCases.slice(0, 2).map((item) => ({
@@ -269,7 +276,7 @@ function Dashboard() {
       detail: "البرنامج منفذ ولا يوجد شاهد مرتبط ظاهر في البيانات",
       to: "/programs" as const,
     })),
-  ].slice(0, 5);
+  ].filter((item) => routeEnabled(item.to)).slice(0, 5);
 
   if (isError) {
     return (
@@ -316,7 +323,7 @@ function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            {attentionCount > 0 && (
+            {attentionCount > 0 && routeEnabled("/posts") && (
               <Link
                 to="/posts"
                 className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-black hover:bg-white/20"
@@ -413,7 +420,7 @@ function Dashboard() {
           </div>
 
           <div className="mt-2 grid gap-2 lg:grid-cols-2">
-            {openRequests > 0 && (
+            {openRequests > 0 && routeEnabled("/posts") && (
               <Link
                 to="/posts"
                 className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/[0.04] p-2.5"
@@ -428,7 +435,7 @@ function Dashboard() {
               </Link>
             )}
 
-            {missingDocumentation.length > 0 && (
+            {missingDocumentation.length > 0 && routeEnabled("/evidences") && (
               <Link
                 to="/evidences"
                 className="flex items-center justify-between gap-3 rounded-xl border p-2.5"
@@ -462,6 +469,7 @@ function Dashboard() {
       )}
 
       <div className="grid gap-3 lg:grid-cols-2">
+        {routeEnabled("/calendar") && (
         <section className="rounded-2xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -500,7 +508,9 @@ function Dashboard() {
             </div>
           )}
         </section>
+        )}
 
+        {routeEnabled("/interviews") && (
         <section className="rounded-2xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -541,6 +551,7 @@ function Dashboard() {
             </div>
           )}
         </section>
+        )}
       </div>
 
       {(data?.failedSources.length ?? 0) > 0 && (
