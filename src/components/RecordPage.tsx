@@ -17,7 +17,7 @@ import {
   Pencil,
   Paperclip,
   FileText,
-  X
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,7 +35,7 @@ import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import {
   StudentCombobox,
   useStudentOptions,
-  type StudentOption
+  type StudentOption,
 } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
@@ -50,9 +50,8 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
-
 
 type Row = Record<string, unknown> & { id: string };
 
@@ -189,7 +188,13 @@ export function RecordPage({
     toast.success("تم حذف الخيار من القائمة");
   }
 
-  const { data: rows = [], isLoading, isError: rowsError, error: rowsQueryError, refetch: refetchRows } = useQuery({
+  const {
+    data: rows = [],
+    isLoading,
+    isError: rowsError,
+    error: rowsQueryError,
+    refetch: refetchRows,
+  } = useQuery({
     queryKey: [config.table],
     retry: 1,
     staleTime: 0,
@@ -200,7 +205,10 @@ export function RecordPage({
         .order("created_at", { ascending: false });
 
       const timeout = new Promise<never>((_, reject) =>
-        window.setTimeout(() => reject(new Error("انتهت مهلة تحميل السجلات. حاول مرة أخرى.")), 10000),
+        window.setTimeout(
+          () => reject(new Error("انتهت مهلة تحميل السجلات. حاول مرة أخرى.")),
+          10000,
+        ),
       );
 
       const { data, error } = await Promise.race([request, timeout]);
@@ -214,7 +222,11 @@ export function RecordPage({
     let out = rows;
     if (term) {
       out = out.filter((row) =>
-        config.fields.some((f) => String(row[f.name] ?? "").toLocaleLowerCase("ar").includes(term)),
+        config.fields.some((f) =>
+          String(row[f.name] ?? "")
+            .toLocaleLowerCase("ar")
+            .includes(term),
+        ),
       );
     }
     if (extraFilter) out = out.filter((row) => extraFilter(row));
@@ -461,7 +473,6 @@ export function RecordPage({
     }
   }
 
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -498,7 +509,7 @@ export function RecordPage({
           <input
             ref={fileRef}
             type="file"
-            accept=".xlsx,.xls,.csv"
+            accept=".xlsx,.csv"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -517,7 +528,9 @@ export function RecordPage({
           <div>
             <p className="font-bold text-destructive">تعذّر تحميل {config.title}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {rowsQueryError instanceof Error ? rowsQueryError.message : "حدث خطأ أثناء جلب البيانات."}
+              {rowsQueryError instanceof Error
+                ? rowsQueryError.message
+                : "حدث خطأ أثناء جلب البيانات."}
             </p>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => void refetchRows()}>
@@ -525,7 +538,6 @@ export function RecordPage({
           </Button>
         </div>
       )}
-
 
       <div className="relative w-full sm:max-w-sm">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -535,8 +547,16 @@ export function RecordPage({
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder={config.key === "students" ? "ابحث بالاسم أو رقم الطالب أو الهوية أو الصف..." : "بحث في السجل..."}
-          aria-label={config.key === "students" ? "البحث بالاسم أو رقم الطالب أو الهوية أو الصف" : "بحث في السجل"}
+          placeholder={
+            config.key === "students"
+              ? "ابحث بالاسم أو رقم الطالب أو الهوية أو الصف..."
+              : "بحث في السجل..."
+          }
+          aria-label={
+            config.key === "students"
+              ? "البحث بالاسم أو رقم الطالب أو الهوية أو الصف"
+              : "بحث في السجل"
+          }
           className="pr-9 pl-9"
         />
         {search && (
@@ -552,7 +572,10 @@ export function RecordPage({
         )}
       </div>
 
-      <div ref={recordPdfRef} className="record-pdf-document rounded-xl border bg-card p-4 shadow-sm">
+      <div
+        ref={recordPdfRef}
+        className="record-pdf-document rounded-xl border bg-card p-4 shadow-sm"
+      >
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
@@ -734,7 +757,10 @@ export function RecordPage({
         </div>
         <OfficialFooter school={school} />
         {pageCount > 1 && (
-          <div data-pdf-exclude="true" className="mt-4 flex items-center justify-between gap-3 text-sm">
+          <div
+            data-pdf-exclude="true"
+            className="mt-4 flex items-center justify-between gap-3 text-sm"
+          >
             <Button
               variant="outline"
               size="sm"
@@ -758,7 +784,6 @@ export function RecordPage({
         )}
       </div>
 
-
       <Dialog open={documentRow !== null} onOpenChange={(open) => !open && setDocumentRow(null)}>
         <DialogContent className="max-h-[96vh] max-w-5xl overflow-y-auto p-3 sm:p-5" dir="rtl">
           <DialogHeader data-pdf-exclude="true">
@@ -773,21 +798,24 @@ export function RecordPage({
             </div>
           </DialogHeader>
           {documentRow && (
-            <div ref={singleDocumentRef} className="record-pdf-document min-h-[277mm] bg-white p-[10mm] text-[#2c2824] shadow-sm">
+            <div
+              ref={singleDocumentRef}
+              className="record-pdf-document min-h-[277mm] bg-white p-[10mm] text-[#2c2824] shadow-sm"
+            >
               <OfficialHeader
                 school={school}
                 title={config.singular}
                 reportType={config.title}
                 reportNo={String(
                   documentRow["case_no"] ??
-                  documentRow["program_no"] ??
-                  documentRow["referral_no"] ??
-                  documentRow["report_no"] ??
-                  documentRow["meeting_no"] ??
-                  documentRow["seq"] ??
-                  documentRow["student_no"] ??
-                  documentRow["id"] ??
-                  "",
+                    documentRow["program_no"] ??
+                    documentRow["referral_no"] ??
+                    documentRow["report_no"] ??
+                    documentRow["meeting_no"] ??
+                    documentRow["seq"] ??
+                    documentRow["student_no"] ??
+                    documentRow["id"] ??
+                    "",
                 )}
               />
               <div className="my-6 grid grid-cols-1 gap-x-6 gap-y-0 border border-[var(--paper-border)] sm:grid-cols-2">
@@ -796,10 +824,15 @@ export function RecordPage({
                   return (
                     <div
                       key={field.name}
-                      data-pdf-block="true" className={`border-b border-[var(--paper-border)] p-3 ${field.type === "textarea" ? "sm:col-span-2" : ""}`}
+                      data-pdf-block="true"
+                      className={`border-b border-[var(--paper-border)] p-3 ${field.type === "textarea" ? "sm:col-span-2" : ""}`}
                     >
-                      <p className="mb-1 text-[11px] font-bold text-[var(--paper-muted-foreground)]">{field.label}</p>
-                      <div className="whitespace-pre-wrap break-words text-sm leading-7">{value || "—"}</div>
+                      <p className="mb-1 text-[11px] font-bold text-[var(--paper-muted-foreground)]">
+                        {field.label}
+                      </p>
+                      <div className="whitespace-pre-wrap break-words text-sm leading-7">
+                        {value || "—"}
+                      </div>
                     </div>
                   );
                 })}
@@ -811,7 +844,10 @@ export function RecordPage({
       </Dialog>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[90vh]" dir="rtl">
+        <DialogContent
+          className="flex max-h-[calc(100dvh-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[90vh]"
+          dir="rtl"
+        >
           <DialogHeader className="border-b px-4 pb-3 pt-4 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <DialogTitle>
@@ -857,7 +893,10 @@ export function RecordPage({
               .map((f) => {
                 const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
                 return (
-                  <div key={f.name} className={f.type === "textarea" || f.student ? "sm:col-span-2" : ""}>
+                  <div
+                    key={f.name}
+                    className={f.type === "textarea" || f.student ? "sm:col-span-2" : ""}
+                  >
                     <div className="mb-1.5 flex items-center justify-between gap-2">
                       <Label htmlFor={f.name} className="text-xs">
                         {f.label}
@@ -1019,10 +1058,21 @@ export function RecordPage({
               })}
           </form>
           <DialogFooter className="sticky bottom-0 z-10 gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
-            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setEditing(null)} disabled={save.isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setEditing(null)}
+              disabled={save.isPending}
+            >
               إلغاء
             </Button>
-            <Button type="submit" form="record-form" className="w-full sm:w-auto" disabled={save.isPending}>
+            <Button
+              type="submit"
+              form="record-form"
+              className="w-full sm:w-auto"
+              disabled={save.isPending}
+            >
               {save.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
               {save.isPending ? "جارٍ الحفظ..." : "حفظ"}
             </Button>

@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export interface StudentImportField {
   name: string;
@@ -13,7 +13,15 @@ export const STUDENT_IMPORT_FIELDS: StudentImportField[] = [
     name: "full_name",
     label: "اسم الطالب",
     required: true,
-    aliases: ["اسم الطالب", "الاسم", "اسم الطالبة", "اسم الطالب رباعي", "الاسم الرباعي", "اسم الطالب الرباعي", "الطالب"],
+    aliases: [
+      "اسم الطالب",
+      "الاسم",
+      "اسم الطالبة",
+      "اسم الطالب رباعي",
+      "الاسم الرباعي",
+      "اسم الطالب الرباعي",
+      "الطالب",
+    ],
   },
   {
     name: "national_id",
@@ -37,6 +45,11 @@ export const STUDENT_IMPORT_FIELDS: StudentImportField[] = [
     name: "nationality",
     label: "الجنسية",
     aliases: ["الجنسية", "جنسية الطالب", "الجنسيه"],
+  },
+  {
+    name: "stage",
+    label: "المرحلة",
+    aliases: ["المرحلة", "المرحله", "المرحلة الدراسية", "المرحله الدراسيه"],
   },
   {
     name: "grade",
@@ -93,7 +106,10 @@ export function autoMap(headers: string[]): Record<string, string> {
       headers.find(
         (h) =>
           !used.has(h) &&
-          candidates.some((c) => c.length > 2 && (normalizeHeader(h).includes(c) || c.includes(normalizeHeader(h)))),
+          candidates.some(
+            (c) =>
+              c.length > 2 && (normalizeHeader(h).includes(c) || c.includes(normalizeHeader(h))),
+          ),
       );
     if (partial) {
       map[field.name] = partial;
@@ -121,11 +137,22 @@ export function cleanId(value: unknown): string {
     .replace(/\D/g, "");
 }
 
-export function downloadStudentsTemplate() {
+export async function downloadStudentsTemplate() {
   const headers = STUDENT_IMPORT_FIELDS.map((field) => field.label);
-  const ws = XLSX.utils.aoa_to_sheet([headers]);
-  ws["!cols"] = headers.map(() => ({ wch: 24 }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "الطلاب");
-  XLSX.writeFile(wb, "نموذج_بيانات_الطلاب.xlsx");
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("الطلاب", { views: [{ rightToLeft: true }] });
+  worksheet.addRow(headers);
+  worksheet.columns = headers.map((header, index) => ({ header, key: String(index), width: 24 }));
+  worksheet.getRow(1).font = { bold: true };
+  const buffer = await workbook.xlsx.writeBuffer();
+  const url = URL.createObjectURL(
+    new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+  );
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "نموذج_بيانات_الطلاب.xlsx";
+  anchor.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }

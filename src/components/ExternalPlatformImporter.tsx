@@ -12,10 +12,10 @@ import {
   Table2,
   Users,
 } from "lucide-react";
-import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { readExcelMatrix } from "@/lib/sheet";
 import { autoMap, cleanId, cleanPhone } from "@/lib/students-import";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,9 +91,7 @@ function prepareRows(rows: Row[]) {
     };
   });
 
-  const invalid = records.filter(
-    (record) => !record.full_name || record.national_id.length !== 10,
-  );
+  const invalid = records.filter((record) => !record.full_name || record.national_id.length !== 10);
   const seen = new Set<string>();
   const duplicateIds = new Set<string>();
   records.forEach((record) => {
@@ -129,18 +127,12 @@ export function ExternalPlatformImporter() {
 
   async function handleFile(file: File) {
     try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: "array" });
-      const firstSheetName = workbook.SheetNames[0];
-      if (!firstSheetName) throw new Error("الملف لا يحتوي على ورقة بيانات.");
-      const sheet = workbook.Sheets[firstSheetName];
-      if (!sheet) throw new Error("تعذر قراءة ورقة البيانات.");
-      const next = rowsFromMatrix(
-        XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as unknown[][],
-      );
+      const next = rowsFromMatrix(await readExcelMatrix(file));
       setRows(next);
       setFileName(file.name);
-      setMessage(`تمت قراءة ${next.length} صف من ${SOURCES[source].label}. راجع الجودة والمطابقة قبل الحفظ.`);
+      setMessage(
+        `تمت قراءة ${next.length} صف من ${SOURCES[source].label}. راجع الجودة والمطابقة قبل الحفظ.`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر قراءة الملف.");
     }
@@ -173,9 +165,7 @@ export function ExternalPlatformImporter() {
         .in("national_id", nationalIds);
       if (existingError) throw existingError;
 
-      const existingIds = new Set(
-        (existing ?? []).map((item) => String(item.national_id ?? "")),
-      );
+      const existingIds = new Set((existing ?? []).map((item) => String(item.national_id ?? "")));
       const newRecords = prepared.records
         .filter((record) => !existingIds.has(record.national_id))
         .map(({ rowNumber: _rowNumber, ...record }) => record);
@@ -263,11 +253,11 @@ export function ExternalPlatformImporter() {
             <span className="font-bold text-foreground">
               {fileName || "اختر ملف التصدير الرسمي"}
             </span>
-            <span className="text-xs">XLSX / XLS / CSV</span>
+            <span className="text-xs">XLSX / CSV</span>
             <input
               className="hidden"
               type="file"
-              accept=".xlsx,.xls,.csv"
+              accept=".xlsx,.csv"
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 if (file) void handleFile(file);
