@@ -11,6 +11,7 @@ import {
   Menu,
   Settings,
   FileText,
+  ShieldCheck,
   UserRound,
   Users,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { featureForPath, useAdminStatus, useGlobalAppSettings } from "@/lib/admin";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -43,6 +45,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: globalSettings } = useGlobalAppSettings();
+  const { data: adminStatus } = useAdminStatus();
+
+  const flags = globalSettings?.feature_flags;
+  const isRouteVisible = (route: string) => {
+    if (adminStatus?.isAdmin) return true;
+    const key = featureForPath(route);
+    return !key || flags?.[key] !== false;
+  };
+
+  const visibleSections = WORKSPACE_SECTIONS
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => isRouteVisible(item.to)),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  const visibleBottomNavigation = bottomNavigation.filter((item) =>
+    item.activeRoutes.some((route) => isRouteVisible(route)),
+  );
   const { data: alertCount = 0 } = useQuery({
     queryKey: ["app-alert-count"],
     queryFn: async () => {
@@ -61,13 +83,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
     },
     staleTime: 60_000,
   });
-  const currentSection = WORKSPACE_SECTIONS.find((section) =>
+  const currentSection = visibleSections.find((section) =>
     section.items.some((item) => isPathActive(pathname, item.to)),
   );
 
   useEffect(() => {
     setOpen(false);
-    const activeSection = WORKSPACE_SECTIONS.find((section) =>
+    const activeSection = visibleSections.find((section) =>
       section.items.some((item) => isPathActive(pathname, item.to)),
     );
     setExpandedSection(activeSection?.id ?? null);
@@ -127,7 +149,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             الأقسام الأساسية
           </p>
           <div className="space-y-1">
-            {WORKSPACE_SECTIONS.map((section) => {
+            {visibleSections.map((section) => {
               const Icon = section.icon;
               const isActive = section.items.some((item) => isPathActive(pathname, item.to));
               const isExpanded = expandedSection === section.id;
@@ -185,6 +207,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </nav>
         <div className="mt-auto border-t border-sidebar-border p-3">
+          {adminStatus?.isAdmin && (
+            <Button
+              asChild
+              variant="ghost"
+              className="mb-1 w-full justify-start text-sidebar-primary hover:bg-sidebar-accent hover:text-sidebar-primary"
+            >
+              <Link to="/admin" onClick={() => setOpen(false)}>
+                <ShieldCheck className="size-4 shrink-0" />
+                <span>{adminStatus.role === "owner" ? "إدارة المنصة" : "لوحة المشرف"}</span>
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             onClick={signOut}
@@ -296,6 +330,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
+        {globalSettings?.announcement && (
+          <div className="border-b border-amber-300/25 bg-amber-50 px-4 py-2 text-center text-xs font-bold text-amber-900">
+            {globalSettings.announcement}
+          </div>
+        )}
         <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
           {currentSection && (
             <nav
@@ -332,7 +371,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden"
           aria-label="التنقل الرئيسي"
         >
-          {bottomNavigation.map((item) => {
+          {visibleBottomNavigation.map((item) => {
             const Icon = item.icon;
             const isActive = item.activeRoutes.some((route) => isPathActive(pathname, route));
             return (
