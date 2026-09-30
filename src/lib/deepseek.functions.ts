@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { EnhancedAuthMiddleware } from "@/integrations/supabase/auth-attacher";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const fieldSchema = z.object({
@@ -56,7 +57,7 @@ function cleanSuggestions(value: unknown, allowedNames: Set<string>) {
 }
 
 export const generateSmartFill = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([EnhancedAuthMiddleware, requireSupabaseAuth])
   .inputValidator(inputSchema)
   .handler(async ({ data }) => {
     const apiKey = process.env["DEEPSEEK_API_KEY"];
@@ -203,7 +204,7 @@ function redactAssistantBrief(value: string) {
 }
 
 export const generateCounselorAssistant = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([EnhancedAuthMiddleware, requireSupabaseAuth])
   .inputValidator(assistantInputSchema)
   .handler(async ({ data }) => {
     const apiKey = process.env["DEEPSEEK_API_KEY"];
