@@ -87,6 +87,9 @@ function SchoolTasksPage() {
   const [completionNotes, setCompletionNotes] = useState<Record<string, string>>({});
   const [returnNotes, setReturnNotes] = useState<Record<string, string>>({});
   const [taskView, setTaskView] = useState<"all" | "attention" | "closed">("attention");
+  const [selectedReportTaskIds, setSelectedReportTaskIds] = useState<string[]>([]);
+  const [reportRecipientId, setReportRecipientId] = useState("");
+  const [reportNote, setReportNote] = useState("");
 
   const query = useQuery({
     queryKey: ["school-tasks"],
@@ -171,6 +174,63 @@ function SchoolTasksPage() {
     onError: (error) => toast.error((error as Error).message),
   });
 
+  const sendTaskReport = useMutation({
+    mutationFn: async ({ rows, recipientId }: { rows: SchoolTask[]; recipientId: string }) => {
+      if (!recipientId) throw new Error("اختر المستلم الإداري.");
+      if (!rows.length) throw new Error("حدد مهمة واحدة على الأقل.");
+
+      const snapshot = {
+        version: 1,
+        report_title: "تقرير إنجاز المهام المدرسية",
+        created_at: new Date().toISOString(),
+        total_rows: rows.length,
+        sections: [
+          {
+            key: "school_tasks",
+            title: "المهام المدرسية",
+            columns: [
+              { key: "title", label: "المهمة" },
+              { key: "category", label: "التصنيف" },
+              { key: "priority", label: "الأولوية" },
+              { key: "cadence", label: "التكرار" },
+              { key: "due_date", label: "الاستحقاق" },
+              { key: "status", label: "الحالة" },
+              { key: "completion_note", label: "إثبات التنفيذ" },
+              { key: "completed_at", label: "تاريخ الإنجاز" },
+            ],
+            rows: rows.map((task) => ({
+              id: task.id,
+              title: task.title,
+              category: task.category,
+              priority: task.priority,
+              cadence: task.cadence,
+              due_date: task.due_date,
+              status: task.status,
+              completion_note: task.completion_note,
+              completed_at: task.completed_at,
+            })),
+          },
+        ],
+      };
+
+      const { error } = await (supabase as any).rpc("create_school_report_handoff", {
+        p_recipient_member_id: recipientId,
+        p_title: "تقرير إنجاز المهام المدرسية",
+        p_note: reportNote.trim() || null,
+        p_snapshot: snapshot,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setSelectedReportTaskIds([]);
+      setReportNote("");
+      await queryClient.invalidateQueries({ queryKey: ["school-report-handoffs"] });
+      await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+      toast.success("تم رفع تقرير إنجاز المهام للإدارة.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
   const context = query.data?.context;
   const membership = context?.membership;
   const members = context?.members ?? [];
@@ -183,6 +243,12 @@ function SchoolTasksPage() {
       member.member_status === "active" &&
       member.id !== memberId &&
       roleRank(member.role) < roleRank(membership?.role ?? ""),
+  );
+  const higherMembers = members.filter(
+    (member) =>
+      member.member_status === "active" &&
+      member.id !== memberId &&
+      roleRank(member.role) > roleRank(membership?.role ?? ""),
   );
 
   const assignedToMe = tasks.filter((task) => task.assignee_member_id === memberId && task.status !== "ملغاة");
@@ -213,6 +279,8 @@ function SchoolTasksPage() {
       });
   const visibleAssignedToMe = filterAndSortTasks(assignedToMe);
   const visibleAssignedByMe = filterAndSortTasks(assignedByMe);
+  const reportableTasks = assignedToMe.filter((task) => ["مكتملة", "معتمدة"].includes(task.status));
+  const selectedReportTasks = reportableTasks.filter((task) => selectedReportTaskIds.includes(task.id));
 
   if (query.isLoading) {
     return <div dir="rtl" className="rounded-2xl border bg-card p-8 text-center text-sm text-muted-foreground">جارٍ تحميل المهام المدرسية...</div>;
@@ -342,6 +410,88 @@ function SchoolTasksPage() {
             reviewTask={reviewTask}
           />
         </div>
+      </section>
+
+      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-black">رفع تقرير إنجاز المهام</h2>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              حدد المهام المكتملة أو المعتمدة ثم حوّلها إلى نسخة تقرير ثابتة تُرفع للمسؤول الأعلى للقراءة فقط.
+            </p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{selectedReportTasks.length} محددة</span>
+        </div>
+
+        {higherMembers.length && reportableTasks.length ? (
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-2">
+              {reportableTasks.map((task) => {
+                const checked = selectedReportTaskIds.includes(task.id);
+                return (
+                  <label key={task.id} className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 hover:border-primary/35">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        setSelectedReportTaskIds((current) =>
+                          checked ? current.filter((id) => id !== task.id) : [...current, task.id],
+                        )
+                      }
+                      className="mt-1 size-4"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black">{task.title}</span>
+                      <span className="mt-1 block text-[11px] text-muted-foreground">
+                        {task.status} · {task.category}{task.due_date ? ` · الاستحقاق ${task.due_date}` : ""}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="space-y-3 rounded-xl border bg-muted/20 p-3">
+              <div>
+                <Label>رفع التقرير إلى</Label>
+                <select
+                  value={reportRecipientId}
+                  onChange={(e) => setReportRecipientId(e.target.value)}
+                  className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="">اختر المسؤول الأعلى</option>
+                  {higherMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.display_name || "عضو المدرسة"} · {roleLabel(member.role)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label>ملاحظة مرافقة</Label>
+                <textarea
+                  value={reportNote}
+                  onChange={(e) => setReportNote(e.target.value)}
+                  className="mt-2 min-h-24 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  placeholder="مثال: تقرير إنجاز مهام الأسبوع الحالي."
+                />
+              </div>
+              <Button
+                className="w-full"
+                disabled={!selectedReportTasks.length || !reportRecipientId || sendTaskReport.isPending}
+                onClick={() => sendTaskReport.mutate({ rows: selectedReportTasks, recipientId: reportRecipientId })}
+              >
+                <ClipboardCheck className="size-4" /> {sendTaskReport.isPending ? "جارٍ الرفع..." : "تحويل المحدد إلى تقرير ورفعه"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-dashed p-5 text-xs leading-6 text-muted-foreground">
+            {!higherMembers.length
+              ? "لا يوجد حاليًا مسؤول أعلى مرتبط بالمدرسة لاستلام التقرير."
+              : "بعد إكمال المهام ستظهر هنا لتحديدها وتحويلها إلى تقرير إداري."}
+          </div>
+        )}
       </section>
     </div>
   );
