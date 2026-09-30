@@ -13,6 +13,7 @@ import {
   Trash2,
   UserRound,
   ArrowDownUp,
+  Activity,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -134,13 +135,29 @@ export function StudentProfileDialog({
     const followup = String(row["followup_at"] ?? "").slice(0, 10);
     return followup && followup <= today;
   });
-  const latestActivity = LINKED_SECTIONS.flatMap((section) =>
-    (sections[section.key] ?? []).map((row) => ({
-      date: String(row[section.dateField] ?? row["created_at"] ?? ""),
-      label: recordByKey(section.key)?.title ?? section.key,
-      title: String(row[section.titleField] ?? ""),
-    })),
-  ).sort((a, b) => b.date.localeCompare(a.date, "ar"))[0];
+  const timeline = useMemo(
+    () =>
+      LINKED_SECTIONS.flatMap((section) =>
+        (sections[section.key] ?? []).map((row) => ({
+          id: `${section.key}-${row.id}`,
+          date: String(row[section.dateField] ?? row["created_at"] ?? ""),
+          label: recordByKey(section.key)?.title ?? section.key,
+          title: String(row[section.titleField] ?? ""),
+          detail: String(
+            row["next_action"] ??
+              row["result"] ??
+              row["action"] ??
+              row["recommendations"] ??
+              row["notes"] ??
+              "",
+          ),
+        })),
+      )
+        .sort((a, b) => b.date.localeCompare(a.date, "ar"))
+        .slice(0, 12),
+    [sections],
+  );
+  const latestActivity = timeline[0];
 
   async function deleteRow(sectionKey: string, table: string, id: string) {
     if (!confirm("هل تريد حذف هذا السجل من ملف الطالب؟")) return;
@@ -152,7 +169,7 @@ export function StudentProfileDialog({
       toast.error(`تعذّر الحذف: ${error.message}`);
       return;
     }
-    queryClient.invalidateQueries({ queryKey: ["student-profile", fullName, studentNo] });
+    queryClient.invalidateQueries({ queryKey: ["student-profile", studentId, fullName, studentNo] });
     queryClient.invalidateQueries({ queryKey: [table] });
     toast.success("تم حذف السجل من ملف الطالب");
   }
@@ -162,12 +179,18 @@ export function StudentProfileDialog({
 
   const infoFields: { label: string; key: string }[] = [
     { label: "اسم الطالب", key: "full_name" },
-    { label: "جوال ولي الأمر", key: "guardian_phone" },
     { label: "رقم الطالب", key: "student_no" },
+    ...(student["national_id"] ? [{ label: "رقم الهوية", key: "national_id" }] : []),
+    ...(student["stage"] ? [{ label: "المرحلة", key: "stage" }] : []),
+    { label: "جوال ولي الأمر", key: "guardian_phone" },
     ...(student["grade"] ? [{ label: "الصف", key: "grade" }] : []),
     ...(student["classroom"] ? [{ label: "الفصل", key: "classroom" }] : []),
     { label: "ولي الأمر", key: "guardian_name" },
     ...(student["mother_phone"] ? [{ label: "جوال الأم", key: "mother_phone" }] : []),
+    ...(student["nationality"] ? [{ label: "الجنسية", key: "nationality" }] : []),
+    ...(student["health_status"] ? [{ label: "الحالة الصحية", key: "health_status" }] : []),
+    ...(student["social_status"] ? [{ label: "الحالة الاجتماعية", key: "social_status" }] : []),
+    ...(student["address"] ? [{ label: "العنوان", key: "address" }] : []),
     { label: "الحالة", key: "status" },
   ];
 
@@ -234,6 +257,8 @@ export function StudentProfileDialog({
               <Button asChild size="sm" variant="outline"><a href={`/cases?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ClipboardList className="size-4" /> فتح حالة</a></Button>
               <Button asChild size="sm" variant="outline"><a href={`/interviews?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><MessageSquare className="size-4" /> إضافة جلسة</a></Button>
               <Button asChild size="sm" variant="outline"><a href={`/referrals?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ExternalLink className="size-4" /> إنشاء إحالة</a></Button>
+              <Button asChild size="sm" variant="outline"><a href={`/attendance?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><CalendarClock className="size-4" /> تسجيل مواظبة</a></Button>
+              <Button asChild size="sm" variant="outline"><a href={`/behavior?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ShieldAlert className="size-4" /> تسجيل سلوك</a></Button>
             </div>
           </div>
 
@@ -269,6 +294,37 @@ export function StudentProfileDialog({
               ) : (
                 <p className="mt-3 text-xs text-paper-muted-foreground">لا توجد متابعة إرشادية مسجلة للطالب حتى الآن.</p>
               )}
+            </section>
+          )}
+
+          {!isLoading && timeline.length > 0 && (
+            <section className="break-inside-avoid rounded-xl border border-paper-border bg-paper p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Activity className="size-4 text-primary" />
+                  <h3 className="text-sm font-black">الخط الزمني للطالب</h3>
+                </div>
+                <span className="text-[10px] text-paper-muted-foreground">أحدث 12 إجراء</span>
+              </div>
+              <div className="space-y-2">
+                {timeline.map((item) => (
+                  <div key={item.id} className="relative border-r-2 border-primary/20 pr-4">
+                    <span className="absolute -right-[5px] top-2 size-2 rounded-full bg-primary" />
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs font-black text-paper-foreground">{item.label}</p>
+                      <span className="text-[10px] text-paper-muted-foreground">
+                        {displayRecordValue(item.date)}
+                      </span>
+                    </div>
+                    {item.title && <p className="mt-0.5 text-xs">{item.title}</p>}
+                    {item.detail && (
+                      <p className="mt-1 line-clamp-2 text-[10px] leading-5 text-paper-muted-foreground">
+                        {item.detail}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 
