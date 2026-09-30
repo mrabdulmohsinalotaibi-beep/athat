@@ -194,19 +194,17 @@ export function RecordPage({
     retry: 1,
     staleTime: 15_000,
     queryFn: async () => {
-      const request = supabase
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+
+      const { data, error } = await supabase
         .from(config.table as never)
         .select("*")
-        .order("created_at", { ascending: false });
+        .eq("user_id", authData.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1000);
 
-      const timeout = new Promise<never>((_, reject) => {
-        window.setTimeout(
-          () => reject(new Error("استغرق تحميل السجلات وقتًا أطول من المتوقع. أعد المحاولة.")),
-          20_000,
-        );
-      });
-
-      const { data, error } = await Promise.race([request, timeout]);
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
     },
