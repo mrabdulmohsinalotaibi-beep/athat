@@ -58,6 +58,19 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Verify that this deployed server really has access to the Lovable Cloud
+    // database before attempting recovery. Do not silently convert a missing
+    // service-role binding into a misleading "0 records found" result.
+    const probe = await (supabaseAdmin as any)
+      .from("students")
+      .select("id", { count: "exact", head: true });
+    if (probe.error) {
+      throw new Error(
+        `تعذّر الوصول إلى قاعدة البيانات من خادم الإنتاج: ${probe.error.message}`,
+      );
+    }
+
     const candidateIds = new Set<string>();
 
     // 0) Auth history: if the same email still exists on an older auth user,
