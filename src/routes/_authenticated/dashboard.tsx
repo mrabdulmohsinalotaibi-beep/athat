@@ -53,6 +53,18 @@ function useDashboard() {
   return useQuery({
     queryKey: ["dashboard-live-v2"],
     queryFn: async () => {
+      let schoolContext: any = null;
+      try {
+        const contextResult = await withDashboardTimeout((supabase as any).rpc("get_my_school_context"), "schoolContext");
+        if (contextResult.error) {
+          console.warn("[dashboard] تعذّر تحميل schoolContext:", contextResult.error.message);
+        } else {
+          schoolContext = contextResult.data;
+        }
+      } catch (error) {
+        console.warn("[dashboard] تعذّر تحميل schoolContext:", error);
+      }
+
       const requests = [
         ["students", supabase.from("students").select("id", { count: "exact", head: true })],
         ["cases", supabase
@@ -69,7 +81,8 @@ function useDashboard() {
           .select("id,status,category,created_at")
           .in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"])],
         ["posts", supabase.from("posts").select("id,is_public,kind")],
-        ["schoolTasks", (supabase as any).from("school_tasks").select("id,title,status,due_date,priority,assignee_member_id")],
+        ["schoolTasks", (supabase as any).from("school_tasks").select("id,title,status,due_date,priority,creator_member_id,assignee_member_id")],
+        ["schoolHandoffs", (supabase as any).from("school_report_handoffs").select("id,status,recipient_member_id,sender_member_id,title,sent_at")],
       ] as const;
 
       const settled = await Promise.all(
@@ -113,6 +126,7 @@ function useDashboard() {
       const feedback = pick("feedback");
       const posts = pick("posts");
       const schoolTasks = pick("schoolTasks");
+      const schoolHandoffs = pick("schoolHandoffs");
 
       const sources = {
         students,
@@ -126,6 +140,7 @@ function useDashboard() {
         feedback,
         posts,
         schoolTasks,
+        schoolHandoffs,
       };
 
       const failedSources = Object.entries(sources)
@@ -147,6 +162,8 @@ function useDashboard() {
         feedback: feedback.error ? [] : feedback.data ?? [],
         posts: posts.error ? [] : posts.data ?? [],
         schoolTasks: schoolTasks.error ? [] : schoolTasks.data ?? [],
+        schoolHandoffs: schoolHandoffs.error ? [] : schoolHandoffs.data ?? [],
+        schoolContext,
         failedSources,
       };
     },
@@ -202,10 +219,24 @@ function Dashboard() {
   const publishedPosts = (data?.posts ?? []).filter((item) => item.is_public).length;
 
   const schoolTasks = data?.schoolTasks ?? [];
-  const openSchoolTasks = schoolTasks.filter((item) => !["مكتملة", "معتمدة", "ملغاة"].includes(String(item.status ?? "")));
+  const schoolMemberId = String(data?.schoolContext?.membership?.id ?? "");
+  const isSchoolAdmin = Boolean(data?.schoolContext?.membership?.is_admin);
+  const mySchoolTasks = schoolTasks.filter((item) => item.assignee_member_id === schoolMemberId);
+  const openSchoolTasks = mySchoolTasks.filter((item) => !["مكتملة", "معتمدة", "ملغاة"].includes(String(item.status ?? "")));
   const dueSchoolTasks = openSchoolTasks.filter(
     (item) => item.due_date && String(item.due_date).slice(0, 10) <= day,
   );
+  const pendingTaskApprovals = schoolTasks.filter(
+    (item) =>
+      item.status === "مكتملة" &&
+      (item.creator_member_id === schoolMemberId || isSchoolAdmin),
+  );
+  const unreadAdministrativeReports = (data?.schoolHandoffs ?? []).filter(
+    (item) => item.recipient_member_id === schoolMemberId && item.status === "sent",
+  );
+  const pendingTeamMembers = isSchoolAdmin
+    ? (data?.schoolContext?.members ?? []).filter((member: any) => member.member_status === "pending")
+    : [];
 
   const todayAgenda = (data?.calendar ?? [])
     .filter(
@@ -225,7 +256,10 @@ function Dashboard() {
     latePlan.length +
     programsMissingEvidence.length +
     openRequests +
-    dueSchoolTasks.length;
+    dueSchoolTasks.length +
+    pendingTaskApprovals.length +
+    unreadAdministrativeReports.length +
+    pendingTeamMembers.length;
 
   const stats = [
     {
@@ -308,6 +342,20 @@ function Dashboard() {
       to: "/school-tasks" as const,
       icon: ClipboardCheck,
     },
+    {
+      label: "اعتماد الإنجاز",
+      value: pendingTaskApprovals.length,
+      meta: "مهام مكتملة تنتظر المراجعة",
+      to: "/school-tasks" as const,
+      icon: CheckCircle2,
+    },
+    {
+      label: "المراسلات",
+      value: unreadAdministrativeReports.length,
+      meta: "تقارير إدارية غير مقروءة",
+      to: "/school-inbox" as const,
+      icon: Inbox,
+    },
   ];
 
   const quickActions = [
@@ -348,7 +396,28 @@ function Dashboard() {
       detail: item.due_date ? `الاستحقاق ${String(item.due_date).slice(0, 10)}` : "فتح المهام المدرسية",
       to: "/school-tasks" as const,
     })),
-  ].slice(0, 5);
+    ...pendingTaskApprovals.slice(0, 2).map((item) => ({
+      key: `approval-${item.id}`,
+      tone: "ينتظر اعتمادك",
+      title: item.title || "مهمة مدرسية مكتملة",
+      detail: "راجع إثبات التنفيذ ثم اعتمد الإنجاز أو أعد المهمة.",
+      to: "/school-tasks" as const,
+    })),
+    ...unreadAdministrativeReports.slice(0, 2).map((item) => ({
+      key: `handoff-${item.id}`,
+      tone: "تقرير إداري جديد",
+      title: item.title || "مراسلة إدارية",
+      detail: "وصلت نسخة تقرير للقراءة والاطلاع.",
+      to: "/school-inbox" as const,
+    })),
+    ...pendingTeamMembers.slice(0, 1).map((item: any) => ({
+      key: `member-${item.id}`,
+      tone: "طلب انضمام",
+      title: item.display_name || "عضو جديد",
+      detail: "ينتظر تحديد الدور واعتماد العضوية.",
+      to: "/school-team" as const,
+    })),
+  ].slice(0, 6);
 
   if (isError) {
     return (
