@@ -82,16 +82,45 @@ function ReportsPage() {
   const [recipientMemberId, setRecipientMemberId] = useState("");
   const [handoffNote, setHandoffNote] = useState("");
 
+  const activeSelectedKeys = reportMode === "single" ? [selectedSingleKey] : selectedKeys;
+  const selectedRecords = reportableRecords.filter((record) =>
+    activeSelectedKeys.includes(record.key),
+  );
+  const selectedKeySignature = [...activeSelectedKeys].sort().join(",");
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["official-reports-all-records"],
+    queryKey: ["official-reports-selected-records", selectedKeySignature, fromDate, toDate],
     queryFn: async () => {
       const results = await Promise.all(
-        reportableRecords.map(async (record) => {
-          const result = await supabase.from(record.table as never).select("*");
-          return { key: record.key, data: result.data ?? [], error: result.error };
+        selectedRecords.map(async (record) => {
+          const rows: ReportRow[] = [];
+          const batchSize = 1000;
+          const dateField = dateFieldForRecord(record.key);
+
+          for (let offset = 0; ; offset += batchSize) {
+            let request = (supabase as any)
+              .from(record.table)
+              .select("*")
+              .order("id", { ascending: true })
+              .range(offset, offset + batchSize - 1);
+
+            if (dateField && fromDate) request = request.gte(dateField, fromDate);
+            if (dateField && toDate) request = request.lte(dateField, toDate);
+
+            const result = await request;
+            if (result.error) {
+              return { key: record.key, data: [] as ReportRow[], error: result.error };
+            }
+
+            const batch = (result.data ?? []) as ReportRow[];
+            rows.push(...batch);
+            if (batch.length < batchSize) break;
+          }
+
+          return { key: record.key, data: rows, error: null };
         }),
       );
+
       const errors = results
         .filter((item) => item.error)
         .map((item) => ({
@@ -105,11 +134,8 @@ function ReportsPage() {
 
       return {
         sections: Object.fromEntries(
-          results.map((item) => [
-            item.key,
-            (item.error ? [] : item.data ?? []) as unknown as ReportRow[],
-          ]),
-        ),
+          results.map((item) => [item.key, item.error ? [] : item.data]),
+        ) as Record<string, ReportRow[]>,
         errors,
       };
     },
@@ -136,21 +162,8 @@ function ReportsPage() {
     staleTime: 30_000,
   });
 
-  const filteredSections = useMemo(() => {
-    const output: Record<string, ReportRow[]> = {};
-    for (const record of reportableRecords) {
-      let rows = sections[record.key] ?? [];
-      const dateField = dateFieldForRecord(record.key);
-      if ((fromDate || toDate) && dateField) {
-        rows = rows.filter((row) => {
-          const value = String(row[dateField] ?? "").slice(0, 10);
-          return Boolean(value) && (!fromDate || value >= fromDate) && (!toDate || value <= toDate);
-        });
-      }
-      output[record.key] = rows;
-    }
-    return output;
-  }, [sections, reportableRecords, fromDate, toDate]);
+  // Date filtering is performed by Postgres before rows are transferred to the browser.
+  const filteredSections = sections;
 
   const kpis = useMemo(() => {
     const computed = computeKpis({
@@ -160,13 +173,27 @@ function ReportsPage() {
       interviews: (filteredSections["interviews"] ?? []) as unknown as KpiInput["interviews"],
       students: (filteredSections["students"] ?? []) as unknown as KpiInput["students"],
     });
-    return computed.map((kpi) => ({
-      key: kpi.key,
-      title: kpi.label,
-      value: kpi.value,
-      description: kpi.hint,
-    }));
-  }, [filteredSections]);
+
+    const visibleKpis = new Set<string>();
+    if (activeSelectedKeys.includes("plan")) visibleKpis.add("plan");
+    if (activeSelectedKeys.includes("cases")) visibleKpis.add("cases");
+    if (activeSelectedKeys.includes("attendance") && activeSelectedKeys.includes("students")) {
+      visibleKpis.add("attendance");
+    }
+    if (activeSelectedKeys.includes("interviews")) {
+      visibleKpis.add("sessions");
+      visibleKpis.add("guardians");
+    }
+
+    return computed
+      .filter((kpi) => visibleKpis.has(kpi.key))
+      .map((kpi) => ({
+        key: kpi.key,
+        title: kpi.label,
+        value: kpi.value,
+        description: kpi.hint,
+      }));
+  }, [filteredSections, selectedKeySignature]);
 
   function toggleRecord(key: string) {
     setSelectedKeys((current) =>
@@ -208,12 +235,6 @@ function ReportsPage() {
     toast.success("تمت إعادة ضبط التقرير.");
   }
 
-
-  const activeSelectedKeys = reportMode === "single" ? [selectedSingleKey] : selectedKeys;
-
-  const selectedRecords = reportableRecords.filter((record) =>
-    activeSelectedKeys.includes(record.key),
-  );
 
   const totalRows = selectedRecords.reduce(
     (sum, record) => sum + (filteredSections[record.key]?.length ?? 0),
@@ -625,25 +646,27 @@ function ReportsPage() {
             </section>
           )}
 
-          <section className="report-summary mt-6">
-            <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
-              ملخص مؤشرات الأداء
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {kpis.map((kpi) => (
-                <div
-                  key={kpi.key}
-                  className="rounded-xl border border-paper-border bg-paper-muted p-3"
-                >
-                  <p className="text-[11px] text-muted-foreground">{kpi.title}</p>
-                  <p className="mt-1 text-xl font-black text-primary">
-                    {isPercentKpi(kpi.key) ? `${kpi.value}%` : kpi.value}
-                  </p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">{kpi.description}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {kpis.length > 0 && (
+            <section className="report-summary mt-6">
+              <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
+                ملخص مؤشرات الأداء
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {kpis.map((kpi) => (
+                  <div
+                    key={kpi.key}
+                    className="rounded-xl border border-paper-border bg-paper-muted p-3"
+                  >
+                    <p className="text-[11px] text-muted-foreground">{kpi.title}</p>
+                    <p className="mt-1 text-xl font-black text-primary">
+                      {isPercentKpi(kpi.key) ? `${kpi.value}%` : kpi.value}
+                    </p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{kpi.description}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {selectedRecords.map((record) => {
             const rows = filteredSections[record.key] ?? [];
