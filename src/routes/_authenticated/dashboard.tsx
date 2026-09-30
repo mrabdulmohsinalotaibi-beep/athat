@@ -219,8 +219,26 @@ function Dashboard() {
   const publishedPosts = (data?.posts ?? []).filter((item) => item.is_public).length;
 
   const schoolTasks = data?.schoolTasks ?? [];
-  const schoolMemberId = String(data?.schoolContext?.membership?.id ?? "");
-  const isSchoolAdmin = Boolean(data?.schoolContext?.membership?.is_admin);
+  const schoolMembership = data?.schoolContext?.membership;
+  const schoolMemberId = String(schoolMembership?.id ?? "");
+  const schoolRole = String(schoolMembership?.role ?? "counselor");
+  const isSchoolAdmin = Boolean(schoolMembership?.is_admin);
+  const schoolRoleLabel =
+    ({
+      principal: "مدير المدرسة",
+      vice_principal: "وكيل المدرسة",
+      counselor: "الموجه الطلابي",
+      teacher: "المعلم",
+      admin_staff: "الموظف الإداري",
+      guard: "حارس المدرسة",
+      observer: "اطلاع فقط",
+    } as Record<string, string>)[schoolRole] ?? "عضو المدرسة";
+  const isCounselorDashboard = schoolRole === "counselor";
+  const isPrincipalDashboard = schoolRole === "principal";
+  const isManagementDashboard = schoolRole === "principal" || schoolRole === "vice_principal";
+  const activeSchoolMembers = (data?.schoolContext?.members ?? []).filter(
+    (member: any) => member.member_status === "active",
+  );
   const mySchoolTasks = schoolTasks.filter((item) => item.assignee_member_id === schoolMemberId);
   const openSchoolTasks = mySchoolTasks.filter((item) => !["مكتملة", "معتمدة", "ملغاة"].includes(String(item.status ?? "")));
   const dueSchoolTasks = openSchoolTasks.filter(
@@ -237,6 +255,19 @@ function Dashboard() {
   const pendingTeamMembers = isSchoolAdmin
     ? (data?.schoolContext?.members ?? []).filter((member: any) => member.member_status === "pending")
     : [];
+  const completedMySchoolTasks = mySchoolTasks.filter((item) =>
+    ["مكتملة", "معتمدة"].includes(String(item.status ?? "")),
+  );
+  const visibleManagementTasks = isPrincipalDashboard
+    ? schoolTasks
+    : schoolTasks.filter(
+        (item) =>
+          item.creator_member_id === schoolMemberId ||
+          item.assignee_member_id === schoolMemberId,
+      );
+  const openManagementTasks = visibleManagementTasks.filter(
+    (item) => !["معتمدة", "ملغاة"].includes(String(item.status ?? "")),
+  );
 
   const todayAgenda = (data?.calendar ?? [])
     .filter(
@@ -251,17 +282,20 @@ function Dashboard() {
     .sort((a, b) => String(a.followup_at ?? "").localeCompare(String(b.followup_at ?? "")))
     .slice(0, 4);
 
-  const attentionCount =
-    overdueCases.length +
-    latePlan.length +
-    programsMissingEvidence.length +
-    openRequests +
+  const schoolAttentionCount =
     dueSchoolTasks.length +
     pendingTaskApprovals.length +
     unreadAdministrativeReports.length +
     pendingTeamMembers.length;
+  const counselorAttentionCount =
+    overdueCases.length +
+    latePlan.length +
+    programsMissingEvidence.length +
+    openRequests +
+    schoolAttentionCount;
+  const attentionCount = isCounselorDashboard ? counselorAttentionCount : schoolAttentionCount;
 
-  const stats = [
+  const counselorStats = [
     {
       label: "الطلاب",
       value: data?.studentsCount ?? 0,
@@ -292,7 +326,75 @@ function Dashboard() {
     },
   ];
 
-  const shortcuts = [
+  const managementStats = [
+    {
+      label: "فريق المدرسة",
+      value: activeSchoolMembers.length,
+      note: pendingTeamMembers.length ? `${pendingTeamMembers.length} طلب انضمام` : "الأعضاء النشطون",
+      to: "/school-team" as const,
+      icon: Users,
+    },
+    {
+      label: "المهام المفتوحة",
+      value: openManagementTasks.length,
+      note: isPrincipalDashboard ? "على مستوى المدرسة" : "ضمن نطاق عملك",
+      to: "/school-tasks" as const,
+      icon: ClipboardList,
+    },
+    {
+      label: "تنتظر الاعتماد",
+      value: pendingTaskApprovals.length,
+      note: "إنجازات تحتاج مراجعة",
+      to: "/school-tasks" as const,
+      icon: CheckCircle2,
+    },
+    {
+      label: "تقارير واردة",
+      value: unreadAdministrativeReports.length,
+      note: "نسخ للقراءة والاطلاع",
+      to: "/school-inbox" as const,
+      icon: Inbox,
+    },
+  ];
+
+  const staffStats = [
+    {
+      label: "مهامي المفتوحة",
+      value: openSchoolTasks.length,
+      note: dueSchoolTasks.length ? `${dueSchoolTasks.length} مستحقة الآن` : "لا توجد مهام مستحقة",
+      to: "/school-tasks" as const,
+      icon: ClipboardCheck,
+    },
+    {
+      label: "المكتملة",
+      value: completedMySchoolTasks.length,
+      note: "مهام أنجزتها",
+      to: "/school-tasks" as const,
+      icon: CheckCircle2,
+    },
+    {
+      label: "تقارير واردة",
+      value: unreadAdministrativeReports.length,
+      note: "نسخ للقراءة والاطلاع",
+      to: "/school-inbox" as const,
+      icon: Inbox,
+    },
+    {
+      label: "فريق المدرسة",
+      value: activeSchoolMembers.length,
+      note: schoolRoleLabel,
+      to: "/school-team" as const,
+      icon: Users,
+    },
+  ];
+
+  const stats = isManagementDashboard
+    ? managementStats
+    : isCounselorDashboard
+      ? counselorStats
+      : staffStats;
+
+  const counselorShortcuts = [
     {
       label: "البرامج",
       value: programs.length,
@@ -358,7 +460,61 @@ function Dashboard() {
     },
   ];
 
-  const quickActions = [
+  const managementShortcuts = [
+    {
+      label: "فريق المدرسة",
+      value: activeSchoolMembers.length,
+      meta: pendingTeamMembers.length ? `${pendingTeamMembers.length} ينتظر الاعتماد` : "الفريق مرتبط",
+      to: "/school-team" as const,
+      icon: Users,
+    },
+    {
+      label: "مهام المدرسة",
+      value: openManagementTasks.length,
+      meta: "إسناد ومتابعة التنفيذ",
+      to: "/school-tasks" as const,
+      icon: ClipboardCheck,
+    },
+    {
+      label: "اعتماد الإنجاز",
+      value: pendingTaskApprovals.length,
+      meta: "مهام مكتملة تنتظر المراجعة",
+      to: "/school-tasks" as const,
+      icon: CheckCircle2,
+    },
+    {
+      label: "المراسلات",
+      value: unreadAdministrativeReports.length,
+      meta: "تقارير إدارية غير مقروءة",
+      to: "/school-inbox" as const,
+      icon: Inbox,
+    },
+  ];
+
+  const staffShortcuts = [
+    {
+      label: "مهام المدرسة",
+      value: openSchoolTasks.length,
+      meta: dueSchoolTasks.length ? `${dueSchoolTasks.length} مستحقة` : "ابدأ من أعمالك الحالية",
+      to: "/school-tasks" as const,
+      icon: ClipboardCheck,
+    },
+    {
+      label: "المراسلات",
+      value: unreadAdministrativeReports.length,
+      meta: "تقارير واردة للقراءة",
+      to: "/school-inbox" as const,
+      icon: Inbox,
+    },
+  ];
+
+  const shortcuts = isManagementDashboard
+    ? managementShortcuts
+    : isCounselorDashboard
+      ? counselorShortcuts
+      : staffShortcuts;
+
+  const counselorQuickActions = [
     { label: "فتح حالة", to: "/cases?new=1", icon: HeartHandshake },
     { label: "إضافة جلسة", to: "/interviews?new=1", icon: MessageSquareText },
     { label: "إضافة برنامج", to: "/programs?new=1", icon: Sparkles },
@@ -366,8 +522,25 @@ function Dashboard() {
     { label: "إنشاء تقرير", to: "/reports", icon: FileCheck2 },
     { label: "مهام المدرسة", to: "/school-tasks", icon: ClipboardCheck },
   ];
+  const managementQuickActions = [
+    { label: "إسناد مهمة", to: "/school-tasks", icon: ClipboardCheck },
+    { label: "فريق المدرسة", to: "/school-team", icon: Users },
+    { label: "اعتماد الإنجاز", to: "/school-tasks", icon: CheckCircle2 },
+    { label: "المراسلات الإدارية", to: "/school-inbox", icon: Inbox },
+    { label: "بيانات المدرسة", to: "/settings", icon: FileCheck2 },
+  ];
+  const staffQuickActions = [
+    { label: "مهامي اليوم", to: "/school-tasks", icon: ClipboardCheck },
+    { label: "رفع تقرير إنجاز", to: "/school-tasks", icon: FileCheck2 },
+    { label: "المراسلات الإدارية", to: "/school-inbox", icon: Inbox },
+  ];
+  const quickActions = isManagementDashboard
+    ? managementQuickActions
+    : isCounselorDashboard
+      ? counselorQuickActions
+      : staffQuickActions;
 
-  const actions = [
+  const counselorActions = [
     ...overdueCases.slice(0, 2).map((item) => ({
       key: `case-${item.id}`,
       tone: "متابعة مستحقة",
@@ -417,7 +590,51 @@ function Dashboard() {
       detail: "ينتظر تحديد الدور واعتماد العضوية.",
       to: "/school-team" as const,
     })),
-  ].slice(0, 6);
+  ];
+
+  const schoolActions = [
+    ...dueSchoolTasks.slice(0, 3).map((item) => ({
+      key: `school-role-task-${item.id}`,
+      tone: "مهمة مدرسية مستحقة",
+      title: item.title || "مهمة مدرسية",
+      detail: item.due_date ? `الاستحقاق ${String(item.due_date).slice(0, 10)}` : "فتح المهام المدرسية",
+      to: "/school-tasks" as const,
+    })),
+    ...pendingTaskApprovals.slice(0, 3).map((item) => ({
+      key: `role-approval-${item.id}`,
+      tone: "ينتظر اعتمادك",
+      title: item.title || "مهمة مكتملة",
+      detail: "راجع إثبات التنفيذ ثم اعتمد الإنجاز أو أعد المهمة.",
+      to: "/school-tasks" as const,
+    })),
+    ...unreadAdministrativeReports.slice(0, 2).map((item) => ({
+      key: `role-handoff-${item.id}`,
+      tone: "تقرير إداري جديد",
+      title: item.title || "مراسلة إدارية",
+      detail: "وصلت نسخة تقرير للقراءة والاطلاع.",
+      to: "/school-inbox" as const,
+    })),
+    ...pendingTeamMembers.slice(0, 2).map((item: any) => ({
+      key: `role-member-${item.id}`,
+      tone: "طلب انضمام",
+      title: item.display_name || "عضو جديد",
+      detail: "ينتظر تحديد الدور واعتماد العضوية.",
+      to: "/school-team" as const,
+    })),
+  ];
+
+  const actions = (isCounselorDashboard ? counselorActions : schoolActions).slice(0, 6);
+
+  const dashboardTitle = isManagementDashboard
+    ? `لوحة ${schoolRoleLabel}`
+    : isCounselorDashboard
+      ? "لوحة الموجه الطلابي"
+      : `مساحة عمل ${schoolRoleLabel}`;
+  const dashboardSubtitle = isManagementDashboard
+    ? "متابعة الفريق والمهام والاعتمادات والمراسلات من مكان واحد."
+    : isCounselorDashboard
+      ? "الحالات والمتابعات والخطة والبرامج وما يحتاج إجراء اليوم."
+      : "مهامك الحالية والاستحقاقات والتقارير المرتبطة بدورك فقط.";
 
   if (isError) {
     return (
@@ -450,12 +667,16 @@ function Dashboard() {
               <img src="/brand-icon.svg?v=20260929f" alt="" className="size-9 rounded-xl bg-white/10 p-0.5" />
               <div className="min-w-0">
                 <h1 className="truncate text-lg font-black sm:text-xl">
-                  {school?.counselor_name
-                    ? `مرحبًا، ${school.counselor_name}`
-                    : "لوحة الموجه الطلابي"}
+                  {schoolMembership?.display_name
+                    ? `مرحبًا، ${schoolMembership.display_name}`
+                    : school?.counselor_name
+                      ? `مرحبًا، ${school.counselor_name}`
+                      : dashboardTitle}
                 </h1>
                 <p className="truncate text-[11px] text-primary-foreground/75">
-                  {school?.school_name || "منصة الذات للتوجيه الطلابي"}
+                  {dashboardTitle}
+                  {" · "}
+                  {school?.school_name || "منصة الذات"}
                   {" · "}
                   {formatHijriDate(new Date())}
                 </p>
@@ -488,8 +709,8 @@ function Dashboard() {
       <section className="rounded-2xl border bg-card p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-black">إجراء سريع</h2>
-            <p className="text-[10px] text-muted-foreground">ابدأ العمل مباشرة دون البحث داخل القوائم.</p>
+            <h2 className="text-sm font-black">إجراء سريع · {schoolRoleLabel}</h2>
+            <p className="text-[10px] text-muted-foreground">{dashboardSubtitle}</p>
           </div>
           <PlusCircle className="size-4 text-primary" />
         </div>
@@ -573,13 +794,15 @@ function Dashboard() {
         </div>
       </section>
 
-      {(actions.length > 0 || openRequests > 0 || missingDocumentation.length > 0) && (
+      {(actions.length > 0 || (isCounselorDashboard && (openRequests > 0 || missingDocumentation.length > 0))) && (
         <section id="today-work" className="scroll-mt-28 rounded-2xl border border-primary/15 bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-black">مركز عمل اليوم</h2>
               <p className="text-[10px] text-muted-foreground">
-                عناصر مستخرجة من الحالات والخطة والبرامج والطلبات الواردة.
+                {isCounselorDashboard
+                  ? "عناصر مستخرجة من الحالات والخطة والبرامج والطلبات الواردة."
+                  : "المهام والاعتمادات والتقارير التي تحتاج إجراء حسب دورك."}
               </p>
             </div>
             <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">
@@ -588,7 +811,7 @@ function Dashboard() {
           </div>
 
           <div className="mt-2 grid gap-2 lg:grid-cols-2">
-            {openRequests > 0 && (
+            {isCounselorDashboard && openRequests > 0 && (
               <Link
                 to="/posts"
                 className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/[0.04] p-2.5"
@@ -603,7 +826,7 @@ function Dashboard() {
               </Link>
             )}
 
-            {missingDocumentation.length > 0 && (
+            {isCounselorDashboard && missingDocumentation.length > 0 && (
               <Link
                 to="/evidences"
                 className="flex items-center justify-between gap-3 rounded-xl border p-2.5"
