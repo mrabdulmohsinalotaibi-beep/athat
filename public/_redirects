@@ -1,3 +1,3 @@
-https://www.athat.app/* https://athat.app/:splat 308
+# Cloudflare Pages redirects must use relative source paths.
 /index.html / 308
 /home / 308
