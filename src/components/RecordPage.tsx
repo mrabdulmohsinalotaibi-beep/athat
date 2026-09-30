@@ -74,6 +74,8 @@ export function RecordPage({
   filters,
   extraFilter,
   rowAction,
+  serverPagination = false,
+  serverFilters = {},
 }: {
   config: RecordConfig;
   hideImport?: boolean;
@@ -81,6 +83,8 @@ export function RecordPage({
   filters?: ReactNode;
   extraFilter?: (row: Record<string, unknown>) => boolean;
   rowAction?: { icon: ReactNode; title: string; onClick: (row: Row) => void };
+  serverPagination?: boolean;
+  serverFilters?: Record<string, string>;
 }) {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
@@ -204,14 +208,48 @@ export function RecordPage({
     toast.success("تم حذف الخيار من القائمة");
   }
 
-  const { data: rows = [], isLoading, isError: rowsError, error: rowsQueryError, refetch: refetchRows } = useQuery({
-    queryKey: [config.table],
+  const serverFilterKey = JSON.stringify(serverFilters);
+  const { data: rowResult, isLoading, isError: rowsError, error: rowsQueryError, refetch: refetchRows } = useQuery({
+    queryKey: [config.table, serverPagination ? "server" : "client", page, search, sort, serverFilterKey],
     retry: 1,
     staleTime: 15_000,
     queryFn: async () => {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+
+      if (serverPagination) {
+        let query = (supabase.from(config.table as never) as any)
+          .select("*", { count: "exact" })
+          .eq("user_id", authData.user.id);
+
+        Object.entries(serverFilters).forEach(([key, value]) => {
+          if (value) query = query.eq(key, value);
+        });
+
+        const safeTerm = search.trim().replace(/[,()%]/g, " ");
+        if (safeTerm) {
+          const searchable =
+            config.key === "students"
+              ? ["full_name", "student_no", "national_id", "grade", "classroom", "guardian_name"]
+              : config.fields
+                  .filter((field) => field.type !== "number" && field.type !== "date")
+                  .slice(0, 8)
+                  .map((field) => field.name);
+          if (searchable.length) {
+            query = query.or(searchable.map((name) => `${name}.ilike.%${safeTerm}%`).join(","));
+          }
+        }
+
+        const orderKey = sort?.key || "created_at";
+        query = query
+          .order(orderKey, { ascending: sort?.dir === "asc" })
+          .range((page - 1) * pageSize, page * pageSize - 1);
+
+        const { data, error, count } = await query;
+        if (error) throw error;
+        return { rows: (data ?? []) as Row[], count: count ?? 0 };
+      }
 
       const { data, error } = await supabase
         .from(config.table as never)
@@ -221,11 +259,15 @@ export function RecordPage({
         .limit(1000);
 
       if (error) throw error;
-      return (data ?? []) as unknown as Row[];
+      const loaded = (data ?? []) as unknown as Row[];
+      return { rows: loaded, count: loaded.length };
     },
   });
 
+  const rows = rowResult?.rows ?? [];
   const filtered = useMemo(() => {
+    if (serverPagination) return rows;
+
     const term = search.trim().toLocaleLowerCase("ar");
     let out = rows;
     if (term) {
@@ -244,13 +286,14 @@ export function RecordPage({
       });
     }
     return out;
-  }, [rows, search, config.fields, extraFilter, sort]);
+  }, [rows, search, config.fields, extraFilter, sort, serverPagination]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const totalRows = serverPagination ? rowResult?.count ?? 0 : filtered.length;
+  const pageCount = Math.max(1, Math.ceil(totalRows / pageSize));
   const currentPage = Math.min(page, pageCount);
   const paged = useMemo(
-    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-    [filtered, currentPage],
+    () => serverPagination ? filtered : filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, serverPagination],
   );
 
   function toggleSort(key: string) {
@@ -487,7 +530,7 @@ export function RecordPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">{config.title}</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} سجل</p>
+          <p className="text-sm text-muted-foreground">{totalRows} سجل</p>
         </div>
         <div className="record-toolbar flex w-full flex-wrap gap-2 sm:w-auto">
           <Button
@@ -506,7 +549,39 @@ export function RecordPage({
           )}
           <Button
             variant="outline"
-            onClick={() => exportToExcel(config.fields, filtered, config.title)}
+            onClick={async () => {
+              if (!serverPagination) {
+                exportToExcel(config.fields, filtered, config.title);
+                return;
+              }
+              try {
+                const { data: authData, error: authError } = await supabase.auth.getUser();
+                if (authError) throw authError;
+                if (!authData.user) throw new Error("انتهت جلسة الدخول.");
+
+                let query = (supabase.from(config.table as never) as any)
+                  .select("*")
+                  .eq("user_id", authData.user.id);
+                Object.entries(serverFilters).forEach(([key, value]) => {
+                  if (value) query = query.eq(key, value);
+                });
+                const safeTerm = search.trim().replace(/[,()%]/g, " ");
+                if (safeTerm && config.key === "students") {
+                  query = query.or(
+                    ["full_name", "student_no", "national_id", "grade", "classroom", "guardian_name"]
+                      .map((name) => `${name}.ilike.%${safeTerm}%`)
+                      .join(","),
+                  );
+                }
+                const { data, error } = await query.order(sort?.key || "created_at", {
+                  ascending: sort?.dir === "asc",
+                }).limit(5000);
+                if (error) throw error;
+                exportToExcel(config.fields, (data ?? []) as Row[], config.title);
+              } catch (error) {
+                toast.error(`تعذّر تصدير البيانات: ${(error as Error).message}`);
+              }
+            }}
           >
             <Download className="size-4" /> تصدير Excel
           </Button>
