@@ -12,16 +12,16 @@ const legacyBackend = {
 const env = process.env;
 const publicBackend = {
   url:
-    env.VITE_SUPABASE_URL ||
-    env.SUPABASE_URL ||
+    env["VITE_SUPABASE_URL"] ||
+    env["SUPABASE_URL"] ||
     legacyBackend.url,
   projectId:
-    env.VITE_SUPABASE_PROJECT_ID ||
-    env.SUPABASE_PROJECT_ID ||
+    env["VITE_SUPABASE_PROJECT_ID"] ||
+    env["SUPABASE_PROJECT_ID"] ||
     legacyBackend.projectId,
   publishableKey:
-    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    env.SUPABASE_PUBLISHABLE_KEY ||
+    env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+    env["SUPABASE_PUBLISHABLE_KEY"] ||
     legacyBackend.publishableKey,
 };
 
