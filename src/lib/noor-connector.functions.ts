@@ -1,9 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { EnhancedAuthMiddleware } from "@/integrations/supabase/auth-attacher";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const getNoorConnectorStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([EnhancedAuthMiddleware, requireSupabaseAuth])
   .handler(async () => {
     const enabled = process.env["NOOR_CONNECTOR_ENABLED"] === "true";
     const hasClientId = Boolean(process.env["NOOR_CLIENT_ID"]);
