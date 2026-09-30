@@ -87,22 +87,29 @@ function useDashboard() {
         }),
       );
 
-      const resultMap = Object.fromEntries(settled) as Record<string, {
+      type DashboardResult = {
         data: any[] | null;
         count?: number | null;
         error: { message?: string } | Error | null;
-      }>;
+      };
+      const resultMap = Object.fromEntries(settled) as Record<string, DashboardResult>;
+      const missing = (name: string): DashboardResult => ({
+        data: null,
+        count: 0,
+        error: new Error(`لم تصل نتيجة ${name}`),
+      });
+      const pick = (name: string) => resultMap[name] ?? missing(name);
 
-      const students = resultMap.students;
-      const cases = resultMap.cases;
-      const programs = resultMap.programs;
-      const calendar = resultMap.calendar;
-      const planTasks = resultMap.planTasks;
-      const interviews = resultMap.interviews;
-      const evidences = resultMap.evidences;
-      const publicRequests = resultMap.publicRequests;
-      const feedback = resultMap.feedback;
-      const posts = resultMap.posts;
+      const students = pick("students");
+      const cases = pick("cases");
+      const programs = pick("programs");
+      const calendar = pick("calendar");
+      const planTasks = pick("planTasks");
+      const interviews = pick("interviews");
+      const evidences = pick("evidences");
+      const publicRequests = pick("publicRequests");
+      const feedback = pick("feedback");
+      const posts = pick("posts");
 
       const sources = {
         students,
