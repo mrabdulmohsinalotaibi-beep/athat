@@ -908,7 +908,16 @@ export function RecordPage({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditing(null);
+            setSmartPromptOpen(false);
+            setSmartPrompt("");
+          }
+        }}
+      >
         <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[90vh]" dir="rtl">
           <DialogHeader className="border-b px-4 pb-3 pt-4 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -932,6 +941,61 @@ export function RecordPage({
               </Button>
             </div>
           </DialogHeader>
+          {smartPromptOpen && (
+            <div className="border-b bg-secondary/35 px-4 py-4 sm:px-6">
+              <div className="rounded-2xl border border-primary/15 bg-background p-3.5 shadow-sm">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-black text-primary">التعبئة الذكية</p>
+                    <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                      اكتب مختصرًا، وسيقترح DeepSeek محتوى للحقول النصية الفارغة فقط.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0"
+                    onClick={() => {
+                      setSmartPromptOpen(false);
+                      setSmartPrompt("");
+                    }}
+                    disabled={smartFilling}
+                  >
+                    إغلاق
+                  </Button>
+                </div>
+                <Textarea
+                  id="smart-fill-brief"
+                  value={smartPrompt}
+                  onChange={(e) => setSmartPrompt(e.target.value)}
+                  placeholder="مثال: طالب يتكرر تأخره الصباحي، تمت مناقشة الأسباب معه ويحتاج إلى متابعة خلال الفترة القادمة."
+                  rows={4}
+                  autoFocus
+                  disabled={smartFilling}
+                />
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="text-[10px] leading-5 text-muted-foreground">
+                    الاقتراحات لا تُحفظ تلقائيًا ويمكن تعديلها قبل الحفظ.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSmartFill}
+                    disabled={smartFilling || smartPrompt.trim().length < 2}
+                    className="shrink-0"
+                  >
+                    {smartFilling ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="size-4" />
+                    )}
+                    {smartFilling ? "جارٍ التوليد..." : "تعبئة النموذج"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           <form
             id="record-form"
             className="grid flex-1 gap-4 overflow-y-auto px-4 py-4 sm:grid-cols-2 sm:px-6"
@@ -1127,57 +1191,6 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={smartPromptOpen}
-        onOpenChange={(open) => {
-          if (!smartFilling) setSmartPromptOpen(open);
-        }}
-      >
-        <DialogContent dir="rtl" className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>التعبئة الذكية</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Label htmlFor="smart-fill-brief">اكتب مختصرًا عن الحالة أو الموضوع</Label>
-            <Textarea
-              id="smart-fill-brief"
-              value={smartPrompt}
-              onChange={(e) => setSmartPrompt(e.target.value)}
-              placeholder="مثال: طالب يتكرر تأخره الصباحي، وتمت مناقشة أسباب التأخر معه، ويحتاج إلى متابعة خلال الفترة القادمة."
-              rows={5}
-              autoFocus
-              disabled={smartFilling}
-            />
-            <p className="text-xs text-muted-foreground">
-              سيستخدم الذكاء الاصطناعي هذا المختصر مع بيانات النموذج لكتابة الحقول النصية الناقصة
-              فقط. لن يغيّر الحقول التي أدخلتها بنفسك.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setSmartPromptOpen(false)}
-              disabled={smartFilling}
-            >
-              إلغاء
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSmartFill}
-              disabled={smartFilling || smartPrompt.trim().length < 2}
-            >
-              {smartFilling ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Sparkles className="size-4" />
-              )}
-              {smartFilling ? "جارٍ التوليد..." : "تعبئة النموذج"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <RecordAttachmentsDialog
         open={attachFor !== null}
         onOpenChange={(open) => !open && setAttachFor(null)}
