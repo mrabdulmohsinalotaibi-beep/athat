@@ -90,7 +90,7 @@ export function useKnownAccountRecovery() {
           queryClient.invalidateQueries({ queryKey: ["calendar_events"] }),
           queryClient.invalidateQueries({ queryKey: ["lookups"] }),
           queryClient.invalidateQueries({ queryKey: ["posts"] }),
-          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
           queryClient.invalidateQueries({ queryKey: ["school_settings"] }),
         ]);
         return;
@@ -209,7 +209,7 @@ export function useKnownAccountRecovery() {
         queryClient.invalidateQueries({ queryKey: ["calendar_events"] }),
         queryClient.invalidateQueries({ queryKey: ["lookups"] }),
         queryClient.invalidateQueries({ queryKey: ["posts"] }),
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
       ]);
       })();
     }, 1800);
