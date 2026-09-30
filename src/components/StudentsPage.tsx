@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { FileSpreadsheet, FolderOpen, Upload } from "lucide-react";
@@ -74,36 +74,28 @@ export function StudentsPage() {
     );
   }, []);
 
-  const { data: rows = [] } = useQuery({
+  const { data: filterOptions } = useQuery({
     queryKey: ["students-filter-options"],
     retry: 1,
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!authData.user) return [] as StudentRow[];
-
-      const { data, error } = await supabase
-        .from("students")
-        .select("stage,grade,classroom,nationality,status")
-        .eq("user_id", authData.user.id)
-        .limit(1000);
-
+      const { data, error } = await (supabase as any).rpc("get_student_filter_options");
       if (error) throw error;
-      return (data ?? []) as StudentRow[];
+      return (data ?? {}) as {
+        stages?: string[];
+        grades?: string[];
+        classrooms?: string[];
+        nationalities?: string[];
+        statuses?: string[];
+      };
     },
   });
 
-  const uniq = (key: string) =>
-    [...new Set(rows.map((r) => String(r[key] ?? "").trim()).filter(Boolean))].sort((a, b) =>
-      a.localeCompare(b, "ar"),
-    );
-
-  const stages = useMemo(() => uniq("stage"), [rows]);
-  const grades = useMemo(() => uniq("grade"), [rows]);
-  const classrooms = useMemo(() => uniq("classroom"), [rows]);
-  const nationalities = useMemo(() => uniq("nationality"), [rows]);
-  const studentStatuses = useMemo(() => uniq("status"), [rows]);
+  const stages = filterOptions?.stages ?? [];
+  const grades = filterOptions?.grades ?? [];
+  const classrooms = filterOptions?.classrooms ?? [];
+  const nationalities = filterOptions?.nationalities ?? [];
+  const studentStatuses = filterOptions?.statuses ?? [];
 
 
   return (
