@@ -59,8 +59,21 @@ type UserProfile = {
   job_title: string | null;
   phone: string | null;
   avatar_path: string | null;
+  avatar_data_url?: string | null;
   bio: string | null;
   school_role: string | null;
+  professional_email?: string | null;
+  employee_no?: string | null;
+  qualification?: string | null;
+  specialization?: string | null;
+  experience_years?: number | null;
+  school_name?: string | null;
+  education_department?: string | null;
+  education_office?: string | null;
+  city?: string | null;
+  office_location?: string | null;
+  office_hours?: string | null;
+  interests?: string | null;
 };
 
 type ExtendedProfile = {
@@ -93,6 +106,16 @@ function initials(value: string) {
 function metadataValue(user: { user_metadata?: Record<string, unknown> } | undefined, key: keyof ExtendedProfile) {
   const value = user?.user_metadata?.[key];
   return typeof value === "string" ? value : "";
+}
+
+function profileValue(
+  profile: UserProfile | null | undefined,
+  user: { user_metadata?: Record<string, unknown> } | undefined,
+  key: keyof ExtendedProfile,
+) {
+  const value = profile?.[key as keyof UserProfile];
+  if (value !== null && value !== undefined && String(value).trim()) return String(value);
+  return metadataValue(user, key);
 }
 
 export function UserProfilePage() {
@@ -152,9 +175,10 @@ export function UserProfilePage() {
     if (profile?.avatar_path) {
       return supabase.storage.from("user-avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
     }
+    if (profile?.avatar_data_url) return profile.avatar_data_url;
     const fallback = user?.user_metadata?.["avatar_data_url"];
     return typeof fallback === "string" ? fallback : "";
-  }, [profile?.avatar_path, user?.user_metadata]);
+  }, [profile?.avatar_path, profile?.avatar_data_url, user?.user_metadata]);
 
   const completion = useMemo(() => {
     const fields = [
@@ -163,11 +187,11 @@ export function UserProfilePage() {
       profile?.phone,
       profile?.bio,
       profile?.avatar_path,
-      metadataValue(user, "qualification"),
-      metadataValue(user, "specialization"),
-      metadataValue(user, "school_name"),
-      metadataValue(user, "education_department"),
-      metadataValue(user, "professional_email"),
+      profileValue(profile, user, "qualification"),
+      profileValue(profile, user, "specialization"),
+      profileValue(profile, user, "school_name"),
+      profileValue(profile, user, "education_department"),
+      profileValue(profile, user, "professional_email"),
     ];
     const done = fields.filter((value) => String(value || "").trim()).length;
     return Math.round((done / fields.length) * 100);
@@ -203,9 +227,20 @@ export function UserProfilePage() {
         interests: String(values.get("interests") || "").trim(),
       };
 
-      const { error } = await (supabase as any).from("user_profiles").upsert(basePayload);
+      const cloudProfilePayload = {
+        ...basePayload,
+        ...extendedPayload,
+        experience_years: extendedPayload.experience_years
+          ? Number(extendedPayload.experience_years)
+          : null,
+      };
+
+      const { error } = await (supabase as any)
+        .from("user_profiles")
+        .upsert(cloudProfilePayload, { onConflict: "id" });
       if (error) throw error;
 
+      // Keep auth metadata as a second copy for resilience and fast restore.
       const { error: authError } = await supabase.auth.updateUser({
         data: {
           ...user.user_metadata,
@@ -286,6 +321,15 @@ export function UserProfilePage() {
         // Safe fallback: keep a very small, optimized avatar in auth metadata so
         // the user can update the profile even before Storage RLS is deployed.
         const fallbackAvatar = await createAvatarFallback(file);
+        const { error: profileFallbackError } = await (supabase as any)
+          .from("user_profiles")
+          .upsert({
+            id: user.id,
+            full_name: profile?.full_name || String(user.user_metadata?.["full_name"] || "") || null,
+            avatar_data_url: fallbackAvatar,
+          }, { onConflict: "id" });
+        if (profileFallbackError) throw profileFallbackError;
+
         const { error: metadataError } = await supabase.auth.updateUser({
           data: {
             ...user.user_metadata,
@@ -294,6 +338,7 @@ export function UserProfilePage() {
         });
         if (metadataError) throw metadataError;
 
+        await queryClient.invalidateQueries({ queryKey: ["user-profile", user.id] });
         await queryClient.invalidateQueries({ queryKey: ["auth-user"] });
         toast.success("تم تحديث الصورة الشخصية.");
         return;
@@ -303,10 +348,19 @@ export function UserProfilePage() {
         id: user.id,
         full_name: profile?.full_name || String(user.user_metadata?.["full_name"] || "") || null,
         avatar_path: path,
+        avatar_data_url: null,
       });
       if (profileError) throw profileError;
 
       // Storage succeeded, so remove any temporary metadata fallback.
+      if (profile?.avatar_data_url) {
+        const { error: clearFallbackError } = await (supabase as any)
+          .from("user_profiles")
+          .update({ avatar_data_url: null })
+          .eq("id", user.id);
+        if (clearFallbackError) throw clearFallbackError;
+      }
+
       if (user.user_metadata?.["avatar_data_url"]) {
         const nextMetadata = { ...user.user_metadata };
         delete nextMetadata["avatar_data_url"];
@@ -328,7 +382,7 @@ export function UserProfilePage() {
   }
 
   async function removeAvatar() {
-    if (!user || (!profile?.avatar_path && !user.user_metadata?.["avatar_data_url"])) return;
+    if (!user || (!profile?.avatar_path && !profile?.avatar_data_url && !user.user_metadata?.["avatar_data_url"])) return;
     if (!window.confirm("هل تريد إزالة الصورة الشخصية؟")) return;
 
     setUploading(true);
@@ -457,11 +511,15 @@ export function UserProfilePage() {
                 <BadgeCheck className="size-3.5" />
                 حساب نشط
               </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/20 bg-sky-300/10 px-3 py-1 text-[11px] font-bold text-sky-100">
+                <ShieldCheck className="size-3.5" />
+                محفوظ سحابيًا
+              </span>
             </div>
             <h1 className="mt-3 truncate text-2xl font-black sm:text-4xl">{displayName}</h1>
             <p className="mt-2 text-sm text-[#D8D0C4]">
               {profile?.job_title || profile?.school_role || "الموجه الطلابي"}
-              {metadataValue(user, "school_name") ? ` · ${metadataValue(user, "school_name")}` : ""}
+              {profileValue(profile, user, "school_name") ? ` · ${profileValue(profile, user, "school_name")}` : ""}
             </p>
 
             <div className="mt-5 max-w-xl">
@@ -538,14 +596,14 @@ export function UserProfilePage() {
               </div>
               <div>
                 <Label htmlFor="profile-employee-no" className="mb-1.5 block">الرقم الوظيفي</Label>
-                <Input id="profile-employee-no" name="employee_no" dir="ltr" defaultValue={metadataValue(user, "employee_no")} placeholder="اختياري" />
+                <Input id="profile-employee-no" name="employee_no" dir="ltr" defaultValue={profileValue(profile, user, "employee_no")} placeholder="اختياري" />
               </div>
               <div>
                 <Label htmlFor="profile-qualification" className="mb-1.5 block">المؤهل العلمي</Label>
                 <select
                   id="profile-qualification"
                   name="qualification"
-                  defaultValue={metadataValue(user, "qualification")}
+                  defaultValue={profileValue(profile, user, "qualification")}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
                   <option value="">اختر المؤهل</option>
@@ -554,11 +612,11 @@ export function UserProfilePage() {
               </div>
               <div>
                 <Label htmlFor="profile-specialization" className="mb-1.5 block">التخصص</Label>
-                <Input id="profile-specialization" name="specialization" defaultValue={metadataValue(user, "specialization")} placeholder="مثال: القياس والتقويم" />
+                <Input id="profile-specialization" name="specialization" defaultValue={profileValue(profile, user, "specialization")} placeholder="مثال: القياس والتقويم" />
               </div>
               <div>
                 <Label htmlFor="profile-experience" className="mb-1.5 block">سنوات الخبرة</Label>
-                <Input id="profile-experience" name="experience_years" type="number" min="0" max="60" defaultValue={metadataValue(user, "experience_years")} placeholder="0" />
+                <Input id="profile-experience" name="experience_years" type="number" min="0" max="60" defaultValue={profileValue(profile, user, "experience_years")} placeholder="0" />
               </div>
               <div>
                 <Label htmlFor="profile-phone" className="mb-1.5 block">رقم الجوال المهني</Label>
@@ -566,11 +624,11 @@ export function UserProfilePage() {
               </div>
               <div>
                 <Label htmlFor="profile-professional-email" className="mb-1.5 block">البريد المهني</Label>
-                <Input id="profile-professional-email" name="professional_email" type="email" dir="ltr" defaultValue={metadataValue(user, "professional_email")} placeholder="name@school.edu.sa" />
+                <Input id="profile-professional-email" name="professional_email" type="email" dir="ltr" defaultValue={profileValue(profile, user, "professional_email")} placeholder="name@school.edu.sa" />
               </div>
               <div>
                 <Label htmlFor="profile-city" className="mb-1.5 block">المدينة</Label>
-                <Input id="profile-city" name="city" defaultValue={metadataValue(user, "city")} placeholder="مثال: مكة المكرمة" />
+                <Input id="profile-city" name="city" defaultValue={profileValue(profile, user, "city")} placeholder="مثال: مكة المكرمة" />
               </div>
 
               <div className="sm:col-span-2 mt-2 border-t pt-5">
@@ -581,23 +639,23 @@ export function UserProfilePage() {
               </div>
               <div>
                 <Label htmlFor="profile-school-name" className="mb-1.5 block">اسم المدرسة</Label>
-                <Input id="profile-school-name" name="school_name" defaultValue={metadataValue(user, "school_name")} placeholder="اسم المدرسة" />
+                <Input id="profile-school-name" name="school_name" defaultValue={profileValue(profile, user, "school_name")} placeholder="اسم المدرسة" />
               </div>
               <div>
                 <Label htmlFor="profile-department" className="mb-1.5 block">إدارة التعليم</Label>
-                <Input id="profile-department" name="education_department" defaultValue={metadataValue(user, "education_department")} placeholder="إدارة التعليم بمنطقة..." />
+                <Input id="profile-department" name="education_department" defaultValue={profileValue(profile, user, "education_department")} placeholder="إدارة التعليم بمنطقة..." />
               </div>
               <div>
                 <Label htmlFor="profile-office" className="mb-1.5 block">مكتب التعليم</Label>
-                <Input id="profile-office" name="education_office" defaultValue={metadataValue(user, "education_office")} placeholder="اختياري" />
+                <Input id="profile-office" name="education_office" defaultValue={profileValue(profile, user, "education_office")} placeholder="اختياري" />
               </div>
               <div>
                 <Label htmlFor="profile-office-location" className="mb-1.5 block">موقع مكتب التوجيه</Label>
-                <Input id="profile-office-location" name="office_location" defaultValue={metadataValue(user, "office_location")} placeholder="مثال: الدور الأول - غرفة التوجيه" />
+                <Input id="profile-office-location" name="office_location" defaultValue={profileValue(profile, user, "office_location")} placeholder="مثال: الدور الأول - غرفة التوجيه" />
               </div>
               <div className="sm:col-span-2">
                 <Label htmlFor="profile-office-hours" className="mb-1.5 block">أوقات التواصل والمقابلات</Label>
-                <Input id="profile-office-hours" name="office_hours" defaultValue={metadataValue(user, "office_hours")} placeholder="مثال: الأحد إلى الخميس من 8:00 ص إلى 12:30 م" />
+                <Input id="profile-office-hours" name="office_hours" defaultValue={profileValue(profile, user, "office_hours")} placeholder="مثال: الأحد إلى الخميس من 8:00 ص إلى 12:30 م" />
               </div>
 
               <div className="sm:col-span-2 mt-2 border-t pt-5">
@@ -622,7 +680,7 @@ export function UserProfilePage() {
                 <Textarea
                   id="profile-interests"
                   name="interests"
-                  defaultValue={metadataValue(user, "interests")}
+                  defaultValue={profileValue(profile, user, "interests")}
                   rows={3}
                   maxLength={500}
                   placeholder="مثال: التوجيه الطلابي، القياس والتقويم، الإرشاد النفسي، تحليل البيانات..."
@@ -660,7 +718,7 @@ export function UserProfilePage() {
                 <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">المدينة</p>
-                  <p className="mt-0.5 font-bold">{metadataValue(user, "city") || "غير مضافة"}</p>
+                  <p className="mt-0.5 font-bold">{profileValue(profile, user, "city") || "غير مضافة"}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-2xl bg-muted/45 p-3">
@@ -668,7 +726,7 @@ export function UserProfilePage() {
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">المؤهل والتخصص</p>
                   <p className="mt-0.5 font-bold">
-                    {[metadataValue(user, "qualification"), metadataValue(user, "specialization")].filter(Boolean).join(" · ") || "غير مكتمل"}
+                    {[profileValue(profile, user, "qualification"), profileValue(profile, user, "specialization")].filter(Boolean).join(" · ") || "غير مكتمل"}
                   </p>
                 </div>
               </div>
@@ -757,7 +815,7 @@ export function UserProfilePage() {
                 <p className="truncate text-xs text-muted-foreground">{user?.email || "—"}</p>
               </div>
             </div>
-            {(profile?.avatar_path || user?.user_metadata?.["avatar_data_url"]) && (
+            {(profile?.avatar_path || profile?.avatar_data_url || user?.user_metadata?.["avatar_data_url"]) && (
               <Button
                 type="button"
                 variant="outline"
