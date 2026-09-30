@@ -250,7 +250,6 @@ export function UserProfilePage() {
       office_location: profile?.office_location,
       office_hours: profile?.office_hours,
       interests: profile?.interests,
-      avatar_data_url: profile?.avatar_data_url,
     };
 
     for (const [key, value] of Object.entries(candidates)) {
@@ -482,18 +481,11 @@ export function UserProfilePage() {
 
         if (!storagePolicyIssue) throw uploadError;
 
-        // Safe fallback: keep a very small, optimized avatar in auth metadata so
-        // the user can update the profile even before Storage RLS is deployed.
+        // Safe fallback: keep the optimized avatar in the profile table only.
+        // Never put image data in Auth metadata because it is embedded in the JWT
+        // and can make authenticated REST requests exceed header limits.
         const fallbackAvatar = await createAvatarFallback(file);
-        const { error: metadataError } = await supabase.auth.updateUser({
-          data: {
-            ...user.user_metadata,
-            avatar_data_url: fallbackAvatar,
-          },
-        });
-        if (metadataError) throw metadataError;
 
-        // Best-effort mirror for databases that already have avatar_data_url.
         const { error: profileFallbackError } = await (supabase as any)
           .from("user_profiles")
           .update({ avatar_data_url: fallbackAvatar })
