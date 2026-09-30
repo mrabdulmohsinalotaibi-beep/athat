@@ -221,7 +221,8 @@ function ExecutionFlowPage() {
             const documented = taskEvidences.length > 0;
             const reportReady = taskDone && programDone && documented;
             const reportUrl = "/reports?workflow=1&planTaskId=" + encodeURIComponent(task.id);
-            const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);\n            const primaryProgram = taskPrograms[0];
+            const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);
+            const primaryProgram = taskPrograms[0];
             return (
               <article key={task.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
                 <div className="flex flex-col gap-3 border-b bg-muted/20 p-4 lg:flex-row lg:items-center lg:justify-between">
