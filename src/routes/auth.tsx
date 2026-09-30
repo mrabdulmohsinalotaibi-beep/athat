@@ -107,7 +107,7 @@ function AuthPage() {
       });
       if (error) throw error;
       toast.success("تم تسجيل الدخول بنجاح");
-      navigate({ to: next || "/dashboard" });
+      await navigate({ to: next || "/dashboard" });
     } catch (err) {
       toast.error(arabicAuthError(err));
     } finally {
@@ -142,7 +142,7 @@ function AuthPage() {
 
       if (data.session) {
         toast.success("تم إنشاء الحساب وتسجيل الدخول بنجاح");
-        navigate({ to: next || "/dashboard" });
+        await navigate({ to: next || "/dashboard" });
         return;
       }
 
@@ -189,7 +189,7 @@ function AuthPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast.success("تم تحديث كلمة المرور بنجاح");
-      navigate({ to: next || "/dashboard" });
+      await navigate({ to: next || "/dashboard" });
     } catch (err) {
       toast.error(arabicAuthError(err));
     } finally {
