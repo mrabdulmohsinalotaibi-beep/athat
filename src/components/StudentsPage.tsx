@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { FileSpreadsheet, FolderOpen, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser } from "@/lib/auth-user";
 import { recordByKey } from "@/lib/records";
 import { downloadStudentsTemplate } from "@/lib/students-import";
 import { RecordPage } from "@/components/RecordPage";
@@ -46,6 +47,8 @@ function Filter({
 
 export function StudentsPage() {
   const config = recordByKey("students");
+  const { data: authUser } = useAuthUser();
+  const userId = authUser?.id ?? "";
   const [importOpen, setImportOpen] = useState(false);
   const [profileStudent, setProfileStudent] = useState<StudentRow | null>(null);
   const [stage, setStage] = useState("");
@@ -55,13 +58,15 @@ export function StudentsPage() {
   const [studentStatus, setStudentStatus] = useState("");
 
   const { data: rows = [] } = useQuery({
-    queryKey: [config.table],
+    queryKey: [config.table, userId],
+    enabled: Boolean(userId),
     retry: 1,
     staleTime: 15_000,
     queryFn: async () => {
       const request = supabase
         .from("students")
         .select("*")
+        .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       const timeout = new Promise<never>((_, reject) => {
