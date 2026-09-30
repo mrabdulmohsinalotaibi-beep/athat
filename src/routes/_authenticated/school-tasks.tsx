@@ -52,7 +52,7 @@ type SchoolTask = {
   priority: "منخفضة" | "متوسطة" | "عالية";
   cadence: "مرة واحدة" | "يومية" | "أسبوعية" | "شهرية" | "سنوية";
   due_date: string | null;
-  status: "مسندة" | "قيد التنفيذ" | "مكتملة" | "معادة" | "ملغاة";
+  status: "مسندة" | "قيد التنفيذ" | "مكتملة" | "معتمدة" | "معادة" | "ملغاة";
   completion_note: string | null;
   returned_note: string | null;
   completed_at: string | null;
@@ -154,7 +154,7 @@ function SchoolTasksPage() {
   });
 
   const reviewTask = useMutation({
-    mutationFn: async ({ id, action }: { id: string; action: "إعادة" | "إلغاء" }) => {
+    mutationFn: async ({ id, action }: { id: string; action: "اعتماد" | "إعادة" | "إلغاء" }) => {
       const { error } = await (supabase as any).rpc("review_school_task", {
         p_task_id: id,
         p_action: action,
@@ -188,7 +188,7 @@ function SchoolTasksPage() {
   const due = assignedToMe.filter(
     (task) => task.status !== "مكتملة" && task.due_date && task.due_date <= today(),
   );
-  const completed = assignedToMe.filter((task) => task.status === "مكتملة").length;
+  const completed = assignedToMe.filter((task) => ["مكتملة", "معتمدة"].includes(task.status)).length;
 
   if (query.isLoading) {
     return <div dir="rtl" className="rounded-2xl border bg-card p-8 text-center text-sm text-muted-foreground">جارٍ تحميل المهام المدرسية...</div>;
@@ -251,7 +251,7 @@ function SchoolTasksPage() {
                 <div><Label>الأولوية</Label><select className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={priority} onChange={(e) => setPriority(e.target.value as SchoolTask["priority"])}><option>منخفضة</option><option>متوسطة</option><option>عالية</option></select></div>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>التكرار</Label><select className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={cadence} onChange={(e) => setCadence(e.target.value as SchoolTask["cadence"])}><option>مرة واحدة</option><option>يومية</option><option>أسبوعية</option><option>شهرية</option><option>سنوية</option></select><p className="mt-1 text-[10px] text-muted-foreground">المهمة المتكررة تُنشئ الاستحقاق التالي تلقائيًا بعد إكمالها.</p></div>
+                <div><Label>التكرار</Label><select className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={cadence} onChange={(e) => setCadence(e.target.value as SchoolTask["cadence"])}><option>مرة واحدة</option><option>يومية</option><option>أسبوعية</option><option>شهرية</option><option>سنوية</option></select><p className="mt-1 text-[10px] text-muted-foreground">المهمة المتكررة تُنشئ الاستحقاق التالي تلقائيًا بعد اعتماد إنجازها من المسؤول.</p></div>
                 <div><Label>الاستحقاق</Label><Input className="mt-2" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
               </div>
               <Button className="w-full" disabled={!assigneeId || !title.trim() || createTask.isPending} onClick={() => createTask.mutate()}>
@@ -321,7 +321,7 @@ function TaskGroup({
   returnNotes: Record<string, string>;
   setReturnNotes: Dispatch<SetStateAction<Record<string, string>>>;
   updateMyTask: { mutate: (variables: { id: string; status: "قيد التنفيذ" | "مكتملة" }) => void };
-  reviewTask: { mutate: (variables: { id: string; action: "إعادة" | "إلغاء" }) => void };
+  reviewTask: { mutate: (variables: { id: string; action: "اعتماد" | "إعادة" | "إلغاء" }) => void };
 }) {
   return (
     <section className="rounded-2xl border bg-card p-4 shadow-sm">
@@ -355,7 +355,7 @@ function TaskGroup({
               {task.returned_note && <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs leading-6"><strong>ملاحظة الإعادة:</strong> {task.returned_note}</div>}
               {task.completion_note && <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs leading-6"><strong>إثبات التنفيذ:</strong> {task.completion_note}</div>}
 
-              {mine && !["مكتملة", "ملغاة"].includes(task.status) && (
+              {mine && !["مكتملة", "معتمدة", "ملغاة"].includes(task.status) && (
                 <div className="mt-4 border-t pt-3">
                   <textarea
                     value={completionNotes[task.id] ?? ""}
@@ -378,8 +378,9 @@ function TaskGroup({
                     placeholder={task.status === "مكتملة" ? "ملاحظة عند الحاجة لإعادة المهمة..." : "سبب الإلغاء أو الإعادة..."}
                   />
                   <div className="mt-2 flex flex-wrap gap-2">
+                    {task.status === "مكتملة" && <Button size="sm" onClick={() => reviewTask.mutate({ id: task.id, action: "اعتماد" })}><CheckCircle2 className="size-4" /> اعتماد الإنجاز</Button>}
                     {task.status === "مكتملة" && <Button size="sm" variant="outline" onClick={() => reviewTask.mutate({ id: task.id, action: "إعادة" })}><RotateCcw className="size-4" /> إعادة للموظف</Button>}
-                    {task.status !== "مكتملة" && <Button size="sm" variant="ghost" onClick={() => reviewTask.mutate({ id: task.id, action: "إلغاء" })}>إلغاء المهمة</Button>}
+                    {!["مكتملة", "معتمدة"].includes(task.status) && <Button size="sm" variant="ghost" onClick={() => reviewTask.mutate({ id: task.id, action: "إلغاء" })}>إلغاء المهمة</Button>}
                   </div>
                 </div>
               )}
@@ -393,7 +394,7 @@ function TaskGroup({
 }
 
 function StatusBadge({ status }: { status: SchoolTask["status"] }) {
-  const icon = status === "مكتملة" ? CheckCircle2 : status === "قيد التنفيذ" ? Clock3 : ClipboardCheck;
+  const icon = ["مكتملة", "معتمدة"].includes(status) ? CheckCircle2 : status === "قيد التنفيذ" ? Clock3 : ClipboardCheck;
   const Icon = icon;
   return <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[10px] font-black"><Icon className="size-3" /> {status}</span>;
 }
