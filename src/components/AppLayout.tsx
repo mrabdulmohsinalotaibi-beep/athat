@@ -120,7 +120,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
         (supabase as any).from("school_tasks").select("id,status,due_date,creator_member_id,assignee_member_id"),
-        (supabase as any).from("school_report_handoffs").select("id,status,recipient_member_id"),
+        (supabase as any).from("school_report_handoffs").select("id,status,recipient_member_id,sender_member_id"),
       ]);
 
       // Alerts are supplementary UI. A missing/temporarily unavailable table
@@ -152,7 +152,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
           (item.creator_member_id === memberId || isSchoolAdmin),
       ).length;
       const unreadReports = (handoffs.error ? [] : handoffs.data ?? []).filter(
-        (item: any) => item.recipient_member_id === memberId && item.status === "sent",
+        (item: any) =>
+          (item.recipient_member_id === memberId && item.status === "sent") ||
+          (item.sender_member_id === memberId && item.status === "returned"),
       ).length;
 
       const total = dueCases + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers;
