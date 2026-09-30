@@ -53,7 +53,7 @@ function useDashboard() {
     queryKey: ["dashboard-live-v2"],
     queryFn: async () => {
       const requests = [
-        ["students", supabase.from("students").select("id")],
+        ["students", supabase.from("students").select("id", { count: "exact", head: true })],
         ["cases", supabase
           .from("counseling_cases")
           .select("id,case_status,followup_at,student_name,student_id,student_no,next_action")],
@@ -89,6 +89,7 @@ function useDashboard() {
 
       const resultMap = Object.fromEntries(settled) as Record<string, {
         data: any[] | null;
+        count?: number | null;
         error: { message?: string } | Error | null;
       }>;
 
@@ -124,7 +125,7 @@ function useDashboard() {
         });
 
       return {
-        students: students.error ? [] : students.data ?? [],
+        studentsCount: students.error ? 0 : students.count ?? 0,
         cases: cases.error ? [] : cases.data ?? [],
         programs: programs.error ? [] : programs.data ?? [],
         calendar: calendar.error ? [] : calendar.data ?? [],
@@ -210,7 +211,7 @@ function Dashboard() {
   const stats = [
     {
       label: "الطلاب",
-      value: data?.students.length ?? 0,
+      value: data?.studentsCount ?? 0,
       note: "المسجلون فعليًا",
       to: "/students" as const,
       icon: Users,
