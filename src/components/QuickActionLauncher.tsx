@@ -89,7 +89,7 @@ export function QuickActionLauncher({
 
   const counselorActions = [
     { label: "طالب جديد", detail: "إضافة طالب للسجل", to: "/students?new=1", icon: UserPlus },
-    { label: "حالة", detail: "فتح حالة إرشادية", to: "/cases?new=1", icon: HeartHandshake },
+    { label: "حالة", detail: "فتح حالة طلابية", to: "/cases?new=1", icon: HeartHandshake },
     { label: "جلسة", detail: "مقابلة أو جلسة", to: "/interviews?new=1", icon: MessageSquareText },
     { label: "إحالة", detail: "إنشاء إحالة طالب", to: "/referrals?new=1", icon: Send },
     { label: "مواظبة", detail: "تسجيل متابعة مواظبة", to: "/attendance?new=1", icon: CalendarDays },
