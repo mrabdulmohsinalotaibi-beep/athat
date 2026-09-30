@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { EnhancedAuthMiddleware } from "@/integrations/supabase/auth-attacher";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const RECORD_TABLES = [
@@ -46,7 +47,7 @@ async function sha256(value: string) {
  * reassign rows by school name, counselor name, student names, or other fuzzy data.
  */
 export const recoverLegacyRecords = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([EnhancedAuthMiddleware, requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: userData, error: userError } = await supabase.auth.getUser();
