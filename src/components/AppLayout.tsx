@@ -204,7 +204,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-0.5 ring-2 ring-sidebar-primary/40">
-              <img src="/brand-icon.svg?v=20260929f" alt="شعار الذات" className="size-full object-contain" />
+              <img src="/brand-icon.svg?v=20261001a" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
               <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
@@ -313,7 +313,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
-        <header className="athat-topbar sticky top-0 z-20 border-b border-[#555555] bg-[#3C3C3C] text-[#F1E9DD] shadow-sm">
+        <header className="athat-topbar sticky top-0 z-20 border-b border-white/10 bg-[#073B4C] text-white shadow-sm">
           <div className="mx-auto flex min-h-[72px] w-full items-center justify-between gap-3 px-3 py-2.5 sm:px-5 lg:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
@@ -321,14 +321,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 size="icon"
                 aria-label="فتح القائمة الجانبية"
                 onClick={() => setOpen(true)}
-                className="shrink-0 text-[#F1E9DD] hover:bg-white/10 hover:text-white lg:hidden"
+                className="shrink-0 text-white hover:bg-white/10 hover:text-white lg:hidden"
               >
                 <Menu className="size-5" />
               </Button>
 
-              <div className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-[#3C3C3C] shadow-[0_10px_30px_-18px_rgba(0,0,0,.9)]">
+              <div className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-[#073B4C] shadow-[0_10px_30px_-18px_rgba(0,0,0,.9)]">
                 <img
-                  src="/brand-icon.svg?v=20260929f"
+                  src="/brand-icon.svg?v=20261001a"
                   alt="شعار الذات"
                   className="size-[50px] object-cover sm:size-[56px]"
                 />
@@ -336,18 +336,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <p className="truncate text-base font-black tracking-tight text-[#F1E9DD] sm:text-lg">
+                  <p className="truncate text-base font-black tracking-tight text-white sm:text-lg">
                     {workspaceSchool?.name || school?.school_name || "اسم المدرسة غير محدد"}
                   </p>
-                  <span className="hidden rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-[#E6DED2] sm:inline-flex">
+                  <span className="hidden rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-[#D8F1EE] sm:inline-flex">
                     منصة الذات
                   </span>
                 </div>
-                <p className="mt-0.5 truncate text-[11px] font-medium text-[#D8D0C4] sm:text-xs">
+                <p className="mt-0.5 truncate text-[11px] font-medium text-[#C7E4E1] sm:text-xs">
                   {workspaceSchool?.education_dept || school?.education_dept || "بيانات إدارة التعليم غير محددة"}
                 </p>
-                <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#CEC6BB] sm:flex">
-                  <span>{guidanceNavigationAllowed ? "الموجه الطلابي" : roleLabel}: <b className="font-bold text-[#F1E9DD]">{currentWorkspaceMember?.display_name || school?.counselor_name || "—"}</b></span>
+                <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#B8D7D5] sm:flex">
+                  <span>{guidanceNavigationAllowed ? "الموجه الطلابي" : roleLabel}: <b className="font-bold text-white">{currentWorkspaceMember?.display_name || school?.counselor_name || "—"}</b></span>
                   <span className="text-white/25">•</span>
                   <span>{school?.academic_year || "العام الدراسي"}</span>
                   <span className="text-white/25">•</span>
@@ -359,7 +359,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <QuickActionLauncher
                 guidanceAllowed={guidanceNavigationAllowed}
-                className="hidden border-white/20 bg-white/10 text-[#F1E9DD] hover:bg-white/20 hover:text-white sm:inline-flex"
+                className="hidden border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white sm:inline-flex"
               />
               {guidanceNavigationAllowed && <div className="hidden md:block"><GlobalSearch /></div>}
               <div className="relative">
@@ -368,7 +368,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   size="icon"
                   aria-label="التنبيهات"
                   onClick={() => setAlertsOpen((value) => !value)}
-                  className="relative text-[#F1E9DD] hover:bg-white/10 hover:text-white"
+                  className="relative text-white hover:bg-white/10 hover:text-white"
                 >
                   <Bell className="size-5" />
                   {alertCount > 0 && (
@@ -405,7 +405,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 asChild
                 variant="outline"
                 size="sm"
-                className="h-10 gap-2 border-white/20 bg-white/8 text-[#F1E9DD] hover:bg-white/14 hover:text-white"
+                className="h-10 gap-2 border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
               >
                 <Link to="/profile" title="حسابي الشخصي">
                   <UserRound className="size-4 shrink-0" />
@@ -448,7 +448,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </main>
 
         <nav
-          className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden"
+          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
           aria-label="التنقل الرئيسي"
         >
           {visibleBottomNavigation.slice(0, 2).map((item) => {
