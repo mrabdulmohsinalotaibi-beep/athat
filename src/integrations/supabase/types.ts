@@ -540,6 +540,7 @@ export type Database = {
       }
       noor_export_jobs: {
         Row: {
+          attempts: number
           created_at: string
           id: string
           last_error: string | null
@@ -554,6 +555,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempts?: number
           created_at?: string
           id?: string
           last_error?: string | null
@@ -568,6 +570,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          attempts?: number
           created_at?: string
           id?: string
           last_error?: string | null
@@ -702,6 +705,7 @@ export type Database = {
           noor_sync_ref: string | null
           noor_synced_at: string | null
           notes: string | null
+          plan_task_id: string | null
           program_no: string | null
           ptype: string | null
           required_evidence: string | null
@@ -724,6 +728,7 @@ export type Database = {
           noor_sync_ref?: string | null
           noor_synced_at?: string | null
           notes?: string | null
+          plan_task_id?: string | null
           program_no?: string | null
           ptype?: string | null
           required_evidence?: string | null
@@ -746,6 +751,7 @@ export type Database = {
           noor_sync_ref?: string | null
           noor_synced_at?: string | null
           notes?: string | null
+          plan_task_id?: string | null
           program_no?: string | null
           ptype?: string | null
           required_evidence?: string | null
@@ -755,7 +761,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "programs_plan_task_id_fkey"
+            columns: ["plan_task_id"]
+            isOneToOne: false
+            referencedRelation: "plan_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       public_requests: {
         Row: {
@@ -961,6 +975,7 @@ export type Database = {
           education_office: string | null
           id: string
           logo_url: string | null
+          ministry_logo_url: string | null
           mission: string | null
           office_hours: string | null
           principal_name: string | null
@@ -971,6 +986,8 @@ export type Database = {
           public_slug: string | null
           school_name: string | null
           semester: string | null
+          show_counselor_on_documents: boolean
+          show_principal_on_documents: boolean
           theme: string
           updated_at: string
           user_id: string
@@ -988,6 +1005,7 @@ export type Database = {
           education_office?: string | null
           id?: string
           logo_url?: string | null
+          ministry_logo_url?: string | null
           mission?: string | null
           office_hours?: string | null
           principal_name?: string | null
@@ -998,6 +1016,8 @@ export type Database = {
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
+          show_counselor_on_documents?: boolean
+          show_principal_on_documents?: boolean
           theme?: string
           updated_at?: string
           user_id?: string
@@ -1015,6 +1035,7 @@ export type Database = {
           education_office?: string | null
           id?: string
           logo_url?: string | null
+          ministry_logo_url?: string | null
           mission?: string | null
           office_hours?: string | null
           principal_name?: string | null
@@ -1025,6 +1046,8 @@ export type Database = {
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
+          show_counselor_on_documents?: boolean
+          show_principal_on_documents?: boolean
           theme?: string
           updated_at?: string
           user_id?: string
@@ -1198,6 +1221,23 @@ export type Database = {
           created_at: string
           excerpt: string
           kind: string
+          published_at: string
+          school_name: string
+          slug: string
+          title: string
+        }[]
+      }
+      get_private_counselor_portal: {
+        Args: { p_token: string }
+        Returns: {
+          author_name: string
+          body: string
+          counselor_name: string
+          cover_url: string
+          created_at: string
+          excerpt: string
+          kind: string
+          public_slug: string
           published_at: string
           school_name: string
           slug: string
