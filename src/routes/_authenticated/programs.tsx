@@ -394,8 +394,13 @@ function ProgramsPage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("new") !== "1") return;
-    openNew();
+    const planTaskId = params.get("planTaskId") ?? "";
+    setEditing({ ...emptyDraft(), plan_task_id: planTaskId });
+    setPendingFiles([]);
+    setUploadedAttachments([]);
+    setEditorOpen(true);
     params.delete("new");
+    params.delete("planTaskId");
     const query = params.toString();
     window.history.replaceState(
       window.history.state,
@@ -435,6 +440,23 @@ function ProgramsPage() {
       return data ?? [];
     },
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || programs.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const programId = params.get("programId");
+    if (!programId) return;
+    const row = programs.find((program) => program.id === programId);
+    if (!row) return;
+    void openEdit(row);
+    params.delete("programId");
+    const query = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+    );
+  }, [programs]);
 
   const ministryNames = useMemo(() => new Set<string>(MINISTRY_PROGRAMS.map((p) => p[1])), []);
   const linkedPlanTask = useMemo(
