@@ -270,7 +270,7 @@ export function StudentProfileDialog({
                   <p className="mt-1 text-sm font-black">{nextStudentAction}</p>
                   {Boolean(priorityCase?.["followup_at"]) && (
                     <p className="mt-1 text-[10px] text-muted-foreground">
-                      موعد المتابعة: {displayRecordValue(priorityCase["followup_at"])}
+                      موعد المتابعة: {displayRecordValue(priorityCase?.["followup_at"])}
                     </p>
                   )}
                 </div>
