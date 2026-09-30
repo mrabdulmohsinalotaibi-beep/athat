@@ -391,7 +391,7 @@ function SchoolTeamPage() {
           </div>
           <div className="rounded-xl border bg-background p-3">
             <p className="text-xs font-black">المدير والوكيل</p>
-            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">إدارة الفريق والمهام والاعتمادات والتقارير المرفوعة لهم، دون فتح ملفات الحالات الإرشادية الخام.</p>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">إدارة الفريق والمهام والاعتمادات والتقارير المرفوعة لهم، دون فتح ملفات ملفات حالات التوجيه الطلابي الخام.</p>
           </div>
           <div className="rounded-xl border bg-background p-3">
             <p className="text-xs font-black">المعلم والإداري والحارس</p>
