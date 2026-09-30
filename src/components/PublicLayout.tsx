@@ -71,22 +71,6 @@ export function PublicLayout({
 
           <div className="flex items-center gap-2">
             <Button
-              asChild
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 font-semibold sm:w-auto sm:px-3"
-            >
-              <Link
-                to="/auth"
-                search={{ next: "/dashboard" }}
-                aria-label="دخول الموجه الطلابي"
-                title="دخول الموجه الطلابي"
-              >
-                <LogIn className="size-4 shrink-0" aria-hidden="true" />
-                <span className="hidden sm:inline">دخول الموجه الطلابي</span>
-              </Link>
-            </Button>
-            <Button
               variant="ghost"
               size="icon"
               className="lg:hidden"
