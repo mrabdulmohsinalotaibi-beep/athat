@@ -15,8 +15,7 @@ ALTER TABLE public.user_profiles
   ADD COLUMN IF NOT EXISTS city text,
   ADD COLUMN IF NOT EXISTS office_location text,
   ADD COLUMN IF NOT EXISTS office_hours text,
-  ADD COLUMN IF NOT EXISTS interests text,
-  ADD COLUMN IF NOT EXISTS avatar_data_url text;
+  ADD COLUMN IF NOT EXISTS interests text;
 
 -- Existing accounts keep their data: copy any previously saved metadata into
 -- the database only when the corresponding database field is empty.
@@ -40,8 +39,7 @@ SET
   city = coalesce(nullif(p.city, ''), nullif(u.raw_user_meta_data ->> 'city', '')),
   office_location = coalesce(nullif(p.office_location, ''), nullif(u.raw_user_meta_data ->> 'office_location', '')),
   office_hours = coalesce(nullif(p.office_hours, ''), nullif(u.raw_user_meta_data ->> 'office_hours', '')),
-  interests = coalesce(nullif(p.interests, ''), nullif(u.raw_user_meta_data ->> 'interests', '')),
-  avatar_data_url = coalesce(nullif(p.avatar_data_url, ''), nullif(u.raw_user_meta_data ->> 'avatar_data_url', ''))
+  interests = coalesce(nullif(p.interests, ''), nullif(u.raw_user_meta_data ->> 'interests', ''))
 FROM auth.users u
 WHERE p.id = u.id;
 
