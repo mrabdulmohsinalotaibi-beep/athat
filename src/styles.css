@@ -489,7 +489,7 @@ textarea {
 .record-pdf-document,
 .record-pdf-document * {
   letter-spacing: 0 !important;
-  word-spacing: 0 !important;
+  word-spacing: normal !important;
 }
 .record-pdf-document p,
 .record-pdf-document li,
@@ -498,8 +498,8 @@ textarea {
 .record-pdf-document dd,
 .record-pdf-document dt {
   direction: rtl;
-  unicode-bidi: isolate;
-  line-height: 1.8;
+  unicode-bidi: plaintext;
+  line-height: 1.85;
   word-break: normal !important;
   overflow-wrap: break-word;
   white-space: normal;
