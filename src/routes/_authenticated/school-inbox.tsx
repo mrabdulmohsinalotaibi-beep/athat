@@ -269,7 +269,7 @@ function SchoolInboxPage() {
                           </thead>
                           <tbody>
                             {sectionRows.map((row, index) => (
-                              <tr key={String(row.id ?? index)} className="border-b last:border-0">
+                              <tr key={String(row["id"] ?? index)} className="border-b last:border-0">
                                 {columns.map((column) => <td key={column.key} className="max-w-64 px-3 py-2 align-top">{valueText(row[column.key])}</td>)}
                               </tr>
                             ))}
