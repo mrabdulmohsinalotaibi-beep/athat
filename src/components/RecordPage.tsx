@@ -94,7 +94,8 @@ export function RecordPage({
   const pageSize = 20;
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
-  const [smartFilling, setSmartFilling] = useState(false);\n  const [smartChecking, setSmartChecking] = useState(false);
+  const [smartFilling, setSmartFilling] = useState(false);
+  const [smartChecking, setSmartChecking] = useState(false);
   const [smartPromptOpen, setSmartPromptOpen] = useState(false);
   const [smartPrompt, setSmartPrompt] = useState("");
   const needsStudentOptions = config.fields.some((field) => field.student);
