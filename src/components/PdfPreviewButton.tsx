@@ -2,7 +2,7 @@ import { useEffect, useState, type RefObject } from "react";
 import { Eye, Download, Share2, Loader2, ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
 
-import { createPdfFile, downloadPdfFile, savePdfFile } from "@/lib/share-pdf";
+import { createPdfFile, downloadPdfFile, savePdfFile, openNativeDocumentPrint } from "@/lib/share-pdf";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,6 +34,22 @@ export function PdfPreviewButton({
 
   async function openPreview() {
     if (!elementRef.current || loading) return;
+
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const iosLike =
+      /iPad|iPhone|iPod/i.test(ua) ||
+      (typeof navigator !== "undefined" &&
+        navigator.platform === "MacIntel" &&
+        navigator.maxTouchPoints > 1);
+
+    if (iosLike) {
+      const opened = openNativeDocumentPrint(elementRef.current, title);
+      if (!opened) {
+        toast.info("اسمح بفتح النافذة لعرض المستند وطباعته أو حفظه PDF.");
+      }
+      return;
+    }
+
     setLoading(true);
     try {
       const nextFile = await createPdfFile({ element: elementRef.current, filename });
@@ -49,12 +65,29 @@ export function PdfPreviewButton({
   }
 
   async function downloadDirect() {
+    if (!elementRef.current || loading) return;
+
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const iosLike =
+      /iPad|iPhone|iPod/i.test(ua) ||
+      (typeof navigator !== "undefined" &&
+        navigator.platform === "MacIntel" &&
+        navigator.maxTouchPoints > 1);
+
+    if (iosLike) {
+      const opened = openNativeDocumentPrint(elementRef.current, title);
+      if (!opened) {
+        toast.info("اسمح بفتح النافذة، ثم اختر مشاركة/حفظ PDF من معاينة الطباعة.");
+      }
+      return;
+    }
+
     if (file) {
       const result = await savePdfFile(file);
       if (result !== "cancelled") toast.success("تم تجهيز ملف PDF للحفظ.");
       return;
     }
-    if (!elementRef.current || loading) return;
+
     setLoading(true);
     try {
       const nextFile = await createPdfFile({ element: elementRef.current, filename });
