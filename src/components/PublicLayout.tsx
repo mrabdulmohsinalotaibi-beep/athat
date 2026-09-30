@@ -11,8 +11,8 @@ import { useGlobalAppSettings, type FeatureKey } from "@/lib/admin";
 const NAV = [
   { to: "/", label: "الرئيسية" },
   { to: "/about", label: "عن التوجيه الطلابي" },
-  { to: "/services", label: "الخدمات الإرشادية" },
-  { to: "/resources", label: "المكتبة الإرشادية" },
+  { to: "/services", label: "خدمات التوجيه الطلابي" },
+  { to: "/resources", label: "مكتبة التوجيه الطلابي" },
   { to: "/forms", label: "الاستمارات" },
   { to: "/contact", label: "تواصل معنا" },
 ] as const;
@@ -67,7 +67,7 @@ export function PublicLayout({
               <p className="text-[10px] font-medium text-[#C7E4E1] sm:text-xs">
                 {profile?.school_name
                   ? `التوجيه الطلابي · ${profile.school_name}`
-                  : "نظام الإرشاد المدرسي"}
+                  : "نظام التوجيه الطلابي"}
               </p>
             </div>
           </Link>
@@ -200,7 +200,7 @@ export function PublicLayout({
             <div>
               <p className="text-lg font-black text-primary">الذات</p>
               <p className="mt-2 text-xs leading-7 text-muted-foreground">
-                نظام الإرشاد المدرسي لخدمات التوجيه الطلابي: صفحات تعريفية، استمارات تفاعلية، ولوحة
+                نظام التوجيه الطلابي لخدمة الطالب والأسرة والمدرسة: صفحات تعريفية، استمارات تفاعلية، ولوحة
                 عمل خاصة بالموجه الطلابي.
               </p>
             </div>
