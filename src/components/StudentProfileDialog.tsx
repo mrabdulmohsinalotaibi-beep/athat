@@ -268,7 +268,7 @@ export function StudentProfileDialog({
                     {overdueFollowups.length ? "الإجراء التالي · متابعة مستحقة" : "الإجراء التالي"}
                   </p>
                   <p className="mt-1 text-sm font-black">{nextStudentAction}</p>
-                  {priorityCase?.["followup_at"] && (
+                  {Boolean(priorityCase?.["followup_at"]) && (
                     <p className="mt-1 text-[10px] text-muted-foreground">
                       موعد المتابعة: {displayRecordValue(priorityCase["followup_at"])}
                     </p>
