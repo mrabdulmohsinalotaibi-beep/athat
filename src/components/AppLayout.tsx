@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { featureForPath, useAdminStatus, useGlobalAppSettings } from "@/lib/admin";
+import { useAdminStatus, useGlobalAppSettings } from "@/lib/admin";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -48,23 +48,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { data: globalSettings } = useGlobalAppSettings();
   const { data: adminStatus } = useAdminStatus();
 
-  const flags = globalSettings?.feature_flags;
-  const isRouteVisible = (route: string) => {
-    if (adminStatus?.isAdmin) return true;
-    const key = featureForPath(route);
-    return !key || flags?.[key] !== false;
-  };
-
-  const visibleSections = WORKSPACE_SECTIONS
-    .map((section) => ({
-      ...section,
-      items: section.items.filter((item) => isRouteVisible(item.to)),
-    }))
-    .filter((section) => section.items.length > 0);
-
-  const visibleBottomNavigation = bottomNavigation.filter((item) =>
-    item.activeRoutes.some((route) => isRouteVisible(route)),
-  );
+  // The main counselor workspace must stay available even if global admin
+  // settings are temporarily unavailable or their database migration is pending.
+  const visibleSections = WORKSPACE_SECTIONS;
+  const visibleBottomNavigation = bottomNavigation;
   const { data: alertCount = 0 } = useQuery({
     queryKey: ["app-alert-count"],
     queryFn: async () => {
