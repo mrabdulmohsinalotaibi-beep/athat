@@ -56,6 +56,8 @@ export function useSchool() {
 
       return data as SchoolSettings | null;
     },
-    staleTime: 1000 * 60 * 30, // احتفاظ بالبيانات في الكاش لمدة 30 دقيقة بدون إعادة طلب
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
