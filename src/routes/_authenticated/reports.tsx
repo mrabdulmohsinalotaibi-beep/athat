@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckSquare, FileText, RotateCcw, Send, ShieldCheck, Square } from "lucide-react";
@@ -99,6 +99,21 @@ function ReportsPage() {
   const [selectedKeys, setSelectedKeys] = useState<string[]>(["plan", "programs", "evidences"]);
   const [recipientMemberId, setRecipientMemberId] = useState("");
   const [handoffNote, setHandoffNote] = useState("");
+  const [workflowPlanTaskId, setWorkflowPlanTaskId] = useState("");
+  const [workflowProgramId, setWorkflowProgramId] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("workflow") !== "1") return;
+    const planTaskId = params.get("planTaskId") ?? "";
+    const programId = params.get("programId") ?? "";
+    setWorkflowPlanTaskId(planTaskId);
+    setWorkflowProgramId(programId);
+    setReportMode("combined");
+    setSelectedKeys(["plan", "programs", "evidences"]);
+    setReportTitle("تقرير تنفيذ مهمة الخطة");
+  }, []);
 
   const activeSelectedKeys = reportMode === "single" ? [selectedSingleKey] : selectedKeys;
   const selectedRecords = reportableRecords.filter((record) =>
@@ -107,8 +122,33 @@ function ReportsPage() {
   const selectedKeySignature = [...activeSelectedKeys].sort().join(",");
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["official-reports-selected-records", selectedKeySignature, fromDate, toDate],
+    queryKey: [
+      "official-reports-selected-records",
+      selectedKeySignature,
+      fromDate,
+      toDate,
+      workflowPlanTaskId,
+      workflowProgramId,
+    ],
     queryFn: async () => {
+      let workflowProgramRefs: string[] = [];
+      if (workflowProgramId) {
+        const { data: program } = await (supabase as any)
+          .from("programs")
+          .select("id,name")
+          .eq("id", workflowProgramId)
+          .maybeSingle();
+        if (program) workflowProgramRefs = [String(program.id), String(program.name ?? "")].filter(Boolean);
+      } else if (workflowPlanTaskId) {
+        const { data: linkedPrograms } = await (supabase as any)
+          .from("programs")
+          .select("id,name")
+          .eq("plan_task_id", workflowPlanTaskId);
+        workflowProgramRefs = (linkedPrograms ?? [])
+          .flatMap((program: any) => [String(program.id), String(program.name ?? "")])
+          .filter(Boolean);
+      }
+
       const results = await Promise.all(
         selectedRecords.map(async (record) => {
           const rows: ReportRow[] = [];
@@ -124,6 +164,21 @@ function ReportsPage() {
 
             if (dateField && fromDate) request = request.gte(dateField, fromDate);
             if (dateField && toDate) request = request.lte(dateField, toDate);
+
+            if (record.key === "plan" && workflowPlanTaskId) {
+              request = request.eq("id", workflowPlanTaskId);
+            }
+            if (record.key === "programs") {
+              if (workflowProgramId) request = request.eq("id", workflowProgramId);
+              else if (workflowPlanTaskId) request = request.eq("plan_task_id", workflowPlanTaskId);
+            }
+            if (record.key === "evidences" && (workflowPlanTaskId || workflowProgramRefs.length)) {
+              const refs = [...new Set([
+                ...workflowProgramRefs,
+                ...(workflowPlanTaskId ? [workflowPlanTaskId] : []),
+              ])];
+              request = refs.length ? request.in("linked_ref", refs) : request.eq("id", "__no_workflow_evidence__");
+            }
 
             const result = await request;
             if (result.error) {
@@ -250,6 +305,11 @@ function ReportsPage() {
     setToDate("");
     setNarrative("");
     setSelectedKeys(["plan", "programs", "evidences"]);
+    setWorkflowPlanTaskId("");
+    setWorkflowProgramId("");
+    if (typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", window.location.pathname);
+    }
     toast.success("تمت إعادة ضبط التقرير.");
   }
 
@@ -353,6 +413,22 @@ function ReportsPage() {
           </div>
         </div>
       </section>
+
+      {(workflowPlanTaskId || workflowProgramId) && (
+        <section className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black text-primary">تقرير مرتبط بمسار التنفيذ</p>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                يعرض فقط مهمة الخطة والبرنامج أو البرامج المرتبطة بها وشواهدها الحالية، دون نسخ السجلات.
+              </p>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={reset}>
+              عرض كل التقارير
+            </Button>
+          </div>
+        </section>
+      )}
 
       <section className="rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 shadow-sm">
         <div className="mb-3">
