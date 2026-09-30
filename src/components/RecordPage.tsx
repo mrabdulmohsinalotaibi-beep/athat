@@ -29,7 +29,7 @@ import { displayRecordValue } from "@/lib/display";
 import { formatHijriDate } from "@/lib/date";
 import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
-import { generateSmartFill } from "@/lib/deepseek.functions";
+import { checkSmartFillReady, generateSmartFill } from "@/lib/deepseek.functions";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import {
@@ -94,7 +94,7 @@ export function RecordPage({
   const pageSize = 20;
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
-  const [smartFilling, setSmartFilling] = useState(false);
+  const [smartFilling, setSmartFilling] = useState(false);\n  const [smartChecking, setSmartChecking] = useState(false);
   const [smartPromptOpen, setSmartPromptOpen] = useState(false);
   const [smartPrompt, setSmartPrompt] = useState("");
   const needsStudentOptions = config.fields.some((field) => field.student);
@@ -398,23 +398,41 @@ export function RecordPage({
     }
   }
 
-  function openSmartFill() {
-    if (smartFilling) return;
+  async function openSmartFill() {
+    if (smartFilling || smartChecking) return;
 
-    const fillableFields = config.fields.filter(
-      (field) =>
-        !field.generated &&
-        (field.type === "text" || field.type === "textarea") &&
-        !(auto[field.name] ?? String(editing?.[field.name] ?? "")).trim(),
-    );
+    const form = document.getElementById("record-form");
+    const liveData = form instanceof HTMLFormElement ? new FormData(form) : null;
+    const fillableFields = config.fields.filter((field) => {
+      if (field.generated || (field.type !== "text" && field.type !== "textarea")) return false;
+      const liveValue = liveData?.get(field.name);
+      const fallback = auto[field.name] ?? String(editing?.[field.name] ?? "");
+      const value = typeof liveValue === "string" ? liveValue : fallback;
+      return !value.trim();
+    });
 
     if (!fillableFields.length) {
       toast.info("جميع الحقول النصية مكتملة بالفعل.");
       return;
     }
 
-    setSmartPrompt("");
-    setSmartPromptOpen(true);
+    setSmartChecking(true);
+    try {
+      const status = await checkSmartFillReady();
+      if (!status.ready) {
+        toast.error(
+          "التعبئة الذكية غير مهيأة على الخادم. أضف DEEPSEEK_API_KEY إلى بيئة Cloudflare ثم أعد النشر.",
+        );
+        return;
+      }
+
+      setSmartPrompt("");
+      setSmartPromptOpen(true);
+    } catch (error) {
+      toast.error((error as Error).message || "تعذّر التحقق من جاهزية التعبئة الذكية.");
+    } finally {
+      setSmartChecking(false);
+    }
   }
 
   async function handleRewrite(fieldName: string, fieldLabel: string) {
@@ -939,12 +957,16 @@ export function RecordPage({
                 disabled={smartFilling}
                 title="اكتب مختصرًا وسيقوم DeepSeek بتعبئة بقية الحقول النصية"
               >
-                {smartFilling ? (
+                {smartFilling || smartChecking ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
                   <Sparkles className="size-4" />
                 )}
-                {smartFilling ? "جارٍ التوليد..." : "التعبئة الذكية"}
+                {smartChecking
+                  ? "جارٍ التحقق..."
+                  : smartFilling
+                    ? "جارٍ التوليد..."
+                    : "التعبئة الذكية"}
               </Button>
             </div>
           </DialogHeader>
