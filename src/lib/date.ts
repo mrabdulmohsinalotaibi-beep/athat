@@ -1,12 +1,30 @@
-const HIJRI_LOCALE = "ar-SA-u-ca-islamic-umalqura";
+const HIJRI_LOCALES = [
+  "ar-SA-u-ca-islamic-umalqura",
+  "ar-SA-u-ca-islamic",
+  "ar-SA",
+] as const;
 
-const hijriDateFormatter = new Intl.DateTimeFormat(HIJRI_LOCALE, {
+function createFormatter(
+  options: Intl.DateTimeFormatOptions,
+): Intl.DateTimeFormat | null {
+  for (const locale of HIJRI_LOCALES) {
+    try {
+      return new Intl.DateTimeFormat(locale, options);
+    } catch {
+      // Some Android WebView/browser builds do not ship the Umm al-Qura
+      // calendar. Fall through instead of crashing the whole route module.
+    }
+  }
+  return null;
+}
+
+const hijriDateFormatter = createFormatter({
   year: "numeric",
   month: "long",
   day: "numeric",
 });
 
-const hijriDateTimeFormatter = new Intl.DateTimeFormat(HIJRI_LOCALE, {
+const hijriDateTimeFormatter = createFormatter({
   year: "numeric",
   month: "long",
   day: "numeric",
@@ -31,21 +49,31 @@ function parseDateValue(value: string | Date): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** عرض أي تاريخ للمستخدم بالتقويم الهجري أم القرى فقط. */
+/** عرض أي تاريخ للمستخدم، مع استخدام أم القرى عندما يدعمه الجهاز. */
 export function formatHijriDate(value: string | Date | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
   const date = parseDateValue(value);
-  return date ? hijriDateFormatter.format(date) : String(value);
+  if (!date) return String(value);
+  try {
+    return hijriDateFormatter?.format(date) ?? date.toLocaleDateString("ar-SA");
+  } catch {
+    return date.toLocaleDateString("ar-SA");
+  }
 }
 
-/** عرض التاريخ والوقت هجريًا عند الحاجة، دون إظهار التاريخ الميلادي. */
+/** عرض التاريخ والوقت مع التدرج الآمن للأجهزة التي لا تدعم تقويم أم القرى. */
 export function formatHijriDateTime(value: string | Date | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
   const date = parseDateValue(value);
-  return date ? hijriDateTimeFormatter.format(date) : String(value);
+  if (!date) return String(value);
+  try {
+    return hijriDateTimeFormatter?.format(date) ?? date.toLocaleString("ar-SA");
+  } catch {
+    return date.toLocaleString("ar-SA");
+  }
 }
 
-/** قيمة ISO داخلية للتخزين، مع بقاء العرض للمستخدم هجريًا. */
+/** قيمة ISO داخلية للتخزين، مع بقاء العرض للمستخدم هجريًا عند الإمكان. */
 export function todayIsoDate(): string {
   const now = new Date();
   const year = now.getFullYear();
