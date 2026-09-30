@@ -71,7 +71,7 @@ function useDashboard() {
         ["cases", supabase
           .from("counseling_cases")
           .select("id,case_status,followup_at,student_name,student_id,student_no,next_action")],
-        ["programs", supabase.from("programs").select("id,name,exec_status")],
+        ["programs", supabase.from("programs").select("id,name,exec_status,plan_task_id")],
         ["calendar", supabase.from("calendar_events").select("id,edate,etime,title,etype,status")],
         ["planTasks", supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status")],
         ["interviews", supabase.from("interviews").select("id,student_name,topic,followup_at")],
@@ -213,6 +213,30 @@ function Dashboard() {
       !evidenceRefs.has(String(program.name ?? "")),
   );
 
+  const programsByPlanTask = new Map<string, typeof programs>();
+  programs.forEach((program) => {
+    const taskId = String(program.plan_task_id ?? "");
+    if (!taskId) return;
+    programsByPlanTask.set(taskId, [...(programsByPlanTask.get(taskId) ?? []), program]);
+  });
+  const approvalReadyPlanTasks = planTasks.filter((task) => {
+    if (task.exec_status === "مكتمل") return false;
+    const taskPrograms = programsByPlanTask.get(String(task.id)) ?? [];
+    if (!taskPrograms.length || !taskPrograms.every((program) => isProgramDone(program.exec_status))) {
+      return false;
+    }
+    const programRefs = new Set(
+      taskPrograms.flatMap((program) => [String(program.id), String(program.name ?? "")]).filter(Boolean),
+    );
+    return (data?.evidences ?? []).some((evidence) => {
+      const ref = String(evidence.linked_ref ?? "");
+      return (
+        (evidence.linked_type === "مهمة" && ref === String(task.id)) ||
+        (evidence.linked_type === "برنامج" && programRefs.has(ref))
+      );
+    });
+  });
+
   const primaryOpenRequests = (data?.publicRequests ?? []).filter(
     (item) => item.status !== "مغلق",
   );
@@ -339,6 +363,7 @@ function Dashboard() {
     pendingTeamMembers.length;
   const counselorAttentionCount =
     overdueCases.length +
+    approvalReadyPlanTasks.length +
     latePlan.length +
     programsMissingEvidence.length +
     openRequests +
@@ -363,7 +388,9 @@ function Dashboard() {
     {
       label: "إنجاز الخطة",
       value: `${planPercent}%`,
-      note: `${planDone} من ${planTasks.length}`,
+      note: approvalReadyPlanTasks.length
+        ? `${approvalReadyPlanTasks.length} جاهزة لاعتماد التنفيذ`
+        : `${planDone} من ${planTasks.length}`,
       to: "/plan" as const,
       icon: ClipboardList,
     },
@@ -445,6 +472,13 @@ function Dashboard() {
       : staffStats;
 
   const counselorShortcuts = [
+    {
+      label: "مسار التنفيذ",
+      value: approvalReadyPlanTasks.length,
+      meta: approvalReadyPlanTasks.length ? "تحتاج موافقتك على التنفيذ" : "لا توجد مهام تنتظر الاعتماد",
+      to: "/execution" as const,
+      icon: CheckCircle2,
+    },
     {
       label: "البرامج",
       value: programs.length,
@@ -565,6 +599,7 @@ function Dashboard() {
       : staffShortcuts;
 
   const counselorQuickActions = [
+    { label: "مسار التنفيذ", to: "/execution", icon: CheckCircle2 },
     { label: "فتح حالة", to: "/cases?new=1", icon: HeartHandshake },
     { label: "إضافة جلسة", to: "/interviews?new=1", icon: MessageSquareText },
     { label: "إضافة برنامج", to: "/programs?new=1", icon: Sparkles },
@@ -591,6 +626,13 @@ function Dashboard() {
       : staffQuickActions;
 
   const counselorActions = [
+    ...approvalReadyPlanTasks.slice(0, 2).map((item) => ({
+      key: `approval-ready-${item.id}`,
+      tone: "جاهز لاعتماد التنفيذ",
+      title: item.task || "مهمة في الخطة",
+      detail: "اكتملت البرامج ويوجد شاهد. راجعها ثم اعتمد التنفيذ بنفسك.",
+      to: "/execution" as const,
+    })),
     ...overdueCases.slice(0, 2).map((item) => ({
       key: `case-${item.id}`,
       tone: "متابعة مستحقة",
