@@ -15,12 +15,12 @@ import { GUIDANCE_SERVICES } from "@/lib/guidance";
 export const Route = createFileRoute("/services")({
   head: () => ({
     meta: [
-      { title: "الخدمات الإرشادية | الذات" },
+      { title: "خدمات التوجيه الطلابي | الذات" },
       {
         name: "description",
-        content: "الخدمات الإرشادية الأكاديمية والسلوكية والمهنية والنفسية المقدمة لطلاب المدرسة.",
+        content: "خدمات التوجيه الطلابي الأكاديمية والسلوكية والمهنية والنفسية المقدمة لطلاب المدرسة.",
       },
-      { property: "og:title", content: "الخدمات الإرشادية | الذات" },
+      { property: "og:title", content: "خدمات التوجيه الطلابي | الذات" },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -51,16 +51,16 @@ const CATEGORIES: Record<string, string> = {
 function ServicesPage() {
   return (
     <PublicLayout
-      title="الخدمات الإرشادية"
-      subtitle="أربعة مجالات إرشادية متكاملة تغطي احتياجات الطالب داخل المدرسة، ويمكن طلب أي منها عبر استمارة الاستشارة الفردية."
+      title="خدمات التوجيه الطلابي"
+      subtitle="أربعة مجالات للتوجيه الطلابي تغطي احتياجات الطالب داخل المدرسة، ويمكن طلب أي منها عبر استمارة الاستشارة الفردية."
     >
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-8 sm:py-14">
         <div className="rounded-3xl border border-border/70 bg-muted/30 p-5 sm:p-7">
           <div className="mb-4">
             <p className="text-sm font-bold text-primary">ابدأ من احتياجك</p>
-            <h2 className="mt-1 text-xl font-black">اختر المجال الإرشادي المناسب</h2>
+            <h2 className="mt-1 text-xl font-black">اختر مجال التوجيه المناسب</h2>
           </div>
-          <nav aria-label="التنقل بين الخدمات الإرشادية" className="flex flex-wrap gap-2">
+          <nav aria-label="التنقل بين خدمات التوجيه الطلابي" className="flex flex-wrap gap-2">
             {GUIDANCE_SERVICES.map((service) => (
               <Link
                 key={service.slug}
@@ -94,7 +94,7 @@ function ServicesPage() {
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <p className="text-xs font-bold text-muted-foreground">{CATEGORIES[service.slug] ?? "خدمة إرشادية"}</p>
+                    <p className="text-xs font-bold text-muted-foreground">{CATEGORIES[service.slug] ?? "خدمة توجيه طلابي"}</p>
                     <h2 id={service.slug + "-title"} className="mt-1 text-lg font-black sm:text-xl">
                       {service.title}
                     </h2>
