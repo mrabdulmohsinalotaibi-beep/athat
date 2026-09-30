@@ -138,7 +138,7 @@ export function QuickActionLauncher({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent dir="rtl" className="max-h-[88vh] max-w-3xl overflow-y-auto">
+        <DialogContent dir="rtl" className="max-h-[88vh] max-w-3xl overflow-y-auto max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-[2rem] max-sm:border-x-0 max-sm:border-b-0 max-sm:px-4 max-sm:pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <DialogHeader>
             <DialogTitle>إجراء جديد</DialogTitle>
           </DialogHeader>
