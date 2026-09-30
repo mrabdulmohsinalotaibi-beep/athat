@@ -49,17 +49,20 @@ export function AppLayout({ children }: { children: ReactNode }) {
     queryKey: ["app-alert-count"],
     queryFn: async () => {
       const day = new Date().toISOString().slice(0, 10);
-      const [cases, tasks] = await Promise.all([
+      const [cases, tasks, schoolTasks] = await Promise.all([
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
+        (supabase as any).from("school_tasks").select("id,status,due_date"),
       ]);
       // Alerts are supplementary UI. A missing/temporarily unavailable table
       // must never prevent the rest of the application from opening.
       if (cases.error) console.warn("[alerts] counseling_cases:", cases.error.message);
       if (tasks.error) console.warn("[alerts] plan_tasks:", tasks.error.message);
+      if (schoolTasks.error) console.warn("[alerts] school_tasks:", schoolTasks.error.message);
       const dueCases = (cases.error ? [] : cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;
       const attentionTasks = (tasks.error ? [] : tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;
-      return dueCases + attentionTasks;
+      const dueSchoolTasks = (schoolTasks.error ? [] : schoolTasks.data ?? []).filter((item: any) => item.due_date && String(item.due_date).slice(0, 10) <= day && !["مكتملة", "ملغاة"].includes(String(item.status ?? ""))).length;
+      return dueCases + attentionTasks + dueSchoolTasks;
     },
     staleTime: 60_000,
   });
