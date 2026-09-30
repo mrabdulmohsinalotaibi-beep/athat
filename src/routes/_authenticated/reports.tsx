@@ -64,6 +64,24 @@ function dateFieldForRecord(key: string) {
   return fields[key];
 }
 
+function reportSelectColumns(record: { key: string; fields: FieldDef[] }) {
+  const columns = new Set<string>([
+    "id",
+    ...reportColumns(record.fields).map((column) => column.key),
+  ]);
+
+  const metricFields: Record<string, string[]> = {
+    plan: ["exec_status"],
+    programs: ["exec_status"],
+    cases: ["case_status", "last_followup", "followup_at"],
+    attendance: ["case_type", "count_days"],
+    interviews: ["itype"],
+  };
+
+  for (const field of metricFields[record.key] ?? []) columns.add(field);
+  return [...columns].join(",");
+}
+
 function ReportsPage() {
   const { data: school } = useSchool();
   const reportRef = useRef<HTMLDivElement>(null);
@@ -100,7 +118,7 @@ function ReportsPage() {
           for (let offset = 0; ; offset += batchSize) {
             let request = (supabase as any)
               .from(record.table)
-              .select("*")
+              .select(reportSelectColumns(record))
               .order("id", { ascending: true })
               .range(offset, offset + batchSize - 1);
 
