@@ -167,7 +167,7 @@ function OwnerAdminPage() {
 
   return (
     <div dir="rtl" className="mx-auto max-w-6xl space-y-6">
-      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#3C3C3C] p-6 text-[#F1E9DD] shadow-xl sm:p-8">
+      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#073B4C] p-6 text-white shadow-xl sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold">
