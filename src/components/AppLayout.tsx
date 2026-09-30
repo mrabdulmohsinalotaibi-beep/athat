@@ -126,8 +126,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", search: { next: "" }, replace: true });
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch (error) {
+      console.warn("[auth] تعذّر إتمام تسجيل الخروج من الخادم، تم تنظيف الجلسة محلياً:", error);
+    } finally {
+      window.location.assign("/auth");
+    }
   }
 
   return (

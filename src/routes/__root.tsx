@@ -104,7 +104,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "الذات | ATHAT — التوجيه الطلابي وعلم النفس" },
       {
         name: "description",
-        content: "منصة الذات للتوجيه الطلابي والدعم النفسي والتربوي وإدارة الأعمال الإرشادية إلكترونياً.",
+        content:
+          "منصة الذات للتوجيه الطلابي والدعم النفسي والتربوي وإدارة الأعمال الإرشادية إلكترونياً.",
       },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/icon-512x512.png?v=20260930b" },
@@ -153,7 +154,8 @@ function RootComponent() {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") queryClient.clear();
+      else queryClient.invalidateQueries();
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);

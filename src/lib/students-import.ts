@@ -169,7 +169,9 @@ export function parseDelimitedRows(value: string): Record<string, string>[] {
     return cells;
   }
 
-  const headers = parseLine(lines[0]).map((header) => header.replace(/^\uFEFF/, ""));
+  const firstLine = lines[0];
+  if (!firstLine) return [];
+  const headers = parseLine(firstLine).map((header) => header.replace(/^\uFEFF/, ""));
   return lines.slice(1).map((line) => {
     const values = parseLine(line);
     return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
