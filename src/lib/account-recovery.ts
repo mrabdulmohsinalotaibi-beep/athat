@@ -59,7 +59,42 @@ export function useKnownAccountRecovery() {
       if (!user?.email || cancelled) return;
 
       const emailHash = await sha256(user.email.trim().toLowerCase());
-      if (emailHash !== RECOVERY_EMAIL_SHA256 || cancelled) return;
+      if (cancelled) return;
+
+      // Record ownership recovery is safe for every account because the server
+      // only reassigns legacy rows when an exact matching email exists.
+      try {
+        const recovery = await recoverLegacyRecords();
+        if (recovery?.recovered && recovery.total > 0) {
+          console.info("[record-recovery] restored", recovery.total, "records");
+        }
+      } catch (error) {
+        console.warn("[record-recovery] server recovery unavailable:", error);
+      }
+
+      // The profile reconstruction below contains verified values for one known
+      // affected account only; never apply those values to other users.
+      if (emailHash !== RECOVERY_EMAIL_SHA256) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["students"] }),
+          queryClient.invalidateQueries({ queryKey: ["counseling_cases"] }),
+          queryClient.invalidateQueries({ queryKey: ["plan_tasks"] }),
+          queryClient.invalidateQueries({ queryKey: ["programs"] }),
+          queryClient.invalidateQueries({ queryKey: ["interviews"] }),
+          queryClient.invalidateQueries({ queryKey: ["attendance"] }),
+          queryClient.invalidateQueries({ queryKey: ["behavior"] }),
+          queryClient.invalidateQueries({ queryKey: ["referrals"] }),
+          queryClient.invalidateQueries({ queryKey: ["committees"] }),
+          queryClient.invalidateQueries({ queryKey: ["evidences"] }),
+          queryClient.invalidateQueries({ queryKey: ["reports"] }),
+          queryClient.invalidateQueries({ queryKey: ["calendar_events"] }),
+          queryClient.invalidateQueries({ queryKey: ["lookups"] }),
+          queryClient.invalidateQueries({ queryKey: ["posts"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["school_settings"] }),
+        ]);
+        return;
+      }
 
       const metadata = user.user_metadata ?? {};
       const metadataPatch: Record<string, string> = {};
@@ -155,15 +190,6 @@ export function useKnownAccountRecovery() {
       }
 
       if (cancelled) return;
-
-      try {
-        const recovery = await recoverLegacyRecords();
-        if (recovery?.recovered && recovery.total > 0) {
-          console.info("[record-recovery] restored", recovery.total, "records");
-        }
-      } catch (error) {
-        console.warn("[record-recovery] server recovery unavailable:", error);
-      }
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["auth-user"] }),
