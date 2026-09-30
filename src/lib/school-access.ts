@@ -19,6 +19,7 @@ const COLLABORATION_PATHS = [
   "/school-team",
   "/school-tasks",
   "/school-inbox",
+  "/inbox",
   "/profile",
   "/subscription",
 ] as const;
