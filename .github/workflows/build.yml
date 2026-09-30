@@ -20,13 +20,9 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit --pretty false
       - name: Validate browser extension
-        run: |
-          node --check extension/background.js
-          node --check extension/content.js
-          node --check extension/popup.js
-          node -e "JSON.parse(require('fs').readFileSync('extension/manifest.json','utf8'))"
+        run: npm run check:extension
       - name: Package Athat Bridge
-        run: zip -qr athat-bridge.zip extension
+        run: zip -qr athat-bridge.zip browser-extension
       - name: Upload Athat Bridge
         uses: actions/upload-artifact@v4
         with:
