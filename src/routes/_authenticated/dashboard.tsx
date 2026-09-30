@@ -250,7 +250,9 @@ function Dashboard() {
       (item.creator_member_id === schoolMemberId || isSchoolAdmin),
   );
   const unreadAdministrativeReports = (data?.schoolHandoffs ?? []).filter(
-    (item) => item.recipient_member_id === schoolMemberId && item.status === "sent",
+    (item) =>
+      (item.recipient_member_id === schoolMemberId && item.status === "sent") ||
+      (item.sender_member_id === schoolMemberId && item.status === "returned"),
   );
   const pendingTeamMembers = isSchoolAdmin
     ? (data?.schoolContext?.members ?? []).filter((member: any) => member.member_status === "pending")
@@ -355,7 +357,7 @@ function Dashboard() {
     {
       label: "تقارير واردة",
       value: unreadAdministrativeReports.length,
-      note: "نسخ للقراءة والاطلاع",
+      note: "وارد أو معاد بملاحظة",
       to: "/school-inbox" as const,
       icon: Inbox,
     },
@@ -379,7 +381,7 @@ function Dashboard() {
     {
       label: "تقارير واردة",
       value: unreadAdministrativeReports.length,
-      note: "نسخ للقراءة والاطلاع",
+      note: "وارد أو معاد بملاحظة",
       to: "/school-inbox" as const,
       icon: Inbox,
     },
