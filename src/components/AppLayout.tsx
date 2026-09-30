@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import {
@@ -37,7 +37,6 @@ const bottomNavigation = [
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: school } = useSchool();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -85,8 +84,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", search: { next: "" }, replace: true });
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch (error) {
+      console.warn("[auth] تعذّر إنهاء الجلسة من الخادم:", error);
+    } finally {
+      window.location.assign("/auth");
+    }
   }
 
   return (
