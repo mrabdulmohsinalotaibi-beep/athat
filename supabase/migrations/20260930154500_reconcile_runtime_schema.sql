@@ -148,3 +148,8 @@ $$;
 
 REVOKE ALL ON FUNCTION public.get_private_counselor_portal(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_private_counselor_portal(text) TO anon, authenticated;
+
+
+-- The settings UI uses upsert(..., { onConflict: "user_id" }).
+CREATE UNIQUE INDEX IF NOT EXISTS school_settings_user_id_unique
+  ON public.school_settings (user_id);
