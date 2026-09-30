@@ -2,6 +2,13 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+function hasPublicBackendConfig() {
+  return Boolean(
+    import.meta.env["VITE_SUPABASE_URL"] &&
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"],
+  );
+}
+
 export const DEFAULT_FEATURE_FLAGS = {
   dashboard: true,
   students: true,
@@ -40,6 +47,14 @@ export type GlobalAppSettings = {
   maintenance_mode: boolean;
   feature_flags: FeatureFlags;
   updated_at: string | null;
+};
+
+const PUBLIC_SETTINGS_FALLBACK: GlobalAppSettings = {
+  site_name: "الذات",
+  announcement: null,
+  maintenance_mode: false,
+  feature_flags: { ...DEFAULT_FEATURE_FLAGS },
+  updated_at: null,
 };
 
 export const ROUTE_FEATURE_MAP: Array<{ prefix: string; feature: FeatureKey }> = [
@@ -89,6 +104,8 @@ export function useGlobalAppSettings() {
   const query = useQuery({
     queryKey: ["global-app-settings"],
     queryFn: async (): Promise<GlobalAppSettings> => {
+      if (!hasPublicBackendConfig()) return PUBLIC_SETTINGS_FALLBACK;
+
       const { data, error } = await (supabase as any)
         .from("global_app_settings")
         .select("site_name,announcement,maintenance_mode,feature_flags,updated_at")
@@ -97,13 +114,7 @@ export function useGlobalAppSettings() {
 
       if (error) {
         console.warn("[global-settings]", error.message);
-        return {
-          site_name: "الذات",
-          announcement: null,
-          maintenance_mode: false,
-          feature_flags: { ...DEFAULT_FEATURE_FLAGS },
-          updated_at: null,
-        };
+        return PUBLIC_SETTINGS_FALLBACK;
       }
 
       return {
@@ -119,6 +130,8 @@ export function useGlobalAppSettings() {
   });
 
   useEffect(() => {
+    if (!hasPublicBackendConfig()) return;
+
     const channel = supabase
       .channel("global-app-settings-live")
       .on(
