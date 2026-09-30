@@ -61,7 +61,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       if (schoolTasks.error) console.warn("[alerts] school_tasks:", schoolTasks.error.message);
       const dueCases = (cases.error ? [] : cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;
       const attentionTasks = (tasks.error ? [] : tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;
-      const dueSchoolTasks = (schoolTasks.error ? [] : schoolTasks.data ?? []).filter((item: any) => item.due_date && String(item.due_date).slice(0, 10) <= day && !["مكتملة", "ملغاة"].includes(String(item.status ?? ""))).length;
+      const dueSchoolTasks = (schoolTasks.error ? [] : schoolTasks.data ?? []).filter((item: any) => item.due_date && String(item.due_date).slice(0, 10) <= day && !["مكتملة", "معتمدة", "ملغاة"].includes(String(item.status ?? ""))).length;
       return dueCases + attentionTasks + dueSchoolTasks;
     },
     staleTime: 60_000,
