@@ -54,17 +54,17 @@ export function PublicLayout({
 
   return (
     <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
-      <header className="athat-site-header sticky top-0 z-50 border-b border-[#555555] bg-[#3C3C3C] text-[#F1E9DD] backdrop-blur-xl">
+      <header className="athat-site-header sticky top-0 z-50 border-b border-[#176678] bg-[#073B4C] text-white backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
-              src="/brand-icon.svg?v=20260929f"
+              src="/brand-icon.svg?v=20261001a"
               alt="شعار الذات"
               className="brand-mark-well size-11 rounded-lg object-contain"
             />
             <div>
-              <p className="text-lg font-black text-[#F1E9DD] sm:text-xl">الذات</p>
-              <p className="text-[10px] font-medium text-[#D5CEC2] sm:text-xs">
+              <p className="text-lg font-black text-white sm:text-xl">الذات</p>
+              <p className="text-[10px] font-medium text-[#C7E4E1] sm:text-xs">
                 {profile?.school_name
                   ? `التوجيه الطلابي · ${profile.school_name}`
                   : "نظام الإرشاد المدرسي"}
@@ -73,7 +73,7 @@ export function PublicLayout({
           </Link>
 
           <nav
-            className="hidden items-center gap-5 text-sm font-semibold text-[#E8E0D4] lg:flex"
+            className="hidden items-center gap-5 text-sm font-semibold text-[#DDF1EF] lg:flex"
             aria-label="التنقل الرئيسي"
           >
             {visibleNav.map((item) => (
