@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -14,9 +14,11 @@ import {
   RefreshCw,
   Sparkles,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { EvidenceUploadDialog } from "@/components/EvidenceUpload";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/execution")({
@@ -68,8 +70,47 @@ function doneStatus(value: unknown) {
   return ["مكتمل", "منفذ", "معتمد"].includes(String(value ?? ""));
 }
 
+function taskExecutionPercent(task: PlanTask, taskPrograms: Program[]) {
+  const taskDone = doneStatus(task.exec_status);
+  const programsDone =
+    taskPrograms.length > 0 && taskPrograms.every((program) => doneStatus(program.exec_status));
+  return (taskDone ? 50 : 0) + (programsDone ? 50 : 0);
+}
+
+function programExecutionPercent(program: Program) {
+  return (program.plan_task_id ? 20 : 0) + (doneStatus(program.exec_status) ? 80 : 0);
+}
+
 function ExecutionFlowPage() {
+  const queryClient = useQueryClient();
   const [evidenceTarget, setEvidenceTarget] = useState<{ type: string; ref: string; label: string } | null>(null);
+  const [linkSelections, setLinkSelections] = useState<Record<string, string>>({});
+
+  const linkProgram = useMutation({
+    mutationFn: async ({ programId, planTaskId }: { programId: string; planTaskId: string }) => {
+      if (!planTaskId) throw new Error("اختر مهمة الخطة أولًا.");
+      const { error } = await supabase
+        .from("programs")
+        .update({ plan_task_id: planTaskId })
+        .eq("id", programId);
+      if (error) throw error;
+    },
+    onSuccess: async (_, variables) => {
+      setLinkSelections((current) => {
+        const next = { ...current };
+        delete next[variables.programId];
+        return next;
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["execution-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["programs"] }),
+      ]);
+      toast.success("تم ربط البرنامج بمهمة الخطة.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "تعذر ربط البرنامج بالخطة.");
+    },
+  });
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["execution-flow"],
@@ -196,6 +237,27 @@ function ExecutionFlowPage() {
         <Stat title="جاهزة للتقرير" value={readyTasks.length} hint="تنفيذ مكتمل + برنامج + شاهد" />
       </section>
 
+      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-black">مؤشر المسار الحالي</h2>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              نسبة الربط والتوثيق محسوبة من السجلات الحالية فقط، ولا تغيّر حالة أي سجل.
+            </p>
+          </div>
+          <div className="grid min-w-64 grid-cols-2 gap-2 text-center">
+            <ProgressMetric
+              label="ربط البرامج"
+              value={programs.length ? Math.round((linkedPrograms.length / programs.length) * 100) : 0}
+            />
+            <ProgressMetric
+              label="توثيق المهام"
+              value={tasks.length ? Math.round((documentedTasks.length / tasks.length) * 100) : 0}
+            />
+          </div>
+        </div>
+      </section>
+
       {(data?.failures.length ?? 0) > 0 && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-800">
           تعذر تحميل جزء من المسار: {data?.failures.join("، ")}. لم يتم تعديل أي بيانات.
@@ -220,6 +282,8 @@ function ExecutionFlowPage() {
             const taskDone = doneStatus(task.exec_status);
             const documented = taskEvidences.length > 0;
             const reportReady = taskDone && programDone && documented;
+            const executionPercent = taskExecutionPercent(task, taskPrograms);
+            const documentationPercent = documented ? 100 : 0;
             const reportUrl = "/reports?workflow=1&planTaskId=" + encodeURIComponent(task.id);
             const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);
             const primaryProgram = taskPrograms[0];
@@ -235,6 +299,10 @@ function ExecutionFlowPage() {
                       {task.due_date && <span className="text-[10px] text-muted-foreground">استحقاق {task.due_date}</span>}
                     </div>
                     <h2 className="mt-2 text-sm font-black">{task.task || "مهمة بدون عنوان"}</h2>
+                    <div className="mt-3 grid max-w-xl grid-cols-2 gap-2">
+                      <MiniProgress label="التنفيذ" value={executionPercent} />
+                      <MiniProgress label="التوثيق" value={documentationPercent} />
+                    </div>
                   </div>
                   <Button asChild variant={reportReady ? "default" : "outline"} size="sm">
                     <Link to={reportUrl as never}>
@@ -299,6 +367,10 @@ function ExecutionFlowPage() {
                                 {program.exec_status || "لم يبدأ"} · {programEvidences.length} شاهد
                                 {program.beneficiaries != null ? " · " + program.beneficiaries + " مستفيد" : ""}
                               </p>
+                              <div className="mt-2 grid grid-cols-2 gap-2">
+                                <MiniProgress label="التنفيذ" value={programExecutionPercent(program)} />
+                                <MiniProgress label="التوثيق" value={programEvidences.length ? 100 : 0} />
+                              </div>
                             </div>
                             <div className="flex gap-1">
                               <Button asChild size="sm" variant="outline"><Link to={programUrl as never}>فتح</Link></Button>
@@ -327,17 +399,56 @@ function ExecutionFlowPage() {
               <p className="text-[10px] text-muted-foreground">هذه البرامج موجودة ولم تُربط بعد بمهمة من الخطة. لن نحذفها أو نكررها.</p>
             </div>
           </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
             {unlinkedPrograms.map((program) => {
               const programUrl = "/programs?programId=" + encodeURIComponent(program.id);
+              const selectedTaskId = linkSelections[program.id] ?? "";
               return (
-                <Link key={program.id} to={programUrl as never} className="flex items-center justify-between gap-2 rounded-xl border p-3 transition hover:border-primary/35">
-                  <span className="min-w-0">
-                    <span className="block truncate text-xs font-black">{program.name || "برنامج"}</span>
-                    <span className="mt-1 block text-[10px] text-muted-foreground">اضغط لاختيار مهمة الخطة المرتبطة</span>
-                  </span>
-                  <ArrowLeft className="size-4 shrink-0 text-primary" />
-                </Link>
+                <div key={program.id} className="rounded-xl border bg-background/60 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-black">{program.name || "برنامج"}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        اختر المهمة الصحيحة ثم اضغط ربط. لن يختار النظام عنك.
+                      </p>
+                    </div>
+                    <Button asChild size="sm" variant="ghost">
+                      <Link to={programUrl as never}>فتح <ArrowLeft className="size-3.5" /></Link>
+                    </Button>
+                  </div>
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <Select
+                      value={selectedTaskId}
+                      onValueChange={(value) =>
+                        setLinkSelections((current) => ({ ...current, [program.id]: value }))
+                      }
+                    >
+                      <SelectTrigger className="min-w-0 flex-1 text-xs">
+                        <SelectValue placeholder="اختر مهمة الخطة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tasks.map((task) => (
+                          <SelectItem key={task.id} value={task.id}>
+                            {task.seq ? "#" + task.seq + " · " : ""}{task.task || "مهمة بدون عنوان"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={!selectedTaskId || linkProgram.isPending}
+                      onClick={() => linkProgram.mutate({ programId: program.id, planTaskId: selectedTaskId })}
+                    >
+                      {linkProgram.isPending && linkProgram.variables?.programId === program.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Link2 className="size-4" />
+                      )}
+                      ربط
+                    </Button>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -358,6 +469,31 @@ function ExecutionFlowPage() {
           defaultLinkedRef={evidenceTarget.ref}
         />
       )}
+    </div>
+  );
+}
+
+function ProgressMetric({ label, value }: { label: string; value: number }) {
+  const safeValue = Math.max(0, Math.min(100, value));
+  return (
+    <div className="rounded-xl border bg-background/70 p-2">
+      <strong className="text-lg">{safeValue}%</strong>
+      <p className="text-[9px] font-bold text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function MiniProgress({ label, value }: { label: string; value: number }) {
+  const safeValue = Math.max(0, Math.min(100, value));
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-[9px]">
+        <span className="font-bold text-muted-foreground">{label}</span>
+        <span className="font-black">{safeValue}%</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary transition-all" style={{ width: safeValue + "%" }} />
+      </div>
     </div>
   );
 }
