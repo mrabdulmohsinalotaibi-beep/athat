@@ -105,7 +105,7 @@ export function RecordPage({
   const singleDocumentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (config.key === "students" || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const newMode = params.get("new");
     if (newMode !== "student" && newMode !== "1") return;
