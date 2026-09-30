@@ -112,6 +112,32 @@ function ExecutionFlowPage() {
     },
   });
 
+  const approveTask = useMutation({
+    mutationFn: async ({ taskId, currentDocStatus }: { taskId: string; currentDocStatus?: string | null }) => {
+      const patch: { exec_status: string; doc_status?: string } = { exec_status: "مكتمل" };
+      if (!currentDocStatus || currentDocStatus === "ناقص") {
+        patch.doc_status = "قيد المراجعة";
+      }
+
+      const { error } = await supabase
+        .from("plan_tasks")
+        .update(patch)
+        .eq("id", taskId);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["execution-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["plan-execution-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
+      ]);
+      toast.success("تم اعتماد تنفيذ المهمة. التوثيق بقي للمراجعة ولم يُعتمد تلقائيًا.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "تعذر اعتماد تنفيذ المهمة.");
+    },
+  });
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["execution-flow"],
     queryFn: async () => {
@@ -189,7 +215,16 @@ function ExecutionFlowPage() {
   const documentedTasks = tasks.filter(
     (task) => evidenceForTask(task, programsByTask.get(task.id) ?? []).length > 0,
   );
-  const readyTasks = tasks.filter((task) => {
+  const approvalReadyTasks = tasks.filter((task) => {
+    const taskPrograms = programsByTask.get(task.id) ?? [];
+    return (
+      !doneStatus(task.exec_status) &&
+      taskPrograms.length > 0 &&
+      taskPrograms.every((program) => doneStatus(program.exec_status)) &&
+      evidenceForTask(task, taskPrograms).length > 0
+    );
+  });
+  const reportReadyTasks = tasks.filter((task) => {
     const taskPrograms = programsByTask.get(task.id) ?? [];
     return (
       doneStatus(task.exec_status) &&
@@ -234,7 +269,11 @@ function ExecutionFlowPage() {
         <Stat title="مهام الخطة" value={tasks.length} hint="المصدر: الخطة التشغيلية" />
         <Stat title="برامج مرتبطة" value={linkedPrograms.length} hint={String(unlinkedPrograms.length) + " برنامج يحتاج ربطًا"} />
         <Stat title="مهام موثقة" value={documentedTasks.length} hint={String(evidences.length) + " شاهد محفوظ إجمالًا"} />
-        <Stat title="جاهزة للتقرير" value={readyTasks.length} hint="تنفيذ مكتمل + برنامج + شاهد" />
+        <Stat
+          title="جاهزة لاعتماد التنفيذ"
+          value={approvalReadyTasks.length}
+          hint={String(reportReadyTasks.length) + " مكتملة وجاهزة للتقرير"}
+        />
       </section>
 
       <section className="rounded-2xl border bg-card p-4 shadow-sm">
@@ -281,6 +320,7 @@ function ExecutionFlowPage() {
             const programDone = taskPrograms.length > 0 && taskPrograms.every((program) => doneStatus(program.exec_status));
             const taskDone = doneStatus(task.exec_status);
             const documented = taskEvidences.length > 0;
+            const readyForApproval = !taskDone && programDone && documented;
             const reportReady = taskDone && programDone && documented;
             const executionPercent = taskExecutionPercent(task, taskPrograms);
             const documentationPercent = documented ? 100 : 0;
@@ -311,13 +351,50 @@ function ExecutionFlowPage() {
                   </Button>
                 </div>
 
+                {readyForApproval && (
+                  <div className="flex flex-col gap-3 border-b border-primary/20 bg-primary/[0.05] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-black text-primary">جاهز لاعتماد التنفيذ</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                        اكتملت البرامج المرتبطة ويوجد شاهد محفوظ. لن يغيّر ذات حالة المهمة إلا بعد موافقتك.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={approveTask.isPending}
+                      onClick={() => {
+                        const approved = window.confirm(
+                          "هل تعتمد تنفيذ هذه المهمة؟ سيتم تغيير حالة التنفيذ إلى «مكتمل»، وسيبقى التوثيق «قيد المراجعة» حتى اعتماده بشكل مستقل.",
+                        );
+                        if (approved) {
+                          approveTask.mutate({ taskId: task.id, currentDocStatus: task.doc_status });
+                        }
+                      }}
+                    >
+                      {approveTask.isPending && approveTask.variables?.taskId === task.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="size-4" />
+                      )}
+                      اعتماد التنفيذ
+                    </Button>
+                  </div>
+                )}
+
                 <div className="grid gap-0 md:grid-cols-4">
                   <Step
                     number="1"
                     title="الخطة"
                     done={taskDone}
-                    detail={task.exec_status || "لم يبدأ"}
-                    action={<Button asChild size="sm" variant="ghost"><Link to="/plan">فتح الخطة</Link></Button>}
+                    detail={readyForApproval ? "جاهز لاعتماد التنفيذ" : task.exec_status || "لم يبدأ"}
+                    action={
+                      readyForApproval ? (
+                        <span className="text-[9px] font-bold text-primary">بانتظار موافقتك فقط</span>
+                      ) : (
+                        <Button asChild size="sm" variant="ghost"><Link to="/plan">فتح الخطة</Link></Button>
+                      )
+                    }
                   />
                   <Step
                     number="2"
