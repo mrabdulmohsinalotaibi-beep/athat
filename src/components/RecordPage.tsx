@@ -459,7 +459,7 @@ export function RecordPage({
         },
       });
 
-      const rewritten = result.suggestions?.[fieldName]?.trim();
+      const rewritten = result?.suggestions?.[fieldName]?.trim();
       if (!rewritten) {
         toast.info("لم يتم إنتاج صياغة بديلة.");
         return;
@@ -528,7 +528,7 @@ export function RecordPage({
         },
       });
 
-      const suggestions = result.suggestions ?? {};
+      const suggestions = result?.suggestions ?? {};
       const usable = Object.fromEntries(
         Object.entries(suggestions).filter(([name, value]) => !currentValues[name] && value.trim()),
       );
