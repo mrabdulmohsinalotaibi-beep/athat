@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { CheckSquare, FileText, RotateCcw, Send, ShieldCheck, Square } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, CheckCircle2, CheckSquare, FileText, RotateCcw, Send, ShieldCheck, Square } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -71,8 +71,9 @@ function reportSelectColumns(record: { key: string; fields: FieldDef[] }) {
   ]);
 
   const metricFields: Record<string, string[]> = {
-    plan: ["exec_status"],
-    programs: ["exec_status"],
+    plan: ["exec_status", "doc_status", "indicator", "required_evidence", "done_date", "notes"],
+    programs: ["exec_status", "goal", "indicator", "start_date", "end_date", "required_evidence", "notes"],
+    evidences: ["file_url", "description", "reviewed_by", "notes"],
     cases: ["case_status", "last_followup", "followup_at"],
     attendance: ["case_type", "count_days"],
     interviews: ["itype"],
@@ -83,6 +84,7 @@ function reportSelectColumns(record: { key: string; fields: FieldDef[] }) {
 }
 
 function ReportsPage() {
+  const queryClient = useQueryClient();
   const { data: school } = useSchool();
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +103,7 @@ function ReportsPage() {
   const [handoffNote, setHandoffNote] = useState("");
   const [workflowPlanTaskId, setWorkflowPlanTaskId] = useState("");
   const [workflowProgramId, setWorkflowProgramId] = useState("");
+  const [workflowDraftInitialized, setWorkflowDraftInitialized] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -110,6 +113,7 @@ function ReportsPage() {
     const programId = params.get("programId") ?? "";
     setWorkflowPlanTaskId(planTaskId);
     setWorkflowProgramId(programId);
+    setWorkflowDraftInitialized(false);
     setReportMode("combined");
     setSelectedKeys(["plan", "programs", "evidences"]);
     setReportTitle("تقرير تنفيذ مهمة الخطة");
@@ -178,6 +182,7 @@ function ReportsPage() {
                 ...(workflowPlanTaskId ? [workflowPlanTaskId] : []),
               ])];
               request = refs.length ? request.in("linked_ref", refs) : request.eq("id", "00000000-0000-0000-0000-000000000000");
+              request = request.eq("doc_status", "معتمد");
             }
 
             const result = await request;
@@ -236,6 +241,8 @@ function ReportsPage() {
   });
 
   // Date filtering is performed by Postgres before rows are transferred to the browser.
+  // In workflow mode, the evidence section is already restricted at the database level
+  // to approved evidence only.
   const filteredSections = sections;
 
   const kpis = useMemo(() => {
@@ -307,6 +314,7 @@ function ReportsPage() {
     setSelectedKeys(["plan", "programs", "evidences"]);
     setWorkflowPlanTaskId("");
     setWorkflowProgramId("");
+    setWorkflowDraftInitialized(false);
     if (typeof window !== "undefined") {
       window.history.replaceState(window.history.state, "", window.location.pathname);
     }
@@ -389,6 +397,85 @@ function ReportsPage() {
   ).length;
   const planProgress = planRows.length ? Math.round((planDone / planRows.length) * 100) : 0;
   const programProgress = programRows.length ? Math.round((programDone / programRows.length) * 100) : 0;
+  const workflowMode = Boolean(workflowPlanTaskId || workflowProgramId);
+  const workflowTask = planRows[0];
+  const workflowProgramsComplete =
+    programRows.length > 0 &&
+    programRows.every((row) => ["منفذ", "مكتمل"].includes(String(row["exec_status"] ?? "")));
+  const workflowExecutionComplete = String(workflowTask?.["exec_status"] ?? "") === "مكتمل";
+  const workflowHasApprovedEvidence = evidenceRows.length > 0;
+  const workflowReportApproved = String(workflowTask?.["doc_status"] ?? "") === "معتمد";
+  const workflowReadyForApproval =
+    workflowMode &&
+    workflowExecutionComplete &&
+    workflowProgramsComplete &&
+    workflowHasApprovedEvidence &&
+    !workflowReportApproved;
+
+  useEffect(() => {
+    if (!workflowMode || workflowDraftInitialized || isLoading || !workflowTask) return;
+
+    const taskName = String(workflowTask["task"] ?? "مهمة الخطة");
+    const programNames = programRows
+      .map((row) => String(row["name"] ?? "").trim())
+      .filter(Boolean);
+    const beneficiaries = programRows.reduce(
+      (sum, row) => sum + (Number(row["beneficiaries"]) || 0),
+      0,
+    );
+    const parts = [
+      `تم تنفيذ مهمة «${taskName}» من الخطة التشغيلية عبر ${programRows.length} ${programRows.length === 1 ? "برنامج مرتبط" : "برامج مرتبطة"}${programNames.length ? `: ${programNames.join("، ")}` : ""}.`,
+      beneficiaries > 0 ? `بلغ عدد المستفيدين المسجل في البرامج ${beneficiaries} مستفيدًا.` : "",
+      `تم توثيق التنفيذ بعدد ${evidenceRows.length} من الشواهد المعتمدة فقط.`,
+      workflowReportApproved
+        ? "حالة التوثيق: مكتمل ومعتمد."
+        : workflowHasApprovedEvidence
+          ? "حالة التوثيق: الشواهد معتمدة والتقرير بانتظار الاعتماد النهائي."
+          : "حالة التوثيق: لا توجد شواهد معتمدة بعد.",
+    ].filter(Boolean);
+
+    setNarrative(parts.join("\n"));
+    if (!documentNo) {
+      const seq = String(workflowTask["seq"] ?? "").trim();
+      setDocumentNo(seq ? `تنفيذ-${seq}` : `تنفيذ-${String(workflowTask["id"]).slice(0, 8)}`);
+    }
+    setWorkflowDraftInitialized(true);
+  }, [
+    workflowMode,
+    workflowDraftInitialized,
+    isLoading,
+    workflowTask,
+    programRows,
+    evidenceRows,
+    workflowReportApproved,
+    workflowHasApprovedEvidence,
+    documentNo,
+  ]);
+
+  const approveWorkflowReport = useMutation({
+    mutationFn: async () => {
+      if (!workflowPlanTaskId) throw new Error("لا توجد مهمة خطة مرتبطة بهذا التقرير.");
+      if (!workflowExecutionComplete) throw new Error("اعتمد تنفيذ المهمة أولًا.");
+      if (!workflowProgramsComplete) throw new Error("يجب اكتمال البرامج المرتبطة أولًا.");
+      if (!workflowHasApprovedEvidence) throw new Error("يجب اعتماد شاهد واحد على الأقل قبل اعتماد التقرير.");
+
+      const { error } = await supabase
+        .from("plan_tasks")
+        .update({ doc_status: "معتمد" })
+        .eq("id", workflowPlanTaskId);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ["execution-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["plan-execution-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
+      ]);
+      toast.success("تم اعتماد التقرير والتوثيق. النسخة الرسمية أصبحت جاهزة للطباعة وPDF.");
+    },
+    onError: (error) => toast.error((error as Error).message || "تعذر اعتماد التقرير."),
+  });
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
@@ -414,18 +501,58 @@ function ReportsPage() {
         </div>
       </section>
 
-      {(workflowPlanTaskId || workflowProgramId) && (
-        <section className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 shadow-sm">
+      {workflowMode && (
+        <section
+          className={
+            "rounded-2xl border p-4 shadow-sm " +
+            (workflowReportApproved
+              ? "border-emerald-500/25 bg-emerald-500/[0.06]"
+              : workflowReadyForApproval
+                ? "border-primary/25 bg-primary/[0.05]"
+                : "border-amber-500/25 bg-amber-500/[0.06]")
+          }
+        >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black text-primary">تقرير مرتبط بمسار التنفيذ</p>
+              <div className="flex items-center gap-2">
+                {workflowReportApproved ? (
+                  <CheckCircle2 className="size-4 text-emerald-700" />
+                ) : (
+                  <AlertTriangle className="size-4 text-amber-700" />
+                )}
+                <p className="text-xs font-black">
+                  {workflowReportApproved
+                    ? "تقرير تنفيذ مكتمل ومعتمد"
+                    : workflowReadyForApproval
+                      ? "المسودة جاهزة لاعتماد التقرير"
+                      : "مسودة تقرير تنفيذ"}
+                </p>
+              </div>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                يعرض فقط مهمة الخطة والبرنامج أو البرامج المرتبطة بها وشواهدها الحالية، دون نسخ السجلات.
+                يعرض مهمة الخطة وبرامجها، ولا يُدخل في التقرير إلا الشواهد التي اعتمدتها. أي شاهد قيد المراجعة أو معاد للتعديل مستبعد من النسخة الرسمية.
               </p>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={reset}>
-              عرض كل التقارير
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {workflowReadyForApproval && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={approveWorkflowReport.isPending}
+                  onClick={() => {
+                    const approved = window.confirm(
+                      "هل تعتمد هذا التقرير؟ سيتم اعتماد توثيق المهمة وإزالة علامة «مسودة غير معتمدة» من المستند الرسمي.",
+                    );
+                    if (approved) approveWorkflowReport.mutate();
+                  }}
+                >
+                  <ShieldCheck className="size-4" />
+                  {approveWorkflowReport.isPending ? "جارٍ الاعتماد..." : "اعتماد التقرير"}
+                </Button>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={reset}>
+                عرض كل التقارير
+              </Button>
+            </div>
           </div>
         </section>
       )}
@@ -703,6 +830,11 @@ function ReportsPage() {
         />
 
         <main className="report-official-content">
+          {workflowMode && !workflowReportApproved && (
+            <div className="mx-5 mt-4 rounded-lg border border-amber-300 bg-amber-50 p-2 text-center text-xs font-black text-amber-800">
+              مسودة غير معتمدة — للمعاينة والمراجعة فقط
+            </div>
+          )}
           <section className="report-cover block border-b border-paper-border pb-5 pt-5">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <ReportStat label="عدد السجلات" value={selectedRecords.length} />
@@ -732,11 +864,47 @@ function ReportsPage() {
                 <ReportStat label="إنجاز الخطة" value={`${planProgress}%`} />
                 <ReportStat label="البرامج المنفذة" value={`${programDone} / ${programRows.length}`} />
                 <ReportStat label="إنجاز البرامج" value={`${programProgress}%`} />
-                <ReportStat label="الشواهد الموثقة" value={evidenceRows.length} />
+                <ReportStat label={workflowMode ? "الشواهد المعتمدة" : "الشواهد الموثقة"} value={evidenceRows.length} />
               </div>
               <p className="mt-3 rounded-xl border border-paper-border bg-paper-muted p-3 text-xs leading-6">
                 يعرض هذا التقرير دورة التنفيذ من الخطة التشغيلية إلى البرامج والشواهد، وفق السجلات المختارة والنطاق الزمني المحدد أعلاه.
               </p>
+            </section>
+          )}
+
+          {workflowMode && evidenceRows.length > 0 && (
+            <section className="mt-6 break-inside-avoid" data-pdf-block="true">
+              <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
+                الشواهد المعتمدة
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {evidenceRows.map((evidence) => {
+                  const fileUrl = String(evidence["file_url"] ?? "");
+                  const imageEvidence =
+                    String(evidence["etype"] ?? "").includes("صورة") ||
+                    /\.(png|jpe?g|webp|gif)(\?|$)/i.test(fileUrl);
+                  return (
+                    <article key={String(evidence["id"])} className="break-inside-avoid rounded-xl border border-paper-border p-3">
+                      {imageEvidence && fileUrl ? (
+                        <img
+                          src={fileUrl}
+                          alt={String(evidence["name"] ?? "شاهد معتمد")}
+                          crossOrigin="anonymous"
+                          className="mb-3 max-h-64 w-full rounded-lg border border-paper-border object-contain"
+                        />
+                      ) : null}
+                      <p className="text-xs font-black">{String(evidence["name"] ?? "شاهد معتمد")}</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                        {String(evidence["etype"] ?? "مرفق")} · معتمد
+                        {evidence["reviewed_by"] ? ` · راجعه: ${String(evidence["reviewed_by"])}` : ""}
+                      </p>
+                      {evidence["description"] ? (
+                        <p className="mt-2 text-[10px] leading-5">{String(evidence["description"])}</p>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
             </section>
           )}
 
@@ -833,9 +1001,19 @@ function ReportsPage() {
           </section>
 
           <section className="report-approval mt-10 break-inside-avoid">
-            <div className="rounded-xl border border-paper-border bg-paper-muted p-4 text-center text-xs leading-7">
-              أُعد هذا التقرير من خلال منصة الذات للتوجيه الطلابي، وتمت مراجعته واعتماده من الجهة
-              المختصة في المدرسة.
+            <div
+              className={
+                "rounded-xl border p-4 text-center text-xs leading-7 " +
+                (workflowMode && !workflowReportApproved
+                  ? "border-amber-300 bg-amber-50 text-amber-800"
+                  : "border-paper-border bg-paper-muted")
+              }
+            >
+              {workflowMode
+                ? workflowReportApproved
+                  ? "أُعد هذا التقرير من خلال منصة الذات للتوجيه الطلابي من بيانات التنفيذ والشواهد المعتمدة، وتم اعتماد توثيق المهمة."
+                  : "هذه مسودة مولدة من بيانات التنفيذ والشواهد المعتمدة فقط، ولم يتم اعتماد التقرير بعد."
+                : "أُعد هذا التقرير من خلال منصة الذات للتوجيه الطلابي وفق السجلات المختارة. راجع محتواه قبل اعتماده أو إرساله."}
             </div>
           </section>
 
