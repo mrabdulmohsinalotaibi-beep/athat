@@ -764,6 +764,27 @@ function Dashboard() {
 
   const actions = (isCounselorDashboard ? counselorActions : schoolActions).slice(0, 6);
 
+  const roleTaskPool = (isManagementDashboard ? visibleManagementTasks : mySchoolTasks).filter(
+    (item) => String(item.status ?? "") !== "ملغاة",
+  );
+  const roleTaskCompleted = roleTaskPool.filter((item) =>
+    ["مكتملة", "معتمدة"].includes(String(item.status ?? "")),
+  ).length;
+  const roleTaskPercent = roleTaskPool.length
+    ? Math.round((roleTaskCompleted / roleTaskPool.length) * 100)
+    : 0;
+  const dashboardProgress = isCounselorDashboard ? planPercent : roleTaskPercent;
+  const dashboardProgressLabel = isCounselorDashboard ? "إنجاز الخطة" : "إنجاز المهام";
+  const dashboardDueCount = isCounselorDashboard
+    ? overdueCases.length + latePlan.length + dueSchoolTasks.length
+    : roleDueSchoolTasks.length;
+  const dashboardApprovalCount = isCounselorDashboard
+    ? approvalReadyPlanTasks.length +
+      pendingEvidenceReviews.length +
+      reportApprovalReadyPlanTasks.length +
+      pendingTaskApprovals.length
+    : pendingTaskApprovals.length + pendingTeamMembers.length;
+
   const dashboardTitle = isManagementDashboard
     ? `لوحة ${schoolRoleLabel}`
     : isCounselorDashboard
@@ -799,12 +820,13 @@ function Dashboard() {
 
   return (
     <div dir="rtl" className="dashboard-shell space-y-3">
-      <section className="rounded-2xl border border-primary/20 bg-primary px-4 py-3 text-primary-foreground shadow-md">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <img src="/brand-icon.svg?v=20261001a" alt="" className="size-9 rounded-xl bg-white/10 p-0.5" />
+      <section className="dashboard-hero rounded-2xl border border-primary/20 bg-primary px-4 py-4 text-primary-foreground shadow-md">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2.5">
+              <img src="/brand-icon.svg?v=20261001a" alt="" className="size-11 rounded-2xl bg-white/10 p-0.5 shadow-sm" />
               <div className="min-w-0">
+                <p className="text-[10px] font-bold text-white/70">{formatHijriDate(new Date())}</p>
                 <h1 className="truncate text-lg font-black sm:text-xl">
                   {schoolMembership?.display_name
                     ? `مرحبًا، ${schoolMembership.display_name}`
@@ -812,40 +834,72 @@ function Dashboard() {
                       ? `مرحبًا، ${school.counselor_name}`
                       : dashboardTitle}
                 </h1>
-                <p className="truncate text-[11px] text-primary-foreground/75">
-                  {dashboardTitle}
-                  {" · "}
-                  {school?.school_name || "منصة الذات"}
-                  {" · "}
-                  {formatHijriDate(new Date())}
+                <p className="truncate text-[10px] text-white/70">
+                  {dashboardTitle} · {school?.school_name || "منصة الذات"}
                 </p>
               </div>
             </div>
+
+            <div className="dashboard-today-strip mt-4 grid grid-cols-3 gap-2">
+              <a href="#today-work" className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm">
+                <strong className="block text-base font-black">{attentionCount}</strong>
+                <span className="block truncate text-[9px] text-white/75">تحتاج إجراء</span>
+              </a>
+              <Link to="/calendar" className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm">
+                <strong className="block text-base font-black">{todayAgenda.length}</strong>
+                <span className="block truncate text-[9px] text-white/75">مواعيد اليوم</span>
+              </Link>
+              <Link
+                to={isCounselorDashboard ? "/execution" : "/school-tasks"}
+                className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm"
+              >
+                <strong className="block text-base font-black">{dashboardApprovalCount}</strong>
+                <span className="block truncate text-[9px] text-white/75">بانتظار الاعتماد</span>
+              </Link>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {attentionCount > 0 && (
-              <a
-                href="#today-work"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-black hover:bg-white/20"
-              >
-                <BellRing className="size-4" />
-                {attentionCount} تحتاج إجراء
-              </a>
-            )}
+          <div className="flex shrink-0 flex-col items-center gap-2">
+            <div
+              className="dashboard-progress-ring grid size-[76px] place-items-center rounded-full p-[6px]"
+              style={{
+                background: `conic-gradient(var(--letterhead-secondary) ${dashboardProgress}%, rgba(255,255,255,.14) 0)`,
+              }}
+              aria-label={`${dashboardProgressLabel} ${dashboardProgress}%`}
+            >
+              <div className="grid size-full place-items-center rounded-full bg-[#07566A] text-center shadow-inner">
+                <span>
+                  <strong className="block text-lg font-black leading-none">{dashboardProgress}%</strong>
+                  <span className="mt-1 block text-[8px] font-bold text-white/70">{dashboardProgressLabel}</span>
+                </span>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => void refetch()}
               disabled={isFetching}
-              className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-[11px] font-bold hover:bg-white/20 disabled:opacity-60"
+              className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[9px] font-bold hover:bg-white/20 disabled:opacity-60"
             >
-              {isFetching ? "تحديث…" : "تحديث"}
+              {isFetching ? "تحديث…" : "تحديث البيانات"}
             </button>
           </div>
         </div>
+
+        {dashboardDueCount > 0 && (
+          <a
+            href="#today-work"
+            className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[10px] font-bold"
+          >
+            <span className="inline-flex min-w-0 items-center gap-1.5">
+              <BellRing className="size-3.5 shrink-0 text-[#E5C27B]" />
+              <span className="truncate">{dashboardDueCount} عنصر مستحق يحتاج متابعتك</span>
+            </span>
+            <ArrowLeft className="size-3.5 shrink-0" />
+          </a>
+        )}
       </section>
 
-      <section className="rounded-2xl border bg-card p-3 shadow-sm">
+      <section className="dashboard-actions-panel rounded-2xl border bg-card p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-black">إجراء سريع · {schoolRoleLabel}</h2>
@@ -853,7 +907,7 @@ function Dashboard() {
           </div>
           <QuickActionLauncher guidanceAllowed={isCounselorDashboard} />
         </div>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+        <div className="dashboard-quick-actions mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
           {quickActions.map((item) => {
             const Icon = item.icon;
             return (
@@ -872,7 +926,7 @@ function Dashboard() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+      <section className="dashboard-stat-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
         {stats.map((card) => {
           const Icon = card.icon;
           return (
@@ -898,7 +952,7 @@ function Dashboard() {
         })}
       </section>
 
-      <section className="rounded-2xl border bg-card p-3 shadow-sm">
+      <section className="dashboard-shortcuts-panel rounded-2xl border bg-card p-3 shadow-sm">
         <div className="mb-2 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-black">اختصارات العمل</h2>
@@ -906,7 +960,7 @@ function Dashboard() {
           </div>
           <span className="text-[10px] font-bold text-primary">اضغط للفتح</span>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="dashboard-shortcuts grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
           {shortcuts.map((item) => {
             const Icon = item.icon;
             return (
