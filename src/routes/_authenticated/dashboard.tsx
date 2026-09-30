@@ -75,7 +75,7 @@ function useDashboard() {
         ["calendar", supabase.from("calendar_events").select("id,edate,etime,title,etype,status")],
         ["planTasks", supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status")],
         ["interviews", supabase.from("interviews").select("id,student_name,topic,followup_at")],
-        ["evidences", supabase.from("evidences").select("id,linked_ref,linked_type")],
+        ["evidences", supabase.from("evidences").select("id,name,linked_ref,linked_type,doc_status")],
         ["publicRequests", supabase.from("public_requests").select("id,status,kind,created_at")],
         ["feedback", supabase
           .from("feedback_messages")
@@ -237,6 +237,28 @@ function Dashboard() {
     });
   });
 
+  const pendingEvidenceReviews = (data?.evidences ?? []).filter(
+    (evidence) => !["معتمد", "ناقص"].includes(String(evidence.doc_status ?? "")),
+  );
+  const reportApprovalReadyPlanTasks = planTasks.filter((task) => {
+    if (task.exec_status !== "مكتمل" || task.doc_status === "معتمد") return false;
+    const taskPrograms = programsByPlanTask.get(String(task.id)) ?? [];
+    if (!taskPrograms.length || !taskPrograms.every((program) => isProgramDone(program.exec_status))) {
+      return false;
+    }
+    const programRefs = new Set(
+      taskPrograms.flatMap((program) => [String(program.id), String(program.name ?? "")]).filter(Boolean),
+    );
+    return (data?.evidences ?? []).some((evidence) => {
+      if (evidence.doc_status !== "معتمد") return false;
+      const ref = String(evidence.linked_ref ?? "");
+      return (
+        (evidence.linked_type === "مهمة" && ref === String(task.id)) ||
+        (evidence.linked_type === "برنامج" && programRefs.has(ref))
+      );
+    });
+  });
+
   const primaryOpenRequests = (data?.publicRequests ?? []).filter(
     (item) => item.status !== "مغلق",
   );
@@ -364,6 +386,8 @@ function Dashboard() {
   const counselorAttentionCount =
     overdueCases.length +
     approvalReadyPlanTasks.length +
+    pendingEvidenceReviews.length +
+    reportApprovalReadyPlanTasks.length +
     latePlan.length +
     programsMissingEvidence.length +
     openRequests +
@@ -474,8 +498,11 @@ function Dashboard() {
   const counselorShortcuts = [
     {
       label: "مسار التنفيذ",
-      value: approvalReadyPlanTasks.length,
-      meta: approvalReadyPlanTasks.length ? "تحتاج موافقتك على التنفيذ" : "لا توجد مهام تنتظر الاعتماد",
+      value: approvalReadyPlanTasks.length + reportApprovalReadyPlanTasks.length,
+      meta:
+        approvalReadyPlanTasks.length || reportApprovalReadyPlanTasks.length
+          ? `${approvalReadyPlanTasks.length} تنفيذ · ${reportApprovalReadyPlanTasks.length} تقرير`
+          : "لا توجد مهام تنتظر الاعتماد",
       to: "/execution" as const,
       icon: CheckCircle2,
     },
@@ -489,7 +516,11 @@ function Dashboard() {
     {
       label: "الشواهد",
       value: data?.evidences.length ?? 0,
-      meta: programsMissingEvidence.length ? `${programsMissingEvidence.length} برنامج بلا شاهد` : "التوثيق سليم",
+      meta: pendingEvidenceReviews.length
+        ? `${pendingEvidenceReviews.length} شاهد ينتظر المراجعة`
+        : programsMissingEvidence.length
+          ? `${programsMissingEvidence.length} برنامج بلا شاهد`
+          : "التوثيق سليم",
       to: "/evidences" as const,
       icon: FolderCheck,
     },
@@ -509,8 +540,10 @@ function Dashboard() {
     },
     {
       label: "التقارير",
-      value: planDone + donePrograms.length,
-      meta: "عناصر مكتملة قابلة للتقرير",
+      value: planTasks.filter((item) => item.doc_status === "معتمد").length,
+      meta: reportApprovalReadyPlanTasks.length
+        ? `${reportApprovalReadyPlanTasks.length} جاهزة لاعتماد التقرير`
+        : "المهام المعتمدة للتقرير",
       to: "/reports" as const,
       icon: FileCheck2,
     },
@@ -626,6 +659,20 @@ function Dashboard() {
       : staffQuickActions;
 
   const counselorActions = [
+    ...pendingEvidenceReviews.slice(0, 2).map((item) => ({
+      key: `evidence-review-${item.id}`,
+      tone: "شاهد ينتظر المراجعة",
+      title: item.name || "شاهد جديد",
+      detail: "راجع الملف ثم اعتمده أو أعده للتعديل مع ملاحظة.",
+      to: "/evidences" as const,
+    })),
+    ...reportApprovalReadyPlanTasks.slice(0, 2).map((item) => ({
+      key: `report-approval-${item.id}`,
+      tone: "جاهز لاعتماد التقرير",
+      title: item.task || "مهمة مكتملة",
+      detail: "التنفيذ والشاهد معتمدان. بقي اعتمادك النهائي للتوثيق.",
+      to: "/execution" as const,
+    })),
     ...approvalReadyPlanTasks.slice(0, 2).map((item) => ({
       key: `approval-ready-${item.id}`,
       tone: "جاهز لاعتماد التنفيذ",
