@@ -380,41 +380,6 @@ export type Database = {
         }
         Relationships: []
       }
-      feedback_actions: {
-        Row: {
-          action: string
-          created_at: string
-          feedback_id: string
-          id: string
-          notes: string | null
-          user_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          feedback_id: string
-          id?: string
-          notes?: string | null
-          user_id?: string
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          feedback_id?: string
-          id?: string
-          notes?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "feedback_actions_feedback_id_fkey"
-            columns: ["feedback_id"]
-            isOneToOne: false
-            referencedRelation: "feedback_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       feedback_messages: {
         Row: {
           assigned_channel: string | null
@@ -575,7 +540,6 @@ export type Database = {
       }
       noor_export_jobs: {
         Row: {
-          attempts: number
           created_at: string
           id: string
           last_error: string | null
@@ -590,7 +554,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          attempts?: number
           created_at?: string
           id?: string
           last_error?: string | null
@@ -605,7 +568,6 @@ export type Database = {
           user_id?: string
         }
         Update: {
-          attempts?: number
           created_at?: string
           id?: string
           last_error?: string | null
@@ -742,7 +704,6 @@ export type Database = {
           notes: string | null
           program_no: string | null
           ptype: string | null
-          plan_task_id: string | null
           required_evidence: string | null
           start_date: string | null
           target_group: string | null
@@ -765,7 +726,6 @@ export type Database = {
           notes?: string | null
           program_no?: string | null
           ptype?: string | null
-          plan_task_id?: string | null
           required_evidence?: string | null
           start_date?: string | null
           target_group?: string | null
@@ -788,7 +748,6 @@ export type Database = {
           notes?: string | null
           program_no?: string | null
           ptype?: string | null
-          plan_task_id?: string | null
           required_evidence?: string | null
           start_date?: string | null
           target_group?: string | null
@@ -796,15 +755,82 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "programs_plan_task_id_fkey"
-            columns: ["plan_task_id"]
-            isOneToOne: false
-            referencedRelation: "plan_tasks"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      public_requests: {
+        Row: {
+          classroom: string | null
+          counselor_notes: string | null
+          created_at: string
+          details: string
+          handled_at: string | null
+          id: string
+          is_anonymous: boolean
+          kind: string
+          linked_record_id: string | null
+          linked_table: string | null
+          preferred_time: string | null
+          request_no: string
+          requester_contact: string | null
+          requester_name: string | null
+          requester_role: string | null
+          status: string
+          student_grade: string | null
+          student_name: string | null
+          topic: string | null
+          updated_at: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          classroom?: string | null
+          counselor_notes?: string | null
+          created_at?: string
+          details: string
+          handled_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          kind: string
+          linked_record_id?: string | null
+          linked_table?: string | null
+          preferred_time?: string | null
+          request_no?: string
+          requester_contact?: string | null
+          requester_name?: string | null
+          requester_role?: string | null
+          status?: string
+          student_grade?: string | null
+          student_name?: string | null
+          topic?: string | null
+          updated_at?: string
+          urgency?: string
+          user_id: string
+        }
+        Update: {
+          classroom?: string | null
+          counselor_notes?: string | null
+          created_at?: string
+          details?: string
+          handled_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          kind?: string
+          linked_record_id?: string | null
+          linked_table?: string | null
+          preferred_time?: string | null
+          request_no?: string
+          requester_contact?: string | null
+          requester_name?: string | null
+          requester_role?: string | null
+          status?: string
+          student_grade?: string | null
+          student_name?: string | null
+          topic?: string | null
+          updated_at?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       referrals: {
         Row: {
@@ -874,81 +900,6 @@ export type Database = {
           },
         ]
       }
-      public_requests: {
-        Row: {
-          classroom: string | null
-          counselor_notes: string | null
-          created_at: string
-          details: string
-          handled_at: string | null
-          id: string
-          is_anonymous: boolean
-          kind: string
-          linked_record_id: string | null
-          linked_table: string | null
-          preferred_time: string | null
-          request_no: string | null
-          requester_contact: string | null
-          requester_name: string | null
-          requester_role: string | null
-          status: string
-          student_grade: string | null
-          student_name: string | null
-          topic: string | null
-          updated_at: string
-          urgency: string
-          user_id: string
-        }
-        Insert: {
-          classroom?: string | null
-          counselor_notes?: string | null
-          created_at?: string
-          details: string
-          handled_at?: string | null
-          id?: string
-          is_anonymous?: boolean
-          kind: string
-          linked_record_id?: string | null
-          linked_table?: string | null
-          preferred_time?: string | null
-          request_no?: string | null
-          requester_contact?: string | null
-          requester_name?: string | null
-          requester_role?: string | null
-          status?: string
-          student_grade?: string | null
-          student_name?: string | null
-          topic?: string | null
-          updated_at?: string
-          urgency?: string
-          user_id?: string
-        }
-        Update: {
-          classroom?: string | null
-          counselor_notes?: string | null
-          created_at?: string
-          details?: string
-          handled_at?: string | null
-          id?: string
-          is_anonymous?: boolean
-          kind?: string
-          linked_record_id?: string | null
-          linked_table?: string | null
-          preferred_time?: string | null
-          request_no?: string | null
-          requester_contact?: string | null
-          requester_name?: string | null
-          requester_role?: string | null
-          status?: string
-          student_grade?: string | null
-          student_name?: string | null
-          topic?: string | null
-          updated_at?: string
-          urgency?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       reports: {
         Row: {
           created_at: string
@@ -1010,19 +961,16 @@ export type Database = {
           education_office: string | null
           id: string
           logo_url: string | null
-          ministry_logo_url: string | null
           mission: string | null
           office_hours: string | null
           principal_name: string | null
           principal_signature: string | null
           private_blog_token: string
           public_feedback_token: string
-          public_requests_enabled: boolean
+          public_requests_enabled: boolean | null
           public_slug: string | null
           school_name: string | null
           semester: string | null
-          show_counselor_on_documents: boolean
-          show_principal_on_documents: boolean
           theme: string
           updated_at: string
           user_id: string
@@ -1040,19 +988,16 @@ export type Database = {
           education_office?: string | null
           id?: string
           logo_url?: string | null
-          ministry_logo_url?: string | null
           mission?: string | null
           office_hours?: string | null
           principal_name?: string | null
           principal_signature?: string | null
           private_blog_token?: string
           public_feedback_token?: string
-          public_requests_enabled?: boolean
+          public_requests_enabled?: boolean | null
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
-          show_counselor_on_documents?: boolean
-          show_principal_on_documents?: boolean
           theme?: string
           updated_at?: string
           user_id?: string
@@ -1070,19 +1015,16 @@ export type Database = {
           education_office?: string | null
           id?: string
           logo_url?: string | null
-          ministry_logo_url?: string | null
           mission?: string | null
           office_hours?: string | null
           principal_name?: string | null
           principal_signature?: string | null
           private_blog_token?: string
           public_feedback_token?: string
-          public_requests_enabled?: boolean
+          public_requests_enabled?: boolean | null
           public_slug?: string | null
           school_name?: string | null
           semester?: string | null
-          show_counselor_on_documents?: boolean
-          show_principal_on_documents?: boolean
           theme?: string
           updated_at?: string
           user_id?: string
@@ -1231,7 +1173,7 @@ export type Database = {
     }
     Functions: {
       get_guidance_profile: {
-        Args: { p_slug?: string | null }
+        Args: { p_slug: string }
         Returns: {
           announcement: string
           contact_email: string
@@ -1244,23 +1186,6 @@ export type Database = {
           requests_enabled: boolean
           school_name: string
           vision: string
-        }[]
-      }
-      get_private_counselor_portal: {
-        Args: { p_token: string }
-        Returns: {
-          author_name: string | null
-          body: string | null
-          counselor_name: string | null
-          cover_url: string | null
-          created_at: string | null
-          excerpt: string | null
-          kind: string | null
-          public_slug: string | null
-          published_at: string | null
-          school_name: string | null
-          slug: string | null
-          title: string | null
         }[]
       }
       get_private_counselor_blog: {
@@ -1288,52 +1213,52 @@ export type Database = {
           user_id: string
         }[]
       }
+      submit_public_feedback: {
+        Args: {
+          p_category: string
+          p_message: string
+          p_satisfaction: number
+          p_sender_contact: string
+          p_sender_name: string
+          p_sender_role: string
+          p_token: string
+        }
+        Returns: string
+      }
       submit_public_request: {
         Args: {
-          p_classroom?: string | null
+          p_classroom?: string
           p_details: string
           p_is_anonymous?: boolean
           p_kind: string
-          p_preferred_time?: string | null
-          p_requester_contact?: string | null
-          p_requester_name?: string | null
-          p_requester_role?: string | null
-          p_slug?: string | null
-          p_student_grade?: string | null
-          p_student_name?: string | null
-          p_topic?: string | null
+          p_preferred_time?: string
+          p_requester_contact?: string
+          p_requester_name?: string
+          p_requester_role?: string
+          p_slug?: string
+          p_student_grade?: string
+          p_student_name?: string
+          p_topic?: string
           p_urgency?: string
         }
         Returns: string
       }
       submit_public_request_v2: {
         Args: {
-          p_classroom?: string | null
+          p_classroom?: string
           p_details: string
           p_is_anonymous?: boolean
           p_kind: string
-          p_portal_token?: string | null
-          p_preferred_time?: string | null
-          p_requester_contact?: string | null
-          p_requester_name?: string | null
-          p_requester_role?: string | null
-          p_slug?: string | null
-          p_student_grade?: string | null
-          p_student_name?: string | null
-          p_topic?: string | null
+          p_portal_token?: string
+          p_preferred_time?: string
+          p_requester_contact?: string
+          p_requester_name?: string
+          p_requester_role?: string
+          p_slug?: string
+          p_student_grade?: string
+          p_student_name?: string
+          p_topic?: string
           p_urgency?: string
-        }
-        Returns: string
-      }
-      submit_public_feedback: {
-        Args: {
-          p_category: string
-          p_message: string
-          p_satisfaction: number | null
-          p_sender_contact: string
-          p_sender_name: string
-          p_sender_role: string
-          p_token: string
         }
         Returns: string
       }

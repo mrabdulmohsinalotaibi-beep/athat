@@ -47,6 +47,7 @@ import { Route as FormsConsultationRouteImport } from './routes/forms.consultati
 import { Route as FormsReferralRouteImport } from './routes/forms.referral'
 import { Route as FormsReportRouteImport } from './routes/forms.report'
 import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminUpgradeRequestsIndexRouteImport } from './routes/_authenticated/admin/upgrade-requests/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -243,6 +244,11 @@ const PostsSlugRoute = PostsSlugRouteImport.update({
   path: '/posts/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminUpgradeRequestsIndexRoute =
   AuthenticatedAdminUpgradeRequestsIndexRouteImport.update({
     id: '/admin/upgrade-requests/',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/forms/report': typeof FormsReportRoute
   '/posts/$slug': typeof PostsSlugRoute
   '/forms/': typeof FormsIndexRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/forms/report': typeof FormsReportRoute
   '/posts/$slug': typeof PostsSlugRoute
   '/forms': typeof FormsIndexRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/upgrade-requests': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRoutesById {
@@ -370,6 +378,7 @@ export interface FileRoutesById {
   '/forms/report': typeof FormsReportRoute
   '/posts/$slug': typeof PostsSlugRoute
   '/forms/': typeof FormsIndexRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/upgrade-requests/': typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/forms/report'
     | '/posts/$slug'
     | '/forms/'
+    | '/admin/'
     | '/admin/upgrade-requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/forms/report'
     | '/posts/$slug'
     | '/forms'
+    | '/admin'
     | '/admin/upgrade-requests'
   id:
     | '__root__'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/forms/report'
     | '/posts/$slug'
     | '/forms/'
+    | '/_authenticated/admin/'
     | '/_authenticated/admin/upgrade-requests/'
   fileRoutesById: FileRoutesById
 }
@@ -783,6 +795,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/upgrade-requests/': {
       id: '/_authenticated/admin/upgrade-requests/'
       path: '/admin/upgrade-requests'
@@ -816,6 +835,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedToolkitRoute: typeof AuthenticatedToolkitRoute
   AuthenticatedWeeklyPosterRoute: typeof AuthenticatedWeeklyPosterRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminUpgradeRequestsIndexRoute: typeof AuthenticatedAdminUpgradeRequestsIndexRoute
 }
 
@@ -842,6 +862,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedToolkitRoute: AuthenticatedToolkitRoute,
   AuthenticatedWeeklyPosterRoute: AuthenticatedWeeklyPosterRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminUpgradeRequestsIndexRoute:
     AuthenticatedAdminUpgradeRequestsIndexRoute,
 }
