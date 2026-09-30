@@ -5,10 +5,12 @@ import {
   CalendarClock,
   CheckCircle2,
   ClipboardCheck,
+  ClipboardList,
   Clock3,
   PlayCircle,
   Plus,
   RotateCcw,
+  Sparkles,
   UserRoundCheck,
 } from "lucide-react";
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
@@ -18,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { initialDueDateForCadence, templatesForRole } from "@/lib/school-task-templates";
 
 export const Route = createFileRoute("/_authenticated/school-tasks")({
   head: () => ({
@@ -57,6 +60,7 @@ type SchoolTask = {
   returned_note: string | null;
   completed_at: string | null;
   created_at: string;
+  template_key?: string | null;
 };
 
 const roleRank = (role: string) =>
@@ -90,6 +94,8 @@ function SchoolTasksPage() {
   const [selectedReportTaskIds, setSelectedReportTaskIds] = useState<string[]>([]);
   const [reportRecipientId, setReportRecipientId] = useState("");
   const [reportNote, setReportNote] = useState("");
+  const [templateTargetId, setTemplateTargetId] = useState("");
+  const [selectedTemplateKeys, setSelectedTemplateKeys] = useState<string[]>([]);
 
   const query = useQuery({
     queryKey: ["school-tasks"],
@@ -138,6 +144,45 @@ function SchoolTasksPage() {
       setDueDate("");
       await refresh();
       toast.success("تم إسناد المهمة للموظف.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
+  const activateTemplates = useMutation({
+    mutationFn: async ({
+      targetId,
+      templateKeys,
+    }: {
+      targetId: string;
+      templateKeys: string[];
+    }) => {
+      const target = members.find((member) => member.id === targetId);
+      if (!target) throw new Error("تعذّر تحديد الموظف.");
+      const templates = templatesForRole(target.role).filter((template) => templateKeys.includes(template.key));
+      if (!templates.length) throw new Error("حدد قالب مهمة واحدًا على الأقل.");
+
+      const results = await Promise.all(
+        templates.map((template) =>
+          (supabase as any).rpc("activate_school_task_template", {
+            p_assignee_member_id: targetId,
+            p_template_key: template.key,
+            p_title: template.title,
+            p_description: template.description,
+            p_category: template.category,
+            p_priority: template.priority,
+            p_cadence: template.cadence,
+            p_due_date: initialDueDateForCadence(template.cadence),
+          }),
+        ),
+      );
+      const failed = results.find((result: any) => result.error);
+      if (failed?.error) throw failed.error;
+      return templates.length;
+    },
+    onSuccess: async (count) => {
+      setSelectedTemplateKeys([]);
+      await refresh();
+      toast.success(`تم تفعيل ${count} من قوالب المهام الدورية.`);
     },
     onError: (error) => toast.error((error as Error).message),
   });
@@ -250,6 +295,26 @@ function SchoolTasksPage() {
       member.id !== memberId &&
       roleRank(member.role) > roleRank(membership?.role ?? ""),
   );
+  const templateTargets = membership
+    ? [membership, ...lowerMembers]
+    : lowerMembers;
+  const effectiveTemplateTargetId = templateTargetId || memberId;
+  const templateTarget = templateTargets.find((member) => member.id === effectiveTemplateTargetId) ?? membership;
+  const roleTemplates = templatesForRole(templateTarget?.role);
+  const activeTemplateKeys = new Set(
+    tasks
+      .filter(
+        (task) =>
+          task.assignee_member_id === effectiveTemplateTargetId &&
+          task.template_key &&
+          !["معتمدة", "ملغاة"].includes(task.status),
+      )
+      .map((task) => String(task.template_key)),
+  );
+  const availableTemplateKeys = roleTemplates
+    .filter((template) => !activeTemplateKeys.has(template.key))
+    .map((template) => template.key);
+  const selectedAvailableTemplateKeys = selectedTemplateKeys.filter((key) => availableTemplateKeys.includes(key));
 
   const assignedToMe = tasks.filter((task) => task.assignee_member_id === memberId && task.status !== "ملغاة");
   const assignedByMe = tasks.filter((task) => task.creator_member_id === memberId);
@@ -347,6 +412,114 @@ function SchoolTasksPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-primary/15 bg-primary/[0.025] p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="size-4" />
+              <h2 className="font-black">قوالب المهام حسب الدور الوظيفي</h2>
+            </div>
+            <p className="mt-1 max-w-3xl text-xs leading-6 text-muted-foreground">
+              اختر الموظف ثم فعّل المهام اليومية والأسبوعية والشهرية والسنوية المناسبة لدوره. بعد اعتماد كل مهمة متكررة ينشئ النظام الاستحقاق التالي تلقائيًا.
+            </p>
+          </div>
+          <div className="min-w-[250px]">
+            <Label>الدور المستهدف</Label>
+            <select
+              value={effectiveTemplateTargetId}
+              onChange={(e) => {
+                setTemplateTargetId(e.target.value);
+                setSelectedTemplateKeys([]);
+              }}
+              className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
+            >
+              {templateTargets.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.id === memberId ? "مهامي أنا" : member.display_name || "عضو المدرسة"} · {roleLabel(member.role)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {roleTemplates.length ? (
+          <>
+            <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {roleTemplates.map((template) => {
+                const active = activeTemplateKeys.has(template.key);
+                const checked = selectedTemplateKeys.includes(template.key);
+                return (
+                  <label
+                    key={template.key}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${
+                      active ? "border-emerald-500/20 bg-emerald-500/5" : checked ? "border-primary/40 bg-primary/5" : "bg-card hover:border-primary/30"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-1 size-4"
+                      disabled={active}
+                      checked={active || checked}
+                      onChange={() =>
+                        setSelectedTemplateKeys((current) =>
+                          checked ? current.filter((key) => key !== template.key) : [...current, template.key],
+                        )
+                      }
+                    />
+                    <span className="min-w-0">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-black">{template.title}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-black">{template.cadence}</span>
+                        {active && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black text-emerald-700">مفعلة</span>}
+                      </span>
+                      <span className="mt-1 block text-[11px] leading-5 text-muted-foreground">{template.description}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!availableTemplateKeys.length}
+                onClick={() => setSelectedTemplateKeys(availableTemplateKeys)}
+              >
+                <ClipboardList className="size-4" /> تحديد المتاح
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={!selectedTemplateKeys.length}
+                onClick={() => setSelectedTemplateKeys([])}
+              >
+                إلغاء التحديد
+              </Button>
+              <Button
+                size="sm"
+                disabled={!selectedAvailableTemplateKeys.length || activateTemplates.isPending}
+                onClick={() =>
+                  activateTemplates.mutate({
+                    targetId: effectiveTemplateTargetId,
+                    templateKeys: selectedAvailableTemplateKeys,
+                  })
+                }
+              >
+                <Sparkles className="size-4" />
+                {activateTemplates.isPending ? "جارٍ التفعيل..." : `تفعيل المحدد (${selectedAvailableTemplateKeys.length})`}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="mt-4 rounded-xl border border-dashed p-5 text-xs text-muted-foreground">
+            لا توجد قوالب تشغيلية لهذا الدور. دور الاطلاع لا يُسند إليه تنفيذ.
+          </div>
+        )}
+        <p className="mt-3 text-[10px] leading-5 text-muted-foreground">
+          هذه قوالب تشغيلية استرشادية قابلة للتعديل وليست بديلًا عن التكليف أو التعميم الرسمي الخاص بالمدرسة.
+        </p>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
@@ -528,6 +701,7 @@ function TaskGroup({
       <div className="space-y-3">
         {tasks.map((task) => {
           const mine = task.assignee_member_id === memberId;
+          const selfCreated = mine && task.creator_member_id === memberId;
           const creator = memberMap.get(task.creator_member_id);
           const assignee = memberMap.get(task.assignee_member_id);
           const late = task.status !== "مكتملة" && task.status !== "ملغاة" && task.due_date && task.due_date < today();
@@ -566,6 +740,17 @@ function TaskGroup({
                     {task.status !== "قيد التنفيذ" && <Button size="sm" variant="outline" onClick={() => updateMyTask.mutate({ id: task.id, status: "قيد التنفيذ" })}><PlayCircle className="size-4" /> بدء التنفيذ</Button>}
                     <Button size="sm" disabled={!completionNotes[task.id]?.trim()} onClick={() => updateMyTask.mutate({ id: task.id, status: "مكتملة" })}><CheckCircle2 className="size-4" /> تم الإنجاز</Button>
                   </div>
+                </div>
+              )}
+
+              {selfCreated && task.status === "مكتملة" && (
+                <div className="mt-4 border-t pt-3">
+                  <p className="mb-2 text-[11px] text-muted-foreground">
+                    هذه مهمة دورية فعّلتها لنفسك. اعتماد الإنجاز يغلق هذا الاستحقاق وينشئ الاستحقاق التالي تلقائيًا إذا كانت متكررة.
+                  </p>
+                  <Button size="sm" onClick={() => reviewTask.mutate({ id: task.id, action: "اعتماد" })}>
+                    <CheckCircle2 className="size-4" /> اعتماد الإنجاز
+                  </Button>
                 </div>
               )}
 
