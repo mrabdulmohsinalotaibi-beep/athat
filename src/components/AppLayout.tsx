@@ -56,7 +56,7 @@ const bottomNavigation = [
   { to: "/dashboard", label: "اليوم", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
   { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students"] },
   { to: "/inbox", label: "الوارد", icon: FileText, activeRoutes: ["/inbox", "/school-inbox", "/posts", "/messages"] },
-  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/school-team", "/school-tasks", "/integrations", "/trash", "/health", "/profile", "/cases", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/weekly-poster", "/plan", "/programs", "/evidences", "/reports"] },
+  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/school-team", "/school-tasks", "/integrations", "/trash", "/health", "/profile", "/cases", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/weekly-poster", "/plan", "/execution", "/programs", "/evidences", "/reports"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
