@@ -48,6 +48,33 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const candidateIds = new Set<string>();
 
+    // 0) Auth history: if the same email still exists on an older auth user,
+    // reclaim rows owned by that legacy UUID. Exact email match only.
+    try {
+      let page = 1;
+      while (page <= 10) {
+        const { data, error } = await (supabaseAdmin as any).auth.admin.listUsers({
+          page,
+          perPage: 1000,
+        });
+        if (error) throw error;
+
+        const users = data?.users ?? [];
+        for (const legacyUser of users) {
+          const legacyEmail = normEmail(legacyUser?.email);
+          const legacyId = typeof legacyUser?.id === "string" ? legacyUser.id : "";
+          if (legacyId && legacyId !== userId && legacyEmail === email) {
+            candidateIds.add(legacyId);
+          }
+        }
+
+        if (users.length < 1000) break;
+        page += 1;
+      }
+    } catch (error) {
+      console.warn("[record-recovery] auth history lookup:", error);
+    }
+
     // 1) Legacy profile rows: strongest identity link.
     try {
       const { data } = await (supabaseAdmin as any)
@@ -159,10 +186,24 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
       console.warn("[record-recovery] school_settings merge:", error);
     }
 
+    const currentCounts: Record<string, number> = {};
+    for (const table of RECORD_TABLES) {
+      try {
+        const { count, error } = await (supabaseAdmin as any)
+          .from(table)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId);
+        if (!error) currentCounts[table] = count ?? 0;
+      } catch {
+        // Optional/older tables may not exist.
+      }
+    }
+
     return {
       recovered: true,
       total,
       tables: recoveredByTable,
       candidates: ids.length,
+      currentCounts,
     };
   });
