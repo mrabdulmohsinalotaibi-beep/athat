@@ -23,7 +23,7 @@ function PlanPage() {
     queryFn: async () => {
       const [tasks, programs, evidences] = await Promise.all([
         supabase.from("plan_tasks").select("id,task,seq,exec_status,doc_status,due_date"),
-        supabase.from("programs").select("id,name,plan_task_id,exec_status"),
+        (supabase as any).from("programs").select("id,name,plan_task_id,exec_status"),
         supabase.from("evidences").select("id,linked_ref,linked_type"),
       ]);
       const failedSources = [
