@@ -38,52 +38,70 @@ function useDashboard() {
   return useQuery({
     queryKey: ["dashboard-live-v2"],
     queryFn: async () => {
-      const [
-        students,
-        cases,
-        programs,
-        calendar,
-        planTasks,
-        interviews,
-        evidences,
-        publicRequests,
-        feedback,
-        posts,
-      ] = await Promise.all([
-        supabase.from("students").select("id"),
-        supabase
+      const withTimeout = async <T,>(name: string, promise: PromiseLike<T>): Promise<T> => {
+        return await Promise.race([
+          Promise.resolve(promise),
+          new Promise<T>((_, reject) =>
+            window.setTimeout(
+              () => reject(new Error(`انتهت مهلة تحميل ${name}`)),
+              9000,
+            ),
+          ),
+        ]);
+      };
+
+      const requests = {
+        students: supabase.from("students").select("id"),
+        cases: supabase
           .from("counseling_cases")
           .select("id,case_status,followup_at,student_name,student_id,student_no,next_action"),
-        supabase.from("programs").select("id,name,exec_status"),
-        supabase.from("calendar_events").select("id,edate,etime,title,etype,status"),
-        supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status"),
-        supabase.from("interviews").select("id,student_name,topic,followup_at"),
-        supabase.from("evidences").select("id,linked_ref,linked_type"),
-        supabase.from("public_requests").select("id,status,kind,created_at"),
-        supabase
+        programs: supabase.from("programs").select("id,name,exec_status"),
+        calendar: supabase.from("calendar_events").select("id,edate,etime,title,etype,status"),
+        planTasks: supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status"),
+        interviews: supabase.from("interviews").select("id,student_name,topic,followup_at"),
+        evidences: supabase.from("evidences").select("id,linked_ref,linked_type"),
+        publicRequests: supabase.from("public_requests").select("id,status,kind,created_at"),
+        feedback: supabase
           .from("feedback_messages")
           .select("id,status,category,created_at")
           .in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"]),
-        supabase.from("posts").select("id,is_public,kind"),
-      ]);
+        posts: supabase.from("posts").select("id,is_public,kind"),
+      } as const;
 
-      const sources = {
-        students,
-        cases,
-        programs,
-        calendar,
-        planTasks,
-        interviews,
-        evidences,
-        publicRequests,
-        feedback,
-        posts,
-      };
+      const entries = await Promise.all(
+        Object.entries(requests).map(async ([name, request]) => {
+          try {
+            return [name, await withTimeout(name, request)] as const;
+          } catch (error) {
+            console.warn(`[dashboard] تعذّر تحميل ${name}:`, error);
+            return [name, { data: [], error: error instanceof Error ? error : new Error(String(error)) }] as const;
+          }
+        }),
+      );
+
+      const sources = Object.fromEntries(entries) as Record<
+        keyof typeof requests,
+        { data: any[] | null; error: { message?: string } | Error | null }
+      >;
+
+      const students = sources.students;
+      const cases = sources.cases;
+      const programs = sources.programs;
+      const calendar = sources.calendar;
+      const planTasks = sources.planTasks;
+      const interviews = sources.interviews;
+      const evidences = sources.evidences;
+      const publicRequests = sources.publicRequests;
+      const feedback = sources.feedback;
+      const posts = sources.posts;
 
       const failedSources = Object.entries(sources)
         .filter(([, result]) => Boolean(result.error))
         .map(([name, result]) => {
-          console.warn(`[dashboard] تعذّر تحميل ${name}:`, result.error?.message);
+          console.warn(
+            `[dashboard] تعذّر تحميل ${name}:`,
+            result.error instanceof Error ? result.error.message : result.error?.message,
+          );
           return name;
         });
 
