@@ -152,10 +152,18 @@ function RootComponent() {
     // have not yet been added to the hosting environment.
     if (!isSupabaseConfigured()) return;
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event === "SIGNED_OUT") queryClient.clear();
-      else queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") {
+        queryClient.clear();
+        void router.invalidate();
+        return;
+      }
+
+      if (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
+        // The auth page performs the post-login navigation itself. Invalidating
+        // the entire router here can race that transition and throw the app into
+        // the root error boundary, especially on mobile browsers.
+        void queryClient.invalidateQueries();
+      }
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
