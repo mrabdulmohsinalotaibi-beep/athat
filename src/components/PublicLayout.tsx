@@ -1,9 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, FileText, Home, LogIn, Menu, MessageCircle, X } from "lucide-react";
+import { BookOpen, FileText, Home, LogIn, MessageCircle } from "lucide-react";
 
 import { Copyright } from "@/components/Copyright";
-import { Button } from "@/components/ui/button";
 import { useGuidanceProfile } from "@/lib/guidance";
 import { cn } from "@/lib/utils";
 import { useGlobalAppSettings, type FeatureKey } from "@/lib/admin";
@@ -28,7 +27,6 @@ export function PublicLayout({
   subtitle?: string;
   schoolSlug?: string | undefined;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const { data: profile } = useGuidanceProfile(schoolSlug);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { data: globalSettings } = useGlobalAppSettings();
@@ -90,52 +88,8 @@ export function PublicLayout({
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"}
-              onClick={() => setMenuOpen((value) => !value)}
-            >
-              {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-            </Button>
-          </div>
         </div>
 
-        {menuOpen && (
-          <nav
-            className="border-t border-border/60 bg-background px-4 py-3 lg:hidden"
-            aria-label="قائمة الجوال"
-          >
-            <ul className="space-y-1 text-sm font-semibold">
-              {visibleNav.map((item) => (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                    "block rounded-md px-3 py-2 hover:bg-muted",
-                      pathname === item.to && "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link
-                  to="/auth"
-                  search={{ next: "/dashboard" }}
-                  onClick={() => setMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-primary hover:bg-muted"
-                >
-                  دخول الموجه الطلابي
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        )}
       </header>}
 
       {title && (
