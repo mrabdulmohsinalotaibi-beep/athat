@@ -76,7 +76,9 @@ export function StudentsImportDialog({
   async function runImport() {
     setBusy(true);
     try {
-      const { data: existing, error: existingError } = await supabase.from("students").select("national_id");
+      const { data: existing, error: existingError } = await supabase
+        .from("students")
+        .select("national_id");
       if (existingError) throw existingError;
       const known = new Set(
         (existing ?? [])

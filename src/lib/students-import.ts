@@ -13,7 +13,15 @@ export const STUDENT_IMPORT_FIELDS: StudentImportField[] = [
     name: "full_name",
     label: "اسم الطالب",
     required: true,
-    aliases: ["اسم الطالب", "الاسم", "اسم الطالبة", "اسم الطالب رباعي", "الاسم الرباعي", "اسم الطالب الرباعي", "الطالب"],
+    aliases: [
+      "اسم الطالب",
+      "الاسم",
+      "اسم الطالبة",
+      "اسم الطالب رباعي",
+      "الاسم الرباعي",
+      "اسم الطالب الرباعي",
+      "الطالب",
+    ],
   },
   {
     name: "national_id",
@@ -39,9 +47,14 @@ export const STUDENT_IMPORT_FIELDS: StudentImportField[] = [
     aliases: ["الجنسية", "جنسية الطالب", "الجنسيه"],
   },
   {
+    name: "stage",
+    label: "المرحلة الدراسية",
+    aliases: ["المرحلة", "المرحله", "المرحلة الدراسية", "المرحله الدراسيه", "مرحلة الطالب"],
+  },
+  {
     name: "grade",
     label: "الصف الدراسي",
-    aliases: ["الصف", "الصف الدراسي", "الصف/المرحلة", "المستوى", "الصف الحالي"],
+    aliases: ["الصف", "الصف الدراسي", "الصف/المرحلة", "المستوى", "الصف الحالي", "صف الطالب"],
   },
   {
     name: "classroom",
@@ -93,7 +106,10 @@ export function autoMap(headers: string[]): Record<string, string> {
       headers.find(
         (h) =>
           !used.has(h) &&
-          candidates.some((c) => c.length > 2 && (normalizeHeader(h).includes(c) || c.includes(normalizeHeader(h)))),
+          candidates.some(
+            (c) =>
+              c.length > 2 && (normalizeHeader(h).includes(c) || c.includes(normalizeHeader(h))),
+          ),
       );
     if (partial) {
       map[field.name] = partial;
@@ -119,6 +135,45 @@ export function cleanId(value: unknown): string {
   return String(value ?? "")
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
     .replace(/\D/g, "");
+}
+
+/** قراءة صفوف CSV/TSV مع احترام علامات الاقتباس والفواصل داخل النص. */
+export function parseDelimitedRows(value: string): Record<string, string>[] {
+  const lines = value
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .filter((line) => line.trim());
+  if (!lines.length) return [];
+
+  function parseLine(line: string): string[] {
+    const cells: string[] = [];
+    let cell = "";
+    let quoted = false;
+    for (let index = 0; index < line.length; index += 1) {
+      const character = line[index];
+      if (character === '"') {
+        if (quoted && line[index + 1] === '"') {
+          cell += '"';
+          index += 1;
+        } else {
+          quoted = !quoted;
+        }
+      } else if (!quoted && (character === "," || character === "\t")) {
+        cells.push(cell.trim());
+        cell = "";
+      } else {
+        cell += character;
+      }
+    }
+    cells.push(cell.trim());
+    return cells;
+  }
+
+  const headers = parseLine(lines[0]).map((header) => header.replace(/^\uFEFF/, ""));
+  return lines.slice(1).map((line) => {
+    const values = parseLine(line);
+    return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
+  });
 }
 
 export function downloadStudentsTemplate() {

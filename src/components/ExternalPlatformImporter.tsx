@@ -16,7 +16,7 @@ import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { autoMap, cleanId, cleanPhone } from "@/lib/students-import";
+import { autoMap, cleanId, cleanPhone, parseDelimitedRows } from "@/lib/students-import";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -59,8 +59,7 @@ function rowsFromMatrix(matrix: unknown[][]): Row[] {
 }
 
 function rowsFromText(value: string): Row[] {
-  const lines = value.trim().split(/\r?\n/).filter(Boolean);
-  return rowsFromMatrix(lines.map((line) => line.split(/\t|,/)));
+  return parseDelimitedRows(value);
 }
 
 function prepareRows(rows: Row[]) {
@@ -91,9 +90,7 @@ function prepareRows(rows: Row[]) {
     };
   });
 
-  const invalid = records.filter(
-    (record) => !record.full_name || record.national_id.length !== 10,
-  );
+  const invalid = records.filter((record) => !record.full_name || record.national_id.length !== 10);
   const seen = new Set<string>();
   const duplicateIds = new Set<string>();
   records.forEach((record) => {
@@ -140,7 +137,9 @@ export function ExternalPlatformImporter() {
       );
       setRows(next);
       setFileName(file.name);
-      setMessage(`تمت قراءة ${next.length} صف من ${SOURCES[source].label}. راجع الجودة والمطابقة قبل الحفظ.`);
+      setMessage(
+        `تمت قراءة ${next.length} صف من ${SOURCES[source].label}. راجع الجودة والمطابقة قبل الحفظ.`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر قراءة الملف.");
     }
@@ -173,9 +172,7 @@ export function ExternalPlatformImporter() {
         .in("national_id", nationalIds);
       if (existingError) throw existingError;
 
-      const existingIds = new Set(
-        (existing ?? []).map((item) => String(item.national_id ?? "")),
-      );
+      const existingIds = new Set((existing ?? []).map((item) => String(item.national_id ?? "")));
       const newRecords = prepared.records
         .filter((record) => !existingIds.has(record.national_id))
         .map(({ rowNumber: _rowNumber, ...record }) => record);
