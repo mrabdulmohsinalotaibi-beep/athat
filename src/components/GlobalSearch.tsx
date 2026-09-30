@@ -98,11 +98,11 @@ export function GlobalSearch() {
               ) : (
                 <div className="space-y-4">
                   {data?.students.length ? <ResultGroup title="الطلاب" icon={Users} items={data.students.map((item: any) => ({ title: item.full_name || "طالب", detail: `${item.student_no || "بدون رقم"} · ${item.grade || ""}`, to: `/students?student=${item.id}` }))} onSelect={go} /> : null}
-                  {data?.cases.length ? <ResultGroup title="الحالات الإرشادية" icon={HeartHandshake} items={data.cases.map((item: any) => ({ title: item.student_name || "حالة إرشادية", detail: `${item.domain || "مجال غير محدد"} · ${item.case_status || "مفتوحة"}`, to: "/cases" }))} onSelect={go} /> : null}
+                  {data?.cases.length ? <ResultGroup title="الحالات الطلابية" icon={HeartHandshake} items={data.cases.map((item: any) => ({ title: item.student_name || "حالة طلابية", detail: `${item.domain || "مجال غير محدد"} · ${item.case_status || "مفتوحة"}`, to: "/cases" }))} onSelect={go} /> : null}
                   {data?.programs.length ? <ResultGroup title="البرامج والأنشطة" icon={FileText} items={data.programs.map((item: any) => ({ title: item.name || "برنامج", detail: `${item.domain || ""} · ${item.exec_status || ""}`, to: "/programs" }))} onSelect={go} /> : null}
                   {data?.tasks.length ? <ResultGroup title="مهام الخطة" icon={ClipboardList} items={data.tasks.map((item: any) => ({ title: item.task || "مهمة", detail: `${item.domain || ""} · ${item.exec_status || ""}`, to: "/plan" }))} onSelect={go} /> : null}
                   {data?.evidences.length ? <ResultGroup title="الشواهد والوثائق" icon={FolderCheck} items={data.evidences.map((item: any) => ({ title: item.name || "شاهد", detail: `${item.etype || item.linked_type || "وثيقة"} · ${item.doc_status || item.linked_ref || ""}`, to: "/evidences" }))} onSelect={go} /> : null}
-                  {data?.interviews.length ? <ResultGroup title="الجلسات" icon={MessageSquareText} items={data.interviews.map((item: any) => ({ title: item.student_name || "جلسة", detail: `${item.topic || "جلسة إرشادية"} · ${item.idate || ""}`, to: "/interviews" }))} onSelect={go} /> : null}
+                  {data?.interviews.length ? <ResultGroup title="الجلسات" icon={MessageSquareText} items={data.interviews.map((item: any) => ({ title: item.student_name || "جلسة", detail: `${item.topic || "مقابلة طلابية"} · ${item.idate || ""}`, to: "/interviews" }))} onSelect={go} /> : null}
                   {data?.referrals.length ? <ResultGroup title="الإحالات" icon={Send} items={data.referrals.map((item: any) => ({ title: item.student_name || "إحالة", detail: `${item.reason || "إحالة طالب"} · ${item.status || ""}`, to: "/referrals" }))} onSelect={go} /> : null}
                 </div>
               )}
