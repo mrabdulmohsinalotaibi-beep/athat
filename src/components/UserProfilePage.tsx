@@ -755,7 +755,7 @@ export function UserProfilePage() {
                   defaultValue={profileValue(profile, user, "interests")}
                   rows={3}
                   maxLength={500}
-                  placeholder="مثال: التوجيه الطلابي، القياس والتقويم، الإرشاد النفسي، تحليل البيانات..."
+                  placeholder="مثال: التوجيه الطلابي، القياس والتقويم، الدعم النفسي، تحليل البيانات..."
                 />
               </div>
 
