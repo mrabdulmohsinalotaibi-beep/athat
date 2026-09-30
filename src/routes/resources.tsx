@@ -13,12 +13,12 @@ import { GUIDANCE_LEAFLETS, GUIDANCE_LINKS } from "@/lib/guidance";
 export const Route = createFileRoute("/resources")({
   head: () => ({
     meta: [
-      { title: "المكتبة الإرشادية | الذات" },
+      { title: "مكتبة التوجيه الطلابي | الذات" },
       {
         name: "description",
-        content: "مطويات ونشرات إرشادية وروابط مفيدة للطلاب وأولياء الأمور والمعلمين.",
+        content: "مطويات ونشرات توعوية وروابط مفيدة للطلاب وأولياء الأمور والمعلمين.",
       },
-      { property: "og:title", content: "المكتبة الإرشادية | الذات" },
+      { property: "og:title", content: "مكتبة التوجيه الطلابي | الذات" },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/resources")({
 function ResourcesPage() {
   return (
     <PublicLayout
-      title="المكتبة الإرشادية"
+      title="مكتبة التوجيه الطلابي"
       subtitle="مطويات ونشرات مختصرة يمكن قراءتها مباشرة، إضافة إلى روابط الجهات والمنصات الرسمية."
     >
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-8">
