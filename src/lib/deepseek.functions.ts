@@ -55,6 +55,13 @@ function cleanSuggestions(value: unknown, allowedNames: Set<string>) {
   return result;
 }
 
+export const checkSmartFillReady = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => ({
+    ready: Boolean(process.env["DEEPSEEK_API_KEY"]?.trim()),
+    model: process.env["DEEPSEEK_MODEL"] || "deepseek-chat",
+  }));
+
 export const generateSmartFill = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(inputSchema)
