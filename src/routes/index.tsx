@@ -32,9 +32,9 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20260929f" },
-      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20260929f" },
-      { rel: "apple-touch-icon", href: "/brand-icon.svg?v=20260929f" },
+      { rel: "canonical", href: "https://athat.app/" },
+      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20260930b" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20260930b" },
     ],
   }),
   component: Landing,

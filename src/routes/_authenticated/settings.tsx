@@ -133,8 +133,26 @@ function SettingsPage() {
 
       if (!userId) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا ثم حاول الحفظ");
 
+      const preserveText = (key: keyof NonNullable<typeof school>) => {
+        const entered = String(values[String(key)] ?? "").trim();
+        const existing = String(school?.[key] ?? "").trim();
+        return entered || existing || null;
+      };
+
       const payload = {
         ...values,
+        school_name: preserveText("school_name"),
+        education_dept: preserveText("education_dept"),
+        principal_name: preserveText("principal_name"),
+        counselor_name: preserveText("counselor_name"),
+        academic_year: preserveText("academic_year"),
+        semester: preserveText("semester"),
+        contact_phone: preserveText("contact_phone"),
+        contact_email: preserveText("contact_email"),
+        office_hours: preserveText("office_hours"),
+        vision: preserveText("vision"),
+        mission: preserveText("mission"),
+        announcement: preserveText("announcement"),
         show_counselor_on_documents: values["show_counselor_on_documents"] !== "false",
         show_principal_on_documents: values["show_principal_on_documents"] !== "false",
         counselor_signature: counselorSignature !== null ? (counselorSignature || null) : (school?.counselor_signature ?? null),

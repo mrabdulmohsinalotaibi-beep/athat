@@ -101,20 +101,13 @@ function AuthPage() {
     setBusy("email");
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
       if (error) throw error;
-      if (!data.session?.user) {
-        throw new Error("تم قبول بيانات الدخول لكن لم تُنشأ جلسة مستخدم. أعد المحاولة.");
-      }
-
       toast.success("تم تسجيل الدخول بنجاح");
-      // Full navigation avoids TanStack route-transition races on mobile and
-      // guarantees every protected query starts with the persisted session.
-      window.location.replace(next || "/dashboard");
-      return;
+      navigate({ to: next || "/dashboard" });
     } catch (err) {
       toast.error(arabicAuthError(err));
     } finally {
@@ -149,7 +142,7 @@ function AuthPage() {
 
       if (data.session) {
         toast.success("تم إنشاء الحساب وتسجيل الدخول بنجاح");
-        await navigate({ to: next || "/dashboard" });
+        navigate({ to: next || "/dashboard" });
         return;
       }
 
@@ -196,7 +189,7 @@ function AuthPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast.success("تم تحديث كلمة المرور بنجاح");
-      await navigate({ to: next || "/dashboard" });
+      navigate({ to: next || "/dashboard" });
     } catch (err) {
       toast.error(arabicAuthError(err));
     } finally {

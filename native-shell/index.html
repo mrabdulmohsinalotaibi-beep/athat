@@ -44,7 +44,7 @@
     <iframe
       id="app-frame"
       title="تطبيق الذات"
-      src="https://athat.lovable.app/?native=android"
+      src="https://athat.app/?native=android"
       allow="camera; microphone; clipboard-read; clipboard-write"
       referrerpolicy="strict-origin-when-cross-origin"
     ></iframe>
@@ -80,7 +80,7 @@
           spinner.style.display = "block";
           status.textContent = "جارٍ إعادة تحميل التطبيق…";
           frame.classList.remove("ready");
-          frame.src = "https://athat.lovable.app/?native=android&retry=" + Date.now();
+          frame.src = "https://athat.app/?native=android&retry=" + Date.now();
           armTimeout();
         });
 

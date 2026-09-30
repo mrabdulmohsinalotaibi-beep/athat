@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function PostCard({ post, featured = false }: { post: PublicPost; featured?: boolean }) {
   function shareOnWhatsApp() {
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://athat.lovable.app";
-    const url = origin + "/posts/" + encodeURIComponent(post.slug);
+    const url = "https://athat.app/posts/" + encodeURIComponent(post.slug);
     const message = post.title + "\\n\\n" + (post.excerpt ? post.excerpt + "\\n\\n" : "") + url + "\\n\\nمن منصة الذات";
     window.location.assign("https://api.whatsapp.com/send?text=" + encodeURIComponent(message));
   }

@@ -1,0 +1,122 @@
+name: Publish Android to Google Play
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Google Play track
+        required: true
+        default: internal
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install Capacitor build tools
+        run: npm install --no-save @capacitor/core@7.4.3 @capacitor/android@7.4.3 @capacitor/cli@7.4.3
+
+      - name: Prepare native shell
+        run: cp public/brand-icon.svg native-shell/brand-icon.svg
+
+      - name: Generate Android project
+        run: |
+          rm -rf android
+          npx cap add android
+          npx cap sync android
+
+      - name: Restore release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || (echo "Missing ANDROID_KEYSTORE_BASE64" && exit 1)
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/athat-release.jks
+
+      - name: Configure release signing
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cat >> android/gradle.properties <<EOF
+          ATHAT_STORE_FILE=athat-release.jks
+          ATHAT_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
+          ATHAT_KEY_ALIAS=$ANDROID_KEY_ALIAS
+          ATHAT_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
+          EOF
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/build.gradle")
+          s=p.read_text()
+          old='''android {
+    namespace "app.athat.android"'''
+          if old not in s:
+              raise SystemExit("Expected Capacitor Android namespace block not found")
+          s=s.replace(old, '''android {
+    signingConfigs {
+        release {
+            storeFile file(ATHAT_STORE_FILE)
+            storePassword ATHAT_STORE_PASSWORD
+            keyAlias ATHAT_KEY_ALIAS
+            keyPassword ATHAT_KEY_PASSWORD
+        }
+    }
+    namespace "app.athat.android"''', 1)
+          needle='''    buildTypes {
+        release {'''
+          if needle not in s:
+              raise SystemExit("Expected release build type not found")
+          s=s.replace(needle, '''    buildTypes {
+        release {
+            signingConfig signingConfigs.release''', 1)
+          p.write_text(s)
+          PY
+
+      - name: Build release AAB
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATHAT-Google-Play-AAB
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Publish to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: app.athat.android
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: ${{ inputs.track }}
+          status: completed

@@ -68,21 +68,11 @@ export const Route = createFileRoute("/_authenticated")({
     let invalidSession = false;
 
     try {
-      const sessionRequest = supabase.auth.getSession();
-      const timeout = new Promise<never>((_, reject) =>
-        window.setTimeout(() => reject(new Error("session check timeout")), 8000),
-      );
-      const { data, error } = await Promise.race([sessionRequest, timeout]);
+      const { data, error } = await supabase.auth.getSession();
       sessionUser = data.session?.user ?? null;
       invalidSession = Boolean(error && isInvalidSessionError(error));
     } catch (error) {
       invalidSession = isInvalidSessionError(error);
-      if (!invalidSession) {
-        // A temporary browser/network failure should not throw the entire
-        // authenticated route into the root error boundary.
-        const local = await supabase.auth.getSession().catch(() => ({ data: { session: null } } as any));
-        sessionUser = local.data.session?.user ?? null;
-      }
     }
 
     if (invalidSession) {

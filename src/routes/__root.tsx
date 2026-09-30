@@ -107,8 +107,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "منصة الذات للتوجيه الطلابي والدعم النفسي والتربوي وإدارة الأعمال الإرشادية إلكترونياً.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/brand-logo.svg?v=20260929f" },
-      { name: "twitter:image", content: "/brand-logo.svg?v=20260929f" },
+      { property: "og:image", content: "/icon-512x512.png?v=20260930b" },
+      { name: "twitter:image", content: "/icon-512x512.png?v=20260930b" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#3C3C3C" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -117,9 +117,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/brand-icon.svg?v=20260929f", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.png?v=20260930b", type: "image/svg+xml" },
       { rel: "manifest", href: "/manifest.json" },
-      { rel: "apple-touch-icon", href: "/brand-icon.svg?v=20260929f" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=20260930b" },
     ],
   }),
   shellComponent: RootShell,
@@ -151,15 +151,9 @@ function RootComponent() {
     // have not yet been added to the hosting environment.
     if (!isSupabaseConfigured()) return;
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        queryClient.clear();
-        void router.invalidate();
-        return;
-      }
-
-      if (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
-        void queryClient.invalidateQueries();
-      }
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);

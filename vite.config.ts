@@ -1,8 +1,8 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// Public browser connection identifiers. These are safe to bundle in the client;
-// row-level security remains enforced by Supabase. Hosting environments can still
-// override them with VITE_SUPABASE_* variables when configured.
+// These are public browser connection identifiers, not privileged credentials.
+// Keeping fallbacks here lets Git-based hosts build the app even when their
+// environment-variable panel has not been configured yet.
 const publicBackend = {
   url: "https://fxgjhynweykuuizrnzah.supabase.co",
   projectId: "fxgjhynweykuuizrnzah",
@@ -11,6 +11,13 @@ const publicBackend = {
 
 export default defineConfig({
   vite: {
+    server: {
+      host: "0.0.0.0",
+      port: 3000,
+      // The preview hostname changes per sandbox/session; the app is still bound
+      // to 0.0.0.0, so allow the active preview host instead of a stale hostname.
+      allowedHosts: true,
+    },
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(publicBackend.url),
       "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(publicBackend.projectId),
@@ -24,4 +31,7 @@ export default defineConfig({
     srcDirectory: "src",
     server: { entry: "server" },
   },
+  // External Cloudflare Pages builds can still select their own preset through
+  // NITRO_PRESET. Lovable builds pin the deployable module layout automatically.
+  nitro: true,
 });

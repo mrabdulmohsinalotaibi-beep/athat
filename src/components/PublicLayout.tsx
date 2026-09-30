@@ -6,6 +6,7 @@ import { Copyright } from "@/components/Copyright";
 import { Button } from "@/components/ui/button";
 import { useGuidanceProfile } from "@/lib/guidance";
 import { cn } from "@/lib/utils";
+import { useGlobalAppSettings, type FeatureKey } from "@/lib/admin";
 
 const NAV = [
   { to: "/", label: "الرئيسية" },
@@ -30,6 +31,26 @@ export function PublicLayout({
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: profile } = useGuidanceProfile(schoolSlug);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { data: globalSettings } = useGlobalAppSettings();
+
+  const publicFeatureByPath: Record<string, FeatureKey> = {
+    "/": "public_home",
+    "/about": "public_about",
+    "/services": "public_services",
+    "/resources": "public_resources",
+    "/forms": "public_forms",
+    "/contact": "public_contact",
+  };
+
+  const isPublicRouteVisible = (route: string) => {
+    const key = publicFeatureByPath[route];
+    return !key || globalSettings?.feature_flags?.[key] !== false;
+  };
+
+  const visibleNav = NAV.filter((item) => isPublicRouteVisible(item.to));
+  const currentPublicFeature = publicFeatureByPath[pathname];
+  const currentPublicHidden =
+    currentPublicFeature && globalSettings?.feature_flags?.[currentPublicFeature] === false;
 
   return (
     <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
@@ -55,7 +76,7 @@ export function PublicLayout({
             className="hidden items-center gap-5 text-sm font-semibold text-[#E8E0D4] lg:flex"
             aria-label="التنقل الرئيسي"
           >
-            {NAV.map((item) => (
+            {visibleNav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -70,22 +91,6 @@ export function PublicLayout({
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button
-              asChild
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 font-semibold sm:w-auto sm:px-3"
-            >
-              <Link
-                to="/auth"
-                search={{ next: "/dashboard" }}
-                aria-label="دخول الموجه الطلابي"
-                title="دخول الموجه الطلابي"
-              >
-                <LogIn className="size-4 shrink-0" aria-hidden="true" />
-                <span className="hidden sm:inline">دخول الموجه الطلابي</span>
-              </Link>
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -104,7 +109,7 @@ export function PublicLayout({
             aria-label="قائمة الجوال"
           >
             <ul className="space-y-1 text-sm font-semibold">
-              {NAV.map((item) => (
+              {visibleNav.map((item) => (
                 <li key={item.to}>
                   <Link
                     to={item.to}
@@ -146,7 +151,29 @@ export function PublicLayout({
         </section>
       )}
 
-      <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+      <main className="flex-1 pb-20 lg:pb-0">
+        {globalSettings?.maintenance_mode ? (
+          <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-8">
+            <div className="rounded-3xl border border-amber-500/20 bg-card p-8 shadow-sm">
+              <h1 className="text-2xl font-black">المنصة تحت الصيانة</h1>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                نعمل حاليًا على تحديث منصة الذات. يرجى المحاولة لاحقًا.
+              </p>
+            </div>
+          </div>
+        ) : currentPublicHidden ? (
+          <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-8">
+            <div className="rounded-3xl border bg-card p-8 shadow-sm">
+              <h1 className="text-2xl font-black">الصفحة غير متاحة حاليًا</h1>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                تم إخفاء هذه الصفحة مؤقتًا من إدارة المنصة.
+              </p>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
+      </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
         {[
@@ -155,7 +182,7 @@ export function PublicLayout({
           { to: "/forms" as const, label: "الاستمارات", icon: FileText },
           { to: "/contact" as const, label: "التواصل", icon: MessageCircle },
           { to: "/auth" as const, label: "حسابي", icon: LogIn },
-        ].map(({ to, label, icon: Icon }) => (
+        ].filter((item) => item.to === "/auth" || isPublicRouteVisible(item.to)).map(({ to, label, icon: Icon }) => (
           <Link key={to} to={to} {...(to === "/auth" ? { search: { next: "/dashboard" } } : {})} className={cn("flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground", pathname === to && "text-primary")}>
             <Icon className="size-5" aria-hidden="true" />
             <span>{label}</span>
@@ -175,7 +202,7 @@ export function PublicLayout({
           <div>
             <p className="text-sm font-bold">روابط سريعة</p>
             <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-              {NAV.slice(1).map((item) => (
+              {visibleNav.slice(1).map((item) => (
                 <li key={item.to}>
                   <Link to={item.to} className="transition-colors hover:text-primary">
                     {item.label}

@@ -47,17 +47,18 @@ export function useSchool() {
         .from("school_settings")
         .select("*")
         .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) {
-        console.warn("تعذّر جلب إعدادات المدرسة، سيتم فتح الصفحة بدون الترويسة مؤقتًا:", error.message);
-        return null;
+        console.error("خطأ في جلب إعدادات المدرسة:", error.message);
+        throw error;
       }
 
       return data as SchoolSettings | null;
     },
     staleTime: 0,
-    retry: 1,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });

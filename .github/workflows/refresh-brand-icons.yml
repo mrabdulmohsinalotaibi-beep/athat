@@ -1,0 +1,48 @@
+name: Refresh ATHAT Brand Icons
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "public/brand-icon.svg"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: athat-brand-icons
+  cancel-in-progress: true
+
+jobs:
+  icons:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install SVG tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq librsvg2-bin imagemagick
+
+      - name: Generate browser and install icons
+        run: |
+          rsvg-convert -w 180 -h 180 public/brand-icon.svg > public/apple-touch-icon.png
+          rsvg-convert -w 192 -h 192 public/brand-icon.svg > public/icon-192x192.png
+          rsvg-convert -w 512 -h 512 public/brand-icon.svg > public/icon-512x512.png
+          rsvg-convert -w 64 -h 64 public/brand-icon.svg > public/favicon.png
+          convert public/favicon.png -define icon:auto-resize=64,48,32,16 public/favicon.ico
+
+      - name: Commit generated icons
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/apple-touch-icon.png public/icon-192x192.png public/icon-512x512.png public/favicon.png public/favicon.ico
+          if git diff --cached --quiet; then
+            echo "Brand icons are already current."
+            exit 0
+          fi
+          git commit -m "Refresh browser and PWA brand icons"
+          git push
