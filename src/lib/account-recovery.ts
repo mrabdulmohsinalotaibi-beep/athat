@@ -49,8 +49,11 @@ export function useKnownAccountRecovery() {
 
   useEffect(() => {
     let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (sessionStorage.getItem("athat-record-recovery-ran") === "1") return;
+      sessionStorage.setItem("athat-record-recovery-ran", "1");
 
-    void (async () => {
+      void (async () => {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
       if (!user?.email || cancelled) return;
@@ -182,10 +185,12 @@ export function useKnownAccountRecovery() {
         queryClient.invalidateQueries({ queryKey: ["posts"] }),
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
-    })();
+      })();
+    }, 1800);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [queryClient]);
 }
