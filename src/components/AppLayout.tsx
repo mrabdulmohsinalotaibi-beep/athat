@@ -38,14 +38,14 @@ function AlertLink({
   close: () => void;
 }) {
   return (
-    <Link
-      to={to}
+    <a
+      href={to}
       onClick={close}
       className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2 transition hover:border-primary/35 hover:bg-primary/[0.04]"
     >
       <span className="font-bold">{label}</span>
       <span className="min-w-6 rounded-full bg-primary/10 px-1.5 py-0.5 text-center text-[10px] font-black text-primary">{count}</span>
-    </Link>
+    </a>
   );
 }
 
