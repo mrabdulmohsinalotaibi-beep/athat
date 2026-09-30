@@ -32,7 +32,7 @@ const bottomNavigation = [
   { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases"] },
   { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/evidences"] },
   { to: "/reports", label: "التقارير", icon: FileText, activeRoutes: ["/reports"] },
-  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/school-team", "/school-inbox", "/integrations", "/trash", "/health", "/profile", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/messages", "/weekly-poster", "/posts"] },
+  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/school-team", "/school-tasks", "/school-inbox", "/integrations", "/trash", "/health", "/profile", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/messages", "/weekly-poster", "/posts"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
