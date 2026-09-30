@@ -158,6 +158,15 @@ export function StudentProfileDialog({
     [sections],
   );
   const latestActivity = timeline[0];
+  const priorityCase = overdueFollowups[0] ?? activeCases[0] ?? null;
+  const nextStudentAction = priorityCase
+    ? String(
+        priorityCase["next_action"] ??
+          priorityCase["recommendations"] ??
+          priorityCase["summary"] ??
+          "مراجعة الحالة وتحديد الإجراء التالي",
+      )
+    : "";
 
   async function deleteRow(sectionKey: string, table: string, id: string) {
     if (!confirm("هل تريد حذف هذا السجل من ملف الطالب؟")) return;
@@ -250,6 +259,29 @@ export function StudentProfileDialog({
               )}
             </div>
           </div>
+
+          {!isLoading && nextStudentAction && (
+            <div data-pdf-exclude="true" className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-primary">
+                    {overdueFollowups.length ? "الإجراء التالي · متابعة مستحقة" : "الإجراء التالي"}
+                  </p>
+                  <p className="mt-1 text-sm font-black">{nextStudentAction}</p>
+                  {priorityCase?.["followup_at"] && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      موعد المتابعة: {displayRecordValue(priorityCase["followup_at"])}
+                    </p>
+                  )}
+                </div>
+                <Button asChild size="sm">
+                  <a href={`/cases?student=${encodeURIComponent(studentId)}`} onClick={() => onOpenChange(false)}>
+                    فتح الحالة
+                  </a>
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div data-pdf-exclude="true" className="rounded-xl border border-primary/15 bg-primary/5 p-3">
             <p className="mb-2 text-xs font-black text-primary">إجراء جديد للطالب</p>
