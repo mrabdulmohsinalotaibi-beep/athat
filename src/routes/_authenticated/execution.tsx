@@ -368,7 +368,7 @@ function ExecutionFlowPage() {
                           "هل تعتمد تنفيذ هذه المهمة؟ سيتم تغيير حالة التنفيذ إلى «مكتمل»، وسيبقى التوثيق «قيد المراجعة» حتى اعتماده بشكل مستقل.",
                         );
                         if (approved) {
-                          approveTask.mutate({ taskId: task.id, currentDocStatus: task.doc_status });
+                          approveTask.mutate({ taskId: task.id, currentDocStatus: task.doc_status ?? null });
                         }
                       }}
                     >
