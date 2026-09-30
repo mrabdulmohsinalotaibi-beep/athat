@@ -79,23 +79,34 @@ export default {
     // process.env, so bridge the relevant non-public bindings for each request.
     if (env && typeof env === "object") {
       const bindings = env as Record<string, unknown>;
+      const runtimeEnv: Record<string, string> = {};
       const processEnv = (globalThis as typeof globalThis & {
         process?: { env?: Record<string, string | undefined> };
       }).process?.env;
-      if (processEnv) {
-        for (const key of [
-          "DEEPSEEK_API_KEY",
-          "DEEPSEEK_MODEL",
-          "SUPABASE_URL",
-          "SUPABASE_PUBLISHABLE_KEY",
-          "SUPABASE_SERVICE_ROLE_KEY",
-          "LOVABLE_CRON_SECRET",
-          "LOVABLE_CRON_SECRET_PREVIOUS",
-        ]) {
-          const value = bindings[key];
-          if (typeof value === "string" && value) processEnv[key] = value;
-        }
+
+      for (const key of [
+        "DEEPSEEK_API_KEY",
+        "DEEPSEEK_MODEL",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "LOVABLE_CRON_SECRET",
+        "LOVABLE_CRON_SECRET_PREVIOUS",
+      ]) {
+        const value = bindings[key];
+        if (typeof value !== "string" || !value) continue;
+        runtimeEnv[key] = value;
+        if (processEnv) processEnv[key] = value;
       }
+
+      // Cloudflare Pages exposes secrets on the fetch env object. Keep a
+      // server-only runtime copy so server functions do not depend on Node's
+      // optional process global being available in the Worker runtime.
+      (
+        globalThis as typeof globalThis & {
+          __ATHAT_SERVER_ENV__?: Record<string, string>;
+        }
+      ).__ATHAT_SERVER_ENV__ = runtimeEnv;
     }
 
     try {
