@@ -182,7 +182,7 @@ function ReportsPage() {
               if (workflowProgramId) request = request.eq("id", workflowProgramId);
               else if (workflowPlanTaskId) request = request.eq("plan_task_id", workflowPlanTaskId);
             }
-            if (record.key === "evidences" && (workflowPlanTaskId || workflowProgramRefs.length)) {
+            if (record.key === "evidences" && (workflowPlanTaskId || workflowProgramId || workflowProgramRefs.length)) {
               const refs = [...new Set([
                 ...workflowProgramRefs,
                 ...(resolvedPlanTaskId ? [resolvedPlanTaskId] : []),
