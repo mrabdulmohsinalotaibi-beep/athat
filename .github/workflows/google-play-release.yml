@@ -73,29 +73,24 @@ jobs:
           EOF
           python - <<'PY'
           from pathlib import Path
-          p=Path("android/app/build.gradle")
-          s=p.read_text()
-          old='''android {
-    namespace "app.athat.android"'''
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+          old = 'android {\n    namespace "app.athat.android"'
           if old not in s:
               raise SystemExit("Expected Capacitor Android namespace block not found")
-          s=s.replace(old, '''android {
-    signingConfigs {
-        release {
-            storeFile file(ATHAT_STORE_FILE)
-            storePassword ATHAT_STORE_PASSWORD
-            keyAlias ATHAT_KEY_ALIAS
-            keyPassword ATHAT_KEY_PASSWORD
-        }
-    }
-    namespace "app.athat.android"''', 1)
-          needle='''    buildTypes {
-        release {'''
+          s = s.replace(
+              old,
+              'android {\n    signingConfigs {\n        release {\n            storeFile file(ATHAT_STORE_FILE)\n            storePassword ATHAT_STORE_PASSWORD\n            keyAlias ATHAT_KEY_ALIAS\n            keyPassword ATHAT_KEY_PASSWORD\n        }\n    }\n    namespace "app.athat.android"',
+              1,
+          )
+          needle = "    buildTypes {\n        release {"
           if needle not in s:
               raise SystemExit("Expected release build type not found")
-          s=s.replace(needle, '''    buildTypes {
-        release {
-            signingConfig signingConfigs.release''', 1)
+          s = s.replace(
+              needle,
+              "    buildTypes {\n        release {\n            signingConfig signingConfigs.release",
+              1,
+          )
           p.write_text(s)
           PY
 
