@@ -66,6 +66,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     icon: ClipboardList,
     items: [
       { to: "/plan", label: "الخطة التشغيلية", icon: ClipboardList },
+      { to: "/execution", label: "مسار التنفيذ", icon: ClipboardList },
       { to: "/programs", label: "البرامج والأنشطة", icon: Sparkles },
       { to: "/calendar", label: "التقويم والمواعيد", icon: CalendarDays },
       { to: "/evidences", label: "الشواهد والتوثيق", icon: FolderCheck },
