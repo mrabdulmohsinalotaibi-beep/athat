@@ -268,6 +268,10 @@ function Dashboard() {
   const openManagementTasks = visibleManagementTasks.filter(
     (item) => !["معتمدة", "ملغاة"].includes(String(item.status ?? "")),
   );
+  const dueManagementTasks = openManagementTasks.filter(
+    (item) => item.due_date && String(item.due_date).slice(0, 10) <= day,
+  );
+  const roleDueSchoolTasks = isManagementDashboard ? dueManagementTasks : dueSchoolTasks;
 
   const todayAgenda = (data?.calendar ?? [])
     .filter(
@@ -282,8 +286,8 @@ function Dashboard() {
     .sort((a, b) => String(a.followup_at ?? "").localeCompare(String(b.followup_at ?? "")))
     .slice(0, 4);
 
-  const schoolAttentionCount =
-    dueSchoolTasks.length +
+  const roleSchoolAttentionCount =
+    roleDueSchoolTasks.length +
     pendingTaskApprovals.length +
     unreadAdministrativeReports.length +
     pendingTeamMembers.length;
@@ -292,8 +296,8 @@ function Dashboard() {
     latePlan.length +
     programsMissingEvidence.length +
     openRequests +
-    schoolAttentionCount;
-  const attentionCount = isCounselorDashboard ? counselorAttentionCount : schoolAttentionCount;
+    roleSchoolAttentionCount;
+  const attentionCount = isCounselorDashboard ? counselorAttentionCount : roleSchoolAttentionCount;
 
   const counselorStats = [
     {
@@ -593,7 +597,7 @@ function Dashboard() {
   ];
 
   const schoolActions = [
-    ...dueSchoolTasks.slice(0, 3).map((item) => ({
+    ...roleDueSchoolTasks.slice(0, 3).map((item) => ({
       key: `school-role-task-${item.id}`,
       tone: "مهمة مدرسية مستحقة",
       title: item.title || "مهمة مدرسية",
