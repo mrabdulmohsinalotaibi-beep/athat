@@ -251,7 +251,7 @@ function SchoolTasksPage() {
                 <div><Label>الأولوية</Label><select className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={priority} onChange={(e) => setPriority(e.target.value as SchoolTask["priority"])}><option>منخفضة</option><option>متوسطة</option><option>عالية</option></select></div>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label>التكرار</Label><select className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={cadence} onChange={(e) => setCadence(e.target.value as SchoolTask["cadence"])}><option>مرة واحدة</option><option>يومية</option><option>أسبوعية</option><option>شهرية</option><option>سنوية</option></select></div>
+                <div><Label>التكرار</Label><select className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={cadence} onChange={(e) => setCadence(e.target.value as SchoolTask["cadence"])}><option>مرة واحدة</option><option>يومية</option><option>أسبوعية</option><option>شهرية</option><option>سنوية</option></select><p className="mt-1 text-[10px] text-muted-foreground">المهمة المتكررة تُنشئ الاستحقاق التالي تلقائيًا بعد إكمالها.</p></div>
                 <div><Label>الاستحقاق</Label><Input className="mt-2" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
               </div>
               <Button className="w-full" disabled={!assigneeId || !title.trim() || createTask.isPending} onClick={() => createTask.mutate()}>
