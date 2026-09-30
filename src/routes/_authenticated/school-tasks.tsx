@@ -317,7 +317,9 @@ function SchoolTasksPage() {
   const selectedAvailableTemplateKeys = selectedTemplateKeys.filter((key) => availableTemplateKeys.includes(key));
 
   const assignedToMe = tasks.filter((task) => task.assignee_member_id === memberId && task.status !== "ملغاة");
-  const assignedByMe = tasks.filter((task) => task.creator_member_id === memberId);
+  const assignedByMe = tasks.filter(
+    (task) => task.creator_member_id === memberId && task.assignee_member_id !== memberId,
+  );
   const due = assignedToMe.filter(
     (task) => !["مكتملة", "معتمدة", "ملغاة"].includes(task.status) && task.due_date && task.due_date <= today(),
   );
