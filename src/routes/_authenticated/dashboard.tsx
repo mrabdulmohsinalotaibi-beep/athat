@@ -202,7 +202,7 @@ function Dashboard() {
   const publishedPosts = (data?.posts ?? []).filter((item) => item.is_public).length;
 
   const schoolTasks = data?.schoolTasks ?? [];
-  const openSchoolTasks = schoolTasks.filter((item) => !["مكتملة", "ملغاة"].includes(String(item.status ?? "")));
+  const openSchoolTasks = schoolTasks.filter((item) => !["مكتملة", "معتمدة", "ملغاة"].includes(String(item.status ?? "")));
   const dueSchoolTasks = openSchoolTasks.filter(
     (item) => item.due_date && String(item.due_date).slice(0, 10) <= day,
   );
