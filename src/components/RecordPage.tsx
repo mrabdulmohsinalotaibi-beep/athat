@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser } from "@/lib/auth-user";
 import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 
@@ -83,6 +84,8 @@ export function RecordPage({
   rowAction?: { icon: ReactNode; title: string; onClick: (row: Row) => void };
 }) {
   const queryClient = useQueryClient();
+  const { data: authUser } = useAuthUser();
+  const userId = authUser?.id ?? "";
   const { data: school } = useSchool();
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
@@ -190,13 +193,15 @@ export function RecordPage({
   }
 
   const { data: rows = [], isLoading, isError: rowsError, error: rowsQueryError, refetch: refetchRows } = useQuery({
-    queryKey: [config.table],
+    queryKey: [config.table, userId],
+    enabled: Boolean(userId),
     retry: 1,
     staleTime: 15_000,
     queryFn: async () => {
       const request = supabase
         .from(config.table as never)
         .select("*")
+        .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       const timeout = new Promise<never>((_, reject) => {
@@ -263,11 +268,13 @@ export function RecordPage({
         });
       if (config.key !== "students" && values["student_id"])
         payload["student_id"] = values["student_id"];
+      payload["user_id"] = userId;
       if (values.id) {
         const { error } = await supabase
           .from(config.table as never)
           .update(payload as never)
-          .eq("id", values.id);
+          .eq("id", values.id)
+          .eq("user_id", userId);
         if (error) throw error;
       } else {
         const { error } = await supabase.from(config.table as never).insert(payload as never);
@@ -289,7 +296,8 @@ export function RecordPage({
       const { error } = await supabase
         .from(config.table as never)
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -325,7 +333,8 @@ export function RecordPage({
         toast.error("لم يتم العثور على بيانات مطابقة. تأكد من تطابق عناوين الأعمدة.");
         return;
       }
-      const { error } = await supabase.from(config.table as never).insert(payloads as never);
+      const scopedPayloads = payloads.map((payload) => ({ ...payload, user_id: userId }));
+      const { error } = await supabase.from(config.table as never).insert(scopedPayloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: [config.table] });
       toast.success(`تم استيراد ${payloads.length} سجلاً`);
