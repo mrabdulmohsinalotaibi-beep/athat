@@ -109,8 +109,30 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
       console.warn("[record-recovery] school identity lookup:", error);
     }
 
+    const countCurrentRecords = async () => {
+      const currentCounts: Record<string, number> = {};
+      for (const table of RECORD_TABLES) {
+        try {
+          const { count, error } = await (supabaseAdmin as any)
+            .from(table)
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId);
+          if (!error) currentCounts[table] = count ?? 0;
+        } catch {
+          // Optional/older tables may not exist.
+        }
+      }
+      return currentCounts;
+    };
+
     if (!candidateIds.size) {
-      return { recovered: true, total: 0, tables: {}, candidates: 0 };
+      return {
+        recovered: true,
+        total: 0,
+        tables: {},
+        candidates: 0,
+        currentCounts: await countCurrentRecords(),
+      };
     }
 
     const ids = [...candidateIds];
@@ -186,24 +208,11 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
       console.warn("[record-recovery] school_settings merge:", error);
     }
 
-    const currentCounts: Record<string, number> = {};
-    for (const table of RECORD_TABLES) {
-      try {
-        const { count, error } = await (supabaseAdmin as any)
-          .from(table)
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", userId);
-        if (!error) currentCounts[table] = count ?? 0;
-      } catch {
-        // Optional/older tables may not exist.
-      }
-    }
-
     return {
       recovered: true,
       total,
       tables: recoveredByTable,
       candidates: ids.length,
-      currentCounts,
+      currentCounts: await countCurrentRecords(),
     };
   });
