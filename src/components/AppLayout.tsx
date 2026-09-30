@@ -11,6 +11,7 @@ import {
   Menu,
   Settings,
   FileText,
+  ShieldCheck,
   UserRound,
   Users,
 } from "lucide-react";
@@ -21,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { useKnownAccountRecovery } from "@/lib/account-recovery";
+import { useAdminStatus } from "@/lib/admin";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -37,8 +38,8 @@ const bottomNavigation = [
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
-  useKnownAccountRecovery();
   const { data: school } = useSchool();
+  const { data: adminStatus } = useAdminStatus();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -189,6 +190,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </nav>
         <div className="mt-auto border-t border-sidebar-border p-3">
+          {adminStatus?.isAdmin && (
+            <Button
+              asChild
+              variant="ghost"
+              className="mb-1 w-full justify-start text-sidebar-primary hover:bg-sidebar-accent hover:text-sidebar-primary"
+            >
+              <Link to="/admin" onClick={() => setOpen(false)}>
+                <ShieldCheck className="size-4 shrink-0" />
+                <span>{adminStatus.role === "owner" ? "إدارة المنصة" : "لوحة المشرف"}</span>
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             onClick={signOut}
