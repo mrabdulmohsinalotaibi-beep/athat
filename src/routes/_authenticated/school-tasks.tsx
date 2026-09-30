@@ -86,6 +86,7 @@ function SchoolTasksPage() {
   const [dueDate, setDueDate] = useState("");
   const [completionNotes, setCompletionNotes] = useState<Record<string, string>>({});
   const [returnNotes, setReturnNotes] = useState<Record<string, string>>({});
+  const [taskView, setTaskView] = useState<"all" | "attention" | "closed">("attention");
 
   const query = useQuery({
     queryKey: ["school-tasks"],
@@ -187,9 +188,31 @@ function SchoolTasksPage() {
   const assignedToMe = tasks.filter((task) => task.assignee_member_id === memberId && task.status !== "ملغاة");
   const assignedByMe = tasks.filter((task) => task.creator_member_id === memberId);
   const due = assignedToMe.filter(
-    (task) => task.status !== "مكتملة" && task.due_date && task.due_date <= today(),
+    (task) => !["مكتملة", "معتمدة", "ملغاة"].includes(task.status) && task.due_date && task.due_date <= today(),
   );
   const completed = assignedToMe.filter((task) => ["مكتملة", "معتمدة"].includes(task.status)).length;
+
+  const priorityRank = (value: SchoolTask["priority"]) => ({ عالية: 3, متوسطة: 2, منخفضة: 1 })[value] ?? 0;
+  const taskNeedsAttention = (task: SchoolTask) =>
+    task.status === "مكتملة" ||
+    task.status === "معادة" ||
+    (!["معتمدة", "ملغاة"].includes(task.status) && Boolean(task.due_date && task.due_date <= today()));
+  const filterAndSortTasks = (rows: SchoolTask[]) =>
+    rows
+      .filter((task) => {
+        if (taskView === "closed") return ["معتمدة", "ملغاة"].includes(task.status);
+        if (taskView === "attention") return taskNeedsAttention(task);
+        return true;
+      })
+      .sort((a, b) => {
+        const attentionDifference = Number(taskNeedsAttention(b)) - Number(taskNeedsAttention(a));
+        if (attentionDifference) return attentionDifference;
+        const priorityDifference = priorityRank(b.priority) - priorityRank(a.priority);
+        if (priorityDifference) return priorityDifference;
+        return String(a.due_date ?? "9999-12-31").localeCompare(String(b.due_date ?? "9999-12-31"));
+      });
+  const visibleAssignedToMe = filterAndSortTasks(assignedToMe);
+  const visibleAssignedByMe = filterAndSortTasks(assignedByMe);
 
   if (query.isLoading) {
     return <div dir="rtl" className="rounded-2xl border bg-card p-8 text-center text-sm text-muted-foreground">جارٍ تحميل المهام المدرسية...</div>;
@@ -233,6 +256,31 @@ function SchoolTasksPage() {
         </div>
       </section>
 
+      <section className="rounded-2xl border bg-card p-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-black">تركيز العمل</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">ابدأ بما يحتاج إجراء، ثم ارجع للسجل الكامل عند الحاجة.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {([
+              ["attention", "تحتاج إجراء"],
+              ["all", "كل المهام"],
+              ["closed", "المغلقة"],
+            ] as const).map(([value, label]) => (
+              <Button
+                key={value}
+                size="sm"
+                variant={taskView === value ? "default" : "outline"}
+                onClick={() => setTaskView(value)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
         <aside className="rounded-2xl border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-2"><Plus className="size-4 text-primary" /><h2 className="font-black">إسناد مهمة جديدة</h2></div>
@@ -270,7 +318,7 @@ function SchoolTasksPage() {
           <TaskGroup
             title="مهامي"
             empty="لا توجد مهام مسندة إليك."
-            tasks={assignedToMe}
+            tasks={visibleAssignedToMe}
             memberMap={memberMap}
             memberId={memberId}
             completionNotes={completionNotes}
@@ -283,7 +331,7 @@ function SchoolTasksPage() {
           <TaskGroup
             title="المهام التي أسندتها"
             empty="لم تُسند مهامًا بعد."
-            tasks={assignedByMe}
+            tasks={visibleAssignedByMe}
             memberMap={memberMap}
             memberId={memberId}
             completionNotes={completionNotes}
