@@ -465,6 +465,7 @@ textarea {
       var(--background);
   }
   .athat-topbar {
+    padding-top: env(safe-area-inset-top);
     border-color: rgb(255 255 255 / 0.1) !important;
     background: linear-gradient(135deg, #073b4c 0%, #07566a 58%, #0b6674 100%) !important;
     color: #fff !important;
