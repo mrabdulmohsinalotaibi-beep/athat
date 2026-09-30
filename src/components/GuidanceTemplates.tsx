@@ -18,13 +18,13 @@ import { ElectronicTemplateDialog } from "@/components/ElectronicTemplateDialog"
 const QUICK_TEMPLATES = [
   {
     id: "interview",
-    title: "خطة مقابلة إرشادية",
+    title: "خطة مقابلة طلابية",
     description: "هيكل مختصر لإدارة المقابلة وتوثيق الإجراء القادم.",
     icon: HeartHandshake,
     to: "/interviews",
     content: [
       "موضوع المقابلة:",
-      "الهدف الإرشادي:",
+      "هدف التوجيه:",
       "أبرز الملاحظات:",
       "الإجراء المتفق عليه:",
       "موعد المتابعة:",
@@ -47,7 +47,7 @@ const QUICK_TEMPLATES = [
   },
   {
     id: "counseling-action",
-    title: "محضر إجراء إرشادي",
+    title: "محضر إجراء توجيه طلابي",
     description: "قالب لتوثيق الإجراء والنتيجة والشاهد المرتبط.",
     icon: FileText,
     to: "/evidences",
@@ -152,14 +152,14 @@ const DOWNLOADABLE_FORMS: {
 }[] = [
   {
     id: "guidance-observation",
-    title: "استمارة الملاحظة الإرشادية",
-    description: "لتسجيل ملاحظات الحالة وما يتطلبه التدخل الإرشادي.",
+    title: "استمارة ملاحظة التوجيه الطلابي",
+    description: "لتسجيل ملاحظات الحالة وما يتطلبه تدخل التوجيه الطلابي.",
     category: "cases",
     file: "guidance-observation.docx",
   },
   {
     id: "guidance-interview",
-    title: "استمارة مقابلة إرشادية",
+    title: "استمارة مقابلة طلابية",
     description: "لتوثيق بيانات المقابلة وأهدافها وملاحظاتها وخلاصتها.",
     category: "cases",
     file: "guidance-interview.docx",
@@ -187,7 +187,7 @@ const DOWNLOADABLE_FORMS: {
   {
     id: "exam-period-services",
     title: "تقرير الخدمات خلال فترة الاختبارات",
-    description: "لتوثيق الخدمات الإرشادية المقدمة أثناء الاختبارات.",
+    description: "لتوثيق خدمات التوجيه الطلابي المقدمة أثناء الاختبارات.",
     category: "reports",
     file: "exam-period-services.docx",
   },
@@ -208,7 +208,7 @@ const DOWNLOADABLE_FORMS: {
   {
     id: "group-guidance-example",
     title: "نموذج توضيحي للتوجيه الجمعي",
-    description: "مثال إرشادي منقح يوضح طريقة تعبئة تقرير الجلسة.",
+    description: "مثال توضيحي منقح يوضح طريقة تعبئة تقرير الجلسة.",
     category: "reports",
     file: "group-guidance-example.docx",
   },
@@ -228,7 +228,7 @@ const DOWNLOADABLE_FORMS: {
   },
   {
     id: "guidance-committee-minutes",
-    title: "محضر لجنة التوجيه والإرشاد",
+    title: "محضر لجنة التوجيه الطلابي",
     description: "لتوثيق موضوعات الاجتماع والتوصيات ومستوى التنفيذ.",
     category: "committees",
     file: "guidance-committee-minutes.docx",
@@ -256,7 +256,7 @@ const DOWNLOADABLE_FORMS: {
   },
   {
     id: "guidance-service",
-    title: "خدمة إرشادية مقدمة للطالب",
+    title: "خدمة توجيه طلابي مقدمة للطالب",
     description: "لتوثيق نوع الخدمة والإجراء والنتيجة والمتابعة.",
     category: "cases",
     file: "guidance-service.docx",
