@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { CheckSquare, FileText, RotateCcw, Square } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CheckSquare, FileText, RotateCcw, Send, ShieldCheck, Square } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -79,6 +79,8 @@ function ReportsPage() {
   const [toDate, setToDate] = useState("");
   const [narrative, setNarrative] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>(["plan", "programs", "evidences"]);
+  const [recipientMemberId, setRecipientMemberId] = useState("");
+  const [handoffNote, setHandoffNote] = useState("");
 
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -115,6 +117,24 @@ function ReportsPage() {
   });
 
   const sections = useMemo(() => data?.sections ?? {}, [data]);
+
+  const { data: schoolTeamContext } = useQuery({
+    queryKey: ["school-team-context"],
+    queryFn: async () => {
+      const { data: context, error } = await (supabase as any).rpc("get_my_school_context");
+      if (error) throw error;
+      return context as {
+        membership?: { id: string; role: string; member_status: string } | null;
+        members?: Array<{
+          id: string;
+          display_name?: string | null;
+          role: string;
+          member_status: string;
+        }>;
+      };
+    },
+    staleTime: 30_000,
+  });
 
   const filteredSections = useMemo(() => {
     const output: Record<string, ReportRow[]> = {};
@@ -199,6 +219,63 @@ function ReportsPage() {
     (sum, record) => sum + (filteredSections[record.key]?.length ?? 0),
     0,
   );
+
+  const roleRank = (role: string) =>
+    ({ principal: 50, vice_principal: 40, counselor: 30, teacher: 20, admin_staff: 20, guard: 10, observer: 0 })[role] ?? 0;
+  const myRole = schoolTeamContext?.membership?.role ?? "";
+  const administrativeRecipients = (schoolTeamContext?.members ?? []).filter(
+    (member) =>
+      member.member_status === "active" &&
+      roleRank(member.role) > roleRank(myRole),
+  );
+
+  const sendAdministrativeReport = useMutation({
+    mutationFn: async () => {
+      if (!recipientMemberId) throw new Error("اختر المستلم الإداري أولًا.");
+      if (!selectedRecords.length) throw new Error("اختر سجلًا واحدًا على الأقل.");
+
+      const snapshot = {
+        version: 1,
+        report_title: reportTitle.trim() || "تقرير التوجيه الطلابي",
+        document_no: documentNo.trim(),
+        period: period.trim(),
+        from_date: fromDate,
+        to_date: toDate,
+        narrative: narrative.trim(),
+        created_at: new Date().toISOString(),
+        total_rows: totalRows,
+        sections: selectedRecords.map((record) => {
+          const columns = reportColumns(record.fields);
+          const rows = (filteredSections[record.key] ?? []).map((row) =>
+            Object.fromEntries([
+              ["id", row["id"]],
+              ...columns.map((column) => [column.key, row[column.key]]),
+            ]),
+          );
+          return {
+            key: record.key,
+            title: record.title,
+            columns,
+            rows,
+          };
+        }),
+      };
+
+      const { data: handoffId, error } = await (supabase as any).rpc("create_school_report_handoff", {
+        p_recipient_member_id: recipientMemberId,
+        p_title: reportTitle.trim() || "تقرير التوجيه الطلابي",
+        p_note: handoffNote.trim() || null,
+        p_snapshot: snapshot,
+      });
+      if (error) throw error;
+      return String(handoffId ?? "");
+    },
+    onSuccess: () => {
+      setHandoffNote("");
+      toast.success("تم إرسال نسخة ثابتة للقراءة فقط إلى الإدارة.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
   const planRows = filteredSections["plan"] ?? [];
   const programRows = filteredSections["programs"] ?? [];
   const evidenceRows = filteredSections["evidences"] ?? [];
@@ -429,6 +506,68 @@ function ReportsPage() {
             </p>
           ) : null}
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 text-primary">
+              <ShieldCheck className="size-5" />
+              <span className="text-xs font-black">إرسال إداري آمن</span>
+            </div>
+            <h2 className="mt-2 text-lg font-black">رفع التقرير للقراءة فقط</h2>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              عند الإرسال تُحفظ نسخة ثابتة من التقرير كما هو الآن. المستلم يستطيع القراءة والطباعة فقط، ولا يحصل على صلاحية تعديل سجلاتك الأصلية.
+            </p>
+          </div>
+
+          <a href="/school-inbox" className="text-xs font-black text-primary hover:underline">
+            فتح المراسلات الإدارية
+          </a>
+        </div>
+
+        {administrativeRecipients.length ? (
+          <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(220px,0.8fr)_minmax(280px,1.4fr)_auto] lg:items-end">
+            <div>
+              <Label htmlFor="report-recipient">المستلم الأعلى صلاحية</Label>
+              <select
+                id="report-recipient"
+                value={recipientMemberId}
+                onChange={(event) => setRecipientMemberId(event.target.value)}
+                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">اختر المستلم</option>
+                {administrativeRecipients.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.display_name || "عضو المدرسة"} · {member.role === "principal" ? "مدير المدرسة" : member.role === "vice_principal" ? "وكيل المدرسة" : member.role}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="report-handoff-note">رسالة مرفقة</Label>
+              <input
+                id="report-handoff-note"
+                value={handoffNote}
+                onChange={(event) => setHandoffNote(event.target.value)}
+                placeholder="مثال: للاطلاع واعتماد ما تم إنجازه خلال الفترة"
+                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            <Button
+              type="button"
+              disabled={!recipientMemberId || sendAdministrativeReport.isPending || isLoading || selectedRecords.length === 0}
+              onClick={() => sendAdministrativeReport.mutate()}
+            >
+              <Send className="size-4" />
+              {sendAdministrativeReport.isPending ? "جارٍ الإرسال..." : "إرسال للإدارة"}
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-dashed p-4 text-xs leading-6 text-muted-foreground">
+            لا يوجد حاليًا عضو أعلى صلاحية في فريق المدرسة. من صفحة <a href="/school-team" className="font-black text-primary hover:underline">فريق المدرسة والصلاحيات</a> أضف المدير أو الوكيل واعتمد عضويته، ثم سيظهر هنا تلقائيًا كمستلم.
+          </div>
+        )}
       </section>
 
       <div
