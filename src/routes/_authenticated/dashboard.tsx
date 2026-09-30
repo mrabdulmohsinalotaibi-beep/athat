@@ -37,38 +37,72 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+async function withDashboardTimeout<T>(request: PromiseLike<T>, label: string): Promise<T> {
+  return await Promise.race([
+    Promise.resolve(request),
+    new Promise<never>((_, reject) =>
+      window.setTimeout(
+        () => reject(new Error(`تأخر تحميل ${label} من قاعدة البيانات`)),
+        9_000,
+      ),
+    ),
+  ]);
+}
+
 function useDashboard() {
   return useQuery({
     queryKey: ["dashboard-live-v2"],
     queryFn: async () => {
-      const [
-        students,
-        cases,
-        programs,
-        calendar,
-        planTasks,
-        interviews,
-        evidences,
-        publicRequests,
-        feedback,
-        posts,
-      ] = await Promise.all([
-        supabase.from("students").select("id"),
-        supabase
+      const requests = [
+        ["students", supabase.from("students").select("id")],
+        ["cases", supabase
           .from("counseling_cases")
-          .select("id,case_status,followup_at,student_name,student_id,student_no,next_action"),
-        supabase.from("programs").select("id,name,exec_status"),
-        supabase.from("calendar_events").select("id,edate,etime,title,etype,status"),
-        supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status"),
-        supabase.from("interviews").select("id,student_name,topic,followup_at"),
-        supabase.from("evidences").select("id,linked_ref,linked_type"),
-        supabase.from("public_requests").select("id,status,kind,created_at"),
-        supabase
+          .select("id,case_status,followup_at,student_name,student_id,student_no,next_action")],
+        ["programs", supabase.from("programs").select("id,name,exec_status")],
+        ["calendar", supabase.from("calendar_events").select("id,edate,etime,title,etype,status")],
+        ["planTasks", supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status")],
+        ["interviews", supabase.from("interviews").select("id,student_name,topic,followup_at")],
+        ["evidences", supabase.from("evidences").select("id,linked_ref,linked_type")],
+        ["publicRequests", supabase.from("public_requests").select("id,status,kind,created_at")],
+        ["feedback", supabase
           .from("feedback_messages")
           .select("id,status,category,created_at")
-          .in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"]),
-        supabase.from("posts").select("id,is_public,kind"),
-      ]);
+          .in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"])],
+        ["posts", supabase.from("posts").select("id,is_public,kind")],
+      ] as const;
+
+      const settled = await Promise.all(
+        requests.map(async ([label, request]) => {
+          try {
+            const result = await withDashboardTimeout(request, label);
+            return [label, result] as const;
+          } catch (error) {
+            return [
+              label,
+              {
+                data: null,
+                error: error instanceof Error ? error : new Error(String(error)),
+              },
+            ] as const;
+          }
+        }),
+      );
+
+      const resultMap = Object.fromEntries(settled) as Record<string, {
+        data: any[] | null;
+        error: { message?: string } | Error | null;
+      }>;
+
+      const students = resultMap.students;
+      const cases = resultMap.cases;
+      const programs = resultMap.programs;
+      const calendar = resultMap.calendar;
+      const planTasks = resultMap.planTasks;
+      const interviews = resultMap.interviews;
+      const evidences = resultMap.evidences;
+      const publicRequests = resultMap.publicRequests;
+      const feedback = resultMap.feedback;
+      const posts = resultMap.posts;
 
       const sources = {
         students,
