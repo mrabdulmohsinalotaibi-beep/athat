@@ -67,7 +67,7 @@ export const RECORDS: RecordConfig[] = [
   {
     key: "cases",
     table: "counseling_cases",
-    title: "الحالات الإرشادية",
+    title: "الحالات الطلابية",
     singular: "حالة",
     fields: [
       { name: "case_no", label: "رقم الحالة", list: true, generated: true },
@@ -132,7 +132,7 @@ export const RECORDS: RecordConfig[] = [
   {
     key: "interviews",
     table: "interviews",
-    title: "الجلسات الإرشادية",
+    title: "المقابلات الطلابية",
     singular: "جلسة",
     fields: [
       { name: "seq", label: "رقم السجل" },
@@ -162,7 +162,7 @@ export const RECORDS: RecordConfig[] = [
       { name: "adate", label: "التاريخ", type: "date", list: true },
       { name: "case_type", label: "نوع الحالة", type: "select", options: ["غياب", "تأخر", "هروب", "غياب بعذر"], list: true },
       { name: "count_days", label: "عدد الأيام/المرات", type: "number", list: true },
-      { name: "action", label: "الإجراء الإرشادي", list: true },
+      { name: "action", label: "إجراء التوجيه الطلابي", list: true },
       { name: "guardian_name", label: "ولي الأمر" },
       { name: "evidence_url", label: "الشاهد/الرابط" },
       notes,
