@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { QuickActionLauncher } from "@/components/QuickActionLauncher";
 import { filterWorkspaceSections, isGuidanceWorkspaceMember } from "@/lib/school-access";
 
 function isPathActive(pathname: string, route: string) {
@@ -52,11 +53,10 @@ function AlertLink({
 
 
 const bottomNavigation = [
-  { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-  { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases"] },
-  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/evidences"] },
-  { to: "/reports", label: "التقارير", icon: FileText, activeRoutes: ["/reports"] },
-  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/school-team", "/school-tasks", "/school-inbox", "/integrations", "/trash", "/health", "/profile", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/messages", "/weekly-poster", "/posts"] },
+  { to: "/dashboard", label: "اليوم", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+  { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students"] },
+  { to: "/inbox", label: "الوارد", icon: FileText, activeRoutes: ["/inbox", "/school-inbox", "/posts", "/messages"] },
+  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/school-team", "/school-tasks", "/integrations", "/trash", "/health", "/profile", "/cases", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/weekly-poster", "/plan", "/programs", "/evidences", "/reports"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -81,11 +81,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const guidanceNavigationAllowed = !accessMembership || isGuidanceWorkspaceMember(accessMembership);
   const visibleSections = filterWorkspaceSections(WORKSPACE_SECTIONS, accessMembership);
   const restrictedBottomNavigation = [
-    { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+    { to: "/dashboard", label: "اليوم", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
     { to: "/school-tasks", label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
-    { to: "/school-inbox", label: "المراسلات", icon: FileText, activeRoutes: ["/school-inbox"] },
-    { to: "/school-team", label: "الفريق", icon: Users, activeRoutes: ["/school-team"] },
-    { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile", "/settings", "/health"] },
+    { to: "/inbox", label: "الوارد", icon: FileText, activeRoutes: ["/inbox", "/school-inbox"] },
+    { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/school-team", "/settings", "/health"] },
   ] as const;
   const visibleBottomNavigation = guidanceNavigationAllowed ? bottomNavigation : restrictedBottomNavigation;
   const workspaceSchool = accessContext?.school ?? null;
@@ -225,7 +224,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
           >
             <LayoutDashboard className="size-4 shrink-0" aria-hidden="true" />
-            <span>الرئيسية</span>
+            <span>اليوم</span>
           </Link>
           <p className="px-3 pb-1 pt-4 text-[10px] font-bold tracking-wide text-sidebar-foreground/55">
             الأقسام الأساسية
@@ -315,7 +314,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
         <header className="athat-topbar sticky top-0 z-20 border-b border-[#555555] bg-[#3C3C3C] text-[#F1E9DD] shadow-sm">
-          <div className="mx-auto flex min-h-[88px] w-full items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-8">
+          <div className="mx-auto flex min-h-[72px] w-full items-center justify-between gap-3 px-3 py-2.5 sm:px-5 lg:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
                 variant="ghost"
@@ -331,7 +330,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <img
                   src="/brand-icon.svg?v=20260929f"
                   alt="شعار الذات"
-                  className="size-[68px] object-cover sm:size-[76px]"
+                  className="size-[50px] object-cover sm:size-[56px]"
                 />
               </div>
 
@@ -358,6 +357,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <QuickActionLauncher
+                guidanceAllowed={guidanceNavigationAllowed}
+                className="hidden border-white/20 bg-white/10 text-[#F1E9DD] hover:bg-white/20 hover:text-white sm:inline-flex"
+              />
               {guidanceNavigationAllowed && <div className="hidden md:block"><GlobalSearch /></div>}
               <div className="relative">
                 <Button
@@ -448,7 +451,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden"
           aria-label="التنقل الرئيسي"
         >
-          {visibleBottomNavigation.map((item) => {
+          {visibleBottomNavigation.slice(0, 2).map((item) => {
             const Icon = item.icon;
             const isActive = item.activeRoutes.some((route) => isPathActive(pathname, route));
             return (
@@ -462,7 +465,28 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 )}
               >
                 <Icon className="size-5" aria-hidden="true" />
-                <span className="max-w-full whitespace-normal">{item.label}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+
+          <QuickActionLauncher guidanceAllowed={guidanceNavigationAllowed} mobile />
+
+          {visibleBottomNavigation.slice(2).map((item) => {
+            const Icon = item.icon;
+            const isActive = item.activeRoutes.some((route) => isPathActive(pathname, route));
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] font-semibold leading-3 transition",
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="size-5" aria-hidden="true" />
+                <span>{item.label}</span>
               </Link>
             );
           })}
