@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_authenticated/programs")({
       { title: "البرامج والأنشطة | الذات" },
       {
         name: "description",
-        content: "إنشاء وتوثيق البرامج والأنشطة الإرشادية ومتابعتها.",
+        content: "إنشاء وتوثيق برامج وأنشطة التوجيه الطلابي ومتابعتها.",
       },
     ],
   }),
