@@ -64,6 +64,7 @@ function PlanPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm"><Link to="/execution"><ClipboardCheck className="size-4" /> مسار التنفيذ <ArrowLeft className="size-3.5" /></Link></Button>
             <Button asChild variant="outline" size="sm"><Link to="/programs"><Sparkles className="size-4" /> 2. البرامج <ArrowLeft className="size-3.5" /></Link></Button>
             <Button asChild variant="outline" size="sm"><Link to="/evidences"><FolderCheck className="size-4" /> 3. الشواهد</Link></Button>
             <Button asChild variant="outline" size="sm"><Link to="/reports"><FileText className="size-4" /> 4. التقارير</Link></Button>
