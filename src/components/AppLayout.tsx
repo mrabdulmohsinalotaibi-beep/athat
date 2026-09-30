@@ -11,7 +11,6 @@ import {
   Menu,
   Settings,
   FileText,
-  ShieldCheck,
   UserRound,
   Users,
 } from "lucide-react";
@@ -22,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { useAdminStatus, useGlobalAppSettings } from "@/lib/admin";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -45,11 +43,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { data: globalSettings } = useGlobalAppSettings();
-  const { data: adminStatus } = useAdminStatus();
-
-  // The main counselor workspace must stay available even if global admin
-  // settings are temporarily unavailable or their database migration is pending.
   const visibleSections = WORKSPACE_SECTIONS;
   const visibleBottomNavigation = bottomNavigation;
   const { data: alertCount = 0 } = useQuery({
@@ -194,18 +187,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </nav>
         <div className="mt-auto border-t border-sidebar-border p-3">
-          {adminStatus?.isAdmin && (
-            <Button
-              asChild
-              variant="ghost"
-              className="mb-1 w-full justify-start text-sidebar-primary hover:bg-sidebar-accent hover:text-sidebar-primary"
-            >
-              <Link to="/admin" onClick={() => setOpen(false)}>
-                <ShieldCheck className="size-4 shrink-0" />
-                <span>{adminStatus.role === "owner" ? "إدارة المنصة" : "لوحة المشرف"}</span>
-              </Link>
-            </Button>
-          )}
           <Button
             variant="ghost"
             onClick={signOut}
@@ -317,11 +298,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        {globalSettings?.announcement && (
-          <div className="border-b border-amber-300/25 bg-amber-50 px-4 py-2 text-center text-xs font-bold text-amber-900">
-            {globalSettings.announcement}
-          </div>
-        )}
         <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
           {currentSection && (
             <nav
