@@ -10,8 +10,8 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/interviews")({
   head: () => ({
     meta: [
-      { title: "الجلسات الإرشادية | الذات" },
-      { name: "description", content: "الجلسات الإرشادية ومواعيد المتابعة المرتبطة بالطلاب والحالات." },
+      { title: "المقابلات الطلابية | الذات" },
+      { name: "description", content: "المقابلات الطلابية ومواعيد المتابعة المرتبطة بالطلاب والحالات." },
     ],
   }),
   component: InterviewsPage,
@@ -91,7 +91,7 @@ function InterviewsPage() {
                   <strong className="truncate text-sm">{row.student_name || "طالب غير محدد"}</strong>
                   <span className="text-[11px] font-bold text-primary">{String(row.followup_at)}</span>
                 </div>
-                <p className="mt-1 truncate text-xs text-muted-foreground">{row.topic || row.itype || "جلسة إرشادية"}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{row.topic || row.itype || "مقابلة طلابية"}</p>
               </div>
             ))}
           </div>
