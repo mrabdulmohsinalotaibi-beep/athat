@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Search, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser } from "@/lib/auth-user";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,12 +21,17 @@ export interface StudentOption {
 }
 
 export function useStudentOptions() {
+  const { data: authUser } = useAuthUser();
+  const userId = authUser?.id ?? "";
+
   return useQuery({
-    queryKey: ["students-options"],
+    queryKey: ["students-options", userId],
+    enabled: Boolean(userId),
     queryFn: async (): Promise<StudentOption[]> => {
       const { data, error } = await supabase
         .from("students")
         .select("id, full_name, student_no, national_id, grade, classroom, guardian_name, guardian_phone")
+        .eq("user_id", userId)
         .order("full_name", { ascending: true });
       if (error) throw error;
       return (data ?? []).map((s) => ({
