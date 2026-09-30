@@ -71,7 +71,7 @@ function PublicCounselorBlogPage() {
   } = useQuery({
     queryKey: ["public-counselor-blog", token],
     queryFn: async () => {
-      const portal = await supabase.rpc(
+      const portal = await (supabase as any).rpc(
         "get_private_counselor_portal",
         { p_token: token },
       );
