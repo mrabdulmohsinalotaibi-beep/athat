@@ -414,7 +414,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
-          {currentSection && (
+          {currentSection && pathname !== "/dashboard" && (
             <nav
               className="mb-4 -mx-4 -mt-4 border-b bg-card/70 px-4 py-2 lg:hidden"
               aria-label={"روابط " + currentSection.title}
