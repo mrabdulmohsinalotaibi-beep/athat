@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
-  CalendarDays,
   ChevronDown,
   ClipboardList,
   LayoutDashboard,
@@ -12,7 +11,6 @@ import {
   Settings,
   FileText,
   UserRound,
-  Users,
 } from "lucide-react";
 import { WORKSPACE_SECTIONS } from "@/lib/workspace-sections";
 import { supabase } from "@/integrations/supabase/client";
