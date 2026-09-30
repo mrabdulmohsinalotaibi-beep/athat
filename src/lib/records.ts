@@ -237,7 +237,7 @@ export const RECORDS: RecordConfig[] = [
       { name: "linked_type", label: "مرتبط بنوع", type: "select", options: ["برنامج", "حالة", "مقابلة", "اجتماع", "مهمة"], list: true },
       { name: "linked_ref", label: "رقم السجل المرتبط" },
       { name: "edate", label: "تاريخ الشاهد", type: "date", list: true },
-      { name: "doc_status", label: "حالة التوثيق", type: "select", options: DOC_STATUS, list: true },
+      { name: "doc_status", label: "حالة التوثيق", type: "select", options: DOC_STATUS, list: true, generated: true },
       { name: "file_url", label: "رابط/مسار الملف" },
       { name: "description", label: "وصف الشاهد", type: "textarea" },
       { name: "reviewed_by", label: "تمت المراجعة بواسطة", generated: true },
