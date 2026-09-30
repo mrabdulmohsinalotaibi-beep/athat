@@ -50,8 +50,6 @@ export function useKnownAccountRecovery() {
   useEffect(() => {
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      if (sessionStorage.getItem("athat-record-recovery-ran") === "1") return;
-
       void (async () => {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
@@ -64,13 +62,30 @@ export function useKnownAccountRecovery() {
       // only reassigns legacy rows when an exact matching email exists.
       try {
         const recovery = await recoverLegacyRecords();
-        sessionStorage.setItem("athat-record-recovery-ran", "1");
         if (recovery?.recovered && recovery.total > 0) {
           console.info("[record-recovery] restored", recovery.total, "records");
         }
+
+        // Verify from the signed-in client's RLS view that the most important
+        // records are now visible to this account. This keeps ownership linking
+        // automatic and immediately refreshes the UI without exposing a manual
+        // recovery action to the user.
+        const [studentsCheck, programsCheck, evidencesCheck] = await Promise.all([
+          supabase.from("students").select("id", { count: "exact", head: true }),
+          supabase.from("programs").select("id", { count: "exact", head: true }),
+          supabase.from("evidences").select("id", { count: "exact", head: true }),
+        ]);
+        if (studentsCheck.error) console.warn("[account-link] students:", studentsCheck.error.message);
+        if (programsCheck.error) console.warn("[account-link] programs:", programsCheck.error.message);
+        if (evidencesCheck.error) console.warn("[account-link] evidences:", evidencesCheck.error.message);
+
+        console.info("[account-link] visible rows", {
+          students: studentsCheck.count ?? 0,
+          programs: programsCheck.count ?? 0,
+          evidences: evidencesCheck.count ?? 0,
+        });
       } catch (error) {
-        sessionStorage.removeItem("athat-record-recovery-ran");
-        console.warn("[record-recovery] server recovery unavailable:", error);
+        console.warn("[record-recovery] automatic account linking unavailable:", error);
       }
 
       // The profile reconstruction below contains verified values for one known
