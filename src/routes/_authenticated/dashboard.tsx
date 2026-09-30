@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -15,7 +14,6 @@ import {
   HeartHandshake,
   Inbox,
   MessageSquareText,
-  RotateCcw,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -23,7 +21,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
-import { recoverLegacyRecords } from "@/lib/record-recovery.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -145,68 +142,9 @@ function useDashboard() {
 }
 
 function Dashboard() {
-  const queryClient = useQueryClient();
   const { data: school } = useSchool();
-  const [recoveringRecords, setRecoveringRecords] = useState(false);
-  const [recoveryMessage, setRecoveryMessage] = useState("");
   const { data, isLoading, isError, refetch, isFetching } = useDashboard();
   const day = today();
-
-  async function handleRecordRecovery() {
-    if (recoveringRecords) return;
-    setRecoveringRecords(true);
-    setRecoveryMessage("جاري فحص السجلات القديمة وربطها بالحساب…");
-
-    try {
-      const result = await recoverLegacyRecords();
-      const restored = result?.total ?? 0;
-      const candidates = result?.candidates ?? 0;
-      const counts = result?.currentCounts ?? {};
-      const visibleTotal = Object.values(counts).reduce(
-        (sum, value) => sum + (typeof value === "number" ? value : 0),
-        0,
-      );
-
-      if (restored > 0) {
-        setRecoveryMessage(
-          `تم استرجاع وربط ${restored} سجلًا من ${candidates} حساب قديم. جاري تحديث الصفحات.`,
-        );
-      } else if (visibleTotal > 0) {
-        setRecoveryMessage(
-          `لم نجد حسابًا قديمًا يحتاج إعادة ربط. يوجد حاليًا ${visibleTotal} سجلًا مرتبطًا بهذا الحساب.`,
-        );
-      } else {
-        setRecoveryMessage(
-          "لم يتم العثور على سجلات مرتبطة بحساب قديم بنفس البريد، ولا تظهر سجلات حالية في الجداول التي أمكن فحصها.",
-        );
-      }
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
-        queryClient.invalidateQueries({ queryKey: ["students"] }),
-        queryClient.invalidateQueries({ queryKey: ["counseling_cases"] }),
-        queryClient.invalidateQueries({ queryKey: ["plan_tasks"] }),
-        queryClient.invalidateQueries({ queryKey: ["programs"] }),
-        queryClient.invalidateQueries({ queryKey: ["interviews"] }),
-        queryClient.invalidateQueries({ queryKey: ["attendance"] }),
-        queryClient.invalidateQueries({ queryKey: ["behavior"] }),
-        queryClient.invalidateQueries({ queryKey: ["referrals"] }),
-        queryClient.invalidateQueries({ queryKey: ["committees"] }),
-        queryClient.invalidateQueries({ queryKey: ["evidences"] }),
-        queryClient.invalidateQueries({ queryKey: ["reports"] }),
-        queryClient.invalidateQueries({ queryKey: ["calendar_events"] }),
-        queryClient.invalidateQueries({ queryKey: ["posts"] }),
-        queryClient.invalidateQueries({ queryKey: ["school_settings"] }),
-      ]);
-      await refetch();
-    } catch (error) {
-      setRecoveryMessage(
-        `تعذر فحص السجلات من خادم الإنتاج: ${error instanceof Error ? error.message : "خطأ غير معروف"}`,
-      );
-    } finally {
-      setRecoveringRecords(false);
-    }
-  }
 
   const activeCases = (data?.cases ?? []).filter((item) => item.case_status !== "مغلقة");
   const overdueCases = activeCases.filter(
@@ -430,29 +368,6 @@ function Dashboard() {
               {isFetching ? "تحديث…" : "تحديث"}
             </button>
           </div>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.04] p-3 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-sm font-black">استعادة السجلات المرتبطة بحساب قديم</h2>
-            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-              يفحص خادم الإنتاج عن نفس بريدك على معرّف مستخدم قديم ويعيد ربط السجلات فقط عند التطابق التام.
-            </p>
-            {recoveryMessage && (
-              <p className="mt-2 text-[11px] font-bold text-foreground">{recoveryMessage}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => void handleRecordRecovery()}
-            disabled={recoveringRecords}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-3 py-2 text-[11px] font-black text-primary-foreground disabled:opacity-60"
-          >
-            <RotateCcw className={`size-4 ${recoveringRecords ? "animate-spin" : ""}`} />
-            {recoveringRecords ? "جاري الفحص…" : "فحص واستعادة الآن"}
-          </button>
         </div>
       </section>
 
