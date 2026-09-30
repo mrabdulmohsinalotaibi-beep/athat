@@ -190,42 +190,48 @@ export function PublicLayout({
         ))}
       </nav>
 
-      <footer className="border-t border-border/60 bg-card">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-3">
-          <div>
-            <p className="text-lg font-black text-primary">الذات</p>
-            <p className="mt-2 text-xs leading-7 text-muted-foreground">
-              نظام الإرشاد المدرسي لخدمات التوجيه الطلابي: صفحات تعريفية، استمارات تفاعلية، ولوحة
-              عمل خاصة بالموجه الطلابي.
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-bold">روابط سريعة</p>
-            <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-              {visibleNav.slice(1).map((item) => (
-                <li key={item.to}>
-                  <Link to={item.to} className="transition-colors hover:text-primary">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="text-sm font-bold">بيانات التواصل</p>
-            <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-              <li>{profile?.school_name || "اسم المدرسة"}</li>
-              <li>{profile?.education_dept || "إدارة التعليم"}</li>
-              {profile?.contact_phone && <li>هاتف: {profile.contact_phone}</li>}
-              {profile?.contact_email && <li>بريد: {profile.contact_email}</li>}
-              {profile?.office_hours && <li>أوقات المقابلات: {profile.office_hours}</li>}
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-border/60 px-4 py-4 text-center sm:px-8">
+      {pathname === "/" ? (
+        <footer className="hidden border-t border-border/60 bg-card px-4 py-4 text-center lg:block sm:px-8">
           <Copyright />
-        </div>
-      </footer>
+        </footer>
+      ) : (
+        <footer className="border-t border-border/60 bg-card">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-3">
+            <div>
+              <p className="text-lg font-black text-primary">الذات</p>
+              <p className="mt-2 text-xs leading-7 text-muted-foreground">
+                نظام الإرشاد المدرسي لخدمات التوجيه الطلابي: صفحات تعريفية، استمارات تفاعلية، ولوحة
+                عمل خاصة بالموجه الطلابي.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-bold">روابط سريعة</p>
+              <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+                {visibleNav.slice(1).map((item) => (
+                  <li key={item.to}>
+                    <Link to={item.to} className="transition-colors hover:text-primary">
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-sm font-bold">بيانات التواصل</p>
+              <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+                <li>{profile?.school_name || "اسم المدرسة"}</li>
+                <li>{profile?.education_dept || "إدارة التعليم"}</li>
+                {profile?.contact_phone && <li>هاتف: {profile.contact_phone}</li>}
+                {profile?.contact_email && <li>بريد: {profile.contact_email}</li>}
+                {profile?.office_hours && <li>أوقات المقابلات: {profile.office_hours}</li>}
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-border/60 px-4 py-4 text-center sm:px-8">
+            <Copyright />
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
