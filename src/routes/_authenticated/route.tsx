@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
+import { featureForPath, useAdminStatus, useGlobalAppSettings } from "@/lib/admin";
 
 function isInvalidSessionError(error: unknown) {
   const message =
@@ -59,6 +60,58 @@ function ProtectedAreaError({ error, reset }: { error: Error; reset: () => void 
   );
 }
 
+function AuthenticatedShell() {
+  const pathname = window.location.pathname;
+  const { data: settings, isLoading: settingsLoading } = useGlobalAppSettings();
+  const { data: admin, isLoading: adminLoading } = useAdminStatus();
+
+  if (settingsLoading || adminLoading) {
+    return (
+      <AppLayout>
+        <div className="rounded-3xl border bg-card p-8 text-center text-sm text-muted-foreground">
+          جارٍ تحميل إعدادات المنصة...
+        </div>
+      </AppLayout>
+    );
+  }
+
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+  const feature = featureForPath(pathname);
+  const isHidden = feature ? settings?.feature_flags?.[feature] === false : false;
+
+  if (!admin?.isAdmin && settings?.maintenance_mode) {
+    return (
+      <AppLayout>
+        <div dir="rtl" className="mx-auto max-w-2xl rounded-3xl border border-amber-500/25 bg-card p-8 text-center shadow-sm">
+          <h1 className="text-2xl font-black">المنصة تحت الصيانة</h1>
+          <p className="mt-3 text-sm leading-7 text-muted-foreground">
+            تم إيقاف بعض الخدمات مؤقتًا من إدارة المنصة. بياناتك محفوظة ولن تتأثر.
+          </p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!admin?.isAdmin && isHidden && !isAdminRoute) {
+    return (
+      <AppLayout>
+        <div dir="rtl" className="mx-auto max-w-2xl rounded-3xl border bg-card p-8 text-center shadow-sm">
+          <h1 className="text-2xl font-black">هذه الخاصية غير ظاهرة حاليًا</h1>
+          <p className="mt-3 text-sm leading-7 text-muted-foreground">
+            تم إخفاء هذه الصفحة من إدارة المنصة. سجلاتك السابقة تبقى محفوظة في حسابك.
+          </p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
+  );
+}
+
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
@@ -89,10 +142,6 @@ export const Route = createFileRoute("/_authenticated")({
     // while autoRefreshToken keeps the browser session current.
     return { user: sessionUser };
   },
-  component: () => (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
-  ),
+  component: AuthenticatedShell,
   errorComponent: ProtectedAreaError,
 });
