@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock, CheckCircle2, ClipboardList, MessageSquare, Users } from "lucide-react";
+import { CalendarClock, CheckCircle2, ClipboardList, MessageSquare, Send, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { RecordPage } from "@/components/RecordPage";
@@ -98,7 +98,20 @@ function InterviewsPage() {
         </section>
       )}
 
-      <RecordPage config={recordByKey("interviews")} />
+      <RecordPage
+        config={recordByKey("interviews")}
+        rowAction={{
+          icon: <Send className="size-4" />,
+          title: "إنشاء إحالة من الجلسة",
+          onClick: (row) => {
+            const studentId = encodeURIComponent(String(row["student_id"] ?? ""));
+            const studentNo = encodeURIComponent(String(row["student_no"] ?? ""));
+            const studentName = encodeURIComponent(String(row["student_name"] ?? ""));
+            const caseId = encodeURIComponent(String(row["case_id"] ?? ""));
+            window.location.href = `/referrals?new=student&studentId=${studentId}&studentNo=${studentNo}&studentName=${studentName}&caseId=${caseId}`;
+          },
+        }}
+      />
     </div>
   );
 }
