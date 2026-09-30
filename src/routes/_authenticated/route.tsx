@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
+import { canOpenWorkspacePath } from "@/lib/school-access";
 
 function isInvalidSessionError(error: unknown) {
   const message =
@@ -82,6 +83,25 @@ export const Route = createFileRoute("/_authenticated")({
 
     if (!sessionUser) {
       throw redirect({ to: "/auth", search: { next } });
+    }
+
+    // Enforce role navigation for school-workspace accounts. Database RLS is
+    // still the final security boundary; this prevents direct-URL access from
+    // rendering pages outside the member's assigned role.
+    try {
+      const { data: schoolContext, error: schoolContextError } = await (supabase as any).rpc(
+        "get_my_school_context",
+      );
+      if (!schoolContextError) {
+        const membership = schoolContext?.membership ?? null;
+        if (!canOpenWorkspacePath(location.pathname, membership)) {
+          throw redirect({ to: "/dashboard" });
+        }
+      }
+    } catch (error) {
+      if (error && typeof error === "object" && "isRedirect" in error) throw error;
+      console.warn("[access] تعذّر التحقق من صلاحية المسار:", error);
+      // RLS remains restrictive if the access-context request is temporarily unavailable.
     }
 
     // Do not block every page transition on a remote getUser() request.
