@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ClipboardList, FileText, FolderCheck, HeartHandshake, Search, Users, X } from "lucide-react";
+import { ClipboardList, FileText, FolderCheck, HeartHandshake, MessageSquareText, Search, Send, Users, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,16 @@ export function GlobalSearch() {
     enabled: open && normalized.length >= 2,
     queryFn: async () => {
       const pattern = `%${normalized}%`;
-      const [students, cases, programs, tasks, evidences] = await Promise.all([
+      const [students, cases, programs, tasks, evidences, interviews, referrals] = await Promise.all([
         supabase.from("students").select("id, full_name, student_no, grade").or(`full_name.ilike.${pattern},student_no.ilike.${pattern}`).limit(6),
         supabase.from("counseling_cases").select("id, student_name, domain, case_status").or(`student_name.ilike.${pattern},summary.ilike.${pattern}`).limit(6),
         supabase.from("programs").select("id, name, domain, exec_status").or(`name.ilike.${pattern},goal.ilike.${pattern}`).limit(6),
         supabase.from("plan_tasks").select("id, task, domain, exec_status").ilike("task", pattern).limit(6),
         supabase.from("evidences").select("id, name, etype, linked_type, linked_ref, doc_status").or(`name.ilike.${pattern},description.ilike.${pattern},linked_ref.ilike.${pattern}`).limit(6),
+        supabase.from("interviews").select("id, student_name, topic, idate").or(`student_name.ilike.${pattern},topic.ilike.${pattern}`).limit(6),
+        supabase.from("referrals").select("id, student_name, reason, status").or(`student_name.ilike.${pattern},reason.ilike.${pattern}`).limit(6),
       ]);
-      const results = [students, cases, programs, tasks, evidences];
+      const results = [students, cases, programs, tasks, evidences, interviews, referrals];
       results.forEach((result, index) => {
         if (result.error) {
           console.warn("[global-search] source failed", index, result.error.message);
@@ -37,6 +39,8 @@ export function GlobalSearch() {
         programs: programs.error ? [] : programs.data ?? [],
         tasks: tasks.error ? [] : tasks.data ?? [],
         evidences: evidences.error ? [] : evidences.data ?? [],
+        interviews: interviews.error ? [] : interviews.data ?? [],
+        referrals: referrals.error ? [] : referrals.data ?? [],
       };
     },
   });
@@ -81,7 +85,7 @@ export function GlobalSearch() {
           <div className="w-full max-w-2xl overflow-hidden rounded-2xl border bg-popover shadow-2xl" dir="rtl" onMouseDown={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-2 border-b px-4">
               <Search className="size-5 text-muted-foreground" />
-              <Input autoFocus value={term} onChange={(event) => setTerm(event.target.value)} placeholder="ابحث باسم الطالب، الحالة، البرنامج، المهمة أو الشاهد..." className="h-14 border-0 px-2 shadow-none focus-visible:ring-0" />
+              <Input autoFocus value={term} onChange={(event) => setTerm(event.target.value)} placeholder="ابحث بالطالب أو الحالة أو الجلسة أو الإحالة أو البرنامج أو الشاهد..." className="h-14 border-0 px-2 shadow-none focus-visible:ring-0" />
               {term && <Button type="button" variant="ghost" size="icon" onClick={() => setTerm("")}><X className="size-4" /></Button>}
             </div>
             <div className="max-h-[60vh] overflow-y-auto p-3">
@@ -93,11 +97,13 @@ export function GlobalSearch() {
                 <p className="py-8 text-center text-sm text-muted-foreground">لا توجد نتائج مطابقة.</p>
               ) : (
                 <div className="space-y-4">
-                  {data?.students.length ? <ResultGroup title="الطلاب" icon={Users} items={data.students.map((item: any) => ({ title: item.full_name || "طالب", detail: `${item.student_no || "بدون رقم"} · ${item.grade || ""}`, to: "/students" }))} onSelect={go} /> : null}
+                  {data?.students.length ? <ResultGroup title="الطلاب" icon={Users} items={data.students.map((item: any) => ({ title: item.full_name || "طالب", detail: `${item.student_no || "بدون رقم"} · ${item.grade || ""}`, to: `/students?student=${item.id}` }))} onSelect={go} /> : null}
                   {data?.cases.length ? <ResultGroup title="الحالات الإرشادية" icon={HeartHandshake} items={data.cases.map((item: any) => ({ title: item.student_name || "حالة إرشادية", detail: `${item.domain || "مجال غير محدد"} · ${item.case_status || "مفتوحة"}`, to: "/cases" }))} onSelect={go} /> : null}
                   {data?.programs.length ? <ResultGroup title="البرامج والأنشطة" icon={FileText} items={data.programs.map((item: any) => ({ title: item.name || "برنامج", detail: `${item.domain || ""} · ${item.exec_status || ""}`, to: "/programs" }))} onSelect={go} /> : null}
                   {data?.tasks.length ? <ResultGroup title="مهام الخطة" icon={ClipboardList} items={data.tasks.map((item: any) => ({ title: item.task || "مهمة", detail: `${item.domain || ""} · ${item.exec_status || ""}`, to: "/plan" }))} onSelect={go} /> : null}
                   {data?.evidences.length ? <ResultGroup title="الشواهد والوثائق" icon={FolderCheck} items={data.evidences.map((item: any) => ({ title: item.name || "شاهد", detail: `${item.etype || item.linked_type || "وثيقة"} · ${item.doc_status || item.linked_ref || ""}`, to: "/evidences" }))} onSelect={go} /> : null}
+                  {data?.interviews.length ? <ResultGroup title="الجلسات" icon={MessageSquareText} items={data.interviews.map((item: any) => ({ title: item.student_name || "جلسة", detail: `${item.topic || "جلسة إرشادية"} · ${item.idate || ""}`, to: "/interviews" }))} onSelect={go} /> : null}
+                  {data?.referrals.length ? <ResultGroup title="الإحالات" icon={Send} items={data.referrals.map((item: any) => ({ title: item.student_name || "إحالة", detail: `${item.reason || "إحالة طالب"} · ${item.status || ""}`, to: "/referrals" }))} onSelect={go} /> : null}
                 </div>
               )}
             </div>
