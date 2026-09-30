@@ -177,7 +177,7 @@ function ReportsPage() {
                 ...workflowProgramRefs,
                 ...(workflowPlanTaskId ? [workflowPlanTaskId] : []),
               ])];
-              request = refs.length ? request.in("linked_ref", refs) : request.eq("id", "__no_workflow_evidence__");
+              request = refs.length ? request.in("linked_ref", refs) : request.eq("id", "00000000-0000-0000-0000-000000000000");
             }
 
             const result = await request;
