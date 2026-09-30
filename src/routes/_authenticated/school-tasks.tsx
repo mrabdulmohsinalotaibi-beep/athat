@@ -11,7 +11,7 @@ import {
   RotateCcw,
   UserRoundCheck,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -317,11 +317,11 @@ function TaskGroup({
   memberMap: Map<string, Member>;
   memberId: string;
   completionNotes: Record<string, string>;
-  setCompletionNotes: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setCompletionNotes: Dispatch<SetStateAction<Record<string, string>>>;
   returnNotes: Record<string, string>;
-  setReturnNotes: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  updateMyTask: ReturnType<typeof useMutation<any, Error, { id: string; status: "قيد التنفيذ" | "مكتملة" }>>;
-  reviewTask: ReturnType<typeof useMutation<any, Error, { id: string; action: "إعادة" | "إلغاء" }>>;
+  setReturnNotes: Dispatch<SetStateAction<Record<string, string>>>;
+  updateMyTask: { mutate: (variables: { id: string; status: "قيد التنفيذ" | "مكتملة" }) => void };
+  reviewTask: { mutate: (variables: { id: string; action: "إعادة" | "إلغاء" }) => void };
 }) {
   return (
     <section className="rounded-2xl border bg-card p-4 shadow-sm">
