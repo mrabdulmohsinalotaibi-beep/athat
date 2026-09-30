@@ -72,7 +72,11 @@ export function reportLovableError(error: unknown, context: Record<string, unkno
   });
 
   // 4. طباعة الخطأ في الكونسول للمطور عند العمل المحلي
-  if (process.env["NODE_ENV"] === "development") {
+  const isDevelopment =
+    typeof process !== "undefined" &&
+    process.env &&
+    process.env["NODE_ENV"] === "development";
+  if (isDevelopment) {
     console.error("[Runtime Error Captured]:", { message, stack, context });
   }
 }
