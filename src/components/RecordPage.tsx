@@ -109,8 +109,16 @@ export function RecordPage({
       const studentId = params.get("studentId") ?? "";
       const studentNo = params.get("studentNo") ?? "";
       const studentName = params.get("studentName") ?? "";
-      if (!studentId && !studentNo && !studentName) return;
-      const prefill = { student_id: studentId, student_no: studentNo, student_name: studentName };
+      const caseId = params.get("caseId") ?? "";
+      const caseNo = params.get("caseNo") ?? "";
+      if (!studentId && !studentNo && !studentName && !caseId) return;
+      const prefill = {
+        student_id: studentId,
+        student_no: studentNo,
+        student_name: studentName,
+        ...(caseId ? { case_id: caseId } : {}),
+        ...(caseNo ? { case_no: caseNo } : {}),
+      };
       setAuto(prefill);
       setEditing(prefill);
     } else {
@@ -119,7 +127,7 @@ export function RecordPage({
     }
 
     // Consume the one-time action link so refreshing does not reopen a duplicate draft.
-    ["new", "studentId", "studentNo", "studentName"].forEach((key) => params.delete(key));
+    ["new", "studentId", "studentNo", "studentName", "caseId", "caseNo"].forEach((key) => params.delete(key));
     const query = params.toString();
     window.history.replaceState(
       window.history.state,
@@ -268,6 +276,8 @@ export function RecordPage({
         });
       if (config.key !== "students" && values["student_id"])
         payload["student_id"] = values["student_id"];
+      if ((config.key === "interviews" || config.key === "referrals") && values["case_id"])
+        payload["case_id"] = values["case_id"];
       if (values.id) {
         const { error } = await supabase
           .from(config.table as never)
@@ -283,6 +293,8 @@ export function RecordPage({
       queryClient.invalidateQueries({ queryKey: [config.table] });
       queryClient.invalidateQueries({ queryKey: ["student-profile"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["cases-followup-center"] });
+      queryClient.invalidateQueries({ queryKey: ["interviews-followup-hub"] });
       setEditing(null);
       toast.success("تم حفظ السجل");
     },
