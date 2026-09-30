@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser } from "@/lib/auth-user";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
 
@@ -46,26 +47,28 @@ async function withDashboardTimeout<T>(request: PromiseLike<T>, label: string): 
   ]);
 }
 
-function useDashboard() {
+function useDashboard(userId: string) {
   return useQuery({
-    queryKey: ["dashboard-live-v2"],
+    queryKey: ["dashboard-live-v2", userId],
+    enabled: Boolean(userId),
     queryFn: async () => {
       const requests = [
-        ["students", supabase.from("students").select("id")],
+        ["students", supabase.from("students").select("id").eq("user_id", userId)],
         ["cases", supabase
           .from("counseling_cases")
-          .select("id,case_status,followup_at,student_name,student_id,student_no,next_action")],
-        ["programs", supabase.from("programs").select("id,name,exec_status")],
-        ["calendar", supabase.from("calendar_events").select("id,edate,etime,title,etype,status")],
-        ["planTasks", supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status")],
-        ["interviews", supabase.from("interviews").select("id,student_name,topic,followup_at")],
-        ["evidences", supabase.from("evidences").select("id,linked_ref,linked_type")],
+          .select("id,case_status,followup_at,student_name,student_id,student_no,next_action")
+          .eq("user_id", userId)],
+        ["programs", supabase.from("programs").select("id,name,exec_status").eq("user_id", userId)],
+        ["calendar", supabase.from("calendar_events").select("id,edate,etime,title,etype,status").eq("user_id", userId)],
+        ["planTasks", supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status").eq("user_id", userId)],
+        ["interviews", supabase.from("interviews").select("id,student_name,topic,followup_at").eq("user_id", userId)],
+        ["evidences", supabase.from("evidences").select("id,linked_ref,linked_type").eq("user_id", userId)],
         ["publicRequests", supabase.from("public_requests").select("id,status,kind,created_at")],
         ["feedback", supabase
           .from("feedback_messages")
           .select("id,status,category,created_at")
           .in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"])],
-        ["posts", supabase.from("posts").select("id,is_public,kind")],
+        ["posts", supabase.from("posts").select("id,is_public,kind").eq("user_id", userId)],
       ] as const;
 
       const settled = await Promise.all(
@@ -146,9 +149,10 @@ function useDashboard() {
 }
 
 function Dashboard() {
-  const queryClient = useQueryClient();
+  const { data: authUser } = useAuthUser();
+  const userId = authUser?.id ?? "";
   const { data: school } = useSchool();
-  const { data, isLoading, isError, refetch, isFetching } = useDashboard();
+  const { data, isLoading, isError, refetch, isFetching } = useDashboard(userId);
   const day = today();
 
   const activeCases = (data?.cases ?? []).filter((item) => item.case_status !== "مغلقة");
