@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileText, Film, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import { CheckCircle2, Download, FileText, Film, ImageIcon, Loader2, RotateCcw, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -261,6 +261,7 @@ export function EvidenceUploadDialog({
 export function EvidenceGallery() {
   const queryClient = useQueryClient();
   const [preview, setPreview] = useState<{ url: string; kind: string; name: string } | null>(null);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   const {
     data: items = [],
@@ -307,6 +308,75 @@ export function EvidenceGallery() {
     if (!storageError) toast.success("تم حذف الشاهد");
   }
 
+  async function reviewEvidence(
+    id: string,
+    nextStatus: "معتمد" | "ناقص",
+    currentNotes?: string | null,
+  ) {
+    let reviewNote = "";
+    if (nextStatus === "معتمد") {
+      if (!window.confirm("هل تعتمد هذا الشاهد؟ سيصبح معتمدًا للتوثيق، ولن يعتمد التقرير تلقائيًا.")) return;
+    } else {
+      reviewNote = window.prompt("اكتب ملاحظة الإعادة للتعديل:")?.trim() ?? "";
+      if (!reviewNote) {
+        toast.info("اكتب ملاحظة واضحة قبل إعادة الشاهد للتعديل.");
+        return;
+      }
+    }
+
+    setReviewingId(id);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+
+      const { data: settings } = await supabase
+        .from("school_settings")
+        .select("counselor_name")
+        .limit(1)
+        .maybeSingle();
+
+      const reviewer = String(
+        settings?.counselor_name || authData.user.email || "المستخدم الحالي",
+      );
+      const previousNotes = String(currentNotes ?? "").trim();
+      const reviewEntry = reviewNote
+        ? `ملاحظة مراجعة (${new Date().toLocaleDateString("ar-SA")}): ${reviewNote}`
+        : "";
+      const nextNotes = reviewEntry
+        ? [previousNotes, reviewEntry].filter(Boolean).join("\n")
+        : previousNotes;
+
+      const patch =
+        nextStatus === "معتمد"
+          ? { doc_status: "معتمد", reviewed_by: reviewer }
+          : { doc_status: "ناقص", reviewed_by: reviewer, notes: nextNotes };
+
+      const { error } = await supabase
+        .from("evidences")
+        .update(patch as never)
+        .eq("id", id);
+      if (error) throw error;
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["evidence-files"] }),
+        queryClient.invalidateQueries({ queryKey: ["evidences"] }),
+        queryClient.invalidateQueries({ queryKey: ["execution-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["plan-execution-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
+      ]);
+      toast.success(
+        nextStatus === "معتمد"
+          ? "تم اعتماد الشاهد. التقرير ما زال يحتاج اعتمادك بشكل مستقل."
+          : "أُعيد الشاهد للتعديل مع حفظ ملاحظة المراجعة.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذّرت مراجعة الشاهد.");
+    } finally {
+      setReviewingId(null);
+    }
+  }
+
   if (isLoading) return <p className="text-sm text-muted-foreground">جارٍ تحميل الشواهد...</p>;
   if (isError)
     return (
@@ -351,6 +421,54 @@ export function EvidenceGallery() {
                 {String(it.linked_type ?? "")} {it.linked_ref ? `· ${displayRecordValue(it.linked_ref)}` : ""} ·{" "}
                 {it.edate ? formatHijriDate(String(it.edate)) : "—"}
               </p>
+              <div className="flex flex-wrap items-center gap-1 pt-1">
+                <span
+                  className={
+                    "rounded-full px-2 py-1 text-[9px] font-black " +
+                    (it.doc_status === "معتمد"
+                      ? "bg-emerald-500/10 text-emerald-700"
+                      : it.doc_status === "ناقص"
+                        ? "bg-destructive/10 text-destructive"
+                        : "bg-amber-500/10 text-amber-700")
+                  }
+                >
+                  {String(it.doc_status || "قيد المراجعة")}
+                </span>
+                {it.doc_status !== "معتمد" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-[10px]"
+                    disabled={reviewingId === String(it.id)}
+                    onClick={() => void reviewEvidence(String(it.id), "معتمد", it.notes)}
+                  >
+                    {reviewingId === String(it.id) ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="size-3.5" />
+                    )}
+                    اعتماد
+                  </Button>
+                )}
+                {it.doc_status !== "ناقص" && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-[10px]"
+                    disabled={reviewingId === String(it.id)}
+                    onClick={() => void reviewEvidence(String(it.id), "ناقص", it.notes)}
+                  >
+                    <RotateCcw className="size-3.5" />
+                    إعادة
+                  </Button>
+                )}
+              </div>
+              {it.doc_status === "ناقص" && it.notes && (
+                <p className="line-clamp-2 text-[10px] leading-5 text-destructive">
+                  {String(it.notes).split("\n").at(-1)}
+                </p>
+              )}
               <div className="flex gap-1 pt-1">
                 <Button
                   variant="outline"
