@@ -202,7 +202,7 @@ export function RecordPage({
       const timeout = new Promise<never>((_, reject) => {
         window.setTimeout(
           () => reject(new Error("استغرق تحميل السجلات وقتًا أطول من المتوقع. أعد المحاولة.")),
-          10_000,
+          20_000,
         );
       });
 
@@ -520,7 +520,11 @@ export function RecordPage({
           <div>
             <p className="font-bold text-destructive">تعذّر تحميل {config.title}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {rowsQueryError instanceof Error ? rowsQueryError.message : "حدث خطأ أثناء جلب البيانات."}
+              {rowsQueryError && typeof rowsQueryError === "object" && "message" in rowsQueryError
+                ? String((rowsQueryError as { message?: unknown }).message ?? "حدث خطأ أثناء جلب البيانات.")
+                : rowsQueryError instanceof Error
+                  ? rowsQueryError.message
+                  : "حدث خطأ أثناء جلب البيانات."}
             </p>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => void refetchRows()}>
