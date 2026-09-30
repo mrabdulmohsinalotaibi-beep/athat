@@ -97,7 +97,7 @@ function AboutPage() {
             استخدم الرابط الذي تشاركه المدرسة لضمان وصول الطلب للموجه الصحيح.
           </p>
           <Button asChild variant="outline" className="mt-4 font-semibold">
-            <Link to="/services">عرض الخدمات الإرشادية</Link>
+            <Link to="/services">عرض خدمات التوجيه الطلابي</Link>
           </Button>
         </div>
       </section>
