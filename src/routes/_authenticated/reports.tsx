@@ -223,11 +223,16 @@ function ReportsPage() {
   const roleRank = (role: string) =>
     ({ principal: 50, vice_principal: 40, counselor: 30, teacher: 20, admin_staff: 20, guard: 10, observer: 0 })[role] ?? 0;
   const myRole = schoolTeamContext?.membership?.role ?? "";
-  const administrativeRecipients = (schoolTeamContext?.members ?? []).filter(
-    (member) =>
-      member.member_status === "active" &&
-      roleRank(member.role) > roleRank(myRole),
+  const activeSchoolMembers = (schoolTeamContext?.members ?? []).filter(
+    (member) => member.member_status === "active",
   );
+  const activeVicePrincipals = activeSchoolMembers.filter((member) => member.role === "vice_principal");
+  const administrativeRecipients =
+    myRole === "counselor"
+      ? activeVicePrincipals.length
+        ? activeVicePrincipals
+        : activeSchoolMembers.filter((member) => member.role === "principal")
+      : activeSchoolMembers.filter((member) => roleRank(member.role) > roleRank(myRole));
 
   const sendAdministrativeReport = useMutation({
     mutationFn: async () => {
@@ -272,7 +277,7 @@ function ReportsPage() {
     },
     onSuccess: () => {
       setHandoffNote("");
-      toast.success("تم إرسال نسخة ثابتة للقراءة فقط إلى الإدارة.");
+      toast.success("تم رفع نسخة ثابتة إلى مسار الاعتماد الإداري.");
     },
     onError: (error) => toast.error((error as Error).message),
   });
