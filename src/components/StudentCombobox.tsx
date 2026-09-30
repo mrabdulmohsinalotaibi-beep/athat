@@ -19,9 +19,11 @@ export interface StudentOption {
   guardian_phone: string;
 }
 
-export function useStudentOptions() {
+export function useStudentOptions(enabled = true) {
   return useQuery({
     queryKey: ["students-options"],
+    enabled,
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<StudentOption[]> => {
       const { data, error } = await supabase
         .from("students")
