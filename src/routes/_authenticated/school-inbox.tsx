@@ -253,7 +253,13 @@ function SchoolInboxPage() {
   const members = query.data?.members ?? [];
   const events = query.data?.events ?? [];
   const received = useMemo(
-    () => rows.filter((row) => row.recipient_member_id === memberId && row.status !== "archived"),
+    () =>
+      rows.filter(
+        (row) =>
+          row.status !== "archived" &&
+          (row.recipient_member_id === memberId ||
+            (row.sender_member_id === memberId && row.status === "returned")),
+      ),
     [rows, memberId],
   );
   const sent = useMemo(
@@ -262,7 +268,11 @@ function SchoolInboxPage() {
   );
   const visible = mode === "received" ? received : sent;
   const selected = rows.find((row) => row.id === selectedId) ?? null;
-  const unread = received.filter((row) => row.status === "sent").length;
+  const pendingActions = received.filter(
+    (row) =>
+      (row.recipient_member_id === memberId && row.status === "sent") ||
+      (row.sender_member_id === memberId && row.status === "returned"),
+  ).length;
   const principals = members.filter((member) => member.member_status === "active" && member.role === "principal");
   const selectedEvents = selected
     ? events.filter((event) => event.root_handoff_id === selected.root_handoff_id)
@@ -298,8 +308,8 @@ function SchoolInboxPage() {
             </p>
           </div>
           <div className="rounded-xl border bg-muted/30 px-4 py-3 text-center">
-            <p className="text-2xl font-black text-primary">{unread}</p>
-            <p className="text-[10px] text-muted-foreground">بانتظار الاطلاع</p>
+            <p className="text-2xl font-black text-primary">{pendingActions}</p>
+            <p className="text-[10px] text-muted-foreground">بانتظار إجراء</p>
           </div>
         </div>
       </section>
@@ -308,7 +318,7 @@ function SchoolInboxPage() {
         <aside className="rounded-2xl border bg-card p-3 shadow-sm">
           <div className="mb-3 grid grid-cols-2 gap-2">
             <Button variant={mode === "received" ? "default" : "outline"} onClick={() => { setMode("received"); setSelectedId(null); }}>
-              <Inbox className="size-4" /> الوارد {unread ? `(${unread})` : ""}
+              <Inbox className="size-4" /> الوارد {pendingActions ? `(${pendingActions})` : ""}
             </Button>
             <Button variant={mode === "sent" ? "default" : "outline"} onClick={() => { setMode("sent"); setSelectedId(null); }}>
               <Send className="size-4" /> المرسل
@@ -328,7 +338,11 @@ function SchoolInboxPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="line-clamp-2 text-sm font-black">{row.title}</p>
-                  {mode === "received" && row.status === "sent" && <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />}
+                  {mode === "received" &&
+                    ((row.recipient_member_id === memberId && row.status === "sent") ||
+                      (row.sender_member_id === memberId && row.status === "returned")) && (
+                      <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />
+                    )}
                 </div>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   {mode === "received"
@@ -371,12 +385,13 @@ function SchoolInboxPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <PdfPreviewButton elementRef={previewRef} filename={`تقرير-إداري-${selected.title}`} title={selected.title} />
-                  {selected.recipient_member_id === memberId &&
-                    !["sent", "read", "archived"].includes(selected.status) && (
-                      <Button variant="outline" onClick={() => archive.mutate(selected.id)} disabled={archive.isPending}>
-                        <Archive className="size-4" /> أرشفة
-                      </Button>
-                    )}
+                  {((selected.recipient_member_id === memberId &&
+                    !["sent", "read", "archived"].includes(selected.status)) ||
+                    (selected.sender_member_id === memberId && selected.status === "returned")) && (
+                    <Button variant="outline" onClick={() => archive.mutate(selected.id)} disabled={archive.isPending}>
+                      <Archive className="size-4" /> أرشفة
+                    </Button>
+                  )}
                 </div>
               </div>
 
