@@ -665,7 +665,7 @@ function ProgramsPage() {
           values,
         },
       });
-      const suggestions = result.suggestions ?? {};
+      const suggestions = result?.suggestions ?? {};
       setEditing((current) => ({ ...(current ?? emptyDraft()), ...suggestions }));
       toast.success(
         Object.keys(suggestions).length
