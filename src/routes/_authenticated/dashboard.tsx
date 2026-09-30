@@ -16,6 +16,8 @@ import {
   MessageSquareText,
   Sparkles,
   Users,
+  PlusCircle,
+  UploadCloud,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -281,6 +283,14 @@ function Dashboard() {
     },
   ];
 
+  const quickActions = [
+    { label: "فتح حالة", to: "/cases?new=1", icon: HeartHandshake },
+    { label: "إضافة جلسة", to: "/interviews?new=1", icon: MessageSquareText },
+    { label: "إضافة برنامج", to: "/programs?new=1", icon: Sparkles },
+    { label: "رفع شاهد", to: "/evidences?new=1", icon: UploadCloud },
+    { label: "إنشاء تقرير", to: "/reports", icon: FileCheck2 },
+  ];
+
   const actions = [
     ...overdueCases.slice(0, 2).map((item) => ({
       key: `case-${item.id}`,
@@ -351,13 +361,13 @@ function Dashboard() {
 
           <div className="flex items-center gap-2">
             {attentionCount > 0 && (
-              <Link
-                to="/posts"
+              <a
+                href="#today-work"
                 className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-black hover:bg-white/20"
               >
                 <BellRing className="size-4" />
                 {attentionCount} تحتاج إجراء
-              </Link>
+              </a>
             )}
             <button
               type="button"
@@ -368,6 +378,33 @@ function Dashboard() {
               {isFetching ? "تحديث…" : "تحديث"}
             </button>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border bg-card p-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-black">إجراء سريع</h2>
+            <p className="text-[10px] text-muted-foreground">ابدأ العمل مباشرة دون البحث داخل القوائم.</p>
+          </div>
+          <PlusCircle className="size-4 text-primary" />
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+          {quickActions.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.label}
+                href={item.to}
+                className="flex items-center gap-2 rounded-xl border bg-background/70 px-3 py-2.5 text-xs font-black transition hover:border-primary/35 hover:bg-primary/[0.04]"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="size-4" />
+                </span>
+                <span>{item.label}</span>
+              </a>
+            );
+          })}
         </div>
       </section>
 
@@ -433,10 +470,10 @@ function Dashboard() {
       </section>
 
       {(actions.length > 0 || openRequests > 0 || missingDocumentation.length > 0) && (
-        <section className="rounded-2xl border border-primary/15 bg-card p-3 shadow-sm">
+        <section id="today-work" className="scroll-mt-28 rounded-2xl border border-primary/15 bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-black">ما يحتاج إجراء الآن</h2>
+              <h2 className="text-sm font-black">مركز عمل اليوم</h2>
               <p className="text-[10px] text-muted-foreground">
                 عناصر مستخرجة من الحالات والخطة والبرامج والطلبات الواردة.
               </p>
