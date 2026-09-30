@@ -15,7 +15,7 @@ as $$
       not exists (
         select 1
         from public.school_members m
-        where m.user_id=auth.uid() and m.member_status='active'
+        where m.user_id=auth.uid()
       )
       or exists (
         select 1
@@ -40,7 +40,7 @@ as $$
       not exists (
         select 1
         from public.school_members m
-        where m.user_id=auth.uid() and m.member_status='active'
+        where m.user_id=auth.uid()
       )
       or exists (
         select 1
