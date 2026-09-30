@@ -24,6 +24,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
+import { QuickActionLauncher } from "@/components/QuickActionLauncher";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -83,6 +84,7 @@ function useDashboard() {
         ["posts", supabase.from("posts").select("id,is_public,kind")],
         ["schoolTasks", (supabase as any).from("school_tasks").select("id,title,status,due_date,priority,creator_member_id,assignee_member_id")],
         ["schoolHandoffs", (supabase as any).from("school_report_handoffs").select("id,status,recipient_member_id,sender_member_id,title,sent_at")],
+        ["auditLog", (supabase as any).from("audit_log").select("id,action,table_name,record_id,new_data,old_data,changed_at").order("changed_at", { ascending: false }).limit(8)],
       ] as const;
 
       const settled = await Promise.all(
@@ -127,6 +129,7 @@ function useDashboard() {
       const posts = pick("posts");
       const schoolTasks = pick("schoolTasks");
       const schoolHandoffs = pick("schoolHandoffs");
+      const auditLog = pick("auditLog");
 
       const sources = {
         students,
@@ -141,6 +144,7 @@ function useDashboard() {
         posts,
         schoolTasks,
         schoolHandoffs,
+        auditLog,
       };
 
       const failedSources = Object.entries(sources)
@@ -163,6 +167,7 @@ function useDashboard() {
         posts: posts.error ? [] : posts.data ?? [],
         schoolTasks: schoolTasks.error ? [] : schoolTasks.data ?? [],
         schoolHandoffs: schoolHandoffs.error ? [] : schoolHandoffs.data ?? [],
+        auditLog: auditLog.error ? [] : auditLog.data ?? [],
         schoolContext,
         failedSources,
       };
@@ -274,6 +279,45 @@ function Dashboard() {
     (item) => item.due_date && String(item.due_date).slice(0, 10) <= day,
   );
   const roleDueSchoolTasks = isManagementDashboard ? dueManagementTasks : dueSchoolTasks;
+
+  const recentWork = (data?.auditLog ?? [])
+    .map((item: any) => {
+      const payload = (item.new_data ?? item.old_data ?? {}) as Record<string, unknown>;
+      const config = ({
+        students: { label: "طالب", to: "/students" },
+        counseling_cases: { label: "حالة إرشادية", to: "/cases" },
+        interviews: { label: "جلسة", to: "/interviews" },
+        attendance: { label: "مواظبة", to: "/attendance" },
+        behavior: { label: "سلوك", to: "/behavior" },
+        referrals: { label: "إحالة", to: "/referrals" },
+        plan_tasks: { label: "مهمة خطة", to: "/plan" },
+        programs: { label: "برنامج", to: "/programs" },
+        evidences: { label: "شاهد", to: "/evidences" },
+        calendar_events: { label: "موعد", to: "/calendar" },
+        reports: { label: "تقرير", to: "/reports" },
+        posts: { label: "منشور", to: "/posts" },
+      } as Record<string, { label: string; to: string }>)[String(item.table_name ?? "")];
+      if (!config) return null;
+      const title =
+        payload["full_name"] ??
+        payload["student_name"] ??
+        payload["name"] ??
+        payload["task"] ??
+        payload["title"] ??
+        payload["topic"] ??
+        payload["summary"] ??
+        config.label;
+      return {
+        id: String(item.id),
+        label: config.label,
+        to: config.to,
+        title: String(title || config.label),
+        action: String(item.action ?? ""),
+        changedAt: String(item.changed_at ?? ""),
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 5) as Array<{ id: string; label: string; to: string; title: string; action: string; changedAt: string }>;
 
   const todayAgenda = (data?.calendar ?? [])
     .filter(
@@ -718,7 +762,7 @@ function Dashboard() {
             <h2 className="text-sm font-black">إجراء سريع · {schoolRoleLabel}</h2>
             <p className="text-[10px] text-muted-foreground">{dashboardSubtitle}</p>
           </div>
-          <PlusCircle className="size-4 text-primary" />
+          <QuickActionLauncher guidanceAllowed={isCounselorDashboard} />
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
           {quickActions.map((item) => {
@@ -946,6 +990,40 @@ function Dashboard() {
           )}
         </section>
       </div>
+
+      {isCounselorDashboard && (
+        <section className="rounded-2xl border bg-card p-3 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-black">أكمل من حيث توقفت</h2>
+              <p className="text-[10px] text-muted-foreground">آخر أعمالك المحفوظة في ذات.</p>
+            </div>
+            <Clock3 className="size-4 text-primary" />
+          </div>
+          {recentWork.length === 0 ? (
+            <div className="mt-2 rounded-xl bg-muted/40 p-3 text-[11px] text-muted-foreground">
+              ستظهر هنا آخر السجلات التي أضفتها أو عدلتها.
+            </div>
+          ) : (
+            <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {recentWork.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.to}
+                  className="min-w-0 rounded-xl border bg-background/60 p-2.5 transition hover:border-primary/35"
+                >
+                  <p className="text-[9px] font-black text-primary">{item.label}</p>
+                  <p className="mt-1 truncate text-[11px] font-black">{item.title}</p>
+                  <p className="mt-1 text-[9px] text-muted-foreground">
+                    {item.action === "INSERT" ? "أضيف" : item.action === "UPDATE" ? "عُدّل" : item.action === "RESTORE" ? "استُعيد" : "آخر نشاط"}
+                    {item.changedAt ? ` · ${new Date(item.changedAt).toLocaleString("ar-SA")}` : ""}
+                  </p>
+                </a>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {(data?.failedSources.length ?? 0) > 0 && (
         <section className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[10px]">
