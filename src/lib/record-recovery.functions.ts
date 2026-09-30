@@ -27,6 +27,17 @@ function normEmail(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
 
+const OWNER_EMAIL_SHA256 =
+  "f85fb6c59825f60fcd934e427128495266b9031d300f51d8fb33aa6f1f209d00";
+
+async function sha256(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /**
  * Recover rows that still exist in production but are owned by an older auth UID.
  *
@@ -107,6 +118,45 @@ export const recoverLegacyRecords = createServerFn({ method: "POST" })
       }
     } catch (error) {
       console.warn("[record-recovery] school identity lookup:", error);
+    }
+
+    // 3) Last-resort recovery for the verified owner account only.
+    // Lovable Cloud can keep old rows after an Auth user is recreated. In that
+    // case the old auth row may no longer exist, so exact-email matching cannot
+    // discover the legacy UUID. For this one verified owner account we also
+    // accept an exact school + counselor identity match. This path is never used
+    // for any other account.
+    if (!candidateIds.size && (await sha256(email)) === OWNER_EMAIL_SHA256) {
+      try {
+        const { data } = await (supabaseAdmin as any)
+          .from("school_settings")
+          .select("user_id,school_name,counselor_name")
+          .eq("school_name", "متوسطة العلاء بن الحضرمي")
+          .eq("counselor_name", "عبدالمحسن العتيبي");
+
+        for (const row of data ?? []) {
+          const id = typeof row?.user_id === "string" ? row.user_id : "";
+          if (id && id !== userId) candidateIds.add(id);
+        }
+      } catch (error) {
+        console.warn("[record-recovery] verified owner school lookup:", error);
+      }
+
+      try {
+        const { data } = await (supabaseAdmin as any)
+          .from("user_profiles")
+          .select("id,full_name,school_name")
+          .eq("full_name", "عبدالمحسن العتيبي");
+
+        for (const row of data ?? []) {
+          const id = typeof row?.id === "string" ? row.id : "";
+          const sameSchool =
+            !row?.school_name || String(row.school_name).trim() === "متوسطة العلاء بن الحضرمي";
+          if (id && id !== userId && sameSchool) candidateIds.add(id);
+        }
+      } catch (error) {
+        console.warn("[record-recovery] verified owner profile lookup:", error);
+      }
     }
 
     const countCurrentRecords = async () => {
