@@ -23,7 +23,7 @@ export function useGuidanceProfile(schoolSlug?: string | null) {
     queryKey: ["guidance_profile", slug],
     queryFn: async (): Promise<GuidanceProfile | null> => {
       try {
-        const { data, error } = await supabase.rpc("get_guidance_profile", { p_slug: slug });
+        const { data, error } = await (supabase as any).rpc("get_guidance_profile", { p_slug: slug });
         if (error) {
           console.warn("[public-profile] تعذّر جلب الملف العام:", error.message);
           return null;
