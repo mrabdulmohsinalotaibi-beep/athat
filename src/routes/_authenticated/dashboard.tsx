@@ -93,16 +93,17 @@ function useDashboard() {
         error: { message?: string } | Error | null;
       }>;
 
-      const students = resultMap.students;
-      const cases = resultMap.cases;
-      const programs = resultMap.programs;
-      const calendar = resultMap.calendar;
-      const planTasks = resultMap.planTasks;
-      const interviews = resultMap.interviews;
-      const evidences = resultMap.evidences;
-      const publicRequests = resultMap.publicRequests;
-      const feedback = resultMap.feedback;
-      const posts = resultMap.posts;
+      const emptyResult = { data: [] as any[], error: null as Error | null };
+      const students = resultMap["students"] ?? emptyResult;
+      const cases = resultMap["cases"] ?? emptyResult;
+      const programs = resultMap["programs"] ?? emptyResult;
+      const calendar = resultMap["calendar"] ?? emptyResult;
+      const planTasks = resultMap["planTasks"] ?? emptyResult;
+      const interviews = resultMap["interviews"] ?? emptyResult;
+      const evidences = resultMap["evidences"] ?? emptyResult;
+      const publicRequests = resultMap["publicRequests"] ?? emptyResult;
+      const feedback = resultMap["feedback"] ?? emptyResult;
+      const posts = resultMap["posts"] ?? emptyResult;
 
       const sources = {
         students,
@@ -120,7 +121,10 @@ function useDashboard() {
       const failedSources = Object.entries(sources)
         .filter(([, result]) => Boolean(result.error))
         .map(([name, result]) => {
-          console.warn(`[dashboard] تعذّر تحميل ${name}:`, result.error?.message);
+          console.warn(
+            `[dashboard] تعذّر تحميل ${name}:`,
+            result.error instanceof Error ? result.error.message : result.error?.message,
+          );
           return name;
         });
 
