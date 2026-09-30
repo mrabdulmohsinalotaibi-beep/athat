@@ -138,6 +138,27 @@ function ExecutionFlowPage() {
     },
   });
 
+  const approveDocumentation = useMutation({
+    mutationFn: async ({ taskId }: { taskId: string }) => {
+      const { error } = await supabase
+        .from("plan_tasks")
+        .update({ doc_status: "معتمد" })
+        .eq("id", taskId);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["execution-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["plan-execution-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
+      ]);
+      toast.success("تم اعتماد التوثيق. أصبحت المهمة مكتملة ومعتمدة وجاهزة للتقرير الرسمي.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "تعذر اعتماد التوثيق.");
+    },
+  });
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["execution-flow"],
     queryFn: async () => {
@@ -226,11 +247,24 @@ function ExecutionFlowPage() {
   });
   const reportReadyTasks = tasks.filter((task) => {
     const taskPrograms = programsByTask.get(task.id) ?? [];
+    const taskEvidences = evidenceForTask(task, taskPrograms);
     return (
       doneStatus(task.exec_status) &&
       taskPrograms.length > 0 &&
       taskPrograms.every((program) => doneStatus(program.exec_status)) &&
-      evidenceForTask(task, taskPrograms).length > 0
+      taskEvidences.some((evidence) => evidence.doc_status === "معتمد") &&
+      task.doc_status !== "معتمد"
+    );
+  });
+  const fullyApprovedTasks = tasks.filter((task) => {
+    const taskPrograms = programsByTask.get(task.id) ?? [];
+    const taskEvidences = evidenceForTask(task, taskPrograms);
+    return (
+      doneStatus(task.exec_status) &&
+      taskPrograms.length > 0 &&
+      taskPrograms.every((program) => doneStatus(program.exec_status)) &&
+      taskEvidences.some((evidence) => evidence.doc_status === "معتمد") &&
+      task.doc_status === "معتمد"
     );
   });
 
@@ -272,7 +306,7 @@ function ExecutionFlowPage() {
         <Stat
           title="جاهزة لاعتماد التنفيذ"
           value={approvalReadyTasks.length}
-          hint={String(reportReadyTasks.length) + " مكتملة وجاهزة للتقرير"}
+          hint={String(reportReadyTasks.length) + " جاهزة لاعتماد التقرير · " + String(fullyApprovedTasks.length) + " معتمدة بالكامل"}
         />
       </section>
 
@@ -320,10 +354,24 @@ function ExecutionFlowPage() {
             const programDone = taskPrograms.length > 0 && taskPrograms.every((program) => doneStatus(program.exec_status));
             const taskDone = doneStatus(task.exec_status);
             const documented = taskEvidences.length > 0;
+            const approvedEvidenceCount = taskEvidences.filter(
+              (evidence) => evidence.doc_status === "معتمد",
+            ).length;
+            const evidenceApproved = approvedEvidenceCount > 0;
+            const documentationApproved = task.doc_status === "معتمد";
             const readyForApproval = !taskDone && programDone && documented;
-            const reportReady = taskDone && programDone && documented;
+            const readyForReportApproval =
+              taskDone && programDone && evidenceApproved && !documentationApproved;
+            const reportReady =
+              taskDone && programDone && evidenceApproved && documentationApproved;
             const executionPercent = taskExecutionPercent(task, taskPrograms);
-            const documentationPercent = documented ? 100 : 0;
+            const documentationPercent = !documented
+              ? 0
+              : !evidenceApproved
+                ? 50
+                : documentationApproved
+                  ? 100
+                  : 75;
             const reportUrl = "/reports?workflow=1&planTaskId=" + encodeURIComponent(task.id);
             const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);
             const primaryProgram = taskPrograms[0];
@@ -382,6 +430,50 @@ function ExecutionFlowPage() {
                   </div>
                 )}
 
+                {taskDone && documented && !evidenceApproved && (
+                  <div className="flex flex-col gap-3 border-b border-amber-500/25 bg-amber-500/[0.06] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-black text-amber-800">الشاهد ينتظر المراجعة</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                        التنفيذ معتمد، لكن لا يمكن اعتماد التوثيق قبل مراجعة شاهد واحد على الأقل واعتماده.
+                      </p>
+                    </div>
+                    <Button asChild type="button" size="sm" variant="outline">
+                      <Link to="/evidences">مراجعة الشواهد</Link>
+                    </Button>
+                  </div>
+                )}
+
+                {readyForReportApproval && (
+                  <div className="flex flex-col gap-3 border-b border-emerald-500/25 bg-emerald-500/[0.06] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-black text-emerald-700">جاهز لاعتماد التوثيق والتقرير</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                        التنفيذ مكتمل ويوجد شاهد معتمد. لن يعتمد ذات التقرير إلا بعد موافقتك الآن.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={approveDocumentation.isPending}
+                      onClick={() => {
+                        const approved = window.confirm(
+                          "هل تعتمد التوثيق لهذه المهمة؟ بعد الموافقة ستصبح «مكتملة ومعتمدة» وجاهزة للتقرير الرسمي.",
+                        );
+                        if (approved) approveDocumentation.mutate({ taskId: task.id });
+                      }}
+                    >
+                      {approveDocumentation.isPending &&
+                      approveDocumentation.variables?.taskId === task.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <FolderCheck className="size-4" />
+                      )}
+                      اعتماد التوثيق والتقرير
+                    </Button>
+                  </div>
+                )}
+
                 <div className="grid gap-0 md:grid-cols-4">
                   <Step
                     number="1"
@@ -406,8 +498,12 @@ function ExecutionFlowPage() {
                   <Step
                     number="3"
                     title="الشاهد"
-                    done={documented}
-                    detail={taskEvidences.length ? String(taskEvidences.length) + " شاهد مرتبط" : "ينقصه شاهد"}
+                    done={evidenceApproved}
+                    detail={
+                      taskEvidences.length
+                        ? String(taskEvidences.length) + " شاهد · " + String(approvedEvidenceCount) + " معتمد"
+                        : "ينقصه شاهد"
+                    }
                     action={
                       primaryProgram ? (
                         <Button type="button" size="sm" variant="ghost" onClick={() => setEvidenceTarget({ type: "برنامج", ref: primaryProgram.id, label: primaryProgram.name || "برنامج" })}>
@@ -424,7 +520,15 @@ function ExecutionFlowPage() {
                     number="4"
                     title="التقرير"
                     done={reportReady}
-                    detail={reportReady ? "المسار مكتمل وجاهز" : "يتحدث تلقائيًا من السجلات"}
+                    detail={
+                      reportReady
+                        ? "مكتمل ومعتمد"
+                        : readyForReportApproval
+                          ? "جاهز لاعتمادك"
+                          : taskDone && documented && !evidenceApproved
+                            ? "بانتظار اعتماد الشاهد"
+                            : "مسودة من السجلات الحالية"
+                    }
                     action={<Button asChild size="sm" variant="ghost"><Link to={reportUrl as never}>فتح التقرير</Link></Button>}
                   />
                 </div>
