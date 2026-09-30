@@ -14,6 +14,140 @@ function isIOSLike() {
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
+export function openNativeDocumentPrint(element: HTMLElement, title: string) {
+  if (typeof window === "undefined") return false;
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return false;
+
+  const stylesheetLinks = Array.from(
+    document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+  )
+    .map((link) => `<link rel="stylesheet" href="${link.href}">`)
+    .join("");
+
+  const inlineStyles = Array.from(document.querySelectorAll<HTMLStyleElement>("style"))
+    .map((style) => `<style>${style.textContent ?? ""}</style>`)
+    .join("");
+
+  const cloned = element.cloneNode(true) as HTMLElement;
+  cloned.querySelectorAll('[data-pdf-exclude="true"]').forEach((node) => node.remove());
+
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <base href="${window.location.origin}/" />
+  <title>${title.replace(/[<>]/g, "")}</title>
+  ${stylesheetLinks}
+  ${inlineStyles}
+  <style>
+    @page { size: A4 portrait; margin: 10mm; }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #fff !important;
+      color: #2f2f2f !important;
+      direction: rtl !important;
+      -webkit-text-size-adjust: 100% !important;
+      text-size-adjust: 100% !important;
+    }
+    body {
+      width: 190mm !important;
+      margin: 0 auto !important;
+      font-family: Tahoma, Arial, "Cairo Variable", "Cairo", sans-serif !important;
+    }
+    .record-pdf-document {
+      width: 190mm !important;
+      max-width: 190mm !important;
+      min-width: 190mm !important;
+      min-height: 277mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      display: block !important;
+      direction: rtl !important;
+      font-family: Tahoma, Arial, "Cairo Variable", "Cairo", sans-serif !important;
+      letter-spacing: 0 !important;
+      word-spacing: normal !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .record-pdf-document *,
+    .record-pdf-document p,
+    .record-pdf-document div,
+    .record-pdf-document span,
+    .record-pdf-document td,
+    .record-pdf-document th {
+      letter-spacing: 0 !important;
+      word-spacing: normal !important;
+      text-shadow: none !important;
+      transform: none !important;
+    }
+    .record-pdf-document p,
+    .record-pdf-document li,
+    .record-pdf-document dd,
+    .record-pdf-document dt,
+    .record-pdf-document td,
+    .record-pdf-document th {
+      direction: rtl !important;
+      unicode-bidi: plaintext !important;
+      line-height: 1.85 !important;
+      word-break: normal !important;
+      overflow-wrap: break-word !important;
+      white-space: normal !important;
+    }
+    .record-pdf-document [data-pdf-block="true"] {
+      min-height: 0 !important;
+      height: auto !important;
+      overflow: visible !important;
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+    }
+    .record-pdf-document [data-pdf-block="true"] > div,
+    .record-pdf-document .whitespace-pre-wrap {
+      white-space: pre-wrap !important;
+      line-height: 1.9 !important;
+    }
+    .official-letterhead,
+    .final-signatures,
+    .official-document-footer,
+    tr {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    .official-document-footer {
+      margin-top: 8mm !important;
+    }
+    [data-pdf-exclude="true"] { display: none !important; }
+  </style>
+</head>
+<body>
+  ${cloned.outerHTML}
+  <script>
+    (async () => {
+      try {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        const images = Array.from(document.images);
+        await Promise.all(images.map((img) => img.complete ? Promise.resolve() : new Promise((resolve) => {
+          img.addEventListener("load", resolve, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+        })));
+      } catch {}
+      setTimeout(() => window.print(), 250);
+    })();
+  <\/script>
+</body>
+</html>`);
+  printWindow.document.close();
+  return true;
+}
+
 function safeFilename(value: string) {
   return (
     value
@@ -36,6 +170,9 @@ export async function createPdfFile({
   element,
   filename,
 }: Pick<SharePdfOptions, "element" | "filename">) {
+  // iOS Safari has known canvas text-shaping/page-slicing issues with Arabic.
+  // Keep this function for downloadable PDF generation, but the UI uses the
+  // native print/PDF path on iPhone/iPad for faithful Arabic pagination.
   const scale = Math.min(2, window.devicePixelRatio || 1);
   const previousCaptureFlag = element.dataset["pdfCaptureTarget"];
   element.dataset["pdfCaptureTarget"] = "true";
@@ -224,6 +361,8 @@ export async function createPdfFile({
     const margin = 8;
     const contentWidth = pageWidth - margin * 2;
     const contentHeight = pageHeight - margin * 2;
+    const pageGuardMm = 5;
+    const guardedContentHeight = contentHeight - pageGuardMm * 2;
 
     const naturalHeightMm = (canvas.height * contentWidth) / canvas.width;
     const fitScale = Math.min(1, contentHeight / Math.max(1, naturalHeightMm));
@@ -248,7 +387,7 @@ export async function createPdfFile({
         canvas.width / Math.max(1, clonedTargetWidth || canvas.width);
       const pageCapacityPx = Math.max(
         1,
-        Math.floor((contentHeight * canvas.width) / contentWidth),
+        Math.floor((guardedContentHeight * canvas.width) / contentWidth),
       );
       const breakPoints = clonedBreakPoints.map((point) =>
         Math.round(point * cloneToCanvasScale),
@@ -301,9 +440,9 @@ export async function createPdfFile({
           slice.toDataURL("image/jpeg", 0.94),
           "JPEG",
           margin,
-          margin,
+          margin + pageGuardMm,
           contentWidth,
-          Math.min(contentHeight, sliceHeightMm),
+          Math.min(guardedContentHeight, sliceHeightMm),
         );
 
         sourceY = sourceEnd;
