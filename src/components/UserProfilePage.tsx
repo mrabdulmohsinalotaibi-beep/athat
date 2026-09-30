@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -173,9 +173,44 @@ export function UserProfilePage() {
     },
   });
 
+  const { data: schoolRecovery } = useQuery({
+    queryKey: ["profile-school-recovery", user?.id],
+    enabled: Boolean(user?.id),
+    staleTime: 0,
+    refetchOnMount: "always",
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("school_settings")
+        .select("school_name,education_dept,education_office,counselor_name")
+        .eq("user_id", user!.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        console.warn("[profile-recovery] school settings unavailable:", error.message);
+        return null;
+      }
+      return data as {
+        school_name?: string | null;
+        education_dept?: string | null;
+        education_office?: string | null;
+        counselor_name?: string | null;
+      } | null;
+    },
+  });
+
+  function nonEmpty(value: unknown) {
+    return typeof value === "string" && value.trim() ? value.trim() : "";
+  }
+
   const displayName =
     profile?.full_name ||
-    String(user?.user_metadata?.["full_name"] || user?.user_metadata?.["name"] || "الموجه الطلابي");
+    String(
+      user?.user_metadata?.["full_name"] ||
+      user?.user_metadata?.["name"] ||
+      schoolRecovery?.counselor_name ||
+      "الموجه الطلابي",
+    );
 
   const displayJobTitle =
     profile?.job_title || String(user?.user_metadata?.["job_title"] || "");
@@ -185,6 +220,57 @@ export function UserProfilePage() {
     profile?.bio || String(user?.user_metadata?.["bio"] || "");
   const displaySchoolRole =
     profile?.school_role || String(user?.user_metadata?.["school_role"] || "الموجه الطلابي");
+
+  useEffect(() => {
+    if (!user) return;
+
+    const current = user.user_metadata ?? {};
+    const recovered: Record<string, string> = {};
+
+    const candidates: Record<string, unknown> = {
+      full_name: profile?.full_name || schoolRecovery?.counselor_name,
+      name: profile?.full_name || schoolRecovery?.counselor_name,
+      job_title: profile?.job_title,
+      phone: profile?.phone,
+      bio: profile?.bio,
+      school_role: profile?.school_role,
+      professional_email: profile?.professional_email,
+      employee_no: profile?.employee_no,
+      qualification: profile?.qualification,
+      specialization: profile?.specialization,
+      experience_years:
+        profile?.experience_years !== null && profile?.experience_years !== undefined
+          ? String(profile.experience_years)
+          : "",
+      school_name: profile?.school_name || schoolRecovery?.school_name,
+      education_department:
+        profile?.education_department || schoolRecovery?.education_dept,
+      education_office: profile?.education_office || schoolRecovery?.education_office,
+      city: profile?.city,
+      office_location: profile?.office_location,
+      office_hours: profile?.office_hours,
+      interests: profile?.interests,
+      avatar_data_url: profile?.avatar_data_url,
+    };
+
+    for (const [key, value] of Object.entries(candidates)) {
+      if (!nonEmpty(current[key]) && nonEmpty(value)) {
+        recovered[key] = nonEmpty(value);
+      }
+    }
+
+    if (!Object.keys(recovered).length) return;
+
+    void supabase.auth
+      .updateUser({ data: { ...current, ...recovered } })
+      .then(({ error }) => {
+        if (error) {
+          console.warn("[profile-recovery] auth metadata backfill failed:", error.message);
+          return;
+        }
+        void queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+      });
+  }, [profile, queryClient, schoolRecovery, user]);
 
   const avatarUrl = useMemo(() => {
     if (profile?.avatar_path) {
@@ -217,43 +303,91 @@ export function UserProfilePage() {
       if (!user) throw new Error("لم يتم العثور على المستخدم.");
       const values = new FormData(form);
 
+      const enteredFullName = String(values.get("full_name") || "").trim();
+      const enteredJobTitle = String(values.get("job_title") || "").trim();
+      const enteredPhone = String(values.get("phone") || "").trim();
+      const enteredBio = String(values.get("bio") || "").trim();
+      const enteredRole = String(values.get("school_role") || "").trim();
+
       const basePayload = {
         id: user.id,
-        full_name: String(values.get("full_name") || "").trim() || null,
-        job_title: String(values.get("job_title") || "").trim() || null,
-        phone: String(values.get("phone") || "").trim() || null,
-        school_role: String(values.get("school_role") || "الموجه الطلابي"),
-        bio: String(values.get("bio") || "").trim() || null,
+        full_name:
+          enteredFullName ||
+          profile?.full_name ||
+          nonEmpty(user.user_metadata?.["full_name"]) ||
+          nonEmpty(schoolRecovery?.counselor_name) ||
+          null,
+        job_title:
+          enteredJobTitle ||
+          profile?.job_title ||
+          nonEmpty(user.user_metadata?.["job_title"]) ||
+          null,
+        phone:
+          enteredPhone ||
+          profile?.phone ||
+          nonEmpty(user.user_metadata?.["phone"]) ||
+          null,
+        school_role:
+          enteredRole ||
+          profile?.school_role ||
+          nonEmpty(user.user_metadata?.["school_role"]) ||
+          "الموجه الطلابي",
+        bio:
+          enteredBio ||
+          profile?.bio ||
+          nonEmpty(user.user_metadata?.["bio"]) ||
+          null,
         avatar_path: profile?.avatar_path || null,
       };
 
+      const preserve = (key: keyof ExtendedProfile, entered: unknown, fallback?: unknown) =>
+        String(entered || "").trim() ||
+        profileValue(profile, user, key) ||
+        nonEmpty(fallback);
+
       const extendedPayload: ExtendedProfile = {
-        professional_email: String(values.get("professional_email") || "").trim(),
-        employee_no: String(values.get("employee_no") || "").trim(),
-        qualification: String(values.get("qualification") || "").trim(),
-        specialization: String(values.get("specialization") || "").trim(),
-        experience_years: String(values.get("experience_years") || "").trim(),
-        school_name: String(values.get("school_name") || "").trim(),
-        education_department: String(values.get("education_department") || "").trim(),
-        education_office: String(values.get("education_office") || "").trim(),
-        city: String(values.get("city") || "").trim(),
-        office_location: String(values.get("office_location") || "").trim(),
-        office_hours: String(values.get("office_hours") || "").trim(),
-        interests: String(values.get("interests") || "").trim(),
+        professional_email: preserve("professional_email", values.get("professional_email")),
+        employee_no: preserve("employee_no", values.get("employee_no")),
+        qualification: preserve("qualification", values.get("qualification")),
+        specialization: preserve("specialization", values.get("specialization")),
+        experience_years: preserve("experience_years", values.get("experience_years")),
+        school_name: preserve("school_name", values.get("school_name"), schoolRecovery?.school_name),
+        education_department: preserve(
+          "education_department",
+          values.get("education_department"),
+          schoolRecovery?.education_dept,
+        ),
+        education_office: preserve(
+          "education_office",
+          values.get("education_office"),
+          schoolRecovery?.education_office,
+        ),
+        city: preserve("city", values.get("city")),
+        office_location: preserve("office_location", values.get("office_location")),
+        office_hours: preserve("office_hours", values.get("office_hours")),
+        interests: preserve("interests", values.get("interests")),
       };
 
       // Primary portable copy: Supabase Auth metadata follows the same account
       // on every phone/tablet/browser immediately and does not depend on a local cache.
+      const metadataPatch: Record<string, string> = {};
+      const metadataCandidates: Record<string, unknown> = {
+        ...extendedPayload,
+        full_name: basePayload.full_name,
+        name: basePayload.full_name,
+        job_title: basePayload.job_title,
+        phone: basePayload.phone,
+        bio: basePayload.bio,
+        school_role: basePayload.school_role,
+      };
+      for (const [key, value] of Object.entries(metadataCandidates)) {
+        if (nonEmpty(value)) metadataPatch[key] = nonEmpty(value);
+      }
+
       const { error: authError } = await supabase.auth.updateUser({
         data: {
           ...user.user_metadata,
-          ...extendedPayload,
-          full_name: basePayload.full_name || "",
-          name: basePayload.full_name || "",
-          job_title: basePayload.job_title || "",
-          phone: basePayload.phone || "",
-          bio: basePayload.bio || "",
-          school_role: basePayload.school_role,
+          ...metadataPatch,
         },
       });
       if (authError) throw authError;
@@ -267,12 +401,14 @@ export function UserProfilePage() {
 
       // Once the extended cloud-profile migration exists, also mirror the same
       // values there. A missing-column error must never prevent cross-device sync.
-      const extendedDbPayload = {
-        ...extendedPayload,
-        experience_years: extendedPayload.experience_years
-          ? Number(extendedPayload.experience_years)
-          : null,
-      };
+      const extendedDbPayload = Object.fromEntries(
+        Object.entries({
+          ...extendedPayload,
+          experience_years: extendedPayload.experience_years
+            ? Number(extendedPayload.experience_years)
+            : undefined,
+        }).filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== ""),
+      );
       const { error: extendedDbError } = await (supabase as any)
         .from("user_profiles")
         .update(extendedDbPayload)
@@ -678,15 +814,15 @@ export function UserProfilePage() {
               </div>
               <div>
                 <Label htmlFor="profile-school-name" className="mb-1.5 block">اسم المدرسة</Label>
-                <Input id="profile-school-name" name="school_name" defaultValue={profileValue(profile, user, "school_name")} placeholder="اسم المدرسة" />
+                <Input id="profile-school-name" name="school_name" defaultValue={profileValue(profile, user, "school_name") || schoolRecovery?.school_name || ""} placeholder="اسم المدرسة" />
               </div>
               <div>
                 <Label htmlFor="profile-department" className="mb-1.5 block">إدارة التعليم</Label>
-                <Input id="profile-department" name="education_department" defaultValue={profileValue(profile, user, "education_department")} placeholder="إدارة التعليم بمنطقة..." />
+                <Input id="profile-department" name="education_department" defaultValue={profileValue(profile, user, "education_department") || schoolRecovery?.education_dept || ""} placeholder="إدارة التعليم بمنطقة..." />
               </div>
               <div>
                 <Label htmlFor="profile-office" className="mb-1.5 block">مكتب التعليم</Label>
-                <Input id="profile-office" name="education_office" defaultValue={profileValue(profile, user, "education_office")} placeholder="اختياري" />
+                <Input id="profile-office" name="education_office" defaultValue={profileValue(profile, user, "education_office") || schoolRecovery?.education_office || ""} placeholder="اختياري" />
               </div>
               <div>
                 <Label htmlFor="profile-office-location" className="mb-1.5 block">موقع مكتب التوجيه</Label>
