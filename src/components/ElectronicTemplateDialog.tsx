@@ -72,7 +72,7 @@ export function ElectronicTemplateDialog({
           values,
         },
       });
-      const suggestions = result.suggestions ?? {};
+      const suggestions = result?.suggestions ?? {};
       const usable = Object.fromEntries(
         Object.entries(suggestions).filter(([name, text]) => !values[name]?.trim() && text.trim()),
       );
