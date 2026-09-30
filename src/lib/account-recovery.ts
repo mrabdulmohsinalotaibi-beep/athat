@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { recoverLegacyRecords } from "@/lib/record-recovery.functions";
 
 const RECOVERY_EMAIL_SHA256 =
   "f85fb6c59825f60fcd934e427128495266b9031d300f51d8fb33aa6f1f209d00";
@@ -151,10 +152,35 @@ export function useKnownAccountRecovery() {
       }
 
       if (cancelled) return;
+
+      try {
+        const recovery = await recoverLegacyRecords();
+        if (recovery?.recovered && recovery.total > 0) {
+          console.info("[record-recovery] restored", recovery.total, "records");
+        }
+      } catch (error) {
+        console.warn("[record-recovery] server recovery unavailable:", error);
+      }
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["auth-user"] }),
         queryClient.invalidateQueries({ queryKey: ["user-profile", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["school_settings"] }),
+        queryClient.invalidateQueries({ queryKey: ["students"] }),
+        queryClient.invalidateQueries({ queryKey: ["counseling_cases"] }),
+        queryClient.invalidateQueries({ queryKey: ["plan_tasks"] }),
+        queryClient.invalidateQueries({ queryKey: ["programs"] }),
+        queryClient.invalidateQueries({ queryKey: ["interviews"] }),
+        queryClient.invalidateQueries({ queryKey: ["attendance"] }),
+        queryClient.invalidateQueries({ queryKey: ["behavior"] }),
+        queryClient.invalidateQueries({ queryKey: ["referrals"] }),
+        queryClient.invalidateQueries({ queryKey: ["committees"] }),
+        queryClient.invalidateQueries({ queryKey: ["evidences"] }),
+        queryClient.invalidateQueries({ queryKey: ["reports"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar_events"] }),
+        queryClient.invalidateQueries({ queryKey: ["lookups"] }),
+        queryClient.invalidateQueries({ queryKey: ["posts"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
     })();
 
