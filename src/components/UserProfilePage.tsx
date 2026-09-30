@@ -134,6 +134,9 @@ export function UserProfilePage() {
     refetch: refetchUser,
   } = useQuery({
     queryKey: ["auth-user"],
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data: sessionData } = await supabase.auth.getSession();
       try {
@@ -156,6 +159,9 @@ export function UserProfilePage() {
   } = useQuery({
     queryKey: ["user-profile", user?.id],
     enabled: Boolean(user?.id),
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("user_profiles")
@@ -171,6 +177,15 @@ export function UserProfilePage() {
     profile?.full_name ||
     String(user?.user_metadata?.["full_name"] || user?.user_metadata?.["name"] || "الموجه الطلابي");
 
+  const displayJobTitle =
+    profile?.job_title || String(user?.user_metadata?.["job_title"] || "");
+  const displayPhone =
+    profile?.phone || String(user?.user_metadata?.["phone"] || "");
+  const displayBio =
+    profile?.bio || String(user?.user_metadata?.["bio"] || "");
+  const displaySchoolRole =
+    profile?.school_role || String(user?.user_metadata?.["school_role"] || "الموجه الطلابي");
+
   const avatarUrl = useMemo(() => {
     if (profile?.avatar_path) {
       return supabase.storage.from("user-avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
@@ -183,9 +198,9 @@ export function UserProfilePage() {
   const completion = useMemo(() => {
     const fields = [
       displayName,
-      profile?.job_title,
-      profile?.phone,
-      profile?.bio,
+      displayJobTitle,
+      displayPhone,
+      displayBio,
       profile?.avatar_path,
       profileValue(profile, user, "qualification"),
       profileValue(profile, user, "specialization"),
@@ -227,20 +242,8 @@ export function UserProfilePage() {
         interests: String(values.get("interests") || "").trim(),
       };
 
-      const cloudProfilePayload = {
-        ...basePayload,
-        ...extendedPayload,
-        experience_years: extendedPayload.experience_years
-          ? Number(extendedPayload.experience_years)
-          : null,
-      };
-
-      const { error } = await (supabase as any)
-        .from("user_profiles")
-        .upsert(cloudProfilePayload, { onConflict: "id" });
-      if (error) throw error;
-
-      // Keep auth metadata as a second copy for resilience and fast restore.
+      // Primary portable copy: Supabase Auth metadata follows the same account
+      // on every phone/tablet/browser immediately and does not depend on a local cache.
       const { error: authError } = await supabase.auth.updateUser({
         data: {
           ...user.user_metadata,
@@ -248,15 +251,40 @@ export function UserProfilePage() {
           full_name: basePayload.full_name || "",
           name: basePayload.full_name || "",
           job_title: basePayload.job_title || "",
+          phone: basePayload.phone || "",
+          bio: basePayload.bio || "",
           school_role: basePayload.school_role,
         },
       });
       if (authError) throw authError;
+
+      // Save the stable base fields in user_profiles (these columns exist in all
+      // deployed schemas). This keeps older deployments compatible.
+      const { error: baseError } = await (supabase as any)
+        .from("user_profiles")
+        .upsert(basePayload, { onConflict: "id" });
+      if (baseError) throw baseError;
+
+      // Once the extended cloud-profile migration exists, also mirror the same
+      // values there. A missing-column error must never prevent cross-device sync.
+      const extendedDbPayload = {
+        ...extendedPayload,
+        experience_years: extendedPayload.experience_years
+          ? Number(extendedPayload.experience_years)
+          : null,
+      };
+      const { error: extendedDbError } = await (supabase as any)
+        .from("user_profiles")
+        .update(extendedDbPayload)
+        .eq("id", user.id);
+      if (extendedDbError) {
+        console.warn("[profile-sync] extended database mirror pending:", extendedDbError.message);
+      }
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["user-profile", user?.id] });
       await queryClient.invalidateQueries({ queryKey: ["auth-user"] });
-      toast.success("تم حفظ الملف الشخصي وتحديث بياناتك.");
+      toast.success("تم حفظ بياناتك سحابيًا وستظهر عند تسجيل الدخول من أي جهاز.");
     },
     onError: (error: Error) => toast.error(arabicAuthError(error.message)),
   });
@@ -321,15 +349,6 @@ export function UserProfilePage() {
         // Safe fallback: keep a very small, optimized avatar in auth metadata so
         // the user can update the profile even before Storage RLS is deployed.
         const fallbackAvatar = await createAvatarFallback(file);
-        const { error: profileFallbackError } = await (supabase as any)
-          .from("user_profiles")
-          .upsert({
-            id: user.id,
-            full_name: profile?.full_name || String(user.user_metadata?.["full_name"] || "") || null,
-            avatar_data_url: fallbackAvatar,
-          }, { onConflict: "id" });
-        if (profileFallbackError) throw profileFallbackError;
-
         const { error: metadataError } = await supabase.auth.updateUser({
           data: {
             ...user.user_metadata,
@@ -337,6 +356,15 @@ export function UserProfilePage() {
           },
         });
         if (metadataError) throw metadataError;
+
+        // Best-effort mirror for databases that already have avatar_data_url.
+        const { error: profileFallbackError } = await (supabase as any)
+          .from("user_profiles")
+          .update({ avatar_data_url: fallbackAvatar })
+          .eq("id", user.id);
+        if (profileFallbackError) {
+          console.warn("[profile-sync] avatar database mirror pending:", profileFallbackError.message);
+        }
 
         await queryClient.invalidateQueries({ queryKey: ["user-profile", user.id] });
         await queryClient.invalidateQueries({ queryKey: ["auth-user"] });
@@ -348,7 +376,6 @@ export function UserProfilePage() {
         id: user.id,
         full_name: profile?.full_name || String(user.user_metadata?.["full_name"] || "") || null,
         avatar_path: path,
-        avatar_data_url: null,
       });
       if (profileError) throw profileError;
 
@@ -358,7 +385,9 @@ export function UserProfilePage() {
           .from("user_profiles")
           .update({ avatar_data_url: null })
           .eq("id", user.id);
-        if (clearFallbackError) throw clearFallbackError;
+        if (clearFallbackError) {
+          console.warn("[profile-sync] avatar database clear pending:", clearFallbackError.message);
+        }
       }
 
       if (user.user_metadata?.["avatar_data_url"]) {
@@ -394,6 +423,16 @@ export function UserProfilePage() {
           .update({ avatar_path: null })
           .eq("id", user.id);
         if (error) throw error;
+      }
+
+      if (profile?.avatar_data_url) {
+        const { error: clearDbFallbackError } = await (supabase as any)
+          .from("user_profiles")
+          .update({ avatar_data_url: null })
+          .eq("id", user.id);
+        if (clearDbFallbackError) {
+          console.warn("[profile-sync] avatar database clear pending:", clearDbFallbackError.message);
+        }
       }
 
       if (user.user_metadata?.["avatar_data_url"]) {
@@ -518,7 +557,7 @@ export function UserProfilePage() {
             </div>
             <h1 className="mt-3 truncate text-2xl font-black sm:text-4xl">{displayName}</h1>
             <p className="mt-2 text-sm text-[#D8D0C4]">
-              {profile?.job_title || profile?.school_role || "الموجه الطلابي"}
+              {displayJobTitle || displaySchoolRole || "الموجه الطلابي"}
               {profileValue(profile, user, "school_name") ? ` · ${profileValue(profile, user, "school_name")}` : ""}
             </p>
 
@@ -548,7 +587,7 @@ export function UserProfilePage() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
               <BriefcaseBusiness className="mb-2 size-4 text-[#E4DACC]" />
               <p className="text-[#BFB6AA]">الدور</p>
-              <p className="mt-1 truncate font-bold">{profile?.school_role || "الموجه الطلابي"}</p>
+              <p className="mt-1 truncate font-bold">{displaySchoolRole || "الموجه الطلابي"}</p>
             </div>
           </div>
         </div>
@@ -584,7 +623,7 @@ export function UserProfilePage() {
                 <select
                   id="profile-role"
                   name="school_role"
-                  defaultValue={profile?.school_role || "الموجه الطلابي"}
+                  defaultValue={displaySchoolRole || "الموجه الطلابي"}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
                   {ROLE_OPTIONS.map((role) => <option key={role}>{role}</option>)}
@@ -592,7 +631,7 @@ export function UserProfilePage() {
               </div>
               <div>
                 <Label htmlFor="profile-title" className="mb-1.5 block">المسمى الوظيفي</Label>
-                <Input id="profile-title" name="job_title" defaultValue={profile?.job_title || ""} placeholder="مثال: موجه طلابي" />
+                <Input id="profile-title" name="job_title" defaultValue={displayJobTitle} placeholder="مثال: موجه طلابي" />
               </div>
               <div>
                 <Label htmlFor="profile-employee-no" className="mb-1.5 block">الرقم الوظيفي</Label>
@@ -620,7 +659,7 @@ export function UserProfilePage() {
               </div>
               <div>
                 <Label htmlFor="profile-phone" className="mb-1.5 block">رقم الجوال المهني</Label>
-                <Input id="profile-phone" name="phone" dir="ltr" defaultValue={profile?.phone || ""} placeholder="05XXXXXXXX" />
+                <Input id="profile-phone" name="phone" dir="ltr" defaultValue={displayPhone} placeholder="05XXXXXXXX" />
               </div>
               <div>
                 <Label htmlFor="profile-professional-email" className="mb-1.5 block">البريد المهني</Label>
@@ -669,7 +708,7 @@ export function UserProfilePage() {
                 <Textarea
                   id="profile-bio"
                   name="bio"
-                  defaultValue={profile?.bio || ""}
+                  defaultValue={displayBio}
                   rows={4}
                   maxLength={800}
                   placeholder="اكتب نبذة موجزة عن خبرتك ودورك المهني..."
@@ -711,7 +750,7 @@ export function UserProfilePage() {
                 <Phone className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">الجوال المهني</p>
-                  <p className="mt-0.5 font-bold" dir="ltr">{profile?.phone || "غير مضاف"}</p>
+                  <p className="mt-0.5 font-bold" dir="ltr">{displayPhone || "غير مضاف"}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-2xl bg-muted/45 p-3">
