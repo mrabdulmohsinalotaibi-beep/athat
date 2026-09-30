@@ -6,9 +6,9 @@ export const Route = createFileRoute("/_authenticated/attendance")({
   head: () => ({
     meta: [
       { title: "الحضور والمواظبة | الذات" },
-      { name: "description", content: "رصد الغياب والتأخر والإجراءات الإرشادية المتخذة." },
+      { name: "description", content: "رصد الغياب والتأخر وإجراءات التوجيه الطلابي المتخذة." },
       { property: "og:title", content: "الحضور والمواظبة | منصة الذات" },
-      { property: "og:description", content: "رصد الغياب والتأخر والإجراءات الإرشادية المتخذة." },
+      { property: "og:description", content: "رصد الغياب والتأخر وإجراءات التوجيه الطلابي المتخذة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
