@@ -67,6 +67,7 @@ function SchoolTeamPage() {
   const [schoolName, setSchoolName] = useState("");
   const [educationDept, setEducationDept] = useState("");
   const [educationOffice, setEducationOffice] = useState("");
+  const [newSchoolRole, setNewSchoolRole] = useState<Role>("counselor");
   const [pendingRoles, setPendingRoles] = useState<Record<string, Role>>({});
 
   const contextQuery = useQuery({
@@ -83,6 +84,7 @@ function SchoolTeamPage() {
     await queryClient.invalidateQueries({ queryKey: ["school-team-context"] });
     await queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
     await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+    await queryClient.invalidateQueries({ queryKey: ["school-access-context"] });
   };
 
   const createSchool = useMutation({
@@ -91,7 +93,7 @@ function SchoolTeamPage() {
         p_name: schoolName.trim(),
         p_education_dept: educationDept.trim() || null,
         p_education_office: educationOffice.trim() || null,
-        p_role: "counselor",
+        p_role: newSchoolRole,
       });
       if (error) throw error;
     },
@@ -197,6 +199,21 @@ function SchoolTeamPage() {
               <div><Label>اسم المدرسة</Label><Input value={schoolName} onChange={(e) => setSchoolName(e.target.value)} /></div>
               <div><Label>إدارة التعليم</Label><Input value={educationDept} onChange={(e) => setEducationDept(e.target.value)} /></div>
               <div><Label>مكتب التعليم</Label><Input value={educationOffice} onChange={(e) => setEducationOffice(e.target.value)} /></div>
+              <div>
+                <Label>دورك في المدرسة</Label>
+                <select
+                  value={newSchoolRole}
+                  onChange={(e) => setNewSchoolRole(e.target.value as Role)}
+                  className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
+                >
+                  {ROLES.filter((role) => role.value !== "observer").map((role) => (
+                    <option key={role.value} value={role.value}>{role.label}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                  سيحدد هذا الدور واجهتك وصلاحياتك داخل ذات. منشئ مساحة المدرسة يبقى مسؤول إدارة الفريق.
+                </p>
+              </div>
               <Button disabled={!schoolName.trim() || createSchool.isPending} onClick={() => createSchool.mutate()}>
                 <School className="size-4" /> إنشاء وربط الحساب
               </Button>
@@ -362,8 +379,28 @@ function SchoolTeamPage() {
         </section>
       )}
 
-      <section className="rounded-2xl border bg-muted/20 p-4 text-xs leading-6 text-muted-foreground">
-        ربط الفريق هنا لا يشارك سجلات الطلاب الحساسة تلقائيًا. مشاركة السجلات ستُدار بصلاحيات مستقلة حسب الدور، حتى لا تتغير خصوصية بياناتك الحالية دون قصد.
+      <section className="rounded-2xl border bg-muted/20 p-4">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="size-4 text-primary" />
+          <h2 className="text-sm font-black">صلاحيات منصة ذات الفعلية</h2>
+        </div>
+        <div className="mt-3 grid gap-2 md:grid-cols-3">
+          <div className="rounded-xl border bg-background p-3">
+            <p className="text-xs font-black">الموجه الطلابي</p>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">سجلات التوجيه والحالات والجلسات والخطة والبرامج والشواهد، إضافة إلى مهام المدرسة.</p>
+          </div>
+          <div className="rounded-xl border bg-background p-3">
+            <p className="text-xs font-black">المدير والوكيل</p>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">إدارة الفريق والمهام والاعتمادات والتقارير المرفوعة لهم، دون فتح ملفات الحالات الإرشادية الخام.</p>
+          </div>
+          <div className="rounded-xl border bg-background p-3">
+            <p className="text-xs font-black">المعلم والإداري والحارس</p>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">مساحة عمل مركزة على المهام المسندة والمراسلات المرتبطة بالدور، دون الوصول لسجلات التوجيه الحساسة.</p>
+          </div>
+        </div>
+        <p className="mt-3 text-[10px] leading-5 text-muted-foreground">
+          الحماية مطبقة في الواجهة وقاعدة البيانات معًا؛ كتابة رابط صفحة غير مصرح بها لا تمنح الوصول إلى بياناتها.
+        </p>
       </section>
     </div>
   );
