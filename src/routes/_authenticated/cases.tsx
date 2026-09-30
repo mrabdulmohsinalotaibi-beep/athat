@@ -71,7 +71,7 @@ function SpecialCasesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("counseling_cases")
-        .select("id,student_name,case_status,priority,followup_at,last_followup,next_action");
+        .select("id,case_no,student_id,student_no,student_name,case_status,priority,followup_at,last_followup,next_action");
       if (error) throw error;
       return data ?? [];
     },
@@ -142,6 +142,20 @@ function SpecialCasesPage() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">موعد المتابعة: {String(row.followup_at ?? "—")}</p>
                 {row.next_action && <p className="mt-2 text-xs">الإجراء القادم: {String(row.next_action)}</p>}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={`/interviews?new=student&studentId=${encodeURIComponent(String(row.student_id ?? ""))}&studentNo=${encodeURIComponent(String(row.student_no ?? ""))}&studentName=${encodeURIComponent(String(row.student_name ?? ""))}&caseId=${encodeURIComponent(String(row.id))}&caseNo=${encodeURIComponent(String(row.case_no ?? ""))}`}
+                    className="rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-black text-primary-foreground"
+                  >
+                    تسجيل متابعة
+                  </a>
+                  <a
+                    href={`/referrals?new=student&studentId=${encodeURIComponent(String(row.student_id ?? ""))}&studentNo=${encodeURIComponent(String(row.student_no ?? ""))}&studentName=${encodeURIComponent(String(row.student_name ?? ""))}&caseId=${encodeURIComponent(String(row.id))}&caseNo=${encodeURIComponent(String(row.case_no ?? ""))}`}
+                    className="rounded-lg border px-2.5 py-1.5 text-[11px] font-black text-primary"
+                  >
+                    إنشاء إحالة
+                  </a>
+                </div>
               </div>
             ))}
           </div>
