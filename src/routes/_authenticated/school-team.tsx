@@ -227,6 +227,7 @@ function SchoolTeamPage() {
   const members = context?.members ?? [];
   const pending = members.filter((member) => member.member_status === "pending");
   const active = members.filter((member) => member.member_status === "active");
+  const suspended = members.filter((member) => member.member_status === "suspended");
 
   return (
     <div dir="rtl" className="space-y-5">
@@ -313,14 +314,51 @@ function SchoolTeamPage() {
                 {member.is_admin && <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">مسؤول</span>}
               </div>
               {membership.is_admin && member.id !== membership.id && (
-                <div className="mt-3">
-                  <Button size="sm" variant="outline" onClick={() => changeStatus.mutate({ id: member.id, status: "suspended" })}>تعليق العضوية</Button>
+                <div className="mt-3 space-y-2 border-t pt-3">
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={pendingRoles[member.id] ?? member.role}
+                      onChange={(e) => setPendingRoles((current) => ({ ...current, [member.id]: e.target.value as Role }))}
+                      className="h-9 rounded-md border bg-background px-3 text-xs"
+                    >
+                      {ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                    </select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={(pendingRoles[member.id] ?? member.role) === member.role || approve.isPending}
+                      onClick={() => approve.mutate({ id: member.id, role: pendingRoles[member.id] ?? member.role })}
+                    >
+                      حفظ الدور
+                    </Button>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => changeStatus.mutate({ id: member.id, status: "suspended" })}>تعليق العضوية</Button>
                 </div>
               )}
             </article>
           ))}
         </div>
       </section>
+
+      {membership.is_admin && suspended.length > 0 && (
+        <section className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-black">عضويات معلقة</h2>
+            <span className="text-xs text-muted-foreground">{suspended.length} عضو</span>
+          </div>
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {suspended.map((member) => (
+              <article key={member.id} className="rounded-xl border border-dashed p-3">
+                <p className="text-sm font-black">{member.display_name || "عضو المدرسة"}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{roleLabel(member.role)}</p>
+                <Button className="mt-3" size="sm" variant="outline" onClick={() => changeStatus.mutate({ id: member.id, status: "active" })}>
+                  إعادة تفعيل العضوية
+                </Button>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="rounded-2xl border bg-muted/20 p-4 text-xs leading-6 text-muted-foreground">
         ربط الفريق هنا لا يشارك سجلات الطلاب الحساسة تلقائيًا. مشاركة السجلات ستُدار بصلاحيات مستقلة حسب الدور، حتى لا تتغير خصوصية بياناتك الحالية دون قصد.
