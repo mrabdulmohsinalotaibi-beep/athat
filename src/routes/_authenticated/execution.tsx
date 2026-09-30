@@ -209,7 +209,7 @@ function ExecutionFlowPage() {
       ) : tasks.length === 0 ? (
         <div className="rounded-2xl border border-dashed bg-card p-8 text-center">
           <p className="font-black">ابدأ بإضافة مهمة في الخطة التشغيلية.</p>
-          <Button asChild className="mt-3"><Link to="/plan?new=1" as never>إضافة أول مهمة</Link></Button>
+          <Button asChild className="mt-3"><Link to={"/plan?new=1" as never}>إضافة أول مهمة</Link></Button>
         </div>
       ) : (
         <section className="space-y-3">
@@ -221,7 +221,7 @@ function ExecutionFlowPage() {
             const documented = taskEvidences.length > 0;
             const reportReady = taskDone && programDone && documented;
             const reportUrl = "/reports?workflow=1&planTaskId=" + encodeURIComponent(task.id);
-            const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);
+            const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);\n            const primaryProgram = taskPrograms[0];
             return (
               <article key={task.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
                 <div className="flex flex-col gap-3 border-b bg-muted/20 p-4 lg:flex-row lg:items-center lg:justify-between">
@@ -263,8 +263,8 @@ function ExecutionFlowPage() {
                     done={documented}
                     detail={taskEvidences.length ? String(taskEvidences.length) + " شاهد مرتبط" : "ينقصه شاهد"}
                     action={
-                      taskPrograms[0] ? (
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setEvidenceTarget({ type: "برنامج", ref: taskPrograms[0].id, label: taskPrograms[0].name || "برنامج" })}>
+                      primaryProgram ? (
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setEvidenceTarget({ type: "برنامج", ref: primaryProgram.id, label: primaryProgram.name || "برنامج" })}>
                           رفع شاهد
                         </Button>
                       ) : (
