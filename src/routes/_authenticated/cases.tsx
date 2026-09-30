@@ -244,7 +244,9 @@ function SpecialCasesPage() {
             const studentId = encodeURIComponent(String(row["student_id"] ?? ""));
             const studentNo = encodeURIComponent(String(row["student_no"] ?? ""));
             const studentName = encodeURIComponent(String(row["student_name"] ?? ""));
-            window.location.href = `/interviews?new=student&studentId=${studentId}&studentNo=${studentNo}&studentName=${studentName}`;
+            const caseId = encodeURIComponent(String(row["id"] ?? ""));
+            const caseNo = encodeURIComponent(String(row["case_no"] ?? ""));
+            window.location.href = `/interviews?new=student&studentId=${studentId}&studentNo=${studentNo}&studentName=${studentName}&caseId=${caseId}&caseNo=${caseNo}`;
           },
         }}
       />
