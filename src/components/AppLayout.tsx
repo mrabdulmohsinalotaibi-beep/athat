@@ -23,23 +23,48 @@ import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { useAdminStatus } from "@/lib/admin";
+import { useKnownAccountRecovery } from "@/lib/account-recovery";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
 }
 
-
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
   { to: "/students", label: "الطلاب", icon: Users, activeRoutes: ["/students", "/cases"] },
-  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/plan", "/programs", "/evidences"] },
+  {
+    to: "/programs",
+    label: "البرامج",
+    icon: ClipboardList,
+    activeRoutes: ["/plan", "/programs", "/evidences"],
+  },
   { to: "/reports", label: "التقارير", icon: FileText, activeRoutes: ["/reports"] },
-  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/integrations", "/profile", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/messages", "/weekly-poster", "/posts"] },
+  {
+    to: "/settings",
+    label: "المزيد",
+    icon: Settings,
+    activeRoutes: [
+      "/settings",
+      "/integrations",
+      "/profile",
+      "/interviews",
+      "/calendar",
+      "/attendance",
+      "/behavior",
+      "/referrals",
+      "/committees",
+      "/toolkit",
+      "/messages",
+      "/weekly-poster",
+      "/posts",
+    ],
+  },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: school } = useSchool();
   const { data: adminStatus } = useAdminStatus();
+  useKnownAccountRecovery();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -60,8 +85,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
       // must never prevent the rest of the application from opening.
       if (cases.error) console.warn("[alerts] counseling_cases:", cases.error.message);
       if (tasks.error) console.warn("[alerts] plan_tasks:", tasks.error.message);
-      const dueCases = (cases.error ? [] : cases.data ?? []).filter((item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day).length;
-      const attentionTasks = (tasks.error ? [] : tasks.data ?? []).filter((item) => (item.due_date && String(item.due_date).slice(0, 10) < day && item.exec_status !== "مكتمل") || item.doc_status === "ناقص").length;
+      const dueCases = (cases.error ? [] : (cases.data ?? [])).filter(
+        (item) =>
+          item.case_status !== "مغلقة" &&
+          item.followup_at &&
+          String(item.followup_at).slice(0, 10) <= day,
+      ).length;
+      const attentionTasks = (tasks.error ? [] : (tasks.data ?? [])).filter(
+        (item) =>
+          (item.due_date &&
+            String(item.due_date).slice(0, 10) < day &&
+            item.exec_status !== "مكتمل") ||
+          item.doc_status === "ناقص",
+      ).length;
       return dueCases + attentionTasks;
     },
     staleTime: 60_000,
@@ -106,7 +142,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-0.5 ring-2 ring-sidebar-primary/40">
-              <img src="/brand-icon.svg?v=20260929f" alt="شعار الذات" className="size-full object-contain" />
+              <img
+                src="/brand-icon.svg?v=20260929f"
+                alt="شعار الذات"
+                className="size-full object-contain"
+              />
             </div>
             <div>
               <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
@@ -154,7 +194,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     <Icon className="size-4 shrink-0" aria-hidden="true" />
                     <span className="min-w-0 flex-1 truncate">{section.title}</span>
                     <ChevronDown
-                      className={cn("size-4 shrink-0 transition-transform", isExpanded && "rotate-180")}
+                      className={cn(
+                        "size-4 shrink-0 transition-transform",
+                        isExpanded && "rotate-180",
+                      )}
                       aria-hidden="true"
                     />
                   </button>
@@ -261,7 +304,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
                 </p>
                 <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#CEC6BB] sm:flex">
-                  <span>الموجه الطلابي: <b className="font-bold text-[#F1E9DD]">{school?.counselor_name || "—"}</b></span>
+                  <span>
+                    الموجه الطلابي:{" "}
+                    <b className="font-bold text-[#F1E9DD]">{school?.counselor_name || "—"}</b>
+                  </span>
                   <span className="text-white/25">•</span>
                   <span>{school?.academic_year || "العام الدراسي"}</span>
                   <span className="text-white/25">•</span>
@@ -271,7 +317,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              <div className="hidden md:block"><GlobalSearch /></div>
+              <div className="hidden md:block">
+                <GlobalSearch />
+              </div>
               <div className="relative">
                 <Button
                   variant="ghost"
@@ -291,9 +339,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <div className="absolute left-0 top-12 z-50 w-72 rounded-xl border border-border bg-card p-3 text-card-foreground shadow-xl">
                     <p className="text-sm font-black">تنبيهات العمل</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {alertCount ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.` : "لا توجد تنبيهات مستحقة حاليًا."}
+                      {alertCount
+                        ? `لديك ${alertCount} عنصرًا يحتاج متابعة أو توثيقًا.`
+                        : "لا توجد تنبيهات مستحقة حاليًا."}
                     </p>
-                    <Button asChild size="sm" className="mt-3 w-full" onClick={() => setAlertsOpen(false)}>
+                    <Button
+                      asChild
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={() => setAlertsOpen(false)}
+                    >
                       <Link to="/dashboard">فتح مركز مهام اليوم</Link>
                     </Button>
                   </div>
@@ -331,7 +386,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       aria-current={isActive ? "page" : undefined}
                       className={cn(
                         "flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                        isActive ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:bg-accent",
+                        isActive
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-background text-muted-foreground hover:bg-accent",
                       )}
                     >
                       <ItemIcon className="size-3.5" aria-hidden="true" />
