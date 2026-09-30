@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { FileSpreadsheet, FolderOpen, Upload } from "lucide-react";
@@ -53,6 +53,26 @@ export function StudentsPage() {
   const [classroom, setClassroom] = useState("");
   const [nationality, setNationality] = useState("");
   const [studentStatus, setStudentStatus] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const studentId = params.get("student");
+    if (!studentId) return;
+
+    void (async () => {
+      const { data, error } = await supabase.from("students").select("*").eq("id", studentId).maybeSingle();
+      if (!error && data) setProfileStudent(data as StudentRow);
+    })();
+
+    params.delete("student");
+    const query = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+    );
+  }, []);
 
   const { data: rows = [] } = useQuery({
     queryKey: ["students-filter-options"],
