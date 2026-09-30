@@ -97,7 +97,8 @@ export function RecordPage({
   const [smartFilling, setSmartFilling] = useState(false);
   const [smartPromptOpen, setSmartPromptOpen] = useState(false);
   const [smartPrompt, setSmartPrompt] = useState("");
-  const { data: studentOptions = [] } = useStudentOptions();
+  const needsStudentOptions = config.fields.some((field) => field.student);
+  const { data: studentOptions = [] } = useStudentOptions(needsStudentOptions);
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
   const [documentRow, setDocumentRow] = useState<Row | null>(null);
