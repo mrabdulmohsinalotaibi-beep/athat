@@ -37,7 +37,7 @@ export const Route = createFileRoute("/blog/$token")({
       {
         name: "description",
         content:
-          "الصفحة العامة للموجه الطلابي: محتوى إرشادي، خدمات، استمارات وموارد للطلاب وأولياء الأمور والمعلمين.",
+          "الصفحة العامة للموجه الطلابي: محتوى التوجيه الطلابي، خدمات، استمارات وموارد للطلاب وأولياء الأمور والمعلمين.",
       },
     ],
   }),
@@ -177,7 +177,7 @@ function PublicCounselorBlogPage() {
           </Link>
           <div className="hidden items-center gap-2 sm:flex">
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-              <Sparkles className="size-3.5" /> بوابة الإرشاد
+              <Sparkles className="size-3.5" /> بوابة التوجيه الطلابي
             </span>
             <Link
               to="/auth"
@@ -202,7 +202,7 @@ function PublicCounselorBlogPage() {
                 كل ما يحتاجه الطالب وولي الأمر والمعلم في مكان واحد.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
-                محتوى الموجه، الخدمات الإرشادية، الاستمارات الإلكترونية والموارد المساعدة — مرتبة
+                محتوى الموجه، خدمات التوجيه الطلابي، الاستمارات الإلكترونية والموارد المساعدة — مرتبة
                 لتصل إلى الخدمة المناسبة بأقل خطوات.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
@@ -253,7 +253,7 @@ function PublicCounselorBlogPage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-sm font-bold text-primary">خدمات عامة</p>
-              <h2 className="mt-1 text-3xl font-black">الخدمات الإرشادية</h2>
+              <h2 className="mt-1 text-3xl font-black">خدمات التوجيه الطلابي</h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
                 مجالات الدعم التي يقدمها الموجه الطلابي للطلاب وأولياء الأمور والمعلمين.
               </p>
@@ -383,7 +383,7 @@ function PublicCounselorBlogPage() {
         />
       </main>
       <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
-        مدونة الموجه الطلابي · منصة الذات للتوجيه والإرشاد
+        مدونة الموجه الطلابي · منصة الذات للتوجيه الطلابي
       </footer>
     </div>
   );
