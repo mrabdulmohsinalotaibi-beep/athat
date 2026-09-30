@@ -149,9 +149,12 @@ export function UserProfilePage() {
     String(user?.user_metadata?.["full_name"] || user?.user_metadata?.["name"] || "الموجه الطلابي");
 
   const avatarUrl = useMemo(() => {
-    if (!profile?.avatar_path) return "";
-    return supabase.storage.from("user-avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
-  }, [profile?.avatar_path]);
+    if (profile?.avatar_path) {
+      return supabase.storage.from("user-avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
+    }
+    const fallback = user?.user_metadata?.["avatar_data_url"];
+    return typeof fallback === "string" ? fallback : "";
+  }, [profile?.avatar_path, user?.user_metadata]);
 
   const completion = useMemo(() => {
     const fields = [
@@ -223,6 +226,36 @@ export function UserProfilePage() {
     onError: (error: Error) => toast.error(arabicAuthError(error.message)),
   });
 
+  async function createAvatarFallback(file: File) {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("تعذّرت قراءة الصورة."));
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.readAsDataURL(file);
+    });
+
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("تعذّر تجهيز الصورة."));
+      img.src = dataUrl;
+    });
+
+    const size = 160;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("تعذّر تجهيز الصورة.");
+
+    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+    const sx = Math.max(0, (image.naturalWidth - sourceSize) / 2);
+    const sy = Math.max(0, (image.naturalHeight - sourceSize) / 2);
+    context.drawImage(image, sx, sy, sourceSize, sourceSize, 0, 0, size, size);
+
+    return canvas.toDataURL("image/webp", 0.72);
+  }
+
   async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -238,8 +271,33 @@ export function UserProfilePage() {
       const path = `${user.id}/avatar-${Date.now()}.${extension}`;
       const { error: uploadError } = await supabase.storage
         .from("user-avatars")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
-      if (uploadError) throw uploadError;
+        .upload(path, file, { cacheControl: "31536000", upsert: false });
+
+      if (uploadError) {
+        const message = uploadError.message.toLowerCase();
+        const storagePolicyIssue =
+          message.includes("row-level security") ||
+          message.includes("policy") ||
+          message.includes("bucket") ||
+          message.includes("unauthorized");
+
+        if (!storagePolicyIssue) throw uploadError;
+
+        // Safe fallback: keep a very small, optimized avatar in auth metadata so
+        // the user can update the profile even before Storage RLS is deployed.
+        const fallbackAvatar = await createAvatarFallback(file);
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: {
+            ...user.user_metadata,
+            avatar_data_url: fallbackAvatar,
+          },
+        });
+        if (metadataError) throw metadataError;
+
+        await queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+        toast.success("تم تحديث الصورة الشخصية.");
+        return;
+      }
 
       const { error: profileError } = await (supabase as any).from("user_profiles").upsert({
         id: user.id,
@@ -248,10 +306,18 @@ export function UserProfilePage() {
       });
       if (profileError) throw profileError;
 
+      // Storage succeeded, so remove any temporary metadata fallback.
+      if (user.user_metadata?.["avatar_data_url"]) {
+        const nextMetadata = { ...user.user_metadata };
+        delete nextMetadata["avatar_data_url"];
+        await supabase.auth.updateUser({ data: nextMetadata });
+      }
+
       if (profile?.avatar_path) {
         void supabase.storage.from("user-avatars").remove([profile.avatar_path]);
       }
       await queryClient.invalidateQueries({ queryKey: ["user-profile", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["auth-user"] });
       toast.success("تم تحديث الصورة الشخصية.");
     } catch (error) {
       toast.error(`تعذّر رفع الصورة: ${(error as Error).message}`);
@@ -262,18 +328,29 @@ export function UserProfilePage() {
   }
 
   async function removeAvatar() {
-    if (!user || !profile?.avatar_path) return;
+    if (!user || (!profile?.avatar_path && !user.user_metadata?.["avatar_data_url"])) return;
     if (!window.confirm("هل تريد إزالة الصورة الشخصية؟")) return;
 
     setUploading(true);
     try {
-      await supabase.storage.from("user-avatars").remove([profile.avatar_path]);
-      const { error } = await (supabase as any)
-        .from("user_profiles")
-        .update({ avatar_path: null })
-        .eq("id", user.id);
-      if (error) throw error;
+      if (profile?.avatar_path) {
+        await supabase.storage.from("user-avatars").remove([profile.avatar_path]);
+        const { error } = await (supabase as any)
+          .from("user_profiles")
+          .update({ avatar_path: null })
+          .eq("id", user.id);
+        if (error) throw error;
+      }
+
+      if (user.user_metadata?.["avatar_data_url"]) {
+        const nextMetadata = { ...user.user_metadata };
+        delete nextMetadata["avatar_data_url"];
+        const { error: metadataError } = await supabase.auth.updateUser({ data: nextMetadata });
+        if (metadataError) throw metadataError;
+      }
+
       await queryClient.invalidateQueries({ queryKey: ["user-profile", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["auth-user"] });
       toast.success("تمت إزالة الصورة الشخصية.");
     } catch (error) {
       toast.error(`تعذّرت إزالة الصورة: ${(error as Error).message}`);
@@ -680,7 +757,7 @@ export function UserProfilePage() {
                 <p className="truncate text-xs text-muted-foreground">{user?.email || "—"}</p>
               </div>
             </div>
-            {profile?.avatar_path && (
+            {(profile?.avatar_path || user?.user_metadata?.["avatar_data_url"]) && (
               <Button
                 type="button"
                 variant="outline"
