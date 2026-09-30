@@ -54,7 +54,7 @@ export function PublicLayout({
 
   return (
     <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
-      <header className="athat-site-header sticky top-0 z-50 border-b border-[#176678] bg-[#073B4C] text-white backdrop-blur-xl">
+      {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-[#176678] bg-[#073B4C] text-white backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
@@ -136,7 +136,7 @@ export function PublicLayout({
             </ul>
           </nav>
         )}
-      </header>
+      </header>}
 
       {title && (
         <section className="border-b border-border/60 bg-secondary/40">
@@ -151,7 +151,7 @@ export function PublicLayout({
         </section>
       )}
 
-      <main className="flex-1 pb-20 lg:pb-0">
+      <main className={cn("flex-1", pathname !== "/" && "pb-20 lg:pb-0")}>
         {globalSettings?.maintenance_mode ? (
           <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-8">
             <div className="rounded-3xl border border-amber-500/20 bg-card p-8 shadow-sm">
@@ -175,7 +175,7 @@ export function PublicLayout({
         )}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
+      {pathname !== "/" && <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
         {[
           { to: "/" as const, label: "الرئيسية", icon: Home },
           { to: "/services" as const, label: "الخدمات", icon: BookOpen },
@@ -188,13 +188,9 @@ export function PublicLayout({
             <span>{label}</span>
           </Link>
         ))}
-      </nav>
+      </nav>}
 
-      {pathname === "/" ? (
-        <footer className="hidden border-t border-border/60 bg-card px-4 py-4 text-center lg:block sm:px-8">
-          <Copyright />
-        </footer>
-      ) : (
+      {pathname === "/" ? null : (
         <footer className="border-t border-border/60 bg-card">
           <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-3">
             <div>
