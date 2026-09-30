@@ -39,7 +39,7 @@ export function PublicFeedback({ token }: { token: string }) {
       p_message: message.trim(),
     };
 
-    const { error } = await supabase.rpc("submit_public_feedback", args);
+    const { error } = await (supabase as any).rpc("submit_public_feedback", args);
     if (error) {
       const missingRpc =
         /Could not find the function|schema cache|PGRST202/i.test(error.message);
