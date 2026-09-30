@@ -51,7 +51,6 @@ export function useKnownAccountRecovery() {
     let cancelled = false;
     const timer = window.setTimeout(() => {
       if (sessionStorage.getItem("athat-record-recovery-ran") === "1") return;
-      sessionStorage.setItem("athat-record-recovery-ran", "1");
 
       void (async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -65,10 +64,12 @@ export function useKnownAccountRecovery() {
       // only reassigns legacy rows when an exact matching email exists.
       try {
         const recovery = await recoverLegacyRecords();
+        sessionStorage.setItem("athat-record-recovery-ran", "1");
         if (recovery?.recovered && recovery.total > 0) {
           console.info("[record-recovery] restored", recovery.total, "records");
         }
       } catch (error) {
+        sessionStorage.removeItem("athat-record-recovery-ran");
         console.warn("[record-recovery] server recovery unavailable:", error);
       }
 
