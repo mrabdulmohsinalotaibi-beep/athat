@@ -331,7 +331,7 @@ function Dashboard() {
       const payload = (item.new_data ?? item.old_data ?? {}) as Record<string, unknown>;
       const config = ({
         students: { label: "طالب", to: "/students" },
-        counseling_cases: { label: "حالة إرشادية", to: "/cases" },
+        counseling_cases: { label: "حالة طلابية", to: "/cases" },
         interviews: { label: "جلسة", to: "/interviews" },
         attendance: { label: "مواظبة", to: "/attendance" },
         behavior: { label: "سلوك", to: "/behavior" },
@@ -1096,7 +1096,7 @@ function Dashboard() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-black">أقرب المتابعات</h2>
-              <p className="text-[10px] text-muted-foreground">من سجل الجلسات الإرشادية</p>
+              <p className="text-[10px] text-muted-foreground">من سجل المقابلات الطلابية</p>
             </div>
             <Link to="/interviews" className="text-[10px] font-black text-primary">
               الجلسات
@@ -1121,7 +1121,7 @@ function Dashboard() {
                       {item.student_name || "طالب غير محدد"}
                     </p>
                     <p className="truncate text-[9px] text-muted-foreground">
-                      {item.topic || "متابعة إرشادية"}
+                      {item.topic || "متابعة التوجيه الطلابي"}
                     </p>
                   </div>
                   <span className="shrink-0 text-[10px] font-bold text-primary">
