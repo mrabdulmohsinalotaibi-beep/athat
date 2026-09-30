@@ -55,7 +55,7 @@ function useDashboard() {
     queryFn: async () => {
       let schoolContext: any = null;
       try {
-        const contextResult = await withDashboardTimeout((supabase as any).rpc("get_my_school_context"), "schoolContext");
+        const contextResult: any = await withDashboardTimeout((supabase as any).rpc("get_my_school_context"), "schoolContext");
         if (contextResult.error) {
           console.warn("[dashboard] تعذّر تحميل schoolContext:", contextResult.error.message);
         } else {
