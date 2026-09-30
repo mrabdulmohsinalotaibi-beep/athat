@@ -76,7 +76,7 @@ export function PublicRequestForm({
         p_portal_token: portalToken?.trim() || null,
       };
 
-      const { data, error } = await supabase.rpc("submit_public_request_v2", args);
+      const { data, error } = await (supabase as any).rpc("submit_public_request_v2", args);
       if (!error) return typeof data === "string" ? data : null;
 
       const missingRequestChannel =
@@ -100,7 +100,7 @@ export function PublicRequestForm({
         p_is_anonymous: args.p_is_anonymous,
         p_slug: args.p_slug,
       };
-      const legacy = await supabase.rpc("submit_public_request", legacyArgs);
+      const legacy = await (supabase as any).rpc("submit_public_request", legacyArgs);
       if (!legacy.error) return typeof legacy.data === "string" ? legacy.data : null;
 
       const legacyMissing =
@@ -125,7 +125,7 @@ export function PublicRequestForm({
           .filter(Boolean)
           .join("\n");
 
-        const feedback = await supabase.rpc("submit_public_feedback", {
+        const feedback = await (supabase as any).rpc("submit_public_feedback", {
           p_token: feedbackToken.trim(),
           p_sender_name: anonymous ? "مجهول" : args.p_requester_name || "مستفيد",
           p_sender_contact: anonymous ? "" : args.p_requester_contact || "",
