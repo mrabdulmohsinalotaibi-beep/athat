@@ -8,9 +8,9 @@ export const Route = createFileRoute("/c/$slug")({
   head: () => ({
     meta: [
       { title: "صفحة الموجه الطلابي | منصة الذات" },
-      { name: "description", content: "المنشورات العامة والأخبار والمقالات الإرشادية لمدرسة على منصة الذات." },
+      { name: "description", content: "المنشورات العامة والأخبار ومقالات التوجيه الطلابي لمدرسة على منصة الذات." },
       { property: "og:title", content: "صفحة الموجه الطلابي | منصة الذات" },
-      { property: "og:description", content: "أخبار ومقالات ونصائح إرشادية من الموجه الطلابي." },
+      { property: "og:description", content: "أخبار ومقالات ونصائح توجيهية من الموجه الطلابي." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
