@@ -90,6 +90,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     items: [
       { to: "/settings", label: "بيانات المدرسة", icon: Settings },
       { to: "/school-team", label: "فريق المدرسة والصلاحيات", icon: UsersRound },
+      { to: "/school-inbox", label: "المراسلات الإدارية", icon: FileText },
       { to: "/integrations", label: "التكاملات", icon: Globe2 },
       { to: "/trash", label: "حماية البيانات", icon: ShieldCheck },
       { to: "/health", label: "صحة النظام", icon: Activity },
