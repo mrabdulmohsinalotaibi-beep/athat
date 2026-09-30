@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { useKnownAccountRecovery } from "@/lib/account-recovery";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -37,7 +36,6 @@ const bottomNavigation = [
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
-  useKnownAccountRecovery();
   const { data: school } = useSchool();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
