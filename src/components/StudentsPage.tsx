@@ -56,11 +56,22 @@ export function StudentsPage() {
 
   const { data: rows = [] } = useQuery({
     queryKey: [config.table],
+    retry: 1,
+    staleTime: 15_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const request = supabase
         .from("students")
         .select("*")
         .order("created_at", { ascending: false });
+
+      const timeout = new Promise<never>((_, reject) => {
+        window.setTimeout(
+          () => reject(new Error("استغرق تحميل الطلاب وقتًا أطول من المتوقع.")),
+          10_000,
+        );
+      });
+
+      const { data, error } = await Promise.race([request, timeout]);
       if (error) throw error;
       return (data ?? []) as StudentRow[];
     },
