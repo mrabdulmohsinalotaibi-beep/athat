@@ -44,8 +44,36 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+function canonicalRedirect(request: Request): Response | null {
+  const url = new URL(request.url);
+  const host = url.hostname.toLowerCase();
+
+  // Keep local/preview domains untouched. Only normalize known ATHAT production hosts.
+  if (host === "www.athat.app") {
+    url.protocol = "https:";
+    url.hostname = "athat.app";
+    url.port = "";
+    return Response.redirect(url.toString(), 308);
+  }
+
+  if (host === "athat.app" && url.protocol !== "https:") {
+    url.protocol = "https:";
+    url.port = "";
+    return Response.redirect(url.toString(), 308);
+  }
+
+  if (host === "athat.app" && (url.pathname === "/index.html" || url.pathname === "/home")) {
+    url.pathname = "/";
+    return Response.redirect(url.toString(), 308);
+  }
+
+  return null;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const canonical = canonicalRedirect(request);
+    if (canonical) return canonical;
     // Cloudflare Workers exposes secrets/bindings through the fetch env object.
     // TanStack Start server functions in this project read server settings from
     // process.env, so bridge the relevant non-public bindings for each request.
