@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  ClipboardCheck,
   Clock3,
   FileCheck2,
   FolderCheck,
@@ -68,6 +69,7 @@ function useDashboard() {
           .select("id,status,category,created_at")
           .in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"])],
         ["posts", supabase.from("posts").select("id,is_public,kind")],
+        ["schoolTasks", (supabase as any).from("school_tasks").select("id,title,status,due_date,priority,assignee_member_id")],
       ] as const;
 
       const settled = await Promise.all(
@@ -110,6 +112,7 @@ function useDashboard() {
       const publicRequests = pick("publicRequests");
       const feedback = pick("feedback");
       const posts = pick("posts");
+      const schoolTasks = pick("schoolTasks");
 
       const sources = {
         students,
@@ -122,6 +125,7 @@ function useDashboard() {
         publicRequests,
         feedback,
         posts,
+        schoolTasks,
       };
 
       const failedSources = Object.entries(sources)
@@ -142,6 +146,7 @@ function useDashboard() {
         publicRequests: publicRequests.error ? [] : publicRequests.data ?? [],
         feedback: feedback.error ? [] : feedback.data ?? [],
         posts: posts.error ? [] : posts.data ?? [],
+        schoolTasks: schoolTasks.error ? [] : schoolTasks.data ?? [],
         failedSources,
       };
     },
@@ -196,6 +201,12 @@ function Dashboard() {
 
   const publishedPosts = (data?.posts ?? []).filter((item) => item.is_public).length;
 
+  const schoolTasks = data?.schoolTasks ?? [];
+  const openSchoolTasks = schoolTasks.filter((item) => !["مكتملة", "ملغاة"].includes(String(item.status ?? "")));
+  const dueSchoolTasks = openSchoolTasks.filter(
+    (item) => item.due_date && String(item.due_date).slice(0, 10) <= day,
+  );
+
   const todayAgenda = (data?.calendar ?? [])
     .filter(
       (item) =>
@@ -213,7 +224,8 @@ function Dashboard() {
     overdueCases.length +
     latePlan.length +
     programsMissingEvidence.length +
-    openRequests;
+    openRequests +
+    dueSchoolTasks.length;
 
   const stats = [
     {
@@ -289,6 +301,13 @@ function Dashboard() {
       to: "/posts" as const,
       icon: BookOpen,
     },
+    {
+      label: "مهام المدرسة",
+      value: openSchoolTasks.length,
+      meta: dueSchoolTasks.length ? `${dueSchoolTasks.length} مستحقة` : "لا توجد مهام مستحقة",
+      to: "/school-tasks" as const,
+      icon: ClipboardCheck,
+    },
   ];
 
   const quickActions = [
@@ -297,6 +316,7 @@ function Dashboard() {
     { label: "إضافة برنامج", to: "/programs?new=1", icon: Sparkles },
     { label: "رفع شاهد", to: "/evidences?new=1", icon: UploadCloud },
     { label: "إنشاء تقرير", to: "/reports", icon: FileCheck2 },
+    { label: "مهام المدرسة", to: "/school-tasks", icon: ClipboardCheck },
   ];
 
   const actions = [
@@ -320,6 +340,13 @@ function Dashboard() {
       title: item.name || "برنامج",
       detail: "البرنامج منفذ ولا يوجد شاهد مرتبط ظاهر في البيانات",
       to: "/programs" as const,
+    })),
+    ...dueSchoolTasks.slice(0, 2).map((item) => ({
+      key: `school-task-${item.id}`,
+      tone: "مهمة مدرسية مستحقة",
+      title: item.title || "مهمة مدرسية",
+      detail: item.due_date ? `الاستحقاق ${String(item.due_date).slice(0, 10)}` : "فتح المهام المدرسية",
+      to: "/school-tasks" as const,
     })),
   ].slice(0, 5);
 
