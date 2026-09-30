@@ -55,23 +55,20 @@ export function StudentsPage() {
   const [studentStatus, setStudentStatus] = useState("");
 
   const { data: rows = [] } = useQuery({
-    queryKey: [config.table],
+    queryKey: ["students-filter-options"],
     retry: 1,
-    staleTime: 15_000,
+    staleTime: 30_000,
     queryFn: async () => {
-      const request = supabase
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) return [] as StudentRow[];
+
+      const { data, error } = await supabase
         .from("students")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("stage,grade,classroom,nationality,status")
+        .eq("user_id", authData.user.id)
+        .limit(1000);
 
-      const timeout = new Promise<never>((_, reject) => {
-        window.setTimeout(
-          () => reject(new Error("استغرق تحميل الطلاب وقتًا أطول من المتوقع.")),
-          10_000,
-        );
-      });
-
-      const { data, error } = await Promise.race([request, timeout]);
       if (error) throw error;
       return (data ?? []) as StudentRow[];
     },
