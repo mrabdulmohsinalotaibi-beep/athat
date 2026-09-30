@@ -11,7 +11,7 @@ const RECOVERY_PROFILE = {
   job_title: "الموجه الطلابي",
   school_role: "الموجه الطلابي",
   qualification: "ماجستير",
-  specialization: "القياس والتقويم",
+  specialization: "علم النفس - القياس والتقويم",
   school_name: "متوسطة العلاء بن الحضرمي",
   education_department: "إدارة التعليم بمنطقة مكة المكرمة",
 } as const;
