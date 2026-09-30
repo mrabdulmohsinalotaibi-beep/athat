@@ -1,133 +1,149 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ChevronLeft,
-  Megaphone,
+  ArrowLeft,
+  FileText,
+  HeartHandshake,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 
 import { PublicLayout } from "@/components/PublicLayout";
 import { Button } from "@/components/ui/button";
-import {
-  DEFAULT_MISSION,
-  DEFAULT_VISION,
-} from "@/lib/guidance";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "الذات — التوجيه الطلابي ونظام الإرشاد المدرسي" },
+      { title: "الذات — نظام الإرشاد المدرسي" },
       {
         name: "description",
         content:
-          "بوابة التوجيه الطلابي: تعريف بالخدمات الإرشادية، استمارات تفاعلية للطلاب والمعلمين، ولوحة عمل خاصة بالموجه الطلابي.",
+          "بوابة التوجيه الطلابي للوصول إلى الخدمات والاستمارات والتواصل مع الموجه الطلابي.",
       },
-      { property: "og:title", content: "الذات — التوجيه الطلابي ونظام الإرشاد المدرسي" },
+      { property: "og:title", content: "الذات — نظام الإرشاد المدرسي" },
       {
         property: "og:description",
-        content:
-          "خدمات إرشادية أكاديمية وسلوكية ومهنية ونفسية، واستمارات تصل مباشرة للموجه الطلابي.",
+        content: "خدمات التوجيه الطلابي في مكان واحد، للطالب والأسرة والمدرسة.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20260930b" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20260930b" },
+      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20261001a" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261001a" },
     ],
   }),
   component: Landing,
 });
 
+const quickLinks = [
+  {
+    to: "/services" as const,
+    title: "الخدمات الإرشادية",
+    description: "استشارة، دعم ومتابعة",
+    icon: HeartHandshake,
+  },
+  {
+    to: "/forms" as const,
+    title: "الاستمارات",
+    description: "إحالة وطلبات إلكترونية",
+    icon: FileText,
+  },
+  {
+    to: "/contact" as const,
+    title: "تواصل مع الموجه",
+    description: "قنوات تواصل مباشرة",
+    icon: ShieldCheck,
+  },
+];
+
 function Landing() {
   return (
     <PublicLayout>
-      <section className="mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-8 sm:pt-12">
-        <div className="mb-6 flex items-center gap-4">
-          <img src="/brand-icon.svg?v=20260929f" alt="شعار الذات" className="brand-mark-well size-14 shrink-0 rounded-lg object-contain" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-muted-foreground">نظام الإرشاد المدرسي</p>
-            <h1 className="text-2xl font-black text-primary sm:text-3xl">الذات</h1>
-          </div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="flex min-h-56 flex-col justify-between rounded-lg bg-primary p-6 text-primary-foreground sm:col-span-2 lg:row-span-2 lg:min-h-80 lg:p-8">
-            <div>
-              <p className="text-sm font-semibold text-primary-foreground/75">التوجيه الطلابي</p>
-              <h2 className="mt-4 max-w-xl text-2xl font-black leading-snug sm:text-3xl">مساحة آمنة لكل طالب، وخطوة أقرب إلى الدعم الذي يحتاجه.</h2>
-            </div>
-            <Button asChild variant="secondary" className="mt-8 h-11 w-fit gap-2 px-5 font-bold">
-              <Link to="/auth" search={{ next: "/dashboard", mode: "signin" }}>
-                دخول الموجه الطلابي <ChevronLeft className="size-4" />
-              </Link>
-            </Button>
-          </div>
-          <div className="flex min-h-36 flex-col justify-between rounded-lg border border-border bg-card p-5 sm:min-h-40">
-            <ShieldCheck className="size-6 text-primary" />
-            <div>
-              <h3 className="font-bold">مدونة الموجه الطلابي</h3>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                الخدمات والاستمارات أصبحت ضمن مدونة الموجه الخاصة بكل مدرسة لضمان وصول الطلب للموجه الصحيح.
-              </p>
-            </div>
-          </div>
-          <div className="flex min-h-36 flex-col justify-between rounded-lg border border-border bg-card p-5 sm:min-h-40">
-            <Sparkles className="size-6 text-accent" />
-            <div>
-              <h3 className="font-bold">خدمات مرتبطة بالسجلات</h3>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                الاستشارة والإحالة والبلاغ ترتبط مباشرة بصندوق الموجه ويمكن متابعتها وطباعتها والرد عليها.
-              </p>
-            </div>
-          </div>
-          <div className="flex min-h-36 flex-col justify-between rounded-lg border border-border bg-card p-5 sm:min-h-40">
-            <Megaphone className="size-6 text-accent" />
-            <div><h3 className="font-bold">تنبيهات وإعلانات</h3><p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs leading-6 text-muted-foreground">لا توجد إعلانات جديدة حالياً.</p></div>
-          </div>
-          <div className="flex min-h-36 flex-col justify-between rounded-lg bg-secondary p-5 sm:min-h-40">
-            <Sparkles className="size-6 text-primary" />
-            <div><h3 className="font-bold">أوقات المقابلات</h3><p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">تواصل مع الموجه الطلابي لترتيب الموعد.</p></div>
-          </div>
-        </div>
-      </section>
+      <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 py-7 sm:px-8 sm:py-12">
+        <div className="overflow-hidden rounded-[1.75rem] border border-primary/10 bg-card shadow-sm">
+          <div className="grid lg:grid-cols-[1.35fr_.65fr]">
+            <div className="relative overflow-hidden bg-primary px-6 py-8 text-primary-foreground sm:px-9 sm:py-10 lg:min-h-[330px]">
+              <div
+                aria-hidden="true"
+                className="absolute -left-16 -top-20 size-64 rounded-full border-[44px] border-white/[0.04]"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute -bottom-24 right-1/3 size-56 rounded-full bg-white/[0.035]"
+              />
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-8">
-        <div className="grid gap-5 lg:grid-cols-2">
-          <article className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-bold text-primary">رؤيتنا</h2>
-            <p className="mt-3 text-sm leading-8 text-muted-foreground">
-              {DEFAULT_VISION}
-            </p>
-          </article>
-          <article className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-bold text-primary">رسالتنا</h2>
-            <p className="mt-3 text-sm leading-8 text-muted-foreground">
-              {DEFAULT_MISSION}
-            </p>
-          </article>
-        </div>
-      </section>
+              <div className="relative flex h-full max-w-2xl flex-col justify-center">
+                <span className="mb-4 w-fit rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold text-white/80">
+                  التوجيه الطلابي
+                </span>
+                <h1 className="text-3xl font-black leading-[1.35] sm:text-4xl">
+                  دعم الطالب يبدأ
+                  <br />
+                  بخطوة بسيطة.
+                </h1>
+                <p className="mt-3 max-w-lg text-sm leading-7 text-white/75 sm:text-base">
+                  خدمات التوجيه والاستمارات والتواصل في مكان واحد، بخصوصية وسهولة.
+                </p>
 
-      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-8">
-        <div className="relative overflow-hidden rounded-lg bg-primary px-6 py-12 text-center text-primary-foreground sm:px-12 sm:py-16">
-          <div className="relative">
-            <p className="text-sm font-semibold text-primary-foreground/80">للموجه الطلابي</p>
-            <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-black leading-tight sm:text-4xl">
-              لوحة تحكم خاصة لإدارة الحالات والجلسات والتقارير الرسمية.
-            </h2>
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="mt-8 h-12 gap-2 px-8 font-bold text-primary shadow-lg"
-            >
-              <Link to="/auth" search={{ next: "/dashboard", mode: "signin" }}>
-                دخول الموجه الطلابي
-                <ChevronLeft className="size-5" />
-              </Link>
-            </Button>
+                <div className="mt-6 flex flex-wrap gap-2.5">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    className="h-11 gap-2 rounded-xl px-5 font-black text-primary"
+                  >
+                    <Link to="/auth" search={{ next: "/dashboard", mode: "signin" }}>
+                      دخول الموجه
+                      <ArrowLeft className="size-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="h-11 rounded-xl border border-white/20 bg-white/5 px-5 font-bold text-white hover:bg-white/15 hover:text-white"
+                  >
+                    <Link to="/services">الخدمات الإرشادية</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-center gap-2.5 bg-secondary/20 p-4 sm:p-5">
+              <p className="px-1 pb-1 text-[11px] font-black text-muted-foreground">
+                وصول سريع
+              </p>
+              {quickLinks.map(({ to, title, description, icon: Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="group flex items-center gap-3 rounded-2xl border border-border/80 bg-background/90 p-3.5 transition hover:border-primary/25 hover:shadow-sm"
+                >
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="size-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="block text-sm font-black">{title}</strong>
+                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                      {description}
+                    </span>
+                  </span>
+                  <ArrowLeft className="size-4 shrink-0 text-muted-foreground transition group-hover:-translate-x-0.5 group-hover:text-primary" />
+                </Link>
+              ))}
+
+              <div className="mt-1 flex items-center gap-2 rounded-xl px-2 py-2 text-[10px] leading-5 text-muted-foreground">
+                <ShieldCheck className="size-4 shrink-0 text-primary" />
+                <span>الطلبات تصل إلى الموجه الطلابي المختص وتُتابع من داخل النظام.</span>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] font-semibold text-muted-foreground sm:text-xs">
+          <span>خصوصية الطالب</span>
+          <span className="size-1 rounded-full bg-primary/30" />
+          <span>خدمات إلكترونية</span>
+          <span className="size-1 rounded-full bg-primary/30" />
+          <span>متابعة منظمة</span>
         </div>
       </section>
     </PublicLayout>
