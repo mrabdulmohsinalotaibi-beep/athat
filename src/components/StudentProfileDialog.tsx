@@ -310,7 +310,7 @@ export function StudentProfileDialog({
             <section className="break-inside-avoid rounded-xl border border-paper-border bg-paper-muted p-4">
               <div className="mb-3 flex items-center gap-2">
                 <ClipboardList className="size-4 text-primary" />
-                <h3 className="text-sm font-black">ملخص المتابعة الإرشادية</h3>
+                <h3 className="text-sm font-black">ملخص متابعة التوجيه الطلابي</h3>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <FollowStat label="الحالات النشطة" value={activeCases.length} />
@@ -324,7 +324,7 @@ export function StudentProfileDialog({
                   {latestActivity.title ? ` — ${latestActivity.title}` : ""}.
                 </p>
               ) : (
-                <p className="mt-3 text-xs text-paper-muted-foreground">لا توجد متابعة إرشادية مسجلة للطالب حتى الآن.</p>
+                <p className="mt-3 text-xs text-paper-muted-foreground">لا توجد متابعة في التوجيه الطلابي مسجلة للطالب حتى الآن.</p>
               )}
             </section>
           )}
