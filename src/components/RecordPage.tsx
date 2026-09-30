@@ -613,11 +613,9 @@ export function RecordPage({
           <div>
             <p className="font-bold text-destructive">تعذّر تحميل {config.title}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {rowsQueryError && typeof rowsQueryError === "object" && "message" in rowsQueryError
-                ? String((rowsQueryError as { message?: unknown }).message ?? "حدث خطأ أثناء جلب البيانات.")
-                : rowsQueryError instanceof Error
-                  ? rowsQueryError.message
-                  : "حدث خطأ أثناء جلب البيانات."}
+              {rowsQueryError
+                ? String((rowsQueryError as { message?: unknown })?.message ?? rowsQueryError)
+                : "حدث خطأ أثناء جلب البيانات."}
             </p>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => void refetchRows()}>
