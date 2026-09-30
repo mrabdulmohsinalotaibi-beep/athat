@@ -7,7 +7,7 @@ BEGIN
   SELECT id
     INTO owner_user_id
   FROM auth.users
-  WHERE encode(digest(lower(trim(email)), 'sha256'), 'hex') = 'd55ab6c5dcac17983b91e7149f000d382bac33e7acb96e9493eadbb28f478488'
+  WHERE encode(digest(lower(trim(email)), 'sha256'), 'hex') = 'f85fb6c59825f60fcd934e427128495266b9031d300f51d8fb33aa6f1f209d00'
   LIMIT 1;
 
   IF owner_user_id IS NOT NULL THEN
