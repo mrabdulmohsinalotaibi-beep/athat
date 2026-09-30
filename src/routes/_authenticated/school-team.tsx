@@ -81,6 +81,8 @@ function SchoolTeamPage() {
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["school-team-context"] });
+    await queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+    await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
   };
 
   const createSchool = useMutation({
