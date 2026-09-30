@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { filterWorkspaceSections, isGuidanceWorkspaceMember } from "@/lib/school-access";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -66,8 +67,42 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const visibleSections = WORKSPACE_SECTIONS;
-  const visibleBottomNavigation = bottomNavigation;
+  const { data: accessContext } = useQuery({
+    queryKey: ["school-access-context"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_my_school_context");
+      if (error) throw error;
+      return data ?? { membership: null, school: null, members: [] };
+    },
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  });
+  const accessMembership = accessContext?.membership ?? null;
+  const guidanceNavigationAllowed = !accessMembership || isGuidanceWorkspaceMember(accessMembership);
+  const visibleSections = filterWorkspaceSections(WORKSPACE_SECTIONS, accessMembership);
+  const restrictedBottomNavigation = [
+    { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+    { to: "/school-tasks", label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
+    { to: "/school-inbox", label: "المراسلات", icon: FileText, activeRoutes: ["/school-inbox"] },
+    { to: "/school-team", label: "الفريق", icon: Users, activeRoutes: ["/school-team"] },
+    { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile", "/settings", "/health"] },
+  ] as const;
+  const visibleBottomNavigation = guidanceNavigationAllowed ? bottomNavigation : restrictedBottomNavigation;
+  const workspaceSchool = accessContext?.school ?? null;
+  const currentWorkspaceMember = (accessContext?.members ?? []).find(
+    (member: any) => member.id === accessMembership?.id,
+  );
+  const roleLabel =
+    ({
+      principal: "مدير المدرسة",
+      vice_principal: "وكيل المدرسة",
+      counselor: "الموجه الطلابي",
+      teacher: "المعلم",
+      admin_staff: "الموظف الإداري",
+      guard: "حارس المدرسة",
+      observer: "اطلاع فقط",
+    } as Record<string, string>)[String(accessMembership?.role ?? "")] ?? "عضو المدرسة";
+
   const { data: alertSummary } = useQuery({
     queryKey: ["app-alert-summary"],
     queryFn: async () => {
@@ -301,17 +336,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <p className="truncate text-base font-black tracking-tight text-[#F1E9DD] sm:text-lg">
-                    {school?.school_name || "اسم المدرسة غير محدد"}
+                    {workspaceSchool?.name || school?.school_name || "اسم المدرسة غير محدد"}
                   </p>
                   <span className="hidden rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-[#E6DED2] sm:inline-flex">
                     منصة الذات
                   </span>
                 </div>
                 <p className="mt-0.5 truncate text-[11px] font-medium text-[#D8D0C4] sm:text-xs">
-                  {school?.education_dept || "أكمل بيانات المدرسة من صفحة الإعدادات"}
+                  {workspaceSchool?.education_dept || school?.education_dept || "بيانات إدارة التعليم غير محددة"}
                 </p>
                 <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#CEC6BB] sm:flex">
-                  <span>الموجه الطلابي: <b className="font-bold text-[#F1E9DD]">{school?.counselor_name || "—"}</b></span>
+                  <span>{guidanceNavigationAllowed ? "الموجه الطلابي" : roleLabel}: <b className="font-bold text-[#F1E9DD]">{currentWorkspaceMember?.display_name || school?.counselor_name || "—"}</b></span>
                   <span className="text-white/25">•</span>
                   <span>{school?.academic_year || "العام الدراسي"}</span>
                   <span className="text-white/25">•</span>
@@ -321,7 +356,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              <div className="hidden md:block"><GlobalSearch /></div>
+              {guidanceNavigationAllowed && <div className="hidden md:block"><GlobalSearch /></div>}
               <div className="relative">
                 <Button
                   variant="ghost"
