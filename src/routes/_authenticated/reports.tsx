@@ -136,13 +136,17 @@ function ReportsPage() {
     ],
     queryFn: async () => {
       let workflowProgramRefs: string[] = [];
+      let resolvedPlanTaskId = workflowPlanTaskId;
       if (workflowProgramId) {
         const { data: program } = await (supabase as any)
           .from("programs")
-          .select("id,name")
+          .select("id,name,plan_task_id")
           .eq("id", workflowProgramId)
           .maybeSingle();
-        if (program) workflowProgramRefs = [String(program.id), String(program.name ?? "")].filter(Boolean);
+        if (program) {
+          workflowProgramRefs = [String(program.id), String(program.name ?? "")].filter(Boolean);
+          resolvedPlanTaskId = String(program.plan_task_id ?? "");
+        }
       } else if (workflowPlanTaskId) {
         const { data: linkedPrograms } = await (supabase as any)
           .from("programs")
@@ -169,8 +173,10 @@ function ReportsPage() {
             if (dateField && fromDate) request = request.gte(dateField, fromDate);
             if (dateField && toDate) request = request.lte(dateField, toDate);
 
-            if (record.key === "plan" && workflowPlanTaskId) {
-              request = request.eq("id", workflowPlanTaskId);
+            if (record.key === "plan" && (workflowPlanTaskId || workflowProgramId)) {
+              request = resolvedPlanTaskId
+                ? request.eq("id", resolvedPlanTaskId)
+                : request.eq("id", "00000000-0000-0000-0000-000000000000");
             }
             if (record.key === "programs") {
               if (workflowProgramId) request = request.eq("id", workflowProgramId);
@@ -179,7 +185,7 @@ function ReportsPage() {
             if (record.key === "evidences" && (workflowPlanTaskId || workflowProgramRefs.length)) {
               const refs = [...new Set([
                 ...workflowProgramRefs,
-                ...(workflowPlanTaskId ? [workflowPlanTaskId] : []),
+                ...(resolvedPlanTaskId ? [resolvedPlanTaskId] : []),
               ])];
               request = refs.length ? request.in("linked_ref", refs) : request.eq("id", "00000000-0000-0000-0000-000000000000");
               request = request.eq("doc_status", "معتمد");
@@ -215,6 +221,7 @@ function ReportsPage() {
           results.map((item) => [item.key, item.error ? [] : item.data]),
         ) as Record<string, ReportRow[]>,
         errors,
+        resolvedPlanTaskId,
       };
     },
     staleTime: 30_000,
@@ -398,6 +405,7 @@ function ReportsPage() {
   const planProgress = planRows.length ? Math.round((planDone / planRows.length) * 100) : 0;
   const programProgress = programRows.length ? Math.round((programDone / programRows.length) * 100) : 0;
   const workflowMode = Boolean(workflowPlanTaskId || workflowProgramId);
+  const effectiveWorkflowPlanTaskId = workflowPlanTaskId || data?.resolvedPlanTaskId || "";
   const workflowTask = planRows[0];
   const workflowProgramsComplete =
     programRows.length > 0 &&
@@ -427,11 +435,6 @@ function ReportsPage() {
       `تم تنفيذ مهمة «${taskName}» من الخطة التشغيلية عبر ${programRows.length} ${programRows.length === 1 ? "برنامج مرتبط" : "برامج مرتبطة"}${programNames.length ? `: ${programNames.join("، ")}` : ""}.`,
       beneficiaries > 0 ? `بلغ عدد المستفيدين المسجل في البرامج ${beneficiaries} مستفيدًا.` : "",
       `تم توثيق التنفيذ بعدد ${evidenceRows.length} من الشواهد المعتمدة فقط.`,
-      workflowReportApproved
-        ? "حالة التوثيق: مكتمل ومعتمد."
-        : workflowHasApprovedEvidence
-          ? "حالة التوثيق: الشواهد معتمدة والتقرير بانتظار الاعتماد النهائي."
-          : "حالة التوثيق: لا توجد شواهد معتمدة بعد.",
     ].filter(Boolean);
 
     setNarrative(parts.join("\n"));
@@ -454,7 +457,7 @@ function ReportsPage() {
 
   const approveWorkflowReport = useMutation({
     mutationFn: async () => {
-      if (!workflowPlanTaskId) throw new Error("لا توجد مهمة خطة مرتبطة بهذا التقرير.");
+      if (!effectiveWorkflowPlanTaskId) throw new Error("لا توجد مهمة خطة مرتبطة بهذا التقرير.");
       if (!workflowExecutionComplete) throw new Error("اعتمد تنفيذ المهمة أولًا.");
       if (!workflowProgramsComplete) throw new Error("يجب اكتمال البرامج المرتبطة أولًا.");
       if (!workflowHasApprovedEvidence) throw new Error("يجب اعتماد شاهد واحد على الأقل قبل اعتماد التقرير.");
@@ -462,7 +465,7 @@ function ReportsPage() {
       const { error } = await supabase
         .from("plan_tasks")
         .update({ doc_status: "معتمد" })
-        .eq("id", workflowPlanTaskId);
+        .eq("id", effectiveWorkflowPlanTaskId);
       if (error) throw error;
     },
     onSuccess: async () => {
