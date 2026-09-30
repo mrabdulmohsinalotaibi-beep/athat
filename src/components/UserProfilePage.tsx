@@ -543,22 +543,22 @@ export function UserProfilePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6" dir="rtl">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#3C3C3C] p-6 text-[#F1E9DD] shadow-xl sm:p-8">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#073B4C] p-6 text-white shadow-xl sm:p-8">
         <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full border border-white/5" />
         <div className="pointer-events-none absolute -left-8 -top-12 size-40 rounded-full border border-white/5" />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
           <div className="relative self-start">
-            <Avatar className="size-28 border-4 border-[#F1E9DD]/30 bg-white/10 text-3xl font-black text-[#F1E9DD] shadow-xl sm:size-32">
+            <Avatar className="size-28 border-4 border-[#F1E9DD]/30 bg-white/10 text-3xl font-black text-white shadow-xl sm:size-32">
               {avatarUrl && <AvatarImage src={avatarUrl} alt={`صورة ${displayName}`} />}
-              <AvatarFallback className="bg-white/10 text-[#F1E9DD]">
+              <AvatarFallback className="bg-white/10 text-white">
                 {initials(displayName)}
               </AvatarFallback>
             </Avatar>
             <Button
               type="button"
               size="icon"
-              className="absolute -bottom-1 -left-1 size-10 rounded-full bg-[#F1E9DD] text-[#3C3C3C] shadow-lg hover:bg-white"
+              className="absolute -bottom-1 -left-1 size-10 rounded-full bg-[#D8F1EE] text-[#073B4C] shadow-lg hover:bg-white"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               title="تغيير الصورة الشخصية"
