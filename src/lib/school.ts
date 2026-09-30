@@ -47,6 +47,8 @@ export function useSchool() {
         .from("school_settings")
         .select("*")
         .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) {
