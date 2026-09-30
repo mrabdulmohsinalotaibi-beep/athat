@@ -8,7 +8,7 @@ const filters = [
   { key: "all", label: "الكل" },
   { key: "article", label: "مقالات" },
   { key: "news", label: "أخبار وإعلانات" },
-  { key: "tip", label: "نصائح إرشادية" },
+  { key: "tip", label: "نصائح توجيهية" },
 ] as const;
 
 type FilterKey = (typeof filters)[number]["key"];
@@ -45,7 +45,7 @@ export function PublicPostsFeed({ userId, limit, title, subtitle }: { userId?: s
           <h2 className="text-3xl font-black tracking-tight sm:text-5xl">{title}</h2>
           {subtitle && <p className="mt-4 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">{subtitle}</p>}
         </div>
-        <p className="max-w-xs text-sm leading-7 text-muted-foreground lg:text-left">محتوى عام يفتح لك نافذة على الممارسة الإرشادية، ويُشارك بسهولة مع من يهمه الأمر.</p>
+        <p className="max-w-xs text-sm leading-7 text-muted-foreground lg:text-left">محتوى عام يفتح لك نافذة على ممارسات التوجيه الطلابي، ويُشارك بسهولة مع من يهمه الأمر.</p>
       </div>
 
       <div className="mt-8 flex flex-wrap gap-2" role="tablist" aria-label="تصفية المنشورات العامة">
@@ -73,7 +73,7 @@ export function PublicPostsFeed({ userId, limit, title, subtitle }: { userId?: s
         <div className="mx-auto mt-10 flex max-w-lg flex-col items-center gap-4 rounded-3xl border border-dashed border-primary/25 bg-primary/5 p-12 text-center text-muted-foreground">
           <div className="rounded-2xl bg-primary/10 p-4 text-primary"><Newspaper className="size-8" /></div>
           <h3 className="text-lg font-bold text-foreground">المجلة تستعد لأول منشوراتها</h3>
-          <p className="text-sm leading-7">ستظهر هنا المقالات والأخبار والنصائح الإرشادية فور نشرها للعامة.</p>
+          <p className="text-sm leading-7">ستظهر هنا المقالات والأخبار ونصائح التوجيه الطلابي فور نشرها للعامة.</p>
         </div>
       ) : filteredPosts.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">لا توجد منشورات في هذا التصنيف حاليًا.</div>
