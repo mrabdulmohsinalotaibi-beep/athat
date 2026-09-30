@@ -204,7 +204,7 @@ function CounselorPortalManager() {
         <ServiceCard
           icon={BookOpen}
           title="المقالات"
-          description="مقالات إرشادية أطول للطلاب وأولياء الأمور والمعلمين."
+          description="مقالات توجيهية أطول للطلاب وأولياء الأمور والمعلمين."
           count={articles.length}
           action="إضافة مقال"
           onClick={() => setDraft({ ...EMPTY_ARTICLE })}
@@ -270,7 +270,7 @@ function CounselorPortalManager() {
 
       <ContentSection
         title="المقالات"
-        subtitle="المحتوى الإرشادي المطول الذي يظهر في قسم المقالات في الصفحة العامة."
+        subtitle="محتوى التوجيه الطلابي المطول الذي يظهر في قسم المقالات في الصفحة العامة."
         icon={BookOpen}
         items={articles}
         onCreate={() => setDraft({ ...EMPTY_ARTICLE })}
