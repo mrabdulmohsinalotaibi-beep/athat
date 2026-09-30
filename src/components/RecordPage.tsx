@@ -102,16 +102,23 @@ export function RecordPage({
   useEffect(() => {
     if (config.key === "students" || typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("new") !== "student") return;
-    const studentId = params.get("studentId") ?? "";
-    const studentNo = params.get("studentNo") ?? "";
-    const studentName = params.get("studentName") ?? "";
-    if (!studentId && !studentNo && !studentName) return;
-    setAuto({ student_id: studentId, student_no: studentNo, student_name: studentName });
-    setEditing({ student_id: studentId, student_no: studentNo, student_name: studentName });
+    const newMode = params.get("new");
+    if (newMode !== "student" && newMode !== "1") return;
 
-    // Consume the prefill link once so refreshing the page does not reopen
-    // a duplicate draft. Preserve unrelated query parameters and the hash.
+    if (newMode === "student") {
+      const studentId = params.get("studentId") ?? "";
+      const studentNo = params.get("studentNo") ?? "";
+      const studentName = params.get("studentName") ?? "";
+      if (!studentId && !studentNo && !studentName) return;
+      const prefill = { student_id: studentId, student_no: studentNo, student_name: studentName };
+      setAuto(prefill);
+      setEditing(prefill);
+    } else {
+      setAuto({});
+      setEditing({});
+    }
+
+    // Consume the one-time action link so refreshing does not reopen a duplicate draft.
     ["new", "studentId", "studentNo", "studentName"].forEach((key) => params.delete(key));
     const query = params.toString();
     window.history.replaceState(
