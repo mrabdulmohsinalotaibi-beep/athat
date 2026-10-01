@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { POST_KINDS, formatPostDate, kindLabel, makeSlug } from "@/lib/posts";
 import { useSchool } from "@/lib/school";
+import { generateSmartFill } from "@/lib/deepseek.functions";
 
 export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
@@ -665,6 +666,56 @@ function ContentEditor({
   saving: boolean;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [aiBrief, setAiBrief] = useState("");
+  const [aiFilling, setAiFilling] = useState(false);
+
+  async function smartDraft() {
+    const brief = aiBrief.trim();
+    if (!brief) {
+      toast.info("اكتب فكرة قصيرة للمحتوى أولاً.");
+      return;
+    }
+
+    setAiFilling(true);
+    try {
+      const fields = [
+        { name: "title", label: "العنوان", type: "text" as const },
+        { name: "excerpt", label: "مقدمة مختصرة", type: "text" as const },
+        { name: "body", label: "المحتوى", type: "textarea" as const },
+      ].filter((field) => !String(draft[field.name as keyof Draft] ?? "").trim());
+
+      if (!fields.length) {
+        toast.info("العنوان والمقدمة والمحتوى مكتملة بالفعل.");
+        return;
+      }
+
+      const result = await generateSmartFill({
+        data: {
+          title: draft.kind === "article" ? "مقال في التوجيه الطلابي" : "منشور في التوجيه الطلابي",
+          brief,
+          fields,
+          currentValues: {
+            title: draft.title,
+            excerpt: draft.excerpt,
+            body: draft.body,
+          },
+        },
+      });
+
+      const suggestions = result?.suggestions ?? {};
+      onChange({
+        ...draft,
+        title: draft.title || suggestions["title"] || "",
+        excerpt: draft.excerpt || suggestions["excerpt"] || "",
+        body: draft.body || suggestions["body"] || "",
+      });
+      toast.success("تم إعداد مسودة للمراجعة قبل النشر.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذّر إعداد المسودة الذكية.");
+    } finally {
+      setAiFilling(false);
+    }
+  }
 
   async function uploadImage(file: File | null) {
     if (!file) return;
@@ -726,6 +777,35 @@ function ContentEditor({
           يمكنك نشر نص مع صورة، أو صورة فقط بدون كتابة محتوى.
         </p>
       </div>
+      <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-5 text-primary" />
+          <div>
+            <p className="text-sm font-black">صياغة ذكية للمحتوى</p>
+            <p className="text-[11px] text-muted-foreground">
+              اكتب الفكرة فقط؛ سيقترح الذكاء الاصطناعي الحقول الفارغة، ولن يتم النشر تلقائيًا.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Input
+            value={aiBrief}
+            onChange={(event) => setAiBrief(event.target.value)}
+            placeholder="مثال: منشور للطلاب عن الاستعداد للاختبارات وتقليل القلق"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={aiFilling}
+            onClick={() => void smartDraft()}
+            className="shrink-0"
+          >
+            {aiFilling ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+            {aiFilling ? "جارٍ الصياغة…" : "اقترح المسودة"}
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>العنوان (اختياري للمنشور المصور)</Label>
