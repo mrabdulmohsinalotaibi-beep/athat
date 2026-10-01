@@ -15,7 +15,7 @@ const normalize = (value: string) =>
 export async function readEtqanAttendancePdf(file: File): Promise<EtqanAttendanceRow[]> {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const document = await pdfjs.getDocument({ data: bytes, disableWorker: true }).promise;
+  const document = await pdfjs.getDocument({ data: bytes }).promise;
   const rows: EtqanAttendanceRow[] = [];
 
   for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
@@ -23,8 +23,7 @@ export async function readEtqanAttendancePdf(file: File): Promise<EtqanAttendanc
     const content = await page.getTextContent();
     const text = normalize(
       content.items
-        .filter((item): item is typeof item & { str: string } => "str" in item)
-        .map((item) => item.str)
+        .map((item) => ("str" in item ? item.str : ""))
         .join(" "),
     );
 
