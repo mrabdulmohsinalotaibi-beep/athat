@@ -701,7 +701,6 @@ function ContentEditor({
             excerpt: draft.excerpt,
             body: draft.body,
           },
-          schoolName: undefined,
         },
       });
 
