@@ -19,9 +19,9 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { title: "الإعدادات | الذات" },
       {
         name: "description",
-        content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في منصة الذات.",
+        content: "تخصيص بيانات المدرسة والموجه الطلابي والقوائم المرجعية في الذات.",
       },
-      { property: "og:title", content: "الإعدادات | منصة الذات" },
+      { property: "og:title", content: "الإعدادات | الذات" },
       { property: "og:description", content: "بيانات المدرسة والعام الدراسي والقوائم المرجعية." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
