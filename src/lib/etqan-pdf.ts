@@ -46,8 +46,8 @@ export async function readEtqanAttendancePdf(file: File): Promise<EtqanAttendanc
       rows.push({
         nationalId: current[0] ?? "",
         studentName,
-        grade: grade[1],
-        classroom: grade[2],
+        grade: grade[1] ?? "",
+        classroom: grade[2] ?? "",
         phone,
         date,
         excuse: /بدون\s+عذر/.test(record) ? "بدون عذر" : /بعذر/.test(record) ? "بعذر" : "",
