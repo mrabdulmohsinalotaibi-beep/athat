@@ -114,7 +114,7 @@ export function PublicFeedback({ token }: { token: string }) {
             <MessageSquareText className="size-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-primary">منصة الذات للتوجيه الطلابي</p>
+            <p className="text-xs font-bold text-primary">الذات للتوجيه الطلابي</p>
             <h1 className="text-xl font-black text-foreground sm:text-2xl">
               استبانة الآراء والمقترحات
             </h1>
@@ -222,7 +222,7 @@ export function PublicFeedback({ token }: { token: string }) {
           </Button>
         </form>
         <p className="mt-5 text-center text-xs text-muted-foreground">
-          منصة الذات — التوجيه الطلابي
+          الذات — التوجيه الطلابي
         </p>
       </div>
     </main>
