@@ -367,7 +367,7 @@ export function RequestsInbox() {
           referral_source: request.is_anonymous
             ? "بلاغ سري"
             : request.requester_role || "إبلاغ إلكتروني",
-          action: "فتح حالة إرشادية ومتابعة السلوك",
+          action: "فتح حالة طلابية ومتابعة السلوك",
           result: request.counselor_notes || null,
           notes: [
             request.details,
@@ -488,9 +488,9 @@ export function RequestsInbox() {
   }
 
   function conversionLabel(request: PublicRequestRow) {
-    if (request.kind === "استشارة فردية") return "تحويل إلى مقابلة إرشادية";
+    if (request.kind === "استشارة فردية") return "تحويل إلى مقابلة طلابية";
     if (request.kind === "إحالة طالب") return "تحويل إلى سجل إحالة";
-    return "تحويل إلى حالة إرشادية";
+    return "تحويل إلى حالة طلابية";
   }
 
   function replyText(request: PublicRequestRow) {
