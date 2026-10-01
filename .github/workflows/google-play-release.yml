@@ -68,14 +68,14 @@ jobs:
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
             mkdir -p "$dir"
-            convert public/brand-logo.png -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "$dir/ic_launcher.png"
+            convert "public/brand-logo.png[0]" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher.png"
             cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
           done
           for spec in "mdpi:108" "hdpi:162" "xhdpi:216" "xxhdpi:324" "xxxhdpi:432"; do
             density="${spec%%:*}"
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
-            convert public/brand-logo.png -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "$dir/ic_launcher_foreground.png"
+            convert "public/brand-logo.png[0]" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher_foreground.png"
           done
 
       - name: Restore release keystore
