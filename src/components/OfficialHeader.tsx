@@ -21,12 +21,9 @@ export function OfficialHeader({
 }) {
   return (
     <header data-pdf-header="true" className="official-letterhead bg-white text-[#123d49]">
-      <div className="official-header-corner official-header-corner-right" aria-hidden="true" />
-      <div className="official-header-corner official-header-corner-left" aria-hidden="true" />
-
-      <div className="official-header-grid grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-9 pb-4 pt-6">
+      <div className="official-header-grid grid grid-cols-[minmax(0,1fr)_170px_minmax(0,1fr)] items-center gap-8 px-10 pb-5 pt-6">
         <section
-          className="official-authority-block flex min-h-[7.5rem] flex-col items-center justify-center text-center text-[10.5px] font-bold leading-[1.9]"
+          className="official-authority-block flex min-h-[7.75rem] flex-col items-center justify-center text-center text-[10.5px] font-bold leading-[1.9]"
           dir="rtl"
         >
           <p className="text-[11.5px] font-black">المملكة العربية السعودية</p>
@@ -46,7 +43,7 @@ export function OfficialHeader({
         </section>
 
         <section
-          className="official-document-meta flex min-h-[7.5rem] flex-col items-center justify-center text-center text-[10px] leading-[1.9]"
+          className="official-document-meta flex min-h-[7.75rem] flex-col items-center justify-center text-center text-[10px] leading-[1.9]"
           dir="rtl"
         >
           <p>
