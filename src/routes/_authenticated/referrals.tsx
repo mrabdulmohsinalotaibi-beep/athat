@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated/referrals")({
     meta: [
       { title: "سجل الإحالات | الذات" },
       { name: "description", content: "إحالة الطلاب إلى الجهات المختصة ومتابعة الردود." },
-      { property: "og:title", content: "سجل الإحالات | منصة الذات" },
+      { property: "og:title", content: "سجل الإحالات | الذات" },
       { property: "og:description", content: "إحالة الطلاب إلى الجهات المختصة ومتابعة الردود." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
