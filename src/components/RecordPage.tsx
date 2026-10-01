@@ -30,7 +30,7 @@ import { formatHijriDate } from "@/lib/date";
 import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import { generateSmartFill } from "@/lib/deepseek.functions";
-import type { RecordConfig } from "@/lib/records";
+import { GRADES_BY_STAGE, type RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import {
   StudentCombobox,
@@ -1040,6 +1040,10 @@ export function RecordPage({
               .filter((field) => !field.generated)
               .map((f) => {
                 const current = auto[f.name] ?? String(editing?.[f.name] ?? "");
+                const fieldOptions =
+                  config.key === "students" && f.name === "grade"
+                    ? [...(GRADES_BY_STAGE[String(auto["stage"] ?? editing?.["stage"] ?? "")] ?? [])]
+                    : optionsFor(f);
                 return (
                   <div key={f.name} className={f.type === "textarea" || f.student ? "sm:col-span-2" : ""}>
                     <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -1173,7 +1177,7 @@ export function RecordPage({
                           className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
                         >
                           <option value="">—</option>
-                          {optionsFor(f).map((option) => (
+                          {fieldOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
