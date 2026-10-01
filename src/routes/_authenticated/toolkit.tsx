@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/toolkit")({
         name: "description",
         content: "روابط المقاييس والاختبارات النفسية وأرشيف التعاميم وقواعد السلوك والمواظبة.",
       },
-      { property: "og:title", content: "أدوات القياس والأرشيف | منصة الذات" },
+      { property: "og:title", content: "أدوات القياس والأرشيف | الذات" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
