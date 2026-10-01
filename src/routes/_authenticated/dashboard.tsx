@@ -835,7 +835,7 @@ function Dashboard() {
                       : dashboardTitle}
                 </h1>
                 <p className="truncate text-[10px] text-white/70">
-                  {dashboardTitle} · {school?.school_name || "منصة الذات"}
+                  {dashboardTitle} · {school?.school_name || "الذات"}
                 </p>
               </div>
             </div>
