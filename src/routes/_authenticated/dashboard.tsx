@@ -19,12 +19,15 @@ import {
   Users,
   PlusCircle,
   UploadCloud,
+  Bot,
+  Send,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
 import { QuickActionLauncher } from "@/components/QuickActionLauncher";
+import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -925,6 +928,26 @@ function Dashboard() {
         </div>
       </section>
 
+      {isCounselorDashboard && (
+        <section className="rounded-2xl border border-primary/15 bg-card p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black text-primary">الخطة الأسبوعية</p>
+              <h2 className="mt-0.5 text-sm font-black">تقدم أعمال التوجيه</h2>
+              <p className="mt-1 text-[10px] text-muted-foreground">{planDone} مكتملة من أصل {planTasks.length} مهمة</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <strong className="text-2xl font-black text-primary">{planPercent}%</strong>
+              <Link to="/plan" className="rounded-xl border px-3 py-2 text-[10px] font-black">فتح الخطة</Link>
+              <Link to="/reports" className="rounded-xl bg-primary px-3 py-2 text-[10px] font-black text-primary-foreground">تقرير الأسبوع</Link>
+            </div>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${planPercent}%` }} />
+          </div>
+        </section>
+      )}
+
       <section className="dashboard-stat-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
         {stats.map((card) => {
           const Icon = card.icon;
@@ -1164,6 +1187,19 @@ function Dashboard() {
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {isCounselorDashboard && (
+        <section className="rounded-2xl border border-primary/20 bg-gradient-to-bl from-primary/[0.07] via-card to-card p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-3">
+            <span className="rounded-xl bg-primary/10 p-2 text-primary"><Bot className="size-5" /></span>
+            <div>
+              <h2 className="text-sm font-black">مساعد ذات الذكي</h2>
+              <p className="text-[10px] text-muted-foreground">اسأل عن أعمالك أو جهّز محتوى وتقريرًا من مكان واحد.</p>
+            </div>
+          </div>
+          <AiCounselorAssistant />
         </section>
       )}
 
