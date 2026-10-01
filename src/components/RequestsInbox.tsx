@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Inbox, Mail, MessageCircle, ShieldAlert, Send } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDot, Inbox, Mail, MessageCircle, RotateCcw, ShieldAlert, Send } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -521,6 +521,24 @@ export function RequestsInbox() {
     shareOnWhatsApp(replyText(request), phone);
   }
 
+  function quickStatus(status: string) {
+    if (!selected) return;
+    update.mutate({
+      id: selected.id,
+      source: selected.source,
+      status,
+      counselor_notes: selected.counselor_notes ?? "",
+    });
+  }
+
+  function workflowStep(status: string) {
+    if (status === "جديد") return 0;
+    if (status === "قيد المعالجة") return 1;
+    if (status.startsWith("تم التحويل")) return 2;
+    if (status === "مغلق") return 3;
+    return 1;
+  }
+
   function replyEmail(request: PublicRequestRow) {
     if (request.is_anonymous) {
       toast.info("البلاغ مجهول ولا يحتوي على وسيلة تواصل.");
@@ -733,6 +751,56 @@ export function RequestsInbox() {
               )}
               <OfficialFooter school={school} />
             </div>
+
+            <section className="mt-5 border-t pt-4" data-pdf-exclude="true">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black text-primary">مسار معالجة الطلب</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    راجع الطلب، ابدأ المعالجة، حوّله إلى السجل المناسب عند الحاجة، ثم أغلقه بعد اكتمال الإجراء.
+                  </p>
+                </div>
+                <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold">
+                  الحالة الحالية: {selected.status}
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-4 gap-2">
+                {[
+                  ["وارد", 0],
+                  ["معالجة", 1],
+                  ["توثيق", 2],
+                  ["مغلق", 3],
+                ].map(([label, step]) => {
+                  const current = workflowStep(selected.status);
+                  const complete = Number(step) <= current;
+                  return (
+                    <div key={String(label)} className="text-center">
+                      <div className={cn("mx-auto flex size-8 items-center justify-center rounded-full border", complete ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground")}>
+                        {complete ? <CheckCircle2 className="size-4" /> : <CircleDot className="size-4" />}
+                      </div>
+                      <p className={cn("mt-1 text-[11px] font-bold", complete ? "text-primary" : "text-muted-foreground")}>{label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {selected.status === "جديد" && (
+                  <Button type="button" size="sm" onClick={() => quickStatus("قيد المعالجة")} disabled={update.isPending}>
+                    بدء المعالجة
+                  </Button>
+                )}
+                {selected.status !== "مغلق" && (
+                  <Button type="button" size="sm" variant="outline" onClick={() => quickStatus("مغلق")} disabled={update.isPending}>
+                    <CheckCircle2 className="size-4" /> إغلاق الطلب
+                  </Button>
+                )}
+                {selected.status === "مغلق" && (
+                  <Button type="button" size="sm" variant="outline" onClick={() => quickStatus("قيد المعالجة")} disabled={update.isPending}>
+                    <RotateCcw className="size-4" /> إعادة فتح الطلب
+                  </Button>
+                )}
+              </div>
+            </section>
 
             <form
               className="mt-5 grid gap-3 border-t pt-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]"
