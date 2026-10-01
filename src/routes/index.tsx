@@ -31,8 +31,8 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20261001f" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261001f" },
+      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20261001h" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261001h" },
     ],
   }),
   component: Landing,
@@ -73,7 +73,7 @@ function Landing() {
           <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
             <div className="brand-hero-panel flex w-full max-w-xl justify-center rounded-[2.25rem] p-6 sm:p-8">
               <img
-                src="/brand-icon.svg?v=20261001f"
+                src="/brand-icon.svg?v=20261001h"
                 alt="شعار الذات"
                 className="h-auto w-full max-w-[22rem] drop-shadow-[0_18px_24px_rgba(3,45,102,.16)] sm:max-w-[27rem]"
               />
@@ -148,7 +148,7 @@ function Landing() {
 
           <footer className="mx-auto mt-5 w-full max-w-4xl border-t border-[#07566A]/10 pt-4 text-center">
             <div className="flex items-center justify-center gap-2">
-              <img src="/brand-icon.svg?v=20261001f" alt="" className="size-7 rounded-lg" />
+              <img src="/brand-icon.svg?v=20261001h" alt="" className="size-7 rounded-lg" />
             </div>
             <p className="mt-2 text-[10px] font-semibold text-[#6B7E84]">
               جميع الحقوق محفوظة لـ Abdulmo7sin
