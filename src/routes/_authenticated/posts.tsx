@@ -13,6 +13,10 @@ import {
   Megaphone,
   MessageCircleQuestion,
   ImageIcon,
+  LayoutDashboard,
+  Newspaper,
+  PenSquare,
+  Share2,
   Inbox,
   CalendarClock,
   CheckCircle2,
@@ -237,22 +241,28 @@ function CounselorPortalManager() {
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-bl from-primary/10 via-card to-accent/10 p-5 shadow-sm sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <section className="relative overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-bl from-primary/15 via-card to-accent/10 p-5 shadow-sm sm:p-8">
+        <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div>
-            <p className="text-xs font-black text-primary">المساحة الخاصة بالموجه</p>
-            <h1 className="mt-1 text-2xl font-black sm:text-3xl">بوابة الموجه الطلابي</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-              مركز واحد لإدارة الصفحة العامة والمحتوى والخدمات والطلبات الواردة، مع روابط مستقلة للطلاب وأولياء الأمور والمعلمين.
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-1 text-xs font-black text-primary">
+              <Newspaper className="size-4" /> مدونة الموجه الطلابي
+            </div>
+            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">مساحتك الإعلامية والتوجيهية</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">
+              انشر الرسائل التربوية والمقالات والإعلانات، استقبل مشاركات المجتمع المدرسي، وأدر خدمات الطلاب والأسرة من لوحة واحدة واضحة.
             </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button onClick={() => setDraft({ ...EMPTY_POST })}><PenSquare className="size-4" /> كتابة منشور</Button>
+              <Button variant="outline" onClick={() => setDraft({ ...EMPTY_ARTICLE })}><BookOpen className="size-4" /> كتابة مقال</Button>
+              <a href="#portal-links"><Button variant="ghost"><Share2 className="size-4" /> مشاركة المدونة</Button></a>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setDraft({ ...EMPTY_POST })}>
-              <Plus className="size-4" /> منشور جديد
-            </Button>
-            <Button variant="outline" onClick={() => setDraft({ ...EMPTY_ARTICLE })}>
-              <BookOpen className="size-4" /> مقال جديد
-            </Button>
+          <div className="grid min-w-[260px] grid-cols-2 gap-2 rounded-2xl border bg-background/70 p-3 backdrop-blur">
+            <a href="#content-library" className="rounded-xl p-3 transition hover:bg-muted"><Newspaper className="size-5 text-primary" /><strong className="mt-2 block text-sm">المحتوى</strong><span className="text-xs text-muted-foreground">{posts.length} مادة</span></a>
+            <a href="#incoming-requests" className="rounded-xl p-3 transition hover:bg-muted"><Inbox className="size-5 text-primary" /><strong className="mt-2 block text-sm">الوارد</strong><span className="text-xs text-muted-foreground">{newRequests} جديد</span></a>
+            <a href="#portal-links" className="rounded-xl p-3 transition hover:bg-muted"><Globe className="size-5 text-primary" /><strong className="mt-2 block text-sm">الصفحة العامة</strong><span className="text-xs text-muted-foreground">روابط المشاركة</span></a>
+            <Link to="/weekly-poster" className="rounded-xl p-3 transition hover:bg-muted"><Sparkles className="size-5 text-primary" /><strong className="mt-2 block text-sm">الأسبوعي</strong><span className="text-xs text-muted-foreground">رسالة وتوجيه</span></Link>
           </div>
         </div>
       </section>
@@ -396,6 +406,7 @@ function CounselorPortalManager() {
         </div>
       )}
 
+      <div id="content-library" className="scroll-mt-24" />
       <ContentSection
         title="المنشورات"
         subtitle="الإعلانات والنصائح والأخبار القصيرة."
