@@ -30,6 +30,7 @@ export async function readEtqanAttendancePdf(file: File): Promise<EtqanAttendanc
     const identities = [...text.matchAll(/\b\d{10}\b/g)];
     for (let index = 0; index < identities.length; index += 1) {
       const current = identities[index];
+      if (!current) continue;
       const start = current.index ?? 0;
       const end = identities[index + 1]?.index ?? text.length;
       const record = text.slice(start, end);
@@ -43,7 +44,7 @@ export async function readEtqanAttendancePdf(file: File): Promise<EtqanAttendanc
       const studentName = normalize((gradeAt >= 0 ? afterId.slice(0, gradeAt) : "").replace(/^\d+\s+/, ""));
 
       rows.push({
-        nationalId: current[0],
+        nationalId: current[0] ?? "",
         studentName,
         grade: grade[1],
         classroom: grade[2],
