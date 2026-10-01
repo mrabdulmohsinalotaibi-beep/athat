@@ -138,10 +138,10 @@ export function WeeklyGuidancePoster() {
         },
       });
       const s = result.suggestions || {};
-      if (s.title) setTitle(s.title);
-      if (s.intro) setIntro(s.intro);
-      if (s.body) setBody(s.body);
-      if (s.reminder) setReminder(s.reminder);
+      if (s["title"]) setTitle(s["title"]);
+      if (s["intro"]) setIntro(s["intro"]);
+      if (s["body"]) setBody(s["body"]);
+      if (s["reminder"]) setReminder(s["reminder"]);
       toast.success("تم إعداد محتوى الأسبوع بالذكاء الاصطناعي. راجعه قبل المشاركة.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذّر إعداد المحتوى بالذكاء الاصطناعي.");
