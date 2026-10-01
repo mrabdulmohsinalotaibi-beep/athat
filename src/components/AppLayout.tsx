@@ -202,7 +202,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-0.5 ring-2 ring-sidebar-primary/40">
-              <img src="/brand-icon.svg?v=20261001f" alt="شعار الذات" className="size-full object-contain" />
+              <img src="/brand-icon.svg?v=20261001h" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
               <p className="text-xs font-bold text-sidebar-foreground/70">نظام التوجيه الطلابي</p>
@@ -325,7 +325,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
               <div className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-[#073B4C] shadow-[0_10px_30px_-18px_rgba(0,0,0,.9)]">
                 <img
-                  src="/brand-icon.svg?v=20261001f"
+                  src="/brand-icon.svg?v=20261001h"
                   alt="شعار الذات"
                   className="size-[50px] object-contain p-1 sm:size-[56px]"
                 />
