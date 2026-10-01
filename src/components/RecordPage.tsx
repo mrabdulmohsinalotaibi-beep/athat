@@ -1070,28 +1070,74 @@ export function RecordPage({
                         <div className="flex-1">
                           <StudentCombobox
                             value={current}
+                            multiple
                             onType={(name) =>
-                              setAuto((a) => ({ ...a, student_name: name, student_id: "" }))
+                              setAuto((a) => {
+                                const names = String(a["student_name"] ?? current)
+                                  .split(/\s*[،,]\s*/)
+                                  .map((item) => item.trim())
+                                  .filter(Boolean);
+                                if (!names.includes(name)) names.push(name);
+                                return {
+                                  ...a,
+                                  student_name: names.join("، "),
+                                  student_id: names.length === 1 ? String(a["student_id"] ?? "") : "",
+                                };
+                              })
                             }
                             onSelect={(s: StudentOption) =>
-                              setAuto((a) => ({
-                                ...a,
-                                student_id: s.id,
-                                student_name: s.full_name,
-                                student_no: s.student_no || s.national_id,
-                                guardian_name: s.guardian_name,
-                                grade: s.grade,
-                                classroom: s.classroom,
-                                participant: a["participant"] || s.guardian_name,
-                              }))
+                              setAuto((a) => {
+                                const existing = String(a["student_name"] ?? current)
+                                  .split(/\s*[،,]\s*/)
+                                  .map((item) => item.trim())
+                                  .filter(Boolean);
+                                const alreadySelected = existing.includes(s.full_name);
+                                const names = alreadySelected
+                                  ? existing.filter((name) => name !== s.full_name)
+                                  : [...existing, s.full_name];
+                                const onlyStudent =
+                                  names.length === 1
+                                    ? studentOptions.find((student) => student.full_name === names[0])
+                                    : undefined;
+                                return {
+                                  ...a,
+                                  student_id: onlyStudent?.id ?? "",
+                                  student_name: names.join("، "),
+                                  student_no:
+                                    names.length === 1
+                                      ? onlyStudent?.student_no || onlyStudent?.national_id || ""
+                                      : names
+                                          .map((name) => {
+                                            const student = studentOptions.find((item) => item.full_name === name);
+                                            return student?.student_no || student?.national_id || "";
+                                          })
+                                          .filter(Boolean)
+                                          .join("، "),
+                                  guardian_name:
+                                    names.length === 1 ? onlyStudent?.guardian_name ?? "" : "",
+                                  grade: names.length === 1 ? onlyStudent?.grade ?? "" : String(a["grade"] ?? ""),
+                                  classroom:
+                                    names.length === 1 ? onlyStudent?.classroom ?? "" : String(a["classroom"] ?? ""),
+                                  participant:
+                                    names.length === 1
+                                      ? String(a["participant"] || onlyStudent?.guardian_name || "")
+                                      : String(a["participant"] ?? ""),
+                                };
+                              })
                             }
                             onClear={() =>
-                              setAuto((a) => ({ ...a, student_name: "", student_id: "" }))
+                              setAuto((a) => ({
+                                ...a,
+                                student_name: "",
+                                student_id: "",
+                                student_no: "",
+                                guardian_name: "",
+                              }))
                             }
                           />
                         </div>
                         {(() => {
-                          const match = studentOptions.find((s) => s.full_name === current);
+                          const match = current.includes("،") ? undefined : studentOptions.find((s) => s.full_name === current);
                           if (!match?.guardian_phone) return null;
                           return (
                             <WhatsAppButton
