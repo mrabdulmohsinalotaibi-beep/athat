@@ -7,8 +7,8 @@ export const Route = createFileRoute("/_authenticated/subscription")({
   head: () => ({ meta: [
     { title: "الاشتراك والترقية | الذات" },
     { name: "description", content: "جميع الخصائص متاحة حالياً للجميع، وقريباً تفعيل نظام الاشتراكات والترقية." },
-    { property: "og:title", content: "الاشتراك والترقية | منصة الذات" },
-    { property: "og:description", content: "جميع خصائص منصة الذات مفتوحة للجميع مؤقتاً." },
+    { property: "og:title", content: "الاشتراك والترقية | الذات" },
+    { property: "og:description", content: "جميع خصائص الذات مفتوحة للجميع مؤقتاً." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
@@ -49,7 +49,7 @@ function SubscriptionPage() {
               <h2 className="text-2xl font-bold">باقة الموجه الشاملة (مفتوحة بالكامل)</h2>
             </div>
             <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-              تتمتع الآن بصلاحيات مطلقة وكاملة على جميع أدوات منصة الذات للتوجيه الطلابي دون الحاجة لأي دفع أو ترقية حالية.
+              تتمتع الآن بصلاحيات مطلقة وكاملة على جميع أدوات الذات للتوجيه الطلابي دون الحاجة لأي دفع أو ترقية حالية.
             </p>
 
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 text-sm">
