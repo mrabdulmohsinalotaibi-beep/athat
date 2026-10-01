@@ -29,7 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
-      { title: "إدارة منصة الذات | ATHAT" },
+      { title: "إدارة الذات | ATHAT" },
       {
         name: "description",
         content: "لوحة مالك المنصة للتحكم العام في الخصائص والظهور لجميع المشتركين.",
@@ -174,7 +174,7 @@ function OwnerAdminPage() {
               <ShieldCheck className="size-4" />
               {admin.role === "owner" ? "مالك المنصة" : "مشرف المنصة"}
             </div>
-            <h1 className="mt-4 text-2xl font-black sm:text-4xl">إدارة منصة الذات</h1>
+            <h1 className="mt-4 text-2xl font-black sm:text-4xl">إدارة الذات</h1>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-[#D8D0C4]">
               أي تغيير في الظهور هنا يُحفظ سحابيًا ويصل إلى جميع المشتركين مباشرة، بدون الحاجة إلى
               إعادة تثبيت التطبيق.
