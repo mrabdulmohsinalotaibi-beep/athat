@@ -56,7 +56,7 @@ export function PublicLayout({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
-              src="/brand-icon.svg?v=20261001f"
+              src="/brand-icon.svg?v=20261001h"
               alt="شعار الذات"
               className="brand-mark-well size-11 rounded-lg object-contain"
             />
