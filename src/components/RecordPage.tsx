@@ -39,6 +39,7 @@ import {
 } from "@/components/StudentCombobox";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
+import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
 
 import { RecordAttachmentsDialog } from "@/components/RecordAttachments";
 import { Button } from "@/components/ui/button";
@@ -102,6 +103,7 @@ export function RecordPage({
   const [importing, setImporting] = useState(false);
   const [attachFor, setAttachFor] = useState<Row | null>(null);
   const [documentRow, setDocumentRow] = useState<Row | null>(null);
+  const [signatureRow, setSignatureRow] = useState<Row | null>(null);
   const singleDocumentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -880,6 +882,14 @@ export function RecordPage({
                 title={config.singular}
                 disabled={!documentRow}
               />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!documentRow}
+                onClick={() => documentRow && setSignatureRow(documentRow)}
+              >
+                <Send className="size-4" /> إرسال للاعتماد والتوقيع
+              </Button>
             </div>
           </DialogHeader>
           {documentRow && (
@@ -1203,6 +1213,19 @@ export function RecordPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {signatureRow && (
+        <SendForSignatureDialog
+          open={signatureRow !== null}
+          onOpenChange={(open) => !open && setSignatureRow(null)}
+          recordTable={config.table}
+          recordId={signatureRow.id}
+          recordType={config.singular}
+          title={`${config.singular} - ${displayRecordValue(signatureRow[listFields[0]?.name ?? "id"])}`}
+          snapshot={Object.fromEntries(
+            config.fields.map((field) => [field.label, signatureRow[field.name] ?? null]),
+          )}
+        />
+      )}
       <RecordAttachmentsDialog
         open={attachFor !== null}
         onOpenChange={(open) => !open && setAttachFor(null)}
