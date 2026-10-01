@@ -15,7 +15,7 @@ import {
   HeartPulse,
   LockKeyhole,
   Megaphone,
-  MessageCircle,
+  Share2,
   MessageCircleQuestion,
   School,
   Search,
@@ -567,11 +567,11 @@ function PublicContentSection({
                         )}`}
                         target="_blank"
                         rel="noreferrer noopener"
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-3.5 py-2 text-xs font-black text-white shadow-sm transition hover:bg-[#1da851]"
+                        className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-bold text-primary transition hover:bg-primary/5"
                         aria-label={`مشاركة ${post.title} عبر واتساب`}
                       >
-                        <MessageCircle className="size-4" />
-                        مشاركة عبر واتساب
+                        <Share2 className="size-5" />
+                        مشاركة
                       </a>
                     </div>
                   </div>
