@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254" role="img" aria-label="شعار الذات">
 <defs>
- <linearGradient id="g" x1=".2" y1="1" x2=".72" y2="0"><stop offset="0" stop-color="#0B506A"/><stop offset=".42" stop-color="#116E7A"/><stop offset=".7" stop-color="#1D9B91"/><stop offset="1" stop-color="#5ACB8D"/></linearGradient>
- <linearGradient id="g2" x1=".15" y1="1" x2=".75" y2="0"><stop offset="0" stop-color="#0A536A"/><stop offset=".48" stop-color="#157D82"/><stop offset="1" stop-color="#55C98B"/></linearGradient>
+ <linearGradient id="g" x1=".15" y1="1" x2=".75" y2="0"><stop offset="0" stop-color="#062D66"/><stop offset=".34" stop-color="#075A88"/><stop offset=".58" stop-color="#00A8C4"/><stop offset=".76" stop-color="#42CFAF"/><stop offset=".9" stop-color="#BCE7B4"/><stop offset="1" stop-color="#F2C55C"/></linearGradient>
+ <linearGradient id="g2" x1=".1" y1="1" x2=".82" y2="0"><stop offset="0" stop-color="#032A62"/><stop offset=".42" stop-color="#0878A4"/><stop offset=".67" stop-color="#16C5C0"/><stop offset=".84" stop-color="#77D6A4"/><stop offset="1" stop-color="#FFD06A"/></linearGradient>
 </defs>
 <g fill="url(#g)">
 <path d="M1054 966V198q0-58 59-58h9q68 0 68 80v742q0 128-67 128h-9q-60 0-60-124Z"/>
@@ -12,7 +12,7 @@
 <rect x="219" y="338" width="142" height="136" rx="35"/>
 <rect x="636" y="340" width="138" height="135" rx="35"/>
 </g>
-<g opacity=".28" fill="url(#g2)">
+<g opacity=".72" fill="url(#g2)">
 <path d="M56 640c115 38 220 105 305 177v127q0 146-91 146H148q-92 0-92-146Z"/>
 <path d="M391 450c58 43 101 101 134 169v383q0 89-61 89h-11q-62 0-62-79Z"/>
 <path d="M553 658c83 70 179 111 304 136v104q0 44 24 44l8-28v51q0 125-80 125H577q-25 0-25-56v-25q0-43 47-43h53q42 0 42-64V766c-55-18-101-53-141-108Z"/>
