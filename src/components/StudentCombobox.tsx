@@ -112,7 +112,7 @@ export function StudentCombobox({
           </button>
         )}
       </div>
-      <PopoverContent dir="rtl" align="start" className="w-[min(26rem,90vw)] p-0">
+      <PopoverContent dir="rtl" align="start" className="w-[min(26rem,94vw)] max-h-[min(32rem,75dvh)] overflow-hidden p-0">
         <div className="relative border-b p-2">
           <Search className="absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -123,7 +123,7 @@ export function StudentCombobox({
             className="pr-9"
           />
         </div>
-        <div className="max-h-64 overflow-y-auto p-1">
+        <div className="max-h-[min(22rem,55dvh)] overflow-y-auto overscroll-contain touch-pan-y p-1 [-webkit-overflow-scrolling:touch]">
           {isLoading && <p className="p-3 text-center text-xs text-muted-foreground">جارٍ التحميل...</p>}
           {isError && (
             <div className="p-3 text-center text-xs">
@@ -146,7 +146,7 @@ export function StudentCombobox({
                 onSelect(s);
                 if (!multiple) setOpen(false);
               }}
-              className="flex w-full items-center gap-2 rounded-md p-2 text-right text-sm hover:bg-accent"
+              className="flex min-h-12 w-full touch-manipulation items-center gap-2 rounded-md p-2 text-right text-sm hover:bg-accent"
             >
               <Check className={cn("size-4", selectedNames.includes(s.full_name) ? "opacity-100 text-primary" : "opacity-0")} />
               <span className="flex-1">
