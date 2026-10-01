@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "public/brand-logo.png"
+      - "public/brand-icon.svg"
 
 permissions:
   contents: write
@@ -29,10 +29,10 @@ jobs:
 
       - name: Generate browser and install icons
         run: |
-          convert public/brand-logo.png -resize 180x180 -background none -gravity center -extent 180x180 public/apple-touch-icon.png
-          convert public/brand-logo.png -resize 192x192 -background none -gravity center -extent 192x192 public/icon-192x192.png
-          convert public/brand-logo.png -resize 512x512 -background none -gravity center -extent 512x512 public/icon-512x512.png
-          convert public/brand-logo.png -resize 64x64 -background none -gravity center -extent 64x64 public/favicon.png
+          convert public/brand-icon.svg -resize 180x180 -background none -gravity center -extent 180x180 public/apple-touch-icon.png
+          convert public/brand-icon.svg -resize 192x192 -background none -gravity center -extent 192x192 public/icon-192x192.png
+          convert public/brand-icon.svg -resize 512x512 -background none -gravity center -extent 512x512 public/icon-512x512.png
+          convert public/brand-icon.svg -resize 64x64 -background none -gravity center -extent 64x64 public/favicon.png
           convert public/favicon.png -define icon:auto-resize=64,48,32,16 public/favicon.ico
 
       - name: Commit generated icons
