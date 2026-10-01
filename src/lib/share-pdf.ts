@@ -216,15 +216,15 @@ export async function createPdfFile({
         root.style.setProperty("--foreground", "#2f2f2f");
         root.style.setProperty("--card", "#ffffff");
         root.style.setProperty("--border", "#d8d2c8");
-        root.style.setProperty("--primary", "#3c3c3c");
-        root.style.setProperty("--ring", "#3c3c3c");
+        root.style.setProperty("--primary", "#07566a");
+        root.style.setProperty("--ring", "#07566a");
         root.style.setProperty("--paper", "#ffffff");
         root.style.setProperty("--paper-foreground", "#2f2f2f");
         root.style.setProperty("--paper-muted", "#f3efe8");
         root.style.setProperty("--paper-muted-foreground", "#6a6762");
         root.style.setProperty("--paper-border", "#d8d2c8");
-        root.style.setProperty("--letterhead-primary", "#3c3c3c");
-        root.style.setProperty("--letterhead-secondary", "#8a8175");
+        root.style.setProperty("--letterhead-primary", "#07566a");
+        root.style.setProperty("--letterhead-secondary", "#c79a5b");
 
         const target = clonedDocument.querySelector<HTMLElement>(
           '[data-pdf-capture-target="true"]',
