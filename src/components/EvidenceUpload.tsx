@@ -166,7 +166,7 @@ export function EvidenceUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent dir="rtl" className="max-h-[96vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>رفع شاهد جديد</DialogTitle>
           <DialogDescription>صور (JPG/PNG) · مقاطع فيديو (MP4) · مستندات (PDF/Word/Excel) — حتى 50 ميجابايت.</DialogDescription>
@@ -186,7 +186,7 @@ export function EvidenceUploadDialog({
               setFile(chosen); if (chosen && !name) setName(chosen.name);
             }} />
             <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
-              {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 h-28 max-w-full object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
+              {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 max-h-[55vh] min-h-64 w-full rounded-xl border bg-black/5 object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
               <p className="mt-2 break-all text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
               {file && <p className="mt-1 text-xs font-semibold text-primary">{typeLabel(kindOf(file.type, file.name))} · {fileSizeLabel(file.size)}</p>}
               <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>
@@ -260,7 +260,7 @@ export function EvidenceUploadDialog({
 
 export function EvidenceGallery() {
   const queryClient = useQueryClient();
-  const [preview, setPreview] = useState<{ url: string; kind: string; name: string } | null>(null);
+  const [preview, setPreview] = useState<{ url: string; kind: string; name: string; id?: string; status?: string; notes?: string | null } | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   const {
@@ -405,7 +405,7 @@ export function EvidenceGallery() {
             <button
               type="button"
               className="flex h-32 w-full items-center justify-center bg-muted/50"
-              onClick={() => setPreview({ url: it.url, kind: it.kind, name: String(it.name ?? "") })}
+              onClick={() => setPreview({ url: it.url, kind: it.kind, name: String(it.name ?? ""), id: String(it.id), status: String(it.doc_status ?? "قيد المراجعة"), notes: it.notes })}
             >
               {it.kind === "image" && it.url ? (
                 <img src={it.url} alt={String(it.name ?? "شاهد")} className="h-full w-full object-cover" />
@@ -434,35 +434,16 @@ export function EvidenceGallery() {
                 >
                   {String(it.doc_status || "قيد المراجعة")}
                 </span>
-                {it.doc_status !== "معتمد" && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-7 gap-1 px-2 text-[10px]"
-                    disabled={reviewingId === String(it.id)}
-                    onClick={() => void reviewEvidence(String(it.id), "معتمد", it.notes)}
-                  >
-                    {reviewingId === String(it.id) ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="size-3.5" />
-                    )}
-                    اعتماد
-                  </Button>
-                )}
-                {it.doc_status !== "ناقص" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1 px-2 text-[10px]"
-                    disabled={reviewingId === String(it.id)}
-                    onClick={() => void reviewEvidence(String(it.id), "ناقص", it.notes)}
-                  >
-                    <RotateCcw className="size-3.5" />
-                    إعادة
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1 px-2 text-[10px]"
+                  onClick={() => setPreview({ url: it.url, kind: it.kind, name: String(it.name ?? ""), id: String(it.id), status: String(it.doc_status ?? "قيد المراجعة"), notes: it.notes })}
+                >
+                  <ImageIcon className="size-3.5" />
+                  مراجعة الشاهد
+                </Button>
               </div>
               {it.doc_status === "ناقص" && it.notes && (
                 <p className="line-clamp-2 text-[10px] leading-5 text-destructive">
@@ -473,7 +454,7 @@ export function EvidenceGallery() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPreview({ url: it.url, kind: it.kind, name: String(it.name ?? "") })}
+                  onClick={() => setPreview({ url: it.url, kind: it.kind, name: String(it.name ?? ""), id: String(it.id), status: String(it.doc_status ?? "قيد المراجعة"), notes: it.notes })}
                 >
                   <ImageIcon className="size-4" /> معاينة
                 </Button>
@@ -496,7 +477,7 @@ export function EvidenceGallery() {
       </div>
 
       <Dialog open={preview !== null} onOpenChange={(v) => !v && setPreview(null)}>
-        <DialogContent dir="rtl" className="max-w-3xl">
+        <DialogContent dir="rtl" className="max-h-[96vh] max-w-5xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{preview?.name}</DialogTitle>
           </DialogHeader>
@@ -505,8 +486,39 @@ export function EvidenceGallery() {
           {preview?.kind === "doc" && (
             <iframe title={preview.name} src={preview.url} className="h-[70vh] w-full rounded-lg border" />
           )}
-          <DialogFooter>
-            <Button asChild>
+          <DialogFooter className="flex-wrap gap-2">
+            {preview?.id && preview.status !== "معتمد" && (
+              <Button
+                type="button"
+                disabled={reviewingId === preview.id}
+                onClick={async () => {
+                  await reviewEvidence(preview.id!, "معتمد", preview.notes);
+                  setPreview(null);
+                }}
+              >
+                {reviewingId === preview.id ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                اعتماد هذا الشاهد
+              </Button>
+            )}
+            {preview?.id && preview.status !== "ناقص" && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={reviewingId === preview.id}
+                onClick={async () => {
+                  await reviewEvidence(preview.id!, "ناقص", preview.notes);
+                  setPreview(null);
+                }}
+              >
+                <RotateCcw className="size-4" /> إعادة للتعديل
+              </Button>
+            )}
+            <Button variant="outline" asChild>
+              <a href={preview?.url} target="_blank" rel="noreferrer">
+                <ImageIcon className="size-4" /> فتح بالحجم الكامل
+              </a>
+            </Button>
+            <Button variant="outline" asChild>
               <a href={preview?.url} download target="_blank" rel="noreferrer">
                 <Download className="size-4" /> تنزيل
               </a>
