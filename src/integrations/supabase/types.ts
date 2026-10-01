@@ -76,6 +76,42 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changed_at: string
+          id: number
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changed_at?: string
+          id?: number
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changed_at?: string
+          id?: number
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       behavior: {
         Row: {
           action: string | null
@@ -317,6 +353,36 @@ export type Database = {
           },
         ]
       }
+      deleted_records: {
+        Row: {
+          deleted_at: string
+          deleted_by: string | null
+          id: string
+          record_data: Json
+          record_id: string | null
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          record_data: Json
+          record_id?: string | null
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          record_data?: Json
+          record_id?: string | null
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       evidences: {
         Row: {
           created_at: string
@@ -439,6 +505,7 @@ export type Database = {
       }
       interviews: {
         Row: {
+          case_id: string | null
           channel: string | null
           created_at: string
           evidence_url: string | null
@@ -459,6 +526,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          case_id?: string | null
           channel?: string | null
           created_at?: string
           evidence_url?: string | null
@@ -479,6 +547,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          case_id?: string | null
           channel?: string | null
           created_at?: string
           evidence_url?: string | null
@@ -499,6 +568,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "interviews_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "counseling_cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "interviews_student_id_fkey"
             columns: ["student_id"]
@@ -792,6 +868,7 @@ export type Database = {
           student_grade: string | null
           student_name: string | null
           topic: string | null
+          tracking_code: string | null
           updated_at: string
           urgency: string
           user_id: string
@@ -816,6 +893,7 @@ export type Database = {
           student_grade?: string | null
           student_name?: string | null
           topic?: string | null
+          tracking_code?: string | null
           updated_at?: string
           urgency?: string
           user_id: string
@@ -840,6 +918,7 @@ export type Database = {
           student_grade?: string | null
           student_name?: string | null
           topic?: string | null
+          tracking_code?: string | null
           updated_at?: string
           urgency?: string
           user_id?: string
@@ -849,6 +928,7 @@ export type Database = {
       referrals: {
         Row: {
           attachments: string | null
+          case_id: string | null
           case_no: string | null
           created_at: string
           id: string
@@ -868,6 +948,7 @@ export type Database = {
         }
         Insert: {
           attachments?: string | null
+          case_id?: string | null
           case_no?: string | null
           created_at?: string
           id?: string
@@ -887,6 +968,7 @@ export type Database = {
         }
         Update: {
           attachments?: string | null
+          case_id?: string | null
           case_no?: string | null
           created_at?: string
           id?: string
@@ -905,6 +987,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "referrals_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "counseling_cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "referrals_student_id_fkey"
             columns: ["student_id"]
@@ -961,6 +1050,278 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      school_join_codes: {
+        Row: {
+          join_code: string
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          join_code: string
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          join_code?: string
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_join_codes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_members: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          is_admin: boolean
+          joined_at: string | null
+          member_status: string
+          permissions: Json
+          role: string
+          school_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_admin?: boolean
+          joined_at?: string | null
+          member_status?: string
+          permissions?: Json
+          role?: string
+          school_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_admin?: boolean
+          joined_at?: string | null
+          member_status?: string
+          permissions?: Json
+          role?: string
+          school_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_members_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_report_handoff_events: {
+        Row: {
+          actor_member_id: string | null
+          actor_name: string
+          actor_role: string
+          created_at: string
+          event_type: string
+          handoff_id: string
+          id: string
+          note: string | null
+          root_handoff_id: string
+          school_id: string
+          target_member_id: string | null
+          target_name: string | null
+          target_role: string | null
+        }
+        Insert: {
+          actor_member_id?: string | null
+          actor_name: string
+          actor_role: string
+          created_at?: string
+          event_type: string
+          handoff_id: string
+          id?: string
+          note?: string | null
+          root_handoff_id: string
+          school_id: string
+          target_member_id?: string | null
+          target_name?: string | null
+          target_role?: string | null
+        }
+        Update: {
+          actor_member_id?: string | null
+          actor_name?: string
+          actor_role?: string
+          created_at?: string
+          event_type?: string
+          handoff_id?: string
+          id?: string
+          note?: string | null
+          root_handoff_id?: string
+          school_id?: string
+          target_member_id?: string | null
+          target_name?: string | null
+          target_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_report_handoff_events_actor_member_id_fkey"
+            columns: ["actor_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoff_events_handoff_id_fkey"
+            columns: ["handoff_id"]
+            isOneToOne: false
+            referencedRelation: "school_report_handoffs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoff_events_root_handoff_id_fkey"
+            columns: ["root_handoff_id"]
+            isOneToOne: false
+            referencedRelation: "school_report_handoffs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoff_events_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoff_events_target_member_id_fkey"
+            columns: ["target_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_report_handoffs: {
+        Row: {
+          archived_at: string | null
+          decision_at: string | null
+          decision_by_member_id: string | null
+          decision_note: string | null
+          id: string
+          note: string | null
+          parent_handoff_id: string | null
+          read_at: string | null
+          recipient_member_id: string
+          recipient_name: string
+          recipient_role: string
+          root_handoff_id: string
+          school_id: string
+          sender_member_id: string
+          sender_name: string
+          sender_role: string
+          sent_at: string
+          snapshot: Json
+          status: string
+          title: string
+        }
+        Insert: {
+          archived_at?: string | null
+          decision_at?: string | null
+          decision_by_member_id?: string | null
+          decision_note?: string | null
+          id?: string
+          note?: string | null
+          parent_handoff_id?: string | null
+          read_at?: string | null
+          recipient_member_id: string
+          recipient_name: string
+          recipient_role: string
+          root_handoff_id: string
+          school_id: string
+          sender_member_id: string
+          sender_name: string
+          sender_role: string
+          sent_at?: string
+          snapshot: Json
+          status?: string
+          title: string
+        }
+        Update: {
+          archived_at?: string | null
+          decision_at?: string | null
+          decision_by_member_id?: string | null
+          decision_note?: string | null
+          id?: string
+          note?: string | null
+          parent_handoff_id?: string | null
+          read_at?: string | null
+          recipient_member_id?: string
+          recipient_name?: string
+          recipient_role?: string
+          root_handoff_id?: string
+          school_id?: string
+          sender_member_id?: string
+          sender_name?: string
+          sender_role?: string
+          sent_at?: string
+          snapshot?: Json
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_report_handoffs_decision_by_member_id_fkey"
+            columns: ["decision_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoffs_parent_fk"
+            columns: ["parent_handoff_id"]
+            isOneToOne: false
+            referencedRelation: "school_report_handoffs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoffs_recipient_member_id_fkey"
+            columns: ["recipient_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoffs_root_fk"
+            columns: ["root_handoff_id"]
+            isOneToOne: false
+            referencedRelation: "school_report_handoffs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoffs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_report_handoffs_sender_member_id_fkey"
+            columns: ["sender_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_settings: {
         Row: {
@@ -1052,6 +1413,131 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vision?: string | null
+        }
+        Relationships: []
+      }
+      school_tasks: {
+        Row: {
+          approved_at: string | null
+          approved_by_member_id: string | null
+          assignee_member_id: string
+          cadence: string
+          category: string
+          completed_at: string | null
+          completion_note: string | null
+          created_at: string
+          creator_member_id: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          returned_note: string | null
+          school_id: string
+          status: string
+          template_key: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_member_id?: string | null
+          assignee_member_id: string
+          cadence?: string
+          category?: string
+          completed_at?: string | null
+          completion_note?: string | null
+          created_at?: string
+          creator_member_id: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          returned_note?: string | null
+          school_id: string
+          status?: string
+          template_key?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_member_id?: string | null
+          assignee_member_id?: string
+          cadence?: string
+          category?: string
+          completed_at?: string | null
+          completion_note?: string | null
+          created_at?: string
+          creator_member_id?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          returned_note?: string | null
+          school_id?: string
+          status?: string
+          template_key?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_tasks_approved_by_member_id_fkey"
+            columns: ["approved_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_tasks_assignee_member_id_fkey"
+            columns: ["assignee_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_tasks_creator_member_id_fkey"
+            columns: ["creator_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_tasks_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          created_at: string
+          education_dept: string | null
+          education_office: string | null
+          id: string
+          name: string
+          owner_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          education_dept?: string | null
+          education_office?: string | null
+          id?: string
+          name: string
+          owner_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          education_dept?: string | null
+          education_office?: string | null
+          id?: string
+          name?: string
+          owner_user_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1195,6 +1681,63 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_school_task_template: {
+        Args: {
+          p_assignee_member_id: string
+          p_cadence?: string
+          p_category?: string
+          p_description?: string
+          p_due_date?: string
+          p_priority?: string
+          p_template_key: string
+          p_title: string
+        }
+        Returns: string
+      }
+      approve_school_member: {
+        Args: { p_is_admin?: boolean; p_member_id: string; p_role: string }
+        Returns: undefined
+      }
+      archive_school_report_handoff: {
+        Args: { p_handoff_id: string }
+        Returns: undefined
+      }
+      can_manage_school_configuration: { Args: never; Returns: boolean }
+      can_read_school_handoff_chain: {
+        Args: { p_root_handoff_id: string; p_school_id: string }
+        Returns: boolean
+      }
+      can_use_guidance_workspace: { Args: never; Returns: boolean }
+      create_school_report_handoff: {
+        Args: {
+          p_note: string
+          p_recipient_member_id: string
+          p_snapshot: Json
+          p_title: string
+        }
+        Returns: string
+      }
+      create_school_task: {
+        Args: {
+          p_assignee_member_id: string
+          p_cadence?: string
+          p_category?: string
+          p_description?: string
+          p_due_date?: string
+          p_priority?: string
+          p_title: string
+        }
+        Returns: string
+      }
+      create_school_workspace: {
+        Args: {
+          p_education_dept?: string
+          p_education_office?: string
+          p_name: string
+          p_role?: string
+        }
+        Returns: string
+      }
       get_guidance_profile: {
         Args: { p_slug: string }
         Returns: {
@@ -1211,6 +1754,7 @@ export type Database = {
           vision: string
         }[]
       }
+      get_my_school_context: { Args: never; Returns: Json }
       get_private_counselor_blog: {
         Args: { p_token: string }
         Returns: {
@@ -1244,6 +1788,17 @@ export type Database = {
           title: string
         }[]
       }
+      get_public_request_status: {
+        Args: { p_request_no: string; p_tracking_code: string }
+        Returns: {
+          created_at: string
+          handled_at: string
+          kind: string
+          request_no: string
+          status: string
+          topic: string
+        }[]
+      }
       get_public_school: {
         Args: { p_slug: string }
         Returns: {
@@ -1252,6 +1807,43 @@ export type Database = {
           school_name: string
           user_id: string
         }[]
+      }
+      get_student_filter_options: { Args: never; Returns: Json }
+      is_active_school_member: {
+        Args: { p_school_id: string }
+        Returns: boolean
+      }
+      is_school_admin: { Args: { p_school_id: string }; Returns: boolean }
+      mark_school_report_handoff_read: {
+        Args: { p_handoff_id: string }
+        Returns: undefined
+      }
+      request_join_school: { Args: { p_join_code: string }; Returns: string }
+      restore_deleted_record: {
+        Args: { p_deleted_id: string }
+        Returns: string
+      }
+      review_school_report_handoff: {
+        Args: {
+          p_action: string
+          p_forward_to_member_id?: string
+          p_handoff_id: string
+          p_note?: string
+        }
+        Returns: string
+      }
+      review_school_task: {
+        Args: { p_action: string; p_note?: string; p_task_id: string }
+        Returns: undefined
+      }
+      rotate_school_join_code: {
+        Args: { p_school_id: string }
+        Returns: string
+      }
+      school_role_rank: { Args: { p_role: string }; Returns: number }
+      set_school_member_status: {
+        Args: { p_member_id: string; p_status: string }
+        Returns: undefined
       }
       submit_public_feedback: {
         Args: {
@@ -1301,6 +1893,33 @@ export type Database = {
           p_urgency?: string
         }
         Returns: string
+      }
+      submit_public_request_v3: {
+        Args: {
+          p_classroom?: string
+          p_details: string
+          p_is_anonymous?: boolean
+          p_kind: string
+          p_portal_token?: string
+          p_preferred_time?: string
+          p_requester_contact?: string
+          p_requester_name?: string
+          p_requester_role?: string
+          p_slug?: string
+          p_student_grade?: string
+          p_student_name?: string
+          p_topic?: string
+          p_urgency?: string
+        }
+        Returns: Json
+      }
+      update_my_school_task: {
+        Args: {
+          p_completion_note?: string
+          p_status: string
+          p_task_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

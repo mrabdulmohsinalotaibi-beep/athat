@@ -95,8 +95,8 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #176678;
   --sidebar-ring: #79d2ca;
-  --brand-mark-surface: #073b4c;
-  --brand-mark-border: #176678;
+  --brand-mark-surface: #f3ebdd;
+  --brand-mark-border: #c99a4a;
   --paper: #ffffff;
   --paper-foreground: #17343d;
   --paper-muted: #f7f4ed;
@@ -142,8 +142,8 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #176678;
   --sidebar-ring: #79d2ca;
-  --brand-mark-surface: #052d39;
-  --brand-mark-border: #176678;
+  --brand-mark-surface: #f3ebdd;
+  --brand-mark-border: #c99a4a;
   --shadow-soft: 0 18px 44px -26px rgb(0 0 0 / 0.7);
   --shadow-card: 0 12px 32px -24px rgb(0 0 0 / 0.58);
 }
@@ -530,7 +530,7 @@ textarea {
   }
   .athat-topbar-logo {
     border-color: rgb(255 255 255 / 0.16) !important;
-    background: #073b4c !important;
+    background: var(--brand-mark-surface) !important;
   }
   .athat-mobile-nav {
     border-color: rgb(7 86 106 / 0.12);
