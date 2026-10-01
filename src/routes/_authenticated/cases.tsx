@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/cases")({
         name: "description",
         content: "مساحة عمل الموجه الطلابي لإدارة الحالات الخاصة والرصد والمتابعة والإحالة بسرية.",
       },
-      { property: "og:title", content: "الحالات الخاصة | منصة الذات" },
+      { property: "og:title", content: "الحالات الخاصة | الذات" },
       { property: "og:description", content: "إدارة ومتابعة الحالات الخاصة بسرية." },
       { property: "og:type", content: "website" },
     ],
