@@ -45,7 +45,7 @@ jobs:
         run: npm install --no-save @capacitor/core@7.4.3 @capacitor/android@7.4.3 @capacitor/cli@7.4.3
 
       - name: Prepare native shell
-        run: cp public/brand-icon.svg native-shell/brand-icon.svg
+        run: cp public/brand-logo.png native-shell/brand-logo.png
 
       - name: Generate Android project
         run: |
@@ -62,7 +62,7 @@ jobs:
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
             mkdir -p "$dir"
-            rsvg-convert -w "$size" -h "$size" public/brand-icon.svg > "$dir/ic_launcher.png"
+            rsvg-convert -w "$size" -h "$size" public/brand-logo.png > "$dir/ic_launcher.png"
             cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
           done
           # Keep the adaptive-icon background and foreground consistent with the same identity.
@@ -77,7 +77,7 @@ jobs:
             density="${spec%%:*}"
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
-            rsvg-convert -w "$size" -h "$size" public/brand-icon.svg > "$dir/ic_launcher_foreground.png"
+            rsvg-convert -w "$size" -h "$size" public/brand-logo.png > "$dir/ic_launcher_foreground.png"
           done
 
       - name: Build installable APK
