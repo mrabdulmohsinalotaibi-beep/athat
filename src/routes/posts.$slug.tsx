@@ -9,10 +9,10 @@ import { PUBLIC_POST_FIELDS, formatPostDate, kindLabel, type PublicPost } from "
 export const Route = createFileRoute("/posts/$slug")({
   head: () => ({
     meta: [
-      { title: "منشور | منصة الذات" },
-      { name: "description", content: "مقالات وأخبار ونصائح توجيهية من الموجهين الطلابيين في منصة الذات." },
-      { property: "og:title", content: "منشور | منصة الذات" },
-      { property: "og:description", content: "مقالات وأخبار ونصائح توجيهية من منصة الذات." },
+      { title: "منشور | الذات" },
+      { name: "description", content: "مقالات وأخبار ونصائح توجيهية من الموجهين الطلابيين في الذات." },
+      { property: "og:title", content: "منشور | الذات" },
+      { property: "og:description", content: "مقالات وأخبار ونصائح توجيهية من الذات." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -37,7 +37,7 @@ function PostPage() {
     const cleanSlug = decodeURIComponent(post.slug);
     const url = `${window.location.origin}/posts/${cleanSlug}`;
     const excerpt = post.excerpt?.trim();
-    const message = [post.title, excerpt, url, "من منصة الذات"].filter(Boolean).join("\n\n");
+    const message = [post.title, excerpt, url, "من الذات"].filter(Boolean).join("\n\n");
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
     window.location.assign(whatsappUrl);
