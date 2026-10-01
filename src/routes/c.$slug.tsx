@@ -7,9 +7,9 @@ import { Copyright } from "@/components/Copyright";
 export const Route = createFileRoute("/c/$slug")({
   head: () => ({
     meta: [
-      { title: "صفحة الموجه الطلابي | منصة الذات" },
-      { name: "description", content: "المنشورات العامة والأخبار ومقالات التوجيه الطلابي لمدرسة على منصة الذات." },
-      { property: "og:title", content: "صفحة الموجه الطلابي | منصة الذات" },
+      { title: "صفحة الموجه الطلابي | الذات" },
+      { name: "description", content: "المنشورات العامة والأخبار ومقالات التوجيه الطلابي لمدرسة على الذات." },
+      { property: "og:title", content: "صفحة الموجه الطلابي | الذات" },
       { property: "og:description", content: "أخبار ومقالات ونصائح توجيهية من الموجه الطلابي." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -33,7 +33,7 @@ function SchoolPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-8">
-          <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-primary"><ArrowRight className="size-4" /> منصة الذات</Link>
+          <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-primary"><ArrowRight className="size-4" /> الذات</Link>
         </div>
       </header>
       {isLoading ? (
