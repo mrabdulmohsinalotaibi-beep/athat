@@ -50,7 +50,6 @@ export function OfficialHeader({
             height={88}
             className="official-ministry-logo h-[72px] w-[140px] object-contain"
           />
-          <AthatDocumentMark />
         </section>
 
         <section
