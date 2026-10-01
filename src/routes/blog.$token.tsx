@@ -200,7 +200,7 @@ function PublicCounselorBlogPage() {
       },
     };
 
-    const withFeedback = (items: typeof common.consultation[]) =>
+    const withFeedback = (items: Array<(typeof common)["consultation"]>) =>
       feedback ? [...items, common.feedback] : items;
 
     if (audience === "teacher") return withFeedback([common.referral, common.consultation]);
