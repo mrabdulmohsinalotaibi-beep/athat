@@ -31,11 +31,23 @@ function PostPage() {
     },
   });
 
-  function shareOnWhatsApp() {
+  async function sharePost() {
     if (!post) return;
-    const url = "https://athat.app/posts/" + encodeURIComponent(post.slug);
-    const message = post.title + "\\n\\n" + (post.excerpt ? post.excerpt + "\\n\\n" : "") + url + "\\n\\nمن منصة الذات";
-    window.location.assign("https://api.whatsapp.com/send?text=" + encodeURIComponent(message));
+
+    const url = `${window.location.origin}/posts/${encodeURIComponent(post.slug)}`;
+    const text = post.excerpt?.trim() ? `${post.excerpt.trim()}\n\nمن منصة الذات` : "من منصة الذات";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: post.title, text, url });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+
+    const message = `${post.title}\n\n${post.excerpt?.trim() ? `${post.excerpt.trim()}\n\n` : ""}${url}\n\nمن منصة الذات`;
+    window.location.href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(message);
   }
 
   return (
@@ -71,7 +83,7 @@ function PostPage() {
                 <span>{post.author_name || "الموجه الطلابي"}</span>
                 <span className="flex items-center gap-1"><CalendarDays className="size-4" />{formatPostDate(post.published_at ?? post.created_at)}</span>
               </div>
-              <Button type="button" variant="ghost" onClick={shareOnWhatsApp} className="mt-7 gap-2 px-3 text-base font-bold text-primary hover:bg-primary/5 hover:text-primary"><Share2 className="size-6" /> مشاركة</Button>
+              <Button type="button" variant="ghost" onClick={sharePost} className="mt-7 gap-2 px-3 text-base font-bold text-primary hover:bg-primary/5 hover:text-primary"><Share2 className="size-6" /> مشاركة</Button>
             </div>
             {post.cover_url && (
               <div className="mt-10 overflow-hidden rounded-3xl border bg-card p-2 shadow-xl sm:p-4">
