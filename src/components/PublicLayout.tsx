@@ -111,7 +111,7 @@ export function PublicLayout({
             <div className="rounded-3xl border border-amber-500/20 bg-card p-8 shadow-sm">
               <h1 className="text-2xl font-black">المنصة تحت الصيانة</h1>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                نعمل حاليًا على تحديث منصة الذات. يرجى المحاولة لاحقًا.
+                نعمل حاليًا على تحديث الذات. يرجى المحاولة لاحقًا.
               </p>
             </div>
           </div>
