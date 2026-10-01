@@ -91,6 +91,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     icon: FileText,
     items: [
       { to: "/reports", label: "التقارير والإحصاءات", icon: FileText },
+      { to: "/free-documents", label: "المستندات الحرة", icon: FileText },
       { to: "/school-inbox", label: "الاعتمادات والمراسلات", icon: ShieldCheck },
       { to: "/school-tasks", label: "المهام المدرسية", icon: ClipboardList },
       { to: "/school-team", label: "فريق المدرسة والصلاحيات", icon: UsersRound },
