@@ -3,8 +3,12 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
+type RequestOptions = {
+  context?: Record<string, unknown>;
+};
+
 type ServerEntry = {
-  fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
+  fetch: (request: Request, opts?: RequestOptions) => Promise<Response> | Response;
 };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
@@ -71,47 +75,39 @@ function canonicalRedirect(request: Request): Response | null {
 }
 
 export default {
-  async fetch(request: Request, env: unknown, ctx: unknown) {
+  async fetch(request: Request, opts?: RequestOptions) {
     const canonical = canonicalRedirect(request);
     if (canonical) return canonical;
-    // Cloudflare Workers exposes secrets/bindings through the fetch env object.
-    // TanStack Start server functions in this project read server settings from
-    // process.env, so bridge the relevant non-public bindings for each request.
-    if (env && typeof env === "object") {
-      const bindings = env as Record<string, unknown>;
-      const runtimeEnv: Record<string, string> = {};
-      const processEnv = (globalThis as typeof globalThis & {
-        process?: { env?: Record<string, string | undefined> };
-      }).process?.env;
 
-      for (const key of [
-        "DEEPSEEK_API_KEY",
-        "DEEPSEEK_MODEL",
-        "SUPABASE_URL",
-        "SUPABASE_PUBLISHABLE_KEY",
-        "SUPABASE_SERVICE_ROLE_KEY",
-        "LOVABLE_CRON_SECRET",
-        "LOVABLE_CRON_SECRET_PREVIOUS",
-      ]) {
-        const value = bindings[key];
-        if (typeof value !== "string" || !value) continue;
-        runtimeEnv[key] = value;
-        if (processEnv) processEnv[key] = value;
+    // Nitro v3 attaches Cloudflare bindings to the incoming request runtime.
+    // Forward them through TanStack's official per-request context so server
+    // functions can access secrets without exposing them to the browser.
+    const runtimeEnv = (
+      request as Request & {
+        runtime?: {
+          cloudflare?: {
+            env?: Record<string, unknown>;
+          };
+        };
       }
+    ).runtime?.cloudflare?.env;
 
-      // Cloudflare Pages exposes secrets on the fetch env object. Keep a
-      // server-only runtime copy so server functions do not depend on Node's
-      // optional process global being available in the Worker runtime.
-      (
-        globalThis as typeof globalThis & {
-          __ATHAT_SERVER_ENV__?: Record<string, string>;
-        }
-      ).__ATHAT_SERVER_ENV__ = runtimeEnv;
+    const stringEnv: Record<string, string> = {};
+    if (runtimeEnv) {
+      for (const [key, value] of Object.entries(runtimeEnv)) {
+        if (typeof value === "string") stringEnv[key] = value;
+      }
     }
 
     try {
       const handler = await getServerEntry();
-      const response = await handler.fetch(request, env, ctx);
+      const response = await handler.fetch(request, {
+        ...opts,
+        context: {
+          ...(opts?.context ?? {}),
+          cloudflareEnv: stringEnv,
+        },
+      });
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
