@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
@@ -13,6 +13,10 @@ import {
   Megaphone,
   MessageCircleQuestion,
   ImageIcon,
+  Inbox,
+  CalendarClock,
+  Search,
+  Sparkles,
   Loader2,
   Pencil,
   Plus,
@@ -36,11 +40,11 @@ import { useSchool } from "@/lib/school";
 export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
     meta: [
-      { title: "مدونة الموجه والخدمات | منصة الذات" },
+      { title: "بوابة الموجه الطلابي | منصة الذات" },
       {
         name: "description",
         content:
-          "إدارة مدونة الموجه والخدمات العامة والطلبات الواردة وروابط الاستشارة والبلاغ والإحالة.",
+          "إدارة بوابة الموجه الطلابي والمحتوى والخدمات والطلبات الواردة وروابط الاستشارة والبلاغ والإحالة.",
       },
     ],
   }),
@@ -86,6 +90,19 @@ function CounselorPortalManager() {
   const qc = useQueryClient();
   const { data: school } = useSchool();
   const [draft, setDraft] = useState<Draft | null>(null);
+
+  const { data: portalRequests = [] } = useQuery({
+    queryKey: ["portal-request-summary"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("public_requests")
+        .select("id,status,kind,created_at")
+        .order("created_at", { ascending: false })
+        .limit(250);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const {
     data: posts = [],
@@ -167,6 +184,15 @@ function CounselorPortalManager() {
 
   const articles = useMemo(() => posts.filter((item) => item.kind === "article"), [posts]);
   const shortPosts = useMemo(() => posts.filter((item) => item.kind !== "article"), [posts]);
+  const publishedCount = useMemo(() => posts.filter((item) => item.is_public).length, [posts]);
+  const newRequests = useMemo(
+    () => portalRequests.filter((item) => item.status === "جديد").length,
+    [portalRequests],
+  );
+  const activeRequests = useMemo(
+    () => portalRequests.filter((item) => item.status === "قيد المعالجة").length,
+    [portalRequests],
+  );
 
   return (
     <div className="space-y-6">
@@ -174,9 +200,9 @@ function CounselorPortalManager() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-black text-primary">المساحة الخاصة بالموجه</p>
-            <h1 className="mt-1 text-2xl font-black sm:text-3xl">مدونة الموجه والخدمات</h1>
+            <h1 className="mt-1 text-2xl font-black sm:text-3xl">بوابة الموجه الطلابي</h1>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-              من هنا تدير ما يظهر للعامة، وتستقبل طلبات الاستشارة والبلاغات، وتشارك رابط إحالة خاص بالمعلمين.
+              مركز واحد لإدارة الصفحة العامة والمحتوى والخدمات والطلبات الواردة، مع روابط مستقلة للطلاب وأولياء الأمور والمعلمين.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -188,6 +214,62 @@ function CounselorPortalManager() {
             </Button>
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <Megaphone className="size-5 text-primary" />
+          <p className="mt-3 text-2xl font-black">{publishedCount}</p>
+          <p className="text-xs text-muted-foreground">محتوى منشور للعامة</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <Inbox className="size-5 text-primary" />
+          <p className="mt-3 text-2xl font-black">{newRequests}</p>
+          <p className="text-xs text-muted-foreground">طلبات جديدة تحتاج مراجعة</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <CalendarClock className="size-5 text-primary" />
+          <p className="mt-3 text-2xl font-black">{activeRequests}</p>
+          <p className="text-xs text-muted-foreground">طلبات قيد المتابعة</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <HeartHandshake className="size-5 text-primary" />
+          <p className="mt-3 text-2xl font-black">{portalRequests.length}</p>
+          <p className="text-xs text-muted-foreground">إجمالي الطلبات الواردة</p>
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-3">
+        <Link
+          to="/weekly-poster"
+          className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 transition hover:border-primary/40"
+        >
+          <Sparkles className="size-5 text-primary" />
+          <h2 className="mt-3 font-black">رسالة هذا الأسبوع</h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+            جهّز اللوحة الأسبوعية ومحتوى التوجيه الذي يمكن مشاركته مع الطلاب والأسرة.
+          </p>
+        </Link>
+        <a
+          href="#incoming-requests"
+          className="rounded-2xl border bg-card p-4 transition hover:border-primary/40"
+        >
+          <Inbox className="size-5 text-primary" />
+          <h2 className="mt-3 font-black">صندوق الطلبات</h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+            راجع الاستشارات والبلاغات والإحالات وحوّلها إلى السجل المناسب.
+          </p>
+        </a>
+        <Link
+          to="/request-status"
+          className="rounded-2xl border bg-card p-4 transition hover:border-primary/40"
+        >
+          <Search className="size-5 text-primary" />
+          <h2 className="mt-3 font-black">تجربة تتبع الطلب</h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+            افتح صفحة التتبع العامة وتحقق من تجربة المستفيد دون كشف بيانات الطلب.
+          </p>
+        </Link>
       </section>
 
       <PortalLinksPanel />
