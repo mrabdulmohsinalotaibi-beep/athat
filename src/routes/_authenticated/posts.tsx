@@ -691,14 +691,17 @@ function ContentEditor({
 
       const result = await generateSmartFill({
         data: {
-          title: draft.kind === "article" ? "مقال في التوجيه الطلابي" : "منشور في التوجيه الطلابي",
+          recordType: "portal_content",
+          recordTitle:
+            draft.kind === "article" ? "مقال في التوجيه الطلابي" : "منشور في التوجيه الطلابي",
           brief,
           fields,
-          currentValues: {
+          values: {
             title: draft.title,
             excerpt: draft.excerpt,
             body: draft.body,
           },
+          schoolName: undefined,
         },
       });
 
