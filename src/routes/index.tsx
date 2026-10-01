@@ -31,8 +31,8 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/webp", href: "/brand-final.webp?v=20261001-psychology" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261001-final" },
+      { rel: "icon", type: "image/webp", href: "/brand-final.webp?v=20261001-finalbrandbrand" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261001-finalbrand" },
     ],
   }),
   component: Landing,
@@ -73,7 +73,7 @@ function Landing() {
           <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
             <div className="flex w-full max-w-xl justify-center p-6 sm:p-8">
               <img
-                src="/brand-final.webp?v=20261001-psychology"
+                src="/brand-final.webp?v=20261001-finalbrandbrand"
                 alt="شعار الذات"
                 className="h-auto w-full max-w-[22rem] rounded-2xl object-contain sm:max-w-[27rem]"
               />
@@ -148,7 +148,7 @@ function Landing() {
 
           <footer className="mx-auto mt-5 w-full max-w-4xl border-t border-[#07566A]/10 pt-4 text-center">
             <div className="flex items-center justify-center gap-2">
-              <img src="/brand-final.webp?v=20261001-psychology" alt="" className="size-7 rounded-lg" />
+              <img src="/brand-final.webp?v=20261001-finalbrandbrand" alt="" className="size-7 rounded-lg" />
             </div>
             <p className="mt-2 text-[10px] font-semibold text-[#6B7E84]">
               جميع الحقوق محفوظة لـ Abdulmo7sin
