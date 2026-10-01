@@ -205,7 +205,7 @@ function AuthPage() {
         <div className="text-center">
           <div className="mx-auto flex w-full max-w-sm justify-center p-5">
             <img
-              src="/brand-final.webp?v=20261001-psychology"
+              src="/brand-final.webp?v=20261001-finalbrandbrand"
               alt="شعار الذات"
               className="h-auto w-full max-w-[18rem] rounded-2xl object-contain"
             />
