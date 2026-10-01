@@ -238,27 +238,19 @@ select {
     position: relative;
     z-index: 2;
   }
-.official-header-corner {
-    position: absolute;
-    top: 0;
-    z-index: 1;
-    width: 7.5rem;
-    height: 4.8rem;
-    background: linear-gradient(135deg, #07566a 0 72%, #c79a5b 72% 79%, transparent 79%);
-    opacity: 0.98;
-    pointer-events: none;
-  }
-.official-header-corner-right {
-    right: -2.2rem;
-    transform: skewX(-18deg);
-  }
-.official-header-corner-left {
-    left: -2.2rem;
-    transform: scaleX(-1) skewX(-18deg);
-  }
 .official-authority-block,
 .official-document-meta {
     color: #123d49;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+.official-authority-block p,
+.official-document-meta p {
+    width: 100%;
+    margin: 0;
+  }
+.official-ministry-block {
+    align-self: stretch;
   }
 .official-letterhead-rule {
     position: relative;
