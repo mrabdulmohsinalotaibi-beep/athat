@@ -9,7 +9,7 @@ function todayDate() {
 function AthatDocumentMark() {
   return (
     <img
-      src="/brand-logo.png?v=20261001-brand4"
+      src="/brand-logo.png?v=20261001-brand5"
       alt="شعار الذات"
       className="h-12 w-12 shrink-0 rounded-xl object-contain"
     />
@@ -42,15 +42,13 @@ export function OfficialHeader({
           <p className="font-black">{school?.school_name || "اسم المدرسة"}</p>
         </section>
 
-        <section className="official-ministry-block flex min-w-40 flex-col items-center justify-center">
+        <section className="official-ministry-block flex min-w-40 flex-col items-center justify-center gap-2">
           <img
             src={school?.ministry_logo_url || moeLogo}
             alt="شعار وزارة التعليم"
             width={150}
             height={88}
-            className="official-ministry-logo h-[82px] w-[150px] object-contain"
-          />
-        </section>
+            className="official-ministry-logo h-[72px] w-[140px] object-contain"\n          />\n          <AthatDocumentMark />\n        </section>
 
         <section
           className="official-document-meta flex min-h-[7.75rem] flex-col items-center justify-center text-center text-[10px] leading-[1.9]"
