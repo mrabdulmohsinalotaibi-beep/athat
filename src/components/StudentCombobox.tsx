@@ -49,11 +49,13 @@ export function StudentCombobox({
   onSelect,
   onType,
   onClear,
+  multiple = false,
 }: {
   value: string;
   onSelect: (student: StudentOption) => void;
   onType: (name: string) => void;
   onClear?: () => void;
+  multiple?: boolean;
 }) {
   const {
     data: students = [],
@@ -64,6 +66,11 @@ export function StudentCombobox({
   } = useStudentOptions();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
+
+  const selectedNames = useMemo(
+    () => value.split(/\s*[،,]\s*/).map((name) => name.trim()).filter(Boolean),
+    [value],
+  );
 
   const results = useMemo(() => {
     const q = term.trim();
@@ -85,7 +92,7 @@ export function StudentCombobox({
             role="combobox"
             className={cn("h-10 w-full justify-between overflow-hidden font-normal", value && "pl-9")}
           >
-            <span className={cn("truncate", !value && "text-muted-foreground")}>{value || "اختر الطالب أو ابحث..."}</span>
+            <span className={cn("truncate", !value && "text-muted-foreground")}>{value || (multiple ? "اختر طالبًا أو عدة طلاب..." : "اختر الطالب أو ابحث...")}</span>
             <ChevronsUpDown className="size-4 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -137,11 +144,11 @@ export function StudentCombobox({
               type="button"
               onClick={() => {
                 onSelect(s);
-                setOpen(false);
+                if (!multiple) setOpen(false);
               }}
               className="flex w-full items-center gap-2 rounded-md p-2 text-right text-sm hover:bg-accent"
             >
-              <Check className={cn("size-4", value === s.full_name ? "opacity-100 text-primary" : "opacity-0")} />
+              <Check className={cn("size-4", selectedNames.includes(s.full_name) ? "opacity-100 text-primary" : "opacity-0")} />
               <span className="flex-1">
                 <span className="font-semibold">{s.full_name}</span>
                 <span className="block text-[11px] text-muted-foreground">
