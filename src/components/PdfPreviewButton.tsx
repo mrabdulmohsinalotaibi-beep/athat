@@ -143,7 +143,7 @@ export function PdfPreviewButton({
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent dir="rtl" className="h-[94vh] w-[96vw] max-w-6xl p-3 sm:p-5">
+        <DialogContent dir="rtl" className="flex h-[94vh] w-[96vw] max-w-6xl flex-col overflow-hidden p-3 sm:p-5">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="size-5" />
@@ -156,7 +156,7 @@ export function PdfPreviewButton({
                 data={url}
                 type="application/pdf"
                 aria-label={title}
-                className="h-full min-h-[70vh] w-full border-0 bg-white"
+                className="block h-full min-h-0 w-full border-0 bg-white"
               >
                 <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 p-6 text-center">
                   <p className="text-sm text-muted-foreground">
@@ -174,7 +174,7 @@ export function PdfPreviewButton({
               </div>
             )}
           </div>
-          <DialogFooter className="sticky bottom-0 z-10 flex-wrap gap-2 border-t bg-background/95 pt-3 backdrop-blur">
+          <DialogFooter className="shrink-0 flex-wrap gap-2 border-t bg-background pt-3">
             <Button type="button" variant="outline" onClick={openFullPreview} disabled={!url}>
               <ExternalLink className="size-4" /> فتح كامل
             </Button>
