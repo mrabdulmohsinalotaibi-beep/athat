@@ -944,16 +944,12 @@ export function RecordPage({
                 disabled={smartFilling}
                 title="اكتب مختصرًا وسيقوم DeepSeek بتعبئة بقية الحقول النصية"
               >
-                {smartFilling || smartChecking ? (
+                {smartFilling ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
                   <Sparkles className="size-4" />
                 )}
-                {smartChecking
-                  ? "جارٍ التحقق..."
-                  : smartFilling
-                    ? "جارٍ التوليد..."
-                    : "التعبئة الذكية"}
+                {smartFilling ? "جارٍ التوليد..." : "التعبئة الذكية"}
               </Button>
             </div>
           </DialogHeader>
