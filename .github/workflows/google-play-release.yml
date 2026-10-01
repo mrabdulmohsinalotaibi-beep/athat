@@ -44,7 +44,7 @@ jobs:
         run: npm install --no-save @capacitor/core@7.4.3 @capacitor/android@7.4.3 @capacitor/cli@7.4.3
 
       - name: Prepare native shell
-        run: cp public/brand-icon.svg native-shell/brand-icon.svg
+        run: cp public/brand-final.webp native-shell/brand-final.webp
 
       - name: Generate Android project
         run: |
@@ -68,14 +68,14 @@ jobs:
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
             mkdir -p "$dir"
-            convert "public/brand-icon.svg" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher.png"
+            convert "public/brand-final.webp" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher.png"
             cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
           done
           for spec in "mdpi:108" "hdpi:162" "xhdpi:216" "xxhdpi:324" "xxxhdpi:432"; do
             density="${spec%%:*}"
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
-            convert "public/brand-icon.svg" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher_foreground.png"
+            convert "public/brand-final.webp" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher_foreground.png"
           done
 
       - name: Restore release keystore
