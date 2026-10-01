@@ -206,12 +206,12 @@ function AuthPage() {
           <div className="mx-auto flex w-fit items-center gap-4 rounded-[2rem] border border-primary/10 bg-card px-5 py-4 shadow-[var(--shadow-card)]">
             <img
               src="/brand-icon.svg?v=20261001a"
-              alt="شعار ذات"
+              alt="شعار الذات"
               className="size-20 rounded-[1.35rem] shadow-lg"
             />
             <div className="text-right">
-              <p className="text-3xl font-black leading-none text-primary">ذات</p>
-              <p className="mt-1 text-sm font-black tracking-[0.35em] text-muted-foreground">THAT</p>
+              <p className="text-3xl font-black leading-none text-primary">الذات</p>
+              <p className="mt-1 text-sm font-black tracking-[0.35em] text-muted-foreground">ATHAT</p>
             </div>
           </div>
           <p className="mt-3 text-xs font-bold tracking-wide text-primary">
