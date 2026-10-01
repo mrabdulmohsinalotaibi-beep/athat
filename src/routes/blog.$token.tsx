@@ -24,6 +24,10 @@ import {
   UserRound,
   UsersRound,
   Brain,
+  Home,
+  Newspaper,
+  PenLine,
+  PhoneCall,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -250,7 +254,7 @@ function PublicCounselorBlogPage() {
     "تابع آخر برامج ورسائل التوجيه الطلابي من خلال هذه البوابة.";
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background text-foreground">
+    <div dir="rtl" className="min-h-screen bg-background pb-16 text-foreground md:pb-0">
       <header className="sticky top-0 z-40 border-b border-[#176678] bg-[#073B4C] text-white shadow-sm">
         <div className="mx-auto grid max-w-7xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-3 px-4 py-3 sm:px-8">
           <button
@@ -287,20 +291,32 @@ function PublicCounselorBlogPage() {
       </header>
 
       <main className="pb-8">
-        <section className="border-b border-border/60 bg-gradient-to-bl from-primary/10 via-background to-accent/10">
-          <div className="mx-auto max-w-3xl px-4 py-5 sm:px-8 sm:py-8">
-            <div className="flex items-center gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-black text-primary">الصفحة الإعلامية اليومية</p>
-                <h1 className="mt-1 text-2xl font-black">مدونة الموجه الطلابي</h1>
-                <p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">{weeklyMessage}</p>
+        <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-bl from-primary/15 via-background to-accent/10">
+          <div className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative mx-auto max-w-5xl px-4 py-7 sm:px-8 sm:py-12">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card/80 px-3 py-1 text-[11px] font-black text-primary">
+                  <Newspaper className="size-4" /> الصفحة الإعلامية للتوجيه الطلابي
+                </div>
+                <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">مدونة الموجه الطلابي</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">{weeklyMessage}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <a href="#daily-feed" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground"><Newspaper className="size-4" /> آخر المنشورات</a>
+                  <button type="button" onClick={() => setContributionOpen(true)} className="inline-flex items-center gap-2 rounded-xl border bg-card px-4 py-2.5 text-xs font-black text-primary"><PenLine className="size-4" /> اكتب مشاركة</button>
+                  <a href="#contact" className="inline-flex items-center gap-2 rounded-xl border bg-card px-4 py-2.5 text-xs font-black"><PhoneCall className="size-4" /> خدمات الموجه</a>
+                </div>
               </div>
-              <Megaphone className="size-8 shrink-0 text-primary/50" />
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <a href="#daily-feed" className="rounded-xl bg-primary px-3 py-2.5 text-center text-xs font-black text-primary-foreground">المنشورات</a>
-              <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl border bg-card px-3 py-2.5 text-xs font-black text-primary">اكتب وانشر</button>
-              <a href="#contact" className="rounded-xl border bg-card px-3 py-2.5 text-center text-xs font-black">تواصل</a>
+              <aside className="rounded-3xl border border-primary/15 bg-card/80 p-5 shadow-sm backdrop-blur">
+                <div className="flex items-center gap-3">
+                  <img src={profile?.logo_url || "/brand-final.svg?v=20261001-psychology"} alt="" className="size-14 rounded-2xl object-contain" />
+                  <div className="min-w-0"><strong className="block truncate">{schoolName}</strong><span className="text-xs text-muted-foreground">{counselorName}</span></div>
+                </div>
+                <div className="mt-4 border-t pt-4 text-xs leading-6 text-muted-foreground">
+                  <p className="font-bold text-foreground">رسالة التوجيه</p>
+                  <p className="mt-1">{profile?.mission || "دعم الطالب تربويًا ونفسيًا وتعزيز التواصل بين المدرسة والأسرة."}</p>
+                </div>
+              </aside>
             </div>
           </div>
         </section>
@@ -394,6 +410,15 @@ function PublicCounselorBlogPage() {
           </div>
         </section>
       </main>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-3 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-1 text-center text-[10px] font-bold">
+          <a href="#" className="rounded-xl p-2 text-primary"><Home className="mx-auto mb-1 size-4" />الرئيسية</a>
+          <a href="#daily-feed" className="rounded-xl p-2"><Newspaper className="mx-auto mb-1 size-4" />المنشورات</a>
+          <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl p-2"><PenLine className="mx-auto mb-1 size-4" />مشاركة</button>
+          <a href="#contact" className="rounded-xl p-2"><HeartHandshake className="mx-auto mb-1 size-4" />الخدمات</a>
+        </div>
+      </nav>
 
       <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
         <p className="font-bold text-foreground">{schoolName}</p>
