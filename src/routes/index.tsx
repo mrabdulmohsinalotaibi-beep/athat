@@ -78,8 +78,8 @@ function Landing() {
                 className="size-16 rounded-2xl shadow-sm sm:size-20"
               />
               <div className="text-right">
-                <p className="text-3xl font-black leading-none text-[#073B4C] sm:text-4xl">ذات</p>
-                <p className="mt-1 text-xs font-bold tracking-[0.28em] text-[#1C8F92]">THAT</p>
+                <p className="text-3xl font-black leading-none text-[#073B4C] sm:text-4xl">الذات</p>
+                <p className="mt-1 text-xs font-bold tracking-[0.28em] text-[#1C8F92]">ATHAT</p>
               </div>
             </div>
             <p className="mt-2 text-xs font-bold text-[#52717B]">من التخطيط إلى الأثر</p>
@@ -154,7 +154,7 @@ function Landing() {
           <footer className="mx-auto mt-5 w-full max-w-4xl border-t border-[#07566A]/10 pt-4 text-center">
             <div className="flex items-center justify-center gap-2">
               <img src="/brand-icon.svg?v=20261001a" alt="" className="size-7 rounded-lg" />
-              <span className="text-xs font-black text-[#073B4C]">ذات | THAT</span>
+              <span className="text-xs font-black text-[#073B4C]">الذات | ATHAT</span>
             </div>
             <p className="mt-2 text-[10px] font-semibold text-[#6B7E84]">
               جميع الحقوق محفوظة لـ Abdulmo7sin
