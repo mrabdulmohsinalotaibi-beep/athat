@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Check, FileText, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { useSchool, type SchoolSettings } from "@/lib/school";
+import { useSchool } from "@/lib/school";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,7 +133,7 @@ function SettingsPage() {
 
       if (!userId) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا ثم حاول الحفظ");
 
-      const preserveText = (key: keyof SchoolSettings) => {
+      const preserveText = (key: keyof NonNullable<typeof school>) => {
         const entered = String(values[String(key)] ?? "").trim();
         const existing = String(school?.[key] ?? "").trim();
         return entered || existing || null;
