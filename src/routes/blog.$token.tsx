@@ -13,7 +13,6 @@ import {
   GraduationCap,
   HeartHandshake,
   HeartPulse,
-  Home,
   LockKeyhole,
   Megaphone,
   Share2,
@@ -160,7 +159,10 @@ function PublicCounselorBlogPage() {
   );
   const articles = posts.filter((row) => row.kind === "article");
   const updates = posts.filter((row) => row.kind !== "article");
-  const weeklyPost = updates[0] ?? articles[0] ?? null;
+  const dailyPosts = [...updates, ...articles].sort((a, b) =>
+    new Date(b.published_at ?? b.created_at).getTime() - new Date(a.published_at ?? a.created_at).getTime(),
+  );
+  const weeklyPost = dailyPosts[0] ?? null;
 
   const formParams = useMemo(() => {
     const params = new URLSearchParams();
@@ -284,159 +286,50 @@ function PublicCounselorBlogPage() {
         </div>
       </header>
 
-      <main>
-        <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-bl from-primary/12 via-background to-accent/15">
-          <div className="absolute -left-20 -top-20 size-64 rounded-full border border-primary/10" />
-          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-8 sm:py-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-            <div className="relative">
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card px-3 py-1 text-xs font-bold text-primary">
-                <Sparkles className="size-3.5" /> بوابة التوجيه الطلابي
-              </span>
-              <h1 className="mt-3 max-w-3xl text-2xl font-black leading-tight tracking-tight sm:mt-5 sm:text-5xl">
-                الموجه الطلابي أقرب إليك.
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:mt-4 sm:text-base sm:leading-8">
-                اختر صفتك للوصول مباشرة إلى الخدمة المناسبة، أو تابع محتوى وبرامج التوجيه الطلابي في المدرسة.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                <a
-                  href="#my-services"
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground"
-                >
-                  ابدأ الآن <ArrowLeft className="size-4" />
-                </a>
-                <Link
-                  to="/request-status"
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-primary/25 bg-card px-5 text-sm font-bold text-primary"
-                >
-                  <Search className="size-4" /> تتبع طلب سابق
-                </Link>
+      <main className="pb-8">
+        <section className="border-b border-border/60 bg-gradient-to-bl from-primary/10 via-background to-accent/10">
+          <div className="mx-auto max-w-3xl px-4 py-5 sm:px-8 sm:py-8">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-black text-primary">الصفحة الإعلامية اليومية</p>
+                <h1 className="mt-1 text-2xl font-black">مدونة الموجه الطلابي</h1>
+                <p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">{weeklyMessage}</p>
               </div>
+              <Megaphone className="size-8 shrink-0 text-primary/50" />
             </div>
-
-            <aside className="rounded-3xl border border-primary/15 bg-card/90 p-5 shadow-lg sm:p-6">
-              <div className="flex items-center gap-3 border-b pb-4">
-                <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <UserRound className="size-5" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">الموجه الطلابي</p>
-                  <p className="font-black">{counselorName}</p>
-                </div>
-              </div>
-              <div className="mt-4 grid gap-3 text-sm">
-                <p><span className="text-muted-foreground">المدرسة:</span> <strong>{schoolName}</strong></p>
-                {profile?.office_hours && (
-                  <p><span className="text-muted-foreground">أوقات التواصل:</span> <strong>{profile.office_hours}</strong></p>
-                )}
-                <p className="flex items-start gap-2 rounded-xl bg-primary/5 p-3 text-xs leading-6 text-muted-foreground">
-                  <LockKeyhole className="mt-1 size-3.5 shrink-0 text-primary" />
-                  الطلبات وسجلات الطلاب لا تظهر في هذه الصفحة العامة، وتصل مباشرة إلى مساحة الموجه الخاصة.
-                </p>
-              </div>
-            </aside>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <a href="#daily-feed" className="rounded-xl bg-primary px-3 py-2.5 text-center text-xs font-black text-primary-foreground">المنشورات</a>
+              <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl border bg-card px-3 py-2.5 text-xs font-black text-primary">اكتب وانشر</button>
+              <a href="#contact" className="rounded-xl border bg-card px-3 py-2.5 text-center text-xs font-black">تواصل</a>
+            </div>
           </div>
         </section>
 
-        <section id="my-services" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-10 sm:px-8 sm:py-14">
-          <div className="text-center">
-            <p className="text-xs font-black text-primary">اختر صفتك</p>
-            <h2 className="mt-1 text-2xl font-black sm:text-3xl">كيف يمكنني مساعدتك؟</h2>
+        <section id="daily-feed" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-5 sm:px-8">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-black text-primary">اليوميات</p>
+              <h2 className="text-xl font-black">آخر المنشورات</h2>
+            </div>
+            <span className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">{dailyPosts.length} منشور</span>
           </div>
-          <div className="mx-auto mt-6 grid max-w-4xl gap-3 sm:grid-cols-3">
-            {AUDIENCES.map((item) => {
-              const Icon = item.icon;
-              const active = audience === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => setAudience(item.key)}
-                  className={
-                    "rounded-2xl border p-4 text-right transition " +
-                    (active
-                      ? "border-primary bg-primary text-primary-foreground shadow-md"
-                      : "border-border bg-card hover:border-primary/35")
-                  }
-                >
-                  <Icon className="size-5" />
-                  <p className="mt-3 font-black">{item.label}</p>
-                  <p className={"mt-1 text-xs leading-5 " + (active ? "text-primary-foreground/80" : "text-muted-foreground")}>
-                    {item.description}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mx-auto mt-5 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {audienceActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <a
-                  key={action.title}
-                  href={action.href}
-                  className="group rounded-2xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40"
-                >
-                  <span className="inline-flex rounded-xl bg-primary/10 p-2.5 text-primary">
-                    <Icon className="size-5" />
-                  </span>
-                  <h3 className="mt-4 font-black">{action.title}</h3>
-                  <p className="mt-2 text-xs leading-6 text-muted-foreground">{action.description}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-xs font-black text-primary">
-                    فتح الخدمة <ArrowLeft className="size-3.5 transition group-hover:-translate-x-1" />
-                  </span>
-                </a>
-              );
-            })}
-          </div>
+          <PublicContentSection eyebrow="" title="" count={dailyPosts.length} items={dailyPosts} compact />
         </section>
 
-        <section className="border-y border-border/60 bg-muted/20">
-          <div className="mx-auto grid max-w-7xl gap-5 px-4 py-10 sm:px-8 lg:grid-cols-[1.25fr_0.75fr]">
-            <article className="rounded-3xl border border-primary/20 bg-card p-5 shadow-sm sm:p-6">
-              <div className="flex items-center gap-2 text-primary">
-                <Megaphone className="size-5" />
-                <p className="text-xs font-black">هذا الأسبوع</p>
-              </div>
-              <h2 className="mt-3 text-xl font-black">رسالة التوجيه الطلابي</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">{weeklyMessage}</p>
-              {weeklyPost && (
-                <a href="#updates" className="mt-5 inline-flex items-center gap-2 text-xs font-black text-primary">
-                  مشاهدة أحدث المحتوى <ArrowLeft className="size-3.5" />
-                </a>
-              )}
-            </article>
-            <article className="rounded-3xl border bg-card p-5 sm:p-6">
-              <CalendarClock className="size-5 text-primary" />
-              <h2 className="mt-3 font-black">تحتاج مقابلة الموجه؟</h2>
-              <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                أرسل طلب الاستشارة وحدد الوقت المفضل، وسيصل الطلب مباشرة إلى الموجه الطلابي.
-              </p>
-              <a
-                href={formHref("/forms/consultation")}
-                className="mt-5 inline-flex rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground"
-              >
-                طلب موعد
-              </a>
-            </article>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-3xl px-4 py-7 sm:px-8">
+        <section className="mx-auto max-w-3xl px-4 pb-5 sm:px-8">
           <div className="rounded-3xl border border-primary/20 bg-card p-5 shadow-sm">
             <div className="flex items-start gap-3">
               <span className="rounded-2xl bg-primary/10 p-3 text-primary"><FileText className="size-5" /></span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-black text-primary">شارك في الصفحة الإعلامية</p>
+                <p className="text-xs font-black text-primary">مساحة المجتمع المدرسي</p>
                 <h2 className="mt-1 text-lg font-black">اكتب باسمك وصفتك</h2>
-                <p className="mt-1 text-xs leading-6 text-muted-foreground">الطالب وولي الأمر والمعلم يمكنهم إرسال مشاركة. لا تظهر للعامة إلا بعد موافقة الموجه الطلابي.</p>
+                <p className="mt-1 text-xs leading-6 text-muted-foreground">يمكن للطالب وولي الأمر والمعلم إرسال كتابة للنشر. لن تظهر في الصفحة إلا بعد موافقة الموجه الطلابي، وعند اعتمادها يظهر اسم الكاتب وصفته.</p>
               </div>
             </div>
             {!contributionOpen ? (
-              <button type="button" onClick={() => setContributionOpen(true)} className="mt-4 w-full rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground">إرسال مشاركة للنشر</button>
+              <button type="button" onClick={() => setContributionOpen(true)} className="mt-4 w-full rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground">كتابة مشاركة</button>
             ) : contributionSent ? (
-              <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800">تم استلام مشاركتك للمراجعة. ستظهر باسمك وصفتك بعد اعتماد الموجه.</div>
+              <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800">تم استلام مشاركتك. ستظهر في المدونة بعد موافقة الموجه الطلابي.</div>
             ) : (
               <form className="mt-4 space-y-3" onSubmit={async (event) => {
                 event.preventDefault();
@@ -453,13 +346,13 @@ function PublicCounselorBlogPage() {
                 setContributionSent(true);
               }}>
                 <div className="grid grid-cols-2 gap-2">
-                  <input required minLength={2} value={contribution.name} onChange={(e) => setContribution({ ...contribution, name: e.target.value })} placeholder="الاسم" className="h-11 rounded-xl border bg-background px-3 text-sm" />
-                  <input required minLength={2} value={contribution.role} onChange={(e) => setContribution({ ...contribution, role: e.target.value })} placeholder="الصفة: طالب، معلم…" className="h-11 rounded-xl border bg-background px-3 text-sm" />
+                  <input required minLength={2} value={contribution.name} onChange={(e) => setContribution({ ...contribution, name: e.target.value })} placeholder="الاسم" className="h-11 min-w-0 rounded-xl border bg-background px-3 text-sm" />
+                  <input required minLength={2} value={contribution.role} onChange={(e) => setContribution({ ...contribution, role: e.target.value })} placeholder="الصفة" className="h-11 min-w-0 rounded-xl border bg-background px-3 text-sm" />
                 </div>
                 <input required minLength={3} value={contribution.title} onChange={(e) => setContribution({ ...contribution, title: e.target.value })} placeholder="عنوان المشاركة" className="h-11 w-full rounded-xl border bg-background px-3 text-sm" />
-                <textarea required minLength={10} rows={5} value={contribution.body} onChange={(e) => setContribution({ ...contribution, body: e.target.value })} placeholder="اكتب مشاركتك…" className="w-full rounded-xl border bg-background p-3 text-sm leading-6" />
+                <textarea required minLength={10} rows={4} value={contribution.body} onChange={(e) => setContribution({ ...contribution, body: e.target.value })} placeholder="اكتب مشاركتك…" className="w-full rounded-xl border bg-background p-3 text-sm leading-6" />
                 <div className="flex gap-2">
-                  <button disabled={contributionSaving} className="flex-1 rounded-xl bg-primary py-3 text-sm font-black text-primary-foreground">{contributionSaving ? "جارٍ الإرسال…" : "إرسال للمراجعة"}</button>
+                  <button disabled={contributionSaving} className="flex-1 rounded-xl bg-primary py-3 text-sm font-black text-primary-foreground">{contributionSaving ? "جارٍ الإرسال…" : "إرسال للموافقة"}</button>
                   <button type="button" onClick={() => setContributionOpen(false)} className="rounded-xl border px-4 text-sm font-bold">إلغاء</button>
                 </div>
               </form>
@@ -467,79 +360,39 @@ function PublicCounselorBlogPage() {
           </div>
         </section>
 
-        <section id="services" className="mx-auto hidden max-w-7xl px-4 py-12 sm:block sm:px-8 sm:py-16">
-          <div>
-            <p className="text-sm font-bold text-primary">مجالات الدعم</p>
-            <h2 className="mt-1 text-2xl font-black sm:text-3xl">خدمات التوجيه الطلابي</h2>
-          </div>
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {GUIDANCE_SERVICES.map((service, index) => {
-              const Icon = SERVICE_ICONS[index] ?? GraduationCap;
-              return (
-                <article key={service.slug} className="rounded-2xl border bg-card p-5 shadow-sm">
-                  <span className="inline-flex rounded-xl bg-primary/10 p-3 text-primary"><Icon className="size-5" /></span>
-                  <h3 className="mt-4 font-black">{service.title}</h3>
-                  <p className="mt-2 text-xs leading-6 text-muted-foreground">{service.summary}</p>
-                  <ul className="mt-4 space-y-2 border-t pt-4 text-xs leading-5">
-                    {service.items.slice(0, 3).map((item) => (
-                      <li key={item} className="flex gap-2">
-                        <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="border-y border-border/60 bg-muted/20">
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-8 sm:py-16">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold text-primary">مكتبة رقمية</p>
-                <h2 className="mt-1 text-2xl font-black sm:text-3xl">موارد للطالب والأسرة والمعلم</h2>
+        <section id="contact" className="border-t bg-muted/20">
+          <div className="mx-auto max-w-3xl px-4 py-6 sm:px-8">
+            <div className="mb-4">
+              <p className="text-[11px] font-black text-primary">التواصل والخدمات</p>
+              <h2 className="text-xl font-black">تواصل مع الموجه الطلابي</h2>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">اختر صفتك ثم الخدمة المناسبة. الطلبات تصل إلى مساحة الموجه الخاصة ولا تظهر في المدونة.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {AUDIENCES.map((item) => {
+                const Icon = item.icon;
+                const active = audience === item.key;
+                return <button key={item.key} type="button" onClick={() => setAudience(item.key)} className={"rounded-2xl border p-3 text-center transition " + (active ? "border-primary bg-primary text-primary-foreground" : "bg-card")}>
+                  <Icon className="mx-auto size-5" /><p className="mt-2 text-xs font-black">{item.label.replace("أنا ", "")}</p>
+                </button>;
+              })}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {audienceActions.map((action) => {
+                const Icon = action.icon;
+                return <a key={action.title} href={action.href} className="rounded-2xl border bg-card p-4 shadow-sm">
+                  <Icon className="size-5 text-primary" /><p className="mt-2 text-sm font-black">{action.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground">{action.description}</p>
+                </a>;
+              })}
+            </div>
+            {(profile?.contact_phone || profile?.contact_email || profile?.office_hours) && (
+              <div className="mt-4 rounded-2xl border bg-card p-4 text-xs leading-6">
+                {profile?.office_hours && <p><strong>أوقات التواصل:</strong> {profile.office_hours}</p>}
+                {profile?.contact_phone && <p><strong>الهاتف:</strong> {profile.contact_phone}</p>}
+                {profile?.contact_email && <p><strong>البريد:</strong> {profile.contact_email}</p>}
               </div>
-              <BookOpen className="size-7 text-primary/50" />
-            </div>
-            <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {GUIDANCE_LEAFLETS.map((leaflet) => (
-                <article key={leaflet.title} className="rounded-2xl border bg-card p-5">
-                  <span className="text-[11px] font-bold text-primary">{leaflet.category}</span>
-                  <h3 className="mt-2 font-black">{leaflet.title}</h3>
-                  <p className="mt-2 text-xs leading-6 text-muted-foreground">{leaflet.summary}</p>
-                  <ul className="mt-4 space-y-2 text-xs leading-5 text-muted-foreground">
-                    {leaflet.points.slice(0, 2).map((point) => (
-                      <li key={point} className="flex gap-2">
-                        <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {GUIDANCE_LINKS.map((link) => (
-                <a
-                  key={link.title}
-                  href={link.href}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-xs font-bold hover:border-primary/40 hover:text-primary"
-                >
-                  {link.title}<ExternalLink className="size-3.5" />
-                </a>
-              ))}
-            </div>
+            )}
           </div>
         </section>
-
-        <div id="updates">
-          <PublicContentSection eyebrow="آخر التحديثات" title="المنشورات والإعلانات" count={updates.length} items={updates} />
-        </div>
-        <PublicContentSection eyebrow="محتوى توجيهي" title="المقالات" count={articles.length} items={articles} alternate />
       </main>
 
       <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
@@ -556,34 +409,36 @@ function PublicContentSection({
   count,
   items,
   alternate = false,
+  compact = false,
 }: {
   eyebrow: string;
   title: string;
   count: number;
   items: Array<BlogPortalRow & { title: string; slug: string; created_at: string }>;
   alternate?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <section className={alternate ? "border-t border-border/60 bg-background" : "border-t border-border/60 bg-muted/20"}>
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-8 sm:py-16">
-        <div className="flex items-end justify-between gap-4">
+    <section className={compact ? "" : (alternate ? "border-t border-border/60 bg-background" : "border-t border-border/60 bg-muted/20")}>
+      <div className={compact ? "" : "mx-auto max-w-7xl px-4 py-12 sm:px-8 sm:py-16"}>
+        {!compact && <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-sm font-bold text-primary">{eyebrow}</p>
             <h2 className="mt-1 text-2xl font-black sm:text-3xl">{title}</h2>
           </div>
           <span className="text-xs text-muted-foreground">{count} منشور</span>
-        </div>
+        </div>}
 
         {items.length === 0 ? (
           <p className="mt-8 rounded-2xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">
             لا يوجد محتوى منشور في هذا القسم حتى الآن.
           </p>
         ) : (
-          <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          <div className={compact ? "grid gap-3" : "mt-8 grid gap-5 lg:grid-cols-2"}>
             {items.map((post) => {
               const imageOnly = Boolean(post.cover_url && !post.body?.trim() && !post.excerpt?.trim());
               return (
-                <article key={`${post.slug}-${post.created_at}`} className="overflow-hidden rounded-3xl border bg-card shadow-sm">
+                <article key={`${post.slug}-${post.created_at}`} className={compact ? "overflow-hidden rounded-2xl border bg-card shadow-sm" : "overflow-hidden rounded-3xl border bg-card shadow-sm"}>
                   {post.cover_url ? (
                     <div className="bg-muted/15 p-2 sm:p-3">
                       <img
