@@ -109,7 +109,7 @@ export function PdfPreviewButton({
         typeof navigator.canShare === "function" &&
         navigator.canShare({ files: [file] })
       ) {
-        await navigator.share({ title, text: "ملف PDF من منصة الذات", files: [file] });
+        await navigator.share({ title, text: "ملف PDF من الذات", files: [file] });
       } else {
         downloadPdfFile(file);
         toast.success("تم تنزيل ملف PDF؛ يمكنك مشاركته من جهازك.");
