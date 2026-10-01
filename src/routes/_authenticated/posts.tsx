@@ -41,7 +41,7 @@ import { generateSmartFill } from "@/lib/deepseek.functions";
 export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
     meta: [
-      { title: "بوابة الموجه الطلابي | منصة الذات" },
+      { title: "بوابة الموجه الطلابي | الذات" },
       {
         name: "description",
         content:
