@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Check, Clipboard, KeyRound, RefreshCw, School, ShieldCheck, UserCheck, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Clipboard, KeyRound, RefreshCw, School, Send, Share2, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +69,34 @@ function SchoolTeamPage() {
   const [educationOffice, setEducationOffice] = useState("");
   const [newSchoolRole, setNewSchoolRole] = useState<Role>("counselor");
   const [pendingRoles, setPendingRoles] = useState<Record<string, Role>>({});
+
+  useEffect(() => {
+    const invitedCode = new URLSearchParams(window.location.search).get("join");
+    if (invitedCode) setJoinCode(invitedCode.trim().toUpperCase());
+  }, []);
+
+  function buildInviteUrl(code: string) {
+    return `${window.location.origin}/school-team?join=${encodeURIComponent(code)}`;
+  }
+
+  async function copyInvite(code: string) {
+    await navigator.clipboard.writeText(buildInviteUrl(code));
+    toast.success("تم نسخ رابط دعوة فريق المدرسة.");
+  }
+
+  async function shareInvite(code: string, name: string) {
+    const url = buildInviteUrl(code);
+    const text = `دعوة للانضمام إلى فريق ${name} في الذات | ATHAT. افتح الرابط وسجّل الدخول ثم أرسل طلب الانضمام:\n${url}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "دعوة فريق المدرسة", text, url });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }
 
   const contextQuery = useQuery({
     queryKey: ["school-team-context"],
@@ -211,7 +239,7 @@ function SchoolTeamPage() {
                   ))}
                 </select>
                 <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-                  سيحدد هذا الدور واجهتك وصلاحياتك داخل ذات. منشئ مساحة المدرسة يبقى مسؤول إدارة الفريق.
+                  سيحدد هذا الدور واجهتك وصلاحياتك داخل الذات | ATHAT. منشئ مساحة المدرسة يبقى مسؤول إدارة الفريق.
                 </p>
               </div>
               <Button disabled={!schoolName.trim() || createSchool.isPending} onClick={() => createSchool.mutate()}>
@@ -286,9 +314,17 @@ function SchoolTeamPage() {
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">أرسل الرمز للموظف فقط، ثم اعتمد طلبه وحدد دوره من هنا.</p>
             </div>
-            <Button variant="outline" disabled={rotateCode.isPending} onClick={() => rotateCode.mutate(school.id)}>
-              <RefreshCw className="size-4" /> تغيير الرمز
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => void shareInvite(context.join_code || "", school.name)}>
+                <Share2 className="size-4" /> دعوة عضو
+              </Button>
+              <Button variant="outline" onClick={() => void copyInvite(context.join_code || "")}>
+                <Send className="size-4" /> نسخ رابط الدعوة
+              </Button>
+              <Button variant="outline" disabled={rotateCode.isPending} onClick={() => rotateCode.mutate(school.id)}>
+                <RefreshCw className="size-4" /> تغيير الرمز
+              </Button>
+            </div>
           </div>
         </section>
       )}
@@ -382,7 +418,7 @@ function SchoolTeamPage() {
       <section className="rounded-2xl border bg-muted/20 p-4">
         <div className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-primary" />
-          <h2 className="text-sm font-black">صلاحيات منصة ذات الفعلية</h2>
+          <h2 className="text-sm font-black">صلاحيات الذات | ATHAT الفعلية</h2>
         </div>
         <div className="mt-3 grid gap-2 md:grid-cols-3">
           <div className="rounded-xl border bg-background p-3">
