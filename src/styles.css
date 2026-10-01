@@ -2,11 +2,13 @@
 @source "../src";
 @import "tw-animate-css";
 @import "@fontsource-variable/cairo";
+@import "@fontsource-variable/ibm-plex-sans-arabic";
+@import "@fontsource-variable/manrope";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "IBM Plex Sans Arabic", "Manrope", "Cairo Variable", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans Arabic Variable", "Manrope Variable", "IBM Plex Sans Arabic", "Manrope", "Cairo Variable", system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -164,8 +166,6 @@ body {
     min-height: 100vh;
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-sans);
-    letter-spacing: 0;
     background-image: none;
     overflow-x: hidden;
     text-rendering: optimizeLegibility;
