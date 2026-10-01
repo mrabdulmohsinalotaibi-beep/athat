@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -44,13 +45,27 @@ const SYSTEM_PROMPT = `أنت مساعد مهني لمنصة "الذات" للت
 - أعد فقط الحقول التي يمكن اقتراحها بثقة، ولا تكرر الحقول الموجودة أصلًا.`;
 
 function getServerSetting(name: string) {
-  const runtimeEnv = (
+  // Nitro v3 attaches Cloudflare bindings to the per-request runtime.
+  // Reading them here keeps secrets request-scoped and server-only.
+  const request = getRequest() as Request & {
+    runtime?: {
+      cloudflare?: {
+        env?: Record<string, unknown>;
+      };
+    };
+  };
+  const cloudflareValue = request.runtime?.cloudflare?.env?.[name];
+  if (typeof cloudflareValue === "string" && cloudflareValue.trim()) {
+    return cloudflareValue.trim();
+  }
+
+  // Fallbacks support local Node development and older deployment adapters.
+  const bridgedValue = (
     globalThis as typeof globalThis & {
       __ATHAT_SERVER_ENV__?: Record<string, string>;
     }
-  ).__ATHAT_SERVER_ENV__;
-  const runtimeValue = runtimeEnv?.[name]?.trim();
-  if (runtimeValue) return runtimeValue;
+  ).__ATHAT_SERVER_ENV__?.[name]?.trim();
+  if (bridgedValue) return bridgedValue;
 
   const processValue =
     typeof process !== "undefined" ? process.env[name]?.trim() : undefined;
