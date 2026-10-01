@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Copy, Send, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,19 @@ export function SendForSignatureDialog({
   const [phone,setPhone]=useState("");
   const [busy,setBusy]=useState(false);
   const [link,setLink]=useState("");
+  const requests=useQuery({
+    queryKey:["document-signatures",recordTable,recordId],
+    enabled:open,
+    refetchInterval:10000,
+    queryFn:async()=>{
+      const {data,error}=await (supabase as any).from("document_signature_requests")
+        .select("id,signer_name,signer_role,status,signed_at,created_at")
+        .eq("record_table",recordTable).eq("record_id",recordId)
+        .order("created_at",{ascending:false});
+      if(error)throw error;
+      return data??[];
+    },
+  });
 
   async function createRequest() {
     const finalRole=role==="أخرى"?customRole.trim():role;
@@ -36,6 +50,7 @@ export function SendForSignatureDialog({
       if(error) throw error;
       const url=`${window.location.origin}/approve/${data}`;
       setLink(url);
+      await requests.refetch();
       toast.success("تم إنشاء طلب الاعتماد والتوقيع.");
     } catch(error){toast.error((error as Error).message);}
     finally{setBusy(false);}
@@ -63,6 +78,13 @@ export function SendForSignatureDialog({
         <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4"><p className="flex items-center gap-2 font-black"><CheckCircle2 className="size-5"/>تم إنشاء رابط التوقيع</p><p dir="ltr" className="mt-2 break-all text-xs">{link}</p></div>
         <Button className="w-full" onClick={whatsapp}><Share2 className="size-4"/>إرسال عبر واتساب</Button>
         <Button variant="outline" className="w-full" onClick={async()=>{await navigator.clipboard.writeText(link);toast.success("تم نسخ الرابط.");}}><Copy className="size-4"/>نسخ الرابط</Button>
+      </div>}
+      {(requests.data?.length ?? 0)>0&&<div className="mt-4 border-t pt-4">
+        <p className="mb-2 text-sm font-black">حالة الاعتمادات لهذا المستند</p>
+        <div className="space-y-2">{requests.data!.map((item:any)=><div key={item.id} className="flex items-center justify-between gap-3 rounded-xl border p-3">
+          <div><p className="text-sm font-bold">{item.signer_name}</p><p className="text-xs text-muted-foreground">{item.signer_role}</p></div>
+          <div className="text-left">{item.status==="signed"?<><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-700">تم التوقيع</span><p className="mt-1 text-[10px] text-muted-foreground">{item.signed_at?new Date(item.signed_at).toLocaleString("ar-SA"):""}</p></>:<span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-bold text-amber-700">بانتظار التوقيع</span>}</div>
+        </div>)}</div>
       </div>}
     </DialogContent>
   </Dialog>;
