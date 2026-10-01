@@ -7,6 +7,9 @@ import { RecordPage } from "@/components/RecordPage";
 import { Button } from "@/components/ui/button";
 import { recordByKey } from "@/lib/records";
 import { readEtqanAttendancePdf, type EtqanAttendanceRow } from "@/lib/etqan-pdf";
+import { supabase } from "@/integrations/supabase/client";
+
+type PreviewRow = EtqanAttendanceRow & { studentId?: string; studentNo?: string; matchedName?: string; status: "new" | "duplicate" | "review" };
 
 export const Route = createFileRoute("/_authenticated/attendance")({
   head: () => ({
@@ -26,7 +29,8 @@ function AttendancePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pdf, setPdf] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const [rows, setRows] = useState<EtqanAttendanceRow[]>([]);
+  const [rows, setRows] = useState<PreviewRow[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const pickPdf = (file?: File) => {
     if (!file) return;
@@ -48,11 +52,56 @@ function AttendancePage() {
         toast.error("لم يتم العثور على سجلات غياب قابلة للقراءة في الملف.");
         return;
       }
-      setRows(parsed);
-      toast.success("تمت قراءة " + parsed.length + " سجلًا من كشف إتقان.");
+      const ids = [...new Set(parsed.map((row) => row.nationalId))];
+      const { data: students, error: studentsError } = await supabase
+        .from("students").select("id,student_no,national_id,full_name").in("national_id", ids);
+      if (studentsError) throw studentsError;
+      const studentById = new Map((students || []).map((student) => [String(student.national_id || ""), student]));
+
+      const dates = [...new Set(parsed.map((row) => row.date))];
+      const { data: existingRows, error: attendanceError } = await supabase
+        .from("attendance").select("student_id,student_no,adate").in("adate", dates);
+      if (attendanceError) throw attendanceError;
+      const existing = new Set((existingRows || []).map((row) => String(row.student_id || row.student_no || "") + "|" + String(row.adate || "")));
+
+      const preview: PreviewRow[] = parsed.map((row) => {
+        const student = studentById.get(row.nationalId);
+        if (!student) return { ...row, status: "review" };
+        const key = String(student.id || student.student_no || "") + "|" + row.date;
+        return { ...row, studentId: student.id, studentNo: student.student_no || undefined, matchedName: student.full_name || row.studentName, status: existing.has(key) ? "duplicate" : "new" };
+      });
+      setRows(preview);
+      toast.success("تمت قراءة ومطابقة " + preview.length + " سجلًا من كشف إتقان.");
     } finally {
       setBusy(false);
     }
+  };
+
+  const counts = rows.reduce((acc, row) => { acc[row.status] += 1; return acc; }, { new: 0, duplicate: 0, review: 0 });
+
+  const approveImport = async () => {
+    const ready = rows.filter((row) => row.status === "new" && row.studentId);
+    if (!ready.length) return toast.info("لا توجد سجلات جديدة جاهزة للحفظ.");
+    setSaving(true);
+    try {
+      const payload = ready.map((row) => ({
+        student_id: row.studentId!,
+        student_no: row.studentNo || null,
+        student_name: row.matchedName || row.studentName,
+        adate: row.date,
+        case_type: row.excuse === "بعذر" ? "غياب بعذر" : "غياب",
+        count_days: 1,
+        action: "مستورد من كشف إتقان",
+        notes: ["إتقان", row.absenceType, row.excuse, row.phone ? "جوال: " + row.phone : ""].filter(Boolean).join(" | "),
+      }));
+      const { error } = await supabase.from("attendance").insert(payload);
+      if (error) throw error;
+      toast.success("تم اعتماد وحفظ " + payload.length + " سجل غياب.");
+      setRows((current) => current.map((row) => row.status === "new" ? { ...row, status: "duplicate" } : row));
+    } catch (error) {
+      console.error(error);
+      toast.error("تعذر حفظ سجلات الغياب. لم يتم اعتماد العملية.");
+    } finally { setSaving(false); }
   };
 
   return (
@@ -97,19 +146,27 @@ function AttendancePage() {
 
       {rows.length > 0 && (
         <section className="rounded-2xl border bg-card p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2 font-black">
-            <CheckCircle2 className="size-5 text-primary" />
-            معاينة كشف إتقان — {rows.length} سجل
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-black"><CheckCircle2 className="size-5 text-primary" />معاينة كشف إتقان — {rows.length} سجل</div>
+            <Button onClick={approveImport} disabled={saving || counts.new === 0}>
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+              اعتماد وإضافة الغياب ({counts.new})
+            </Button>
+          </div>
+          <div className="mb-3 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border p-3 font-bold">جديد: {counts.new}</div>
+            <div className="rounded-xl border p-3 font-bold">مكرر: {counts.duplicate}</div>
+            <div className="rounded-xl border p-3 font-bold">يحتاج مراجعة: {counts.review}</div>
           </div>
           <div className="max-h-[430px] overflow-auto rounded-xl border">
             <table className="w-full min-w-[760px] text-sm">
               <thead className="sticky top-0 bg-muted">
-                <tr><th className="p-2 text-right">الهوية</th><th className="p-2 text-right">الطالب</th><th className="p-2 text-right">الصف</th><th className="p-2 text-right">الفصل</th><th className="p-2 text-right">التاريخ</th><th className="p-2 text-right">العذر</th><th className="p-2 text-right">نوع الغياب</th></tr>
+                <tr><th className="p-2 text-right">الحالة</th><th className="p-2 text-right">الهوية</th><th className="p-2 text-right">الطالب</th><th className="p-2 text-right">الصف</th><th className="p-2 text-right">الفصل</th><th className="p-2 text-right">التاريخ</th><th className="p-2 text-right">العذر</th><th className="p-2 text-right">نوع الغياب</th></tr>
               </thead>
               <tbody>
                 {rows.map((row, index) => (
                   <tr key={row.nationalId + row.date + index} className="border-t">
-                    <td className="p-2">{row.nationalId}</td><td className="p-2">{row.studentName}</td>
+                    <td className="p-2 font-bold">{row.status === "new" ? "جديد" : row.status === "duplicate" ? "مكرر" : "مراجعة"}</td><td className="p-2">{row.nationalId}</td><td className="p-2">{row.matchedName || row.studentName}</td>
                     <td className="p-2">{row.grade}</td><td className="p-2">{row.classroom}</td>
                     <td className="p-2">{row.date}</td><td className="p-2">{row.excuse || "—"}</td>
                     <td className="p-2">{row.absenceType}</td>
