@@ -824,7 +824,7 @@ function Dashboard() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
-              <img src="/brand-icon.svg?v=20261001h" alt="" className="size-11 rounded-2xl bg-white/10 p-0.5 shadow-sm" />
+              <img src="/brand-icon.svg?v=20261001-new" alt="" className="size-11 rounded-lg object-contain shadow-sm" />
               <div className="min-w-0">
                 <p className="text-[10px] font-bold text-white/70">{formatHijriDate(new Date())}</p>
                 <h1 className="truncate text-lg font-black sm:text-xl">

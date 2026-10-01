@@ -203,11 +203,11 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <div className="brand-hero-panel mx-auto flex w-full max-w-sm justify-center rounded-[2rem] p-5 shadow-[var(--shadow-card)]">
+          <div className="mx-auto flex w-full max-w-sm justify-center p-5">
             <img
-              src="/brand-icon.svg?v=20261001h"
+              src="/brand-icon.svg?v=20261001-new"
               alt="شعار الذات"
-              className="h-auto w-full max-w-[18rem] drop-shadow-[0_14px_20px_rgba(3,45,102,.16)]"
+              className="h-auto w-full max-w-[18rem] rounded-2xl object-contain"
             />
           </div>
         </div>
