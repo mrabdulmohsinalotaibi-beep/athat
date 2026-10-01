@@ -205,7 +205,7 @@ function AuthPage() {
         <div className="text-center">
           <div className="brand-hero-panel mx-auto flex w-full max-w-sm justify-center rounded-[2rem] p-5 shadow-[var(--shadow-card)]">
             <img
-              src="/brand-icon.svg?v=20261001f"
+              src="/brand-icon.svg?v=20261001h"
               alt="شعار الذات"
               className="h-auto w-full max-w-[18rem] drop-shadow-[0_14px_20px_rgba(3,45,102,.16)]"
             />
