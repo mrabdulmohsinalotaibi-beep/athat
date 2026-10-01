@@ -9,9 +9,9 @@ function todayDate() {
 function AthatDocumentMark() {
   return (
     <img
-      src="/brand-logo.png?v=20261001-brand5"
+      src="/brand-icon.svg?v=20261001-docs1"
       alt="شعار الذات"
-      className="h-12 w-12 shrink-0 rounded-xl object-contain"
+      className="h-14 w-14 shrink-0 rounded-[14px] object-contain"
     />
   );
 }
