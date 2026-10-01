@@ -66,9 +66,9 @@ function AttendancePage() {
 
       const preview: PreviewRow[] = parsed.map((row) => {
         const student = studentById.get(row.nationalId);
-        if (!student) return { ...row, status: "review" as const };
+        if (!student) return { ...row, status: "review" as const } satisfies PreviewRow;
         const key = String(student.id || student.student_no || "") + "|" + row.date;
-        return { ...row, studentId: student.id, studentNo: student.student_no || undefined, matchedName: student.full_name || row.studentName, status: (existing.has(key) ? "duplicate" : "new") as "duplicate" | "new" };
+        return { ...row, studentId: student.id, studentNo: student.student_no ?? undefined, matchedName: student.full_name || row.studentName, status: existing.has(key) ? "duplicate" as const : "new" as const } satisfies PreviewRow;
       });
       setRows(preview);
       toast.success("تمت قراءة ومطابقة " + preview.length + " سجلًا من كشف إتقان.");
