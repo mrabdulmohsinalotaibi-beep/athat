@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, CheckCircle2, Home, MessageCircle } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Home, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
@@ -71,7 +71,7 @@ function PostPage() {
                 <span>{post.author_name || "الموجه الطلابي"}</span>
                 <span className="flex items-center gap-1"><CalendarDays className="size-4" />{formatPostDate(post.published_at ?? post.created_at)}</span>
               </div>
-              <Button type="button" onClick={shareOnWhatsApp} className="mt-7 gap-2 bg-[#25D366] font-bold text-white shadow-lg shadow-[#25D366]/20 hover:bg-[#1da851]"><MessageCircle className="size-4" /> مشاركة المنشور عبر واتساب</Button>
+              <Button type="button" variant="ghost" onClick={shareOnWhatsApp} className="mt-7 gap-2 px-3 text-base font-bold text-primary hover:bg-primary/5 hover:text-primary"><Share2 className="size-6" /> مشاركة</Button>
             </div>
             {post.cover_url && (
               <div className="mt-10 overflow-hidden rounded-3xl border bg-card p-2 shadow-xl sm:p-4">
