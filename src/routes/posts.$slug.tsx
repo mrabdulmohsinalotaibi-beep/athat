@@ -31,23 +31,16 @@ function PostPage() {
     },
   });
 
-  async function sharePost() {
+  function sharePost() {
     if (!post) return;
 
-    const url = `${window.location.origin}/posts/${encodeURIComponent(post.slug)}`;
-    const text = post.excerpt?.trim() ? `${post.excerpt.trim()}\n\nمن منصة الذات` : "من منصة الذات";
+    const cleanSlug = decodeURIComponent(post.slug);
+    const url = `${window.location.origin}/posts/${cleanSlug}`;
+    const excerpt = post.excerpt?.trim();
+    const message = [post.title, excerpt, url, "من منصة الذات"].filter(Boolean).join("\n\n");
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: post.title, text, url });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-      }
-    }
-
-    const message = `${post.title}\n\n${post.excerpt?.trim() ? `${post.excerpt.trim()}\n\n` : ""}${url}\n\nمن منصة الذات`;
-    window.location.href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(message);
+    window.location.assign(whatsappUrl);
   }
 
   return (
