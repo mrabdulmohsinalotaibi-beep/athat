@@ -269,7 +269,7 @@ export default function MessagesDashboard() {
     }
 
     const subject = encodeURIComponent(
-      `مشاركات التوجيه الطلابي — ${school?.school_name || "منصة الذات"}`,
+      `مشاركات التوجيه الطلابي — ${school?.school_name || "الذات"}`,
     );
     const body = encodeURIComponent(
       deliveryText(selected, school?.school_name || "التوجيه الطلابي"),
