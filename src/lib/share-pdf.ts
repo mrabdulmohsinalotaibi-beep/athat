@@ -124,22 +124,79 @@ export function openNativeDocumentPrint(element: HTMLElement, title: string) {
     .official-document-footer {
       margin-top: 8mm !important;
     }
-    [data-pdf-exclude="true"] { display: none !important; }
+    .athat-print-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2147483647;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255,255,255,.96);
+      border-bottom: 1px solid #d8d2c8;
+    }
+    .athat-print-toolbar button {
+      appearance: none;
+      border: 1px solid #07566a;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font: inherit;
+      font-weight: 700;
+      background: #fff;
+      color: #07566a;
+    }
+    .athat-print-toolbar #athat-print-button {
+      background: #07566a;
+      color: #fff;
+    }
+    @media print {
+      .athat-print-toolbar, [data-pdf-exclude="true"] { display: none !important; }
+    }
   </style>
 </head>
 <body>
+  <div class="athat-print-toolbar" data-pdf-exclude="true">
+    <button type="button" id="athat-back-button" aria-label="الرجوع إلى الذات">رجوع إلى الذات | ATHAT</button>
+    <button type="button" id="athat-print-button" aria-label="طباعة المستند">طباعة</button>
+  </div>
   ${cloned.outerHTML}
   <script>
-    (async () => {
-      try {
-        if (document.fonts && document.fonts.ready) await document.fonts.ready;
-        const images = Array.from(document.images);
-        await Promise.all(images.map((img) => img.complete ? Promise.resolve() : new Promise((resolve) => {
-          img.addEventListener("load", resolve, { once: true });
-          img.addEventListener("error", resolve, { once: true });
-        })));
-      } catch {}
-      setTimeout(() => window.print(), 250);
+    (() => {
+      const returnToApp = () => {
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.focus();
+            window.close();
+            setTimeout(() => window.opener && window.opener.focus(), 50);
+            return;
+          }
+        } catch {}
+        if (history.length > 1) history.back();
+        else location.href = "PLACEHOLDER_ORIGIN".replace("PLACEHOLDER_ORIGIN", window.location.origin);
+      };
+
+      document.getElementById("athat-back-button")?.addEventListener("click", returnToApp);
+      document.getElementById("athat-print-button")?.addEventListener("click", () => window.print());
+
+      // Safari/iOS can leave this temporary print window in front after the
+      // native print sheet is dismissed. Return focus to ATHAT after printing.
+      window.addEventListener("afterprint", () => {
+        setTimeout(returnToApp, 150);
+      });
+
+      (async () => {
+        try {
+          if (document.fonts && document.fonts.ready) await document.fonts.ready;
+          const images = Array.from(document.images);
+          await Promise.all(images.map((img) => img.complete ? Promise.resolve() : new Promise((resolve) => {
+            img.addEventListener("load", resolve, { once: true });
+            img.addEventListener("error", resolve, { once: true });
+          })));
+        } catch {}
+        setTimeout(() => window.print(), 350);
+      })();
     })();
   <\/script>
 </body>
