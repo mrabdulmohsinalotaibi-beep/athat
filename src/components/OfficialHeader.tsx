@@ -6,6 +6,32 @@ function todayDate() {
   return formatHijriDate(new Date());
 }
 
+function AthatDocumentMark() {
+  return (
+    <svg
+      viewBox="0 0 180 300"
+      role="img"
+      aria-label="شعار ذات"
+      className="h-11 w-8 shrink-0"
+    >
+      <defs>
+        <linearGradient id="athat-doc-teal" x1="20" y1="270" x2="115" y2="25" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#07566A" />
+          <stop offset="1" stopColor="#2A9D8F" />
+        </linearGradient>
+        <linearGradient id="athat-doc-gold" x1="100" y1="265" x2="155" y2="35" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#C79A5B" />
+          <stop offset="1" stopColor="#E5C27B" />
+        </linearGradient>
+      </defs>
+      <path d="M80 285C57 226 60 176 83 137C105 99 124 68 126 18C157 70 151 126 119 164C94 194 83 233 80 285Z" fill="url(#athat-doc-gold)" />
+      <path d="M67 283C25 231 15 181 32 136C47 97 78 72 91 18C107 73 95 119 65 154C42 181 44 229 67 283Z" fill="url(#athat-doc-teal)" />
+      <path d="M76 285C68 238 77 201 102 173C129 143 144 111 143 72C163 117 151 160 121 191C99 214 85 245 76 285Z" fill="#F7F0E4" />
+      <path d="M67 283C81 244 103 216 132 197C153 183 166 162 173 139C177 180 159 211 129 229C104 244 84 262 67 283Z" fill="#0A6A73" />
+    </svg>
+  );
+}
+
 export function OfficialHeader({
   school,
   title,
@@ -134,7 +160,7 @@ export function OfficialFooter({
             <p className="text-[18px] font-black text-[#07566a]">ذات</p>
             <p className="mt-1 text-[7px] font-black tracking-[0.28em] text-[#c79a5b]">THAT</p>
           </div>
-          <img src="/brand-mark.svg" alt="" className="h-11 w-8 object-contain" />
+          <AthatDocumentMark />
         </div>
         <span className="official-footer-line official-footer-line-left" aria-hidden="true" />
       </div>
