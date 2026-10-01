@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RequestStatusRouteImport } from './routes/request-status'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
@@ -24,6 +25,9 @@ import { Route as AuthenticatedCasesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCommitteesRouteImport } from './routes/_authenticated/committees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEvidencesRouteImport } from './routes/_authenticated/evidences'
+import { Route as AuthenticatedExecutionRouteImport } from './routes/_authenticated/execution'
+import { Route as AuthenticatedHealthRouteImport } from './routes/_authenticated/health'
+import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedInterviewsRouteImport } from './routes/_authenticated/interviews'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
@@ -34,10 +38,14 @@ import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
+import { Route as AuthenticatedSchoolInboxRouteImport } from './routes/_authenticated/school-inbox'
+import { Route as AuthenticatedSchoolTasksRouteImport } from './routes/_authenticated/school-tasks'
+import { Route as AuthenticatedSchoolTeamRouteImport } from './routes/_authenticated/school-team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedToolkitRouteImport } from './routes/_authenticated/toolkit'
+import { Route as AuthenticatedTrashRouteImport } from './routes/_authenticated/trash'
 import { Route as AuthenticatedWeeklyPosterRouteImport } from './routes/_authenticated/weekly-poster'
 import { Route as BlogTokenRouteImport } from './routes/blog.$token'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
@@ -77,6 +85,11 @@ const ContactRoute = ContactRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestStatusRoute = RequestStatusRouteImport.update({
+  id: '/request-status',
+  path: '/request-status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResourcesRoute = ResourcesRouteImport.update({
@@ -122,6 +135,21 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedEvidencesRoute = AuthenticatedEvidencesRouteImport.update({
   id: '/evidences',
   path: '/evidences',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExecutionRoute = AuthenticatedExecutionRouteImport.update({
+  id: '/execution',
+  path: '/execution',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHealthRoute = AuthenticatedHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedIntegrationsRoute =
@@ -177,6 +205,23 @@ const AuthenticatedRequestsRoute = AuthenticatedRequestsRouteImport.update({
   path: '/requests',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSchoolInboxRoute =
+  AuthenticatedSchoolInboxRouteImport.update({
+    id: '/school-inbox',
+    path: '/school-inbox',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSchoolTasksRoute =
+  AuthenticatedSchoolTasksRouteImport.update({
+    id: '/school-tasks',
+    path: '/school-tasks',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSchoolTeamRoute = AuthenticatedSchoolTeamRouteImport.update({
+  id: '/school-team',
+  path: '/school-team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -196,6 +241,11 @@ const AuthenticatedSubscriptionRoute =
 const AuthenticatedToolkitRoute = AuthenticatedToolkitRouteImport.update({
   id: '/toolkit',
   path: '/toolkit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTrashRoute = AuthenticatedTrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWeeklyPosterRoute =
@@ -262,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/request-status': typeof RequestStatusRoute
   '/resources': typeof ResourcesRoute
   '/services': typeof ServicesRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
@@ -271,6 +322,9 @@ export interface FileRoutesByFullPath {
   '/committees': typeof AuthenticatedCommitteesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/evidences': typeof AuthenticatedEvidencesRoute
+  '/execution': typeof AuthenticatedExecutionRoute
+  '/health': typeof AuthenticatedHealthRoute
+  '/inbox': typeof AuthenticatedInboxRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
@@ -281,10 +335,14 @@ export interface FileRoutesByFullPath {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/requests': typeof AuthenticatedRequestsRoute
+  '/school-inbox': typeof AuthenticatedSchoolInboxRoute
+  '/school-tasks': typeof AuthenticatedSchoolTasksRoute
+  '/school-team': typeof AuthenticatedSchoolTeamRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/toolkit': typeof AuthenticatedToolkitRoute
+  '/trash': typeof AuthenticatedTrashRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
   '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
@@ -303,6 +361,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/request-status': typeof RequestStatusRoute
   '/resources': typeof ResourcesRoute
   '/services': typeof ServicesRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
@@ -312,6 +371,9 @@ export interface FileRoutesByTo {
   '/committees': typeof AuthenticatedCommitteesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/evidences': typeof AuthenticatedEvidencesRoute
+  '/execution': typeof AuthenticatedExecutionRoute
+  '/health': typeof AuthenticatedHealthRoute
+  '/inbox': typeof AuthenticatedInboxRoute
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
@@ -322,10 +384,14 @@ export interface FileRoutesByTo {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/requests': typeof AuthenticatedRequestsRoute
+  '/school-inbox': typeof AuthenticatedSchoolInboxRoute
+  '/school-tasks': typeof AuthenticatedSchoolTasksRoute
+  '/school-team': typeof AuthenticatedSchoolTeamRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/toolkit': typeof AuthenticatedToolkitRoute
+  '/trash': typeof AuthenticatedTrashRoute
   '/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
   '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
@@ -346,6 +412,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/request-status': typeof RequestStatusRoute
   '/resources': typeof ResourcesRoute
   '/services': typeof ServicesRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
@@ -355,6 +422,9 @@ export interface FileRoutesById {
   '/_authenticated/committees': typeof AuthenticatedCommitteesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/evidences': typeof AuthenticatedEvidencesRoute
+  '/_authenticated/execution': typeof AuthenticatedExecutionRoute
+  '/_authenticated/health': typeof AuthenticatedHealthRoute
+  '/_authenticated/inbox': typeof AuthenticatedInboxRoute
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
   '/_authenticated/interviews': typeof AuthenticatedInterviewsRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
@@ -365,10 +435,14 @@ export interface FileRoutesById {
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/requests': typeof AuthenticatedRequestsRoute
+  '/_authenticated/school-inbox': typeof AuthenticatedSchoolInboxRoute
+  '/_authenticated/school-tasks': typeof AuthenticatedSchoolTasksRoute
+  '/_authenticated/school-team': typeof AuthenticatedSchoolTeamRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/toolkit': typeof AuthenticatedToolkitRoute
+  '/_authenticated/trash': typeof AuthenticatedTrashRoute
   '/_authenticated/weekly-poster': typeof AuthenticatedWeeklyPosterRoute
   '/blog/$token': typeof BlogTokenRoute
   '/c/$slug': typeof CSlugRoute
@@ -389,6 +463,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/login'
+    | '/request-status'
     | '/resources'
     | '/services'
     | '/attendance'
@@ -398,6 +473,9 @@ export interface FileRouteTypes {
     | '/committees'
     | '/dashboard'
     | '/evidences'
+    | '/execution'
+    | '/health'
+    | '/inbox'
     | '/integrations'
     | '/interviews'
     | '/messages'
@@ -408,10 +486,14 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/reports'
     | '/requests'
+    | '/school-inbox'
+    | '/school-tasks'
+    | '/school-team'
     | '/settings'
     | '/students'
     | '/subscription'
     | '/toolkit'
+    | '/trash'
     | '/weekly-poster'
     | '/blog/$token'
     | '/c/$slug'
@@ -430,6 +512,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/login'
+    | '/request-status'
     | '/resources'
     | '/services'
     | '/attendance'
@@ -439,6 +522,9 @@ export interface FileRouteTypes {
     | '/committees'
     | '/dashboard'
     | '/evidences'
+    | '/execution'
+    | '/health'
+    | '/inbox'
     | '/integrations'
     | '/interviews'
     | '/messages'
@@ -449,10 +535,14 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/reports'
     | '/requests'
+    | '/school-inbox'
+    | '/school-tasks'
+    | '/school-team'
     | '/settings'
     | '/students'
     | '/subscription'
     | '/toolkit'
+    | '/trash'
     | '/weekly-poster'
     | '/blog/$token'
     | '/c/$slug'
@@ -472,6 +562,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/login'
+    | '/request-status'
     | '/resources'
     | '/services'
     | '/_authenticated/attendance'
@@ -481,6 +572,9 @@ export interface FileRouteTypes {
     | '/_authenticated/committees'
     | '/_authenticated/dashboard'
     | '/_authenticated/evidences'
+    | '/_authenticated/execution'
+    | '/_authenticated/health'
+    | '/_authenticated/inbox'
     | '/_authenticated/integrations'
     | '/_authenticated/interviews'
     | '/_authenticated/messages'
@@ -491,10 +585,14 @@ export interface FileRouteTypes {
     | '/_authenticated/referrals'
     | '/_authenticated/reports'
     | '/_authenticated/requests'
+    | '/_authenticated/school-inbox'
+    | '/_authenticated/school-tasks'
+    | '/_authenticated/school-team'
     | '/_authenticated/settings'
     | '/_authenticated/students'
     | '/_authenticated/subscription'
     | '/_authenticated/toolkit'
+    | '/_authenticated/trash'
     | '/_authenticated/weekly-poster'
     | '/blog/$token'
     | '/c/$slug'
@@ -515,6 +613,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
+  RequestStatusRoute: typeof RequestStatusRoute
   ResourcesRoute: typeof ResourcesRoute
   ServicesRoute: typeof ServicesRoute
   BlogTokenRoute: typeof BlogTokenRoute
@@ -569,6 +668,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/request-status': {
+      id: '/request-status'
+      path: '/request-status'
+      fullPath: '/request-status'
+      preLoaderRoute: typeof RequestStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resources': {
@@ -632,6 +738,27 @@ declare module '@tanstack/react-router' {
       path: '/evidences'
       fullPath: '/evidences'
       preLoaderRoute: typeof AuthenticatedEvidencesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/execution': {
+      id: '/_authenticated/execution'
+      path: '/execution'
+      fullPath: '/execution'
+      preLoaderRoute: typeof AuthenticatedExecutionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/health': {
+      id: '/_authenticated/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof AuthenticatedHealthRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inbox': {
+      id: '/_authenticated/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AuthenticatedInboxRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/integrations': {
@@ -704,6 +831,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/school-inbox': {
+      id: '/_authenticated/school-inbox'
+      path: '/school-inbox'
+      fullPath: '/school-inbox'
+      preLoaderRoute: typeof AuthenticatedSchoolInboxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/school-tasks': {
+      id: '/_authenticated/school-tasks'
+      path: '/school-tasks'
+      fullPath: '/school-tasks'
+      preLoaderRoute: typeof AuthenticatedSchoolTasksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/school-team': {
+      id: '/_authenticated/school-team'
+      path: '/school-team'
+      fullPath: '/school-team'
+      preLoaderRoute: typeof AuthenticatedSchoolTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -730,6 +878,13 @@ declare module '@tanstack/react-router' {
       path: '/toolkit'
       fullPath: '/toolkit'
       preLoaderRoute: typeof AuthenticatedToolkitRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trash': {
+      id: '/_authenticated/trash'
+      path: '/trash'
+      fullPath: '/trash'
+      preLoaderRoute: typeof AuthenticatedTrashRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/weekly-poster': {
@@ -820,6 +975,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCommitteesRoute: typeof AuthenticatedCommitteesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEvidencesRoute: typeof AuthenticatedEvidencesRoute
+  AuthenticatedExecutionRoute: typeof AuthenticatedExecutionRoute
+  AuthenticatedHealthRoute: typeof AuthenticatedHealthRoute
+  AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
   AuthenticatedInterviewsRoute: typeof AuthenticatedInterviewsRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
@@ -830,10 +988,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
+  AuthenticatedSchoolInboxRoute: typeof AuthenticatedSchoolInboxRoute
+  AuthenticatedSchoolTasksRoute: typeof AuthenticatedSchoolTasksRoute
+  AuthenticatedSchoolTeamRoute: typeof AuthenticatedSchoolTeamRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedToolkitRoute: typeof AuthenticatedToolkitRoute
+  AuthenticatedTrashRoute: typeof AuthenticatedTrashRoute
   AuthenticatedWeeklyPosterRoute: typeof AuthenticatedWeeklyPosterRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminUpgradeRequestsIndexRoute: typeof AuthenticatedAdminUpgradeRequestsIndexRoute
@@ -847,6 +1009,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCommitteesRoute: AuthenticatedCommitteesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEvidencesRoute: AuthenticatedEvidencesRoute,
+  AuthenticatedExecutionRoute: AuthenticatedExecutionRoute,
+  AuthenticatedHealthRoute: AuthenticatedHealthRoute,
+  AuthenticatedInboxRoute: AuthenticatedInboxRoute,
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
   AuthenticatedInterviewsRoute: AuthenticatedInterviewsRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
@@ -857,10 +1022,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
+  AuthenticatedSchoolInboxRoute: AuthenticatedSchoolInboxRoute,
+  AuthenticatedSchoolTasksRoute: AuthenticatedSchoolTasksRoute,
+  AuthenticatedSchoolTeamRoute: AuthenticatedSchoolTeamRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedToolkitRoute: AuthenticatedToolkitRoute,
+  AuthenticatedTrashRoute: AuthenticatedTrashRoute,
   AuthenticatedWeeklyPosterRoute: AuthenticatedWeeklyPosterRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminUpgradeRequestsIndexRoute:
@@ -877,6 +1046,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
+  RequestStatusRoute: RequestStatusRoute,
   ResourcesRoute: ResourcesRoute,
   ServicesRoute: ServicesRoute,
   BlogTokenRoute: BlogTokenRoute,
