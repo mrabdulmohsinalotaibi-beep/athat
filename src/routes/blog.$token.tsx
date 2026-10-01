@@ -258,7 +258,7 @@ function PublicCounselorBlogPage() {
 
           <div className="order-2 flex min-w-0 items-center justify-center gap-3 text-center">
             <img
-              src={profile?.logo_url || "/brand-icon.svg?v=20261001d"}
+              src={profile?.logo_url || "/brand-icon.svg?v=20261001e"}
               alt="شعار بوابة التوجيه الطلابي"
               className="size-10 shrink-0 rounded-xl bg-white/95 object-contain p-1"
             />
