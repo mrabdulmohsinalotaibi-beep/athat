@@ -91,7 +91,7 @@ export function WeeklyGuidancePoster() {
 
   const watermarkStyle = useMemo(
     () => ({
-      backgroundImage: watermarkBackground(school?.school_name || "منصة الذات"),
+      backgroundImage: watermarkBackground(school?.school_name || "الذات"),
       backgroundRepeat: "repeat" as const,
     }),
     [school?.school_name],
@@ -256,7 +256,7 @@ export function WeeklyGuidancePoster() {
             {/* تذييل البوستر */}
             <div className="relative mt-8 flex items-center justify-between border-t border-[#c69f70]/40 pt-3 text-xs font-medium text-[#76685a]">
               <span>الموجه الطلابي: {school?.counselor_name || "—"}</span>
-              <span>منصة الذات للتوجيه الطلابي</span>
+              <span>الذات للتوجيه الطلابي</span>
             </div>
           </div>
         </div>
