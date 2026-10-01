@@ -192,11 +192,20 @@ function PublicCounselorBlogPage() {
         href: formHref("/forms/referral"),
         icon: HeartHandshake,
       },
+      feedback: {
+        title: "رأيك ومقترحك",
+        description: "أرسل ملاحظة أو مقترحًا لتحسين خدمات التوجيه الطلابي.",
+        href: feedback ? `/feedback/${feedback}` : "",
+        icon: Megaphone,
+      },
     };
 
-    if (audience === "teacher") return [common.referral, common.consultation];
-    if (audience === "parent") return [common.consultation, common.appointment, common.report];
-    return [common.consultation, common.appointment, common.report];
+    const withFeedback = (items: typeof common.consultation[]) =>
+      feedback ? [...items, common.feedback] : items;
+
+    if (audience === "teacher") return withFeedback([common.referral, common.consultation]);
+    if (audience === "parent") return withFeedback([common.consultation, common.appointment, common.report]);
+    return withFeedback([common.consultation, common.appointment, common.report]);
   }, [audience, formParams]);
 
   if (isLoading) {
