@@ -23,6 +23,11 @@ export interface RecordConfig {
 export const STAGES = ["ابتدائي", "متوسط", "ثانوي"] as const;
 export const GRADES = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"] as const;
 export const CLASSROOMS = ["1", "2", "3", "4", "5", "6", "7", "8"] as const;
+export const GRADES_BY_STAGE: Record<string, readonly string[]> = {
+  "ابتدائي": ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"],
+  "متوسط": ["الأول", "الثاني", "الثالث"],
+  "ثانوي": ["الأول", "الثاني", "الثالث"],
+};
 
 export const DOMAINS = ["وقائي", "إنمائي", "علاجي", "تنظيمي", "أكاديمي", "سلوكي", "اجتماعي", "نفسي", "صحي"] as const;
 export const PRIORITIES = ["منخفضة", "متوسطة", "عالية"] as const;
@@ -54,7 +59,7 @@ export const RECORDS: RecordConfig[] = [
       { name: "gender", label: "الجنس", type: "select", options: ["ذكر", "أنثى"] },
       { name: "stage", label: "المرحلة", type: "select", options: STAGES, list: true },
       { name: "grade", label: "الصف", type: "select", options: GRADES, list: true },
-      { name: "classroom", label: "الفصل", type: "select", options: CLASSROOMS, list: true },
+      { name: "classroom", label: "الفصل", type: "select", options: CLASSROOMS, list: true, lookupCategory: "classrooms" },
       { name: "guardian_name", label: "ولي الأمر", list: true },
       { name: "guardian_phone", label: "جوال ولي الأمر", list: true },
       { name: "address", label: "السكن" },
