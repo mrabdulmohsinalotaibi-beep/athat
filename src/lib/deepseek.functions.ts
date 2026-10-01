@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -44,29 +43,16 @@ const SYSTEM_PROMPT = `أنت مساعد مهني لمنصة "الذات" للت
 - أعد JSON فقط بالشكل: {"suggestions":{"field_name":"النص المقترح"}}.
 - أعد فقط الحقول التي يمكن اقتراحها بثقة، ولا تكرر الحقول الموجودة أصلًا.`;
 
-function getServerSetting(name: string) {
-  // Nitro v3 attaches Cloudflare bindings to the per-request runtime.
-  // Reading them here keeps secrets request-scoped and server-only.
-  const request = getRequest() as Request & {
-    runtime?: {
-      cloudflare?: {
-        env?: Record<string, unknown>;
-      };
-    };
-  };
-  const cloudflareValue = request.runtime?.cloudflare?.env?.[name];
+function getServerSetting(name: string, context?: unknown) {
+  const requestContext = context as
+    | { cloudflareEnv?: Record<string, unknown> }
+    | undefined;
+  const cloudflareValue = requestContext?.cloudflareEnv?.[name];
   if (typeof cloudflareValue === "string" && cloudflareValue.trim()) {
     return cloudflareValue.trim();
   }
 
-  // Fallbacks support local Node development and older deployment adapters.
-  const bridgedValue = (
-    globalThis as typeof globalThis & {
-      __ATHAT_SERVER_ENV__?: Record<string, string>;
-    }
-  ).__ATHAT_SERVER_ENV__?.[name]?.trim();
-  if (bridgedValue) return bridgedValue;
-
+  // TanStack documents process.env as the normal server-function fallback.
   const processValue =
     typeof process !== "undefined" ? process.env[name]?.trim() : undefined;
   return processValue || undefined;
@@ -86,16 +72,16 @@ function cleanSuggestions(value: unknown, allowedNames: Set<string>) {
 
 export const checkSmartFillReady = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => ({
-    ready: Boolean(getServerSetting("DEEPSEEK_API_KEY")?.trim()),
-    model: getServerSetting("DEEPSEEK_MODEL") || "deepseek-chat",
+  .handler(async ({ context }) => ({
+    ready: Boolean(getServerSetting("DEEPSEEK_API_KEY", context)),
+    model: getServerSetting("DEEPSEEK_MODEL", context) || "deepseek-chat",
   }));
 
 export const generateSmartFill = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(inputSchema)
-  .handler(async ({ data }) => {
-    const apiKey = getServerSetting("DEEPSEEK_API_KEY");
+  .handler(async ({ data, context }) => {
+    const apiKey = getServerSetting("DEEPSEEK_API_KEY", context);
     if (!apiKey) {
       throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
     }
@@ -151,7 +137,7 @@ export const generateSmartFill = createServerFn({ method: "POST" })
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: getServerSetting("DEEPSEEK_MODEL") || "deepseek-chat",
+        model: getServerSetting("DEEPSEEK_MODEL", context) || "deepseek-chat",
         temperature: 0.25,
         response_format: { type: "json_object" },
         messages: [
@@ -241,8 +227,8 @@ function redactAssistantBrief(value: string) {
 export const generateCounselorAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(assistantInputSchema)
-  .handler(async ({ data }) => {
-    const apiKey = getServerSetting("DEEPSEEK_API_KEY");
+  .handler(async ({ data, context }) => {
+    const apiKey = getServerSetting("DEEPSEEK_API_KEY", context);
     if (!apiKey) throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
     const safeBrief = redactAssistantBrief(data.brief);
     const taskLabel =
@@ -260,7 +246,7 @@ export const generateCounselorAssistant = createServerFn({ method: "POST" })
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: getServerSetting("DEEPSEEK_MODEL") || "deepseek-chat",
+        model: getServerSetting("DEEPSEEK_MODEL", context) || "deepseek-chat",
         temperature: 0.3,
         response_format: { type: "json_object" },
         messages: [
