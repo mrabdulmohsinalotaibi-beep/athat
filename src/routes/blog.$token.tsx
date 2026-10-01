@@ -43,7 +43,7 @@ export const Route = createFileRoute("/blog/$token")({
   },
   head: () => ({
     meta: [
-      { title: "بوابة الموجه الطلابي | منصة الذات" },
+      { title: "بوابة الموجه الطلابي | الذات" },
       {
         name: "description",
         content:
@@ -495,7 +495,7 @@ function PublicCounselorBlogPage() {
 
       <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
         <p className="font-bold text-foreground">{schoolName}</p>
-        <p className="mt-1">بوابة الموجه الطلابي · ذات | THAT</p>
+        <p className="mt-1">بوابة الموجه الطلابي · الذات | ATHAT</p>
       </footer>
     </div>
   );
@@ -575,7 +575,7 @@ function PublicContentSection({
                       </Link>
                       <a
                         href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                          `${post.title}\n\n${typeof window !== "undefined" ? window.location.origin : "https://athat.app"}/posts/${encodeURIComponent(post.slug)}\n\nمن منصة الذات`,
+                          `${post.title}\n\n${typeof window !== "undefined" ? window.location.origin : "https://athat.app"}/posts/${encodeURIComponent(post.slug)}\n\nمن الذات`,
                         )}`}
                         target="_blank"
                         rel="noreferrer noopener"
