@@ -885,6 +885,7 @@ export default function MessagesDashboard() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => openOfficialDocument(item)} title="مشاركة كمستند رسمي PDF" aria-label="مشاركة كمستند رسمي"><Share2 className="size-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => void replyToBeneficiary(item)} title="رد مباشر">
                           <Send className="size-4" />
                         </Button>
@@ -900,6 +901,58 @@ export default function MessagesDashboard() {
           </table>
         </div>
       </section>
+
+      {documentMessage && (
+        <section className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-black">مستند المشاركة الرسمي</h2>
+              <p className="text-xs text-muted-foreground">عاين المستند ثم نزّله PDF أو شاركه مباشرة عبر واتساب وتطبيقات الجهاز.</p>
+            </div>
+            <PdfPreviewButton
+              elementRef={documentRef}
+              filename={`مشاركة-${documentMessage.sender_name || "مستفيد"}-${documentMessage.id.slice(0, 8)}.pdf`}
+              title="مشاركة مستفيد"
+            />
+          </div>
+
+          <div className="overflow-auto rounded-lg bg-muted/30 p-2 sm:p-4">
+            <article
+              ref={documentRef}
+              dir="rtl"
+              className="mx-auto flex min-h-[1123px] w-[794px] max-w-none flex-col bg-white text-[#24211f] shadow-sm"
+            >
+              <OfficialHeader
+                school={school}
+                title={`${documentMessage.category} — مشاركة مستفيد`}
+                reportNo={documentMessage.id.slice(0, 8).toUpperCase()}
+              />
+              <main className="flex-1 px-12 py-9 text-[13px] leading-8">
+                <h1 className="mb-7 text-center text-xl font-black text-[#123d49]">مشاركة مستفيد</h1>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-3 rounded-lg border border-[#ddd6cc] bg-[#faf9f7] p-5">
+                  <p><strong>الاسم:</strong> {documentMessage.sender_name || "مستفيد"}</p>
+                  <p><strong>الصفة:</strong> {documentMessage.sender_role || "—"}</p>
+                  <p><strong>نوع المشاركة:</strong> {documentMessage.category || "—"}</p>
+                  <p><strong>تاريخ الاستلام:</strong> {formatHijriDateTime(documentMessage.created_at)}</p>
+                  <p><strong>الحالة:</strong> {documentMessage.status || "—"}</p>
+                  <p><strong>الجهة المسؤولة:</strong> {documentMessage.assigned_to || "الموجه الطلابي"}</p>
+                </div>
+                <section className="mt-7">
+                  <h2 className="mb-2 font-black text-[#123d49]">نص المشاركة</h2>
+                  <div className="min-h-40 whitespace-pre-wrap rounded-lg border border-[#ddd6cc] p-5">{documentMessage.message}</div>
+                </section>
+                {documentMessage.response_note && (
+                  <section className="mt-6">
+                    <h2 className="mb-2 font-black text-[#123d49]">الرد أو الإجراء</h2>
+                    <div className="whitespace-pre-wrap rounded-lg border border-[#ddd6cc] p-5">{documentMessage.response_note}</div>
+                  </section>
+                )}
+              </main>
+              <OfficialFooter school={school} />
+            </article>
+          </div>
+        </section>
+      )}
 
 
     </div>
