@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20261001b" },
+      { rel: "icon", type: "image/svg+xml", href: "/brand-icon.svg?v=20261001c" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261001a" },
     ],
   }),
@@ -71,17 +71,13 @@ function Landing() {
 
         <main className="relative mx-auto flex w-full max-w-6xl flex-col px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-8 sm:pt-8">
           <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
-            <div className="flex items-center gap-3">
+            <div className="brand-hero-panel flex w-full max-w-xl justify-center rounded-[2.25rem] p-6 sm:p-8">
               <img
-                src="/brand-icon.svg?v=20261001b"
+                src="/brand-icon.svg?v=20261001c"
                 alt="شعار الذات"
-                className="size-16 rounded-2xl shadow-sm sm:size-20"
+                className="h-auto w-full max-w-[22rem] drop-shadow-[0_18px_24px_rgba(3,45,102,.16)] sm:max-w-[27rem]"
               />
-              <div className="text-right">
-                <p className="text-3xl font-black leading-none text-[#073B4C] sm:text-4xl">الذات</p>
-              </div>
             </div>
-            <p className="mt-2 text-xs font-bold text-[#52717B]">من التخطيط إلى الأثر</p>
 
             <span className="mt-7 rounded-full border border-[#07566A]/10 bg-white/70 px-3 py-1 text-[11px] font-black text-[#07566A] shadow-sm backdrop-blur">
               نظام التوجيه الطلابي
@@ -152,7 +148,7 @@ function Landing() {
 
           <footer className="mx-auto mt-5 w-full max-w-4xl border-t border-[#07566A]/10 pt-4 text-center">
             <div className="flex items-center justify-center gap-2">
-              <img src="/brand-icon.svg?v=20261001b" alt="" className="size-7 rounded-lg" />
+              <img src="/brand-icon.svg?v=20261001c" alt="" className="size-7 rounded-lg" />
             </div>
             <p className="mt-2 text-[10px] font-semibold text-[#6B7E84]">
               جميع الحقوق محفوظة لـ Abdulmo7sin
