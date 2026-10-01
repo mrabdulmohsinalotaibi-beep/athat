@@ -19,7 +19,7 @@ import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
 export const Route = createFileRoute("/_authenticated/integrations")({
   head: () => ({
     meta: [
-      { title: "مركز نور ومدرستي | منصة الذات" },
+      { title: "مركز نور ومدرستي | الذات" },
       {
         name: "description",
         content:
