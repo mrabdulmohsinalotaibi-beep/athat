@@ -52,7 +52,7 @@ export function PublicLayout({
 
   return (
     <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
-      {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-sidebar-border bg-sidebar text-white backdrop-blur-xl">
+      {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-[#176678] bg-[#073B4C] text-white backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
