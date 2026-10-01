@@ -71,13 +71,13 @@ function FreeDocumentsPage() {
   async function remove() {
     if (!selectedId || !confirm("حذف هذا المستند؟")) return;
     const { error } = await (supabase as any).from("free_documents").delete().eq("id", selectedId);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     fresh(); queryClient.invalidateQueries({ queryKey: ["free-documents"] }); toast.success("تم حذف المستند");
   }
 
   async function duplicate() {
     const { data, error } = await (supabase as any).from("free_documents").insert({ title: title + " - نسخة", document_no: null, content }).select().single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     load(data as FreeDoc); queryClient.invalidateQueries({ queryKey: ["free-documents"] }); toast.success("تم إنشاء نسخة");
   }
 
