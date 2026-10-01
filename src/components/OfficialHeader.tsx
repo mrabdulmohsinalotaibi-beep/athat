@@ -11,7 +11,7 @@ function AthatDocumentMark() {
     <svg
       viewBox="0 0 180 300"
       role="img"
-      aria-label="شعار ذات"
+      aria-label="شعار الذات"
       className="h-11 w-8 shrink-0"
     >
       <defs>
@@ -155,10 +155,10 @@ export function OfficialFooter({
 
       <div data-pdf-footer="true" className="official-footer-brand">
         <span className="official-footer-line official-footer-line-right" aria-hidden="true" />
-        <div className="official-footer-logo" aria-label="ذات THAT">
+        <div className="official-footer-logo" aria-label="الذات ATHAT">
           <div className="text-center leading-none">
-            <p className="text-[18px] font-black text-[#07566a]">ذات</p>
-            <p className="mt-1 text-[7px] font-black tracking-[0.28em] text-[#c79a5b]">THAT</p>
+            <p className="text-[18px] font-black text-[#07566a]">الذات</p>
+            <p className="mt-1 text-[7px] font-black tracking-[0.28em] text-[#c79a5b]">ATHAT</p>
           </div>
           <AthatDocumentMark />
         </div>
