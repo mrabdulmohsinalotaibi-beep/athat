@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
     links: [
       { rel: "canonical", href: "https://athat.app/" },
       { rel: "icon", type: "image/svg+xml", href: "/brand-final.svg?v=20261001-finalbrandbrand" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261001-finalbrand" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261002-ios2" },
     ],
   }),
   component: Landing,
