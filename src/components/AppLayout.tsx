@@ -338,7 +338,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     {workspaceSchool?.name || school?.school_name || "اسم المدرسة غير محدد"}
                   </p>
                   <span className="hidden rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-[#D8F1EE] sm:inline-flex">
-                    منصة الذات
+                    الذات
                   </span>
                 </div>
                 <p className="mt-0.5 truncate text-[11px] font-medium text-[#C7E4E1] sm:text-xs">
