@@ -62,7 +62,7 @@ jobs:
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
             mkdir -p "$dir"
-            convert public/brand-logo.png -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "$dir/ic_launcher.png"
+            convert "public/brand-logo.png[0]" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher.png"
             cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
           done
           # Keep the adaptive-icon background and foreground consistent with the same identity.
@@ -77,7 +77,7 @@ jobs:
             density="${spec%%:*}"
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
-            convert public/brand-logo.png -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "$dir/ic_launcher_foreground.png"
+            convert "public/brand-logo.png[0]" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher_foreground.png"
           done
 
       - name: Build installable APK
