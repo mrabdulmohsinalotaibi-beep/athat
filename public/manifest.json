@@ -4,9 +4,9 @@
   "description": "الذات لإدارة أعمال الموجه الطلابي ودعم التوجيه النفسي والتربوي.",
   "icons": [
     {
-      "src": "/brand-icon.svg?v=20261001-brand2",
+      "src": "/brand-logo.png?v=20261001-brand3",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
