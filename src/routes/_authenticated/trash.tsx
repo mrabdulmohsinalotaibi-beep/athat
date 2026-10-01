@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/trash")({
   head: () => ({
     meta: [
       { title: "حماية البيانات | الذات" },
-      { name: "description", content: "سلة المحذوفات وسجل العمليات لحماية بيانات منصة الذات." },
+      { name: "description", content: "سلة المحذوفات وسجل العمليات لحماية بيانات الذات." },
     ],
   }),
   component: DataProtectionPage,
