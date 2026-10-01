@@ -1,29 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="شعار ذات" data-brand-version="20261001-mobile3">
-  <defs>
-    <linearGradient id="bg" x1="72" y1="48" x2="438" y2="472" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#073B4C"/>
-      <stop offset="1" stop-color="#0B5263"/>
-    </linearGradient>
-    <linearGradient id="teal" x1="164" y1="355" x2="326" y2="111" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#1C8F92"/>
-      <stop offset="1" stop-color="#63C7C2"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="275" y1="371" x2="380" y2="159" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#C99548"/>
-      <stop offset="1" stop-color="#E5C27B"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#032A35" flood-opacity=".28"/>
-    </filter>
-  </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="256" cy="250" r="166" fill="#FFFFFF" opacity=".035"/>
-  <g filter="url(#shadow)">
-    <path d="M253 404c-13-69-2-118 31-159 29-36 56-68 61-124 42 64 30 135-17 181-28 28-51 54-75 102Z" fill="url(#gold)"/>
-    <path d="M223 401c-49-56-68-111-52-166 14-47 56-79 74-142 24 62 12 118-27 160-31 34-38 85 5 148Z" fill="url(#teal)"/>
-    <path d="M246 405c-16-52-7-94 27-127 36-35 61-73 62-124 26 57 9 111-31 148-30 28-47 61-58 103Z" fill="#F7F0E4"/>
-    <path d="M222 402c12-45 35-80 69-105 45-34 72-75 79-123 18 61-5 117-51 151-39 29-68 54-97 77Z" fill="#0A5F70" opacity=".94"/>
-    <path d="M217 402c-30-36-44-71-41-105 3-35 22-67 53-99-7 47 4 82 31 106-27 25-41 58-43 98Z" fill="#E7D8B7"/>
-  </g>
-  <path d="M128 429c74 21 182 21 256 0" fill="none" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="2" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254" role="img" aria-label="الذات | ATHAT">
+<rect width="1254" height="1254" fill="#fff"/>
+<defs>
+ <linearGradient id="g" x1="0" y1="1" x2=".65" y2="0"><stop offset="0" stop-color="#043763"/><stop offset=".38" stop-color="#057696"/><stop offset=".62" stop-color="#1199aa"/><stop offset=".78" stop-color="#42afa0"/><stop offset=".9" stop-color="#85d2be"/><stop offset="1" stop-color="#e0c789"/></linearGradient>
+</defs>
+<g fill="url(#g)">
+<path d="M1054 966V198q0-58 59-58h9q68 0 68 80v742q0 128-67 128h-9q-60 0-60-124Z"/>
+<path d="M889 965V214q0-75 63-75h10q64 0 64 91v727q0 133-80 133H577q-25 0-25-56v-25q0-43 47-43h53q42 0 42-64V666q0-30 13-30 14 0 14 30v232q0 44 24 44 112 0 112-126V588q0-84-71-84H626q-73 0-73 80v281q0 79 60 79h22q58 0 58-76V649q0-13 14-13t14 13v239q0 84-83 84h-42q-44 0-44 55v17q0 46 50 46h334q90 0 90-133V220q0-81-64-81h-10q-63 0-63 75v751Z"/>
+<path d="M391 1012V219q0-78 60-78h8q66 0 66 89v772q0 89-61 89h-11q-62 0-62-79Z"/>
+<path d="M56 594q0-94 63-94h15q62 0 62 94v348q0 24 12 24 12 0 12-24V594q0-94 62-94h16q63 0 63 94v350q0 146-91 146H148q-92 0-92-146V594Z"/>
+<rect x="56" y="338" width="141" height="136" rx="35"/>
+<rect x="219" y="338" width="142" height="136" rx="35"/>
+<rect x="636" y="340" width="138" height="135" rx="35"/>
+</g>
+<g opacity=".48" fill="#e0c789">
+ <path d="M56 338h141v56c-42-23-89-42-141-57Z"/>
+ <path d="M391 141h134v276c-25-102-68-172-134-201Z"/>
+ <path d="M889 139h137v304c-73-30-119-79-137-145Z"/>
+ <path d="M1054 140h136v344c-38-70-83-124-136-164Z"/>
+</g>
+<g opacity=".32" fill="#85d2be">
+ <path d="M219 338h142v135c-43-66-90-103-142-113Z"/>
+ <path d="M391 216c71 29 113 101 134 203v164c-39-87-83-153-134-197Z"/>
+ <path d="M553 505h233c40 0 71 21 71 83v178c-66-101-165-172-304-207Z"/>
+ <path d="M889 298c22 67 67 116 137 145v142c-66-22-111-58-137-109Z"/>
+ <path d="M1054 320c55 38 101 92 136 164v170c-37-79-83-140-136-181Z"/>
+</g>
 </svg>
