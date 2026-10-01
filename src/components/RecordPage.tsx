@@ -29,7 +29,7 @@ import { displayRecordValue } from "@/lib/display";
 import { formatHijriDate } from "@/lib/date";
 import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
-import { checkSmartFillReady, generateSmartFill } from "@/lib/deepseek.functions";
+import { generateSmartFill } from "@/lib/deepseek.functions";
 import type { RecordConfig } from "@/lib/records";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import {
@@ -95,7 +95,6 @@ export function RecordPage({
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
   const [smartFilling, setSmartFilling] = useState(false);
-  const [smartChecking, setSmartChecking] = useState(false);
   const [smartPromptOpen, setSmartPromptOpen] = useState(false);
   const [smartPrompt, setSmartPrompt] = useState("");
   const needsStudentOptions = config.fields.some((field) => field.student);
@@ -399,8 +398,8 @@ export function RecordPage({
     }
   }
 
-  async function openSmartFill() {
-    if (smartFilling || smartChecking) return;
+  function openSmartFill() {
+    if (smartFilling) return;
 
     const form = document.getElementById("record-form");
     const liveData = form instanceof HTMLFormElement ? new FormData(form) : null;
@@ -417,23 +416,10 @@ export function RecordPage({
       return;
     }
 
-    setSmartChecking(true);
-    try {
-      const status = await checkSmartFillReady();
-      if (!status.ready) {
-        toast.error(
-          "التعبئة الذكية غير مهيأة على الخادم. أضف DEEPSEEK_API_KEY إلى بيئة Cloudflare ثم أعد النشر.",
-        );
-        return;
-      }
-
-      setSmartPrompt("");
-      setSmartPromptOpen(true);
-    } catch (error) {
-      toast.error((error as Error).message || "تعذّر التحقق من جاهزية التعبئة الذكية.");
-    } finally {
-      setSmartChecking(false);
-    }
+    // Do not block the user on a separate readiness probe. The real POST below
+    // validates the Cloudflare secret and returns the precise DeepSeek error.
+    setSmartPrompt("");
+    setSmartPromptOpen(true);
   }
 
   async function handleRewrite(fieldName: string, fieldLabel: string) {
