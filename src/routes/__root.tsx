@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "الذات | ATHAT — التوجيه الطلابي وعلم النفس" },
       {
         name: "description",
-        content: "منصة الذات للتوجيه الطلابي والدعم النفسي والتربوي وإدارة أعمال الموجه الطلابي إلكترونياً.",
+        content: "الذات للتوجيه الطلابي والدعم النفسي والتربوي وإدارة أعمال الموجه الطلابي إلكترونياً.",
       },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/icon-512x512.png?v=20261001a" },
