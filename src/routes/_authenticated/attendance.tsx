@@ -9,7 +9,7 @@ import { recordByKey } from "@/lib/records";
 import { readEtqanAttendancePdf, type EtqanAttendanceRow } from "@/lib/etqan-pdf";
 import { supabase } from "@/integrations/supabase/client";
 
-type PreviewRow = EtqanAttendanceRow & { studentId?: string; studentNo?: string; matchedName?: string; status: "new" | "duplicate" | "review" };
+type PreviewRow = EtqanAttendanceRow & { studentId: string | null; studentNo: string | null; matchedName: string | null; status: "new" | "duplicate" | "review" };
 
 export const Route = createFileRoute("/_authenticated/attendance")({
   head: () => ({
@@ -66,9 +66,9 @@ function AttendancePage() {
 
       const preview: PreviewRow[] = parsed.map((row) => {
         const student = studentById.get(row.nationalId);
-        if (!student) return { ...row, status: "review" as const } satisfies PreviewRow;
+        if (!student) return { ...row, studentId: null, studentNo: null, matchedName: null, status: "review" as const };
         const key = String(student.id || student.student_no || "") + "|" + row.date;
-        return { ...row, studentId: student.id, studentNo: student.student_no ?? undefined, matchedName: student.full_name || row.studentName, status: existing.has(key) ? "duplicate" as const : "new" as const } satisfies PreviewRow;
+        return { ...row, studentId: student.id, studentNo: student.student_no, matchedName: student.full_name || row.studentName, status: existing.has(key) ? "duplicate" as const : "new" as const };
       });
       setRows(preview);
       toast.success("تمت قراءة ومطابقة " + preview.length + " سجلًا من كشف إتقان.");
