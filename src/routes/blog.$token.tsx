@@ -117,6 +117,10 @@ function PublicCounselorBlogPage() {
   const { token } = Route.useParams();
   const { school: schoolFromLink, feedback } = Route.useSearch();
   const [audience, setAudience] = useState<Audience>("student");
+  const [contributionOpen, setContributionOpen] = useState(false);
+  const [contributionSent, setContributionSent] = useState(false);
+  const [contributionSaving, setContributionSaving] = useState(false);
+  const [contribution, setContribution] = useState({ name: "", role: "", title: "", body: "" });
 
   const {
     data = [],
@@ -247,14 +251,15 @@ function PublicCounselorBlogPage() {
     <div dir="rtl" className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-[#176678] bg-[#073B4C] text-white shadow-sm">
         <div className="mx-auto grid max-w-7xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-3 px-4 py-3 sm:px-8">
-          <Link
-            to="/"
-            aria-label="الانتقال إلى الصفحة الرئيسية لمنصة ذات"
-            title="الرئيسية"
+          <button
+            type="button"
+            onClick={() => window.history.length > 1 ? window.history.back() : window.location.assign("/")}
+            aria-label="رجوع"
+            title="رجوع"
             className="order-3 grid size-10 place-items-center justify-self-start rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/15"
           >
-            <Home className="size-4.5" />
-          </Link>
+            <ArrowLeft className="size-4.5 rotate-180" />
+          </button>
 
           <div className="order-2 flex min-w-0 items-center justify-center gap-3 text-center">
             <img
@@ -282,15 +287,15 @@ function PublicCounselorBlogPage() {
       <main>
         <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-bl from-primary/12 via-background to-accent/15">
           <div className="absolute -left-20 -top-20 size-64 rounded-full border border-primary/10" />
-          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-8 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-8 sm:py-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
             <div className="relative">
               <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card px-3 py-1 text-xs font-bold text-primary">
                 <Sparkles className="size-3.5" /> بوابة التوجيه الطلابي
               </span>
-              <h1 className="mt-5 max-w-3xl text-3xl font-black leading-tight tracking-tight sm:text-5xl">
+              <h1 className="mt-3 max-w-3xl text-2xl font-black leading-tight tracking-tight sm:mt-5 sm:text-5xl">
                 الموجه الطلابي أقرب إليك.
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:mt-4 sm:text-base sm:leading-8">
                 اختر صفتك للوصول مباشرة إلى الخدمة المناسبة، أو تابع محتوى وبرامج التوجيه الطلابي في المدرسة.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
@@ -418,7 +423,51 @@ function PublicCounselorBlogPage() {
           </div>
         </section>
 
-        <section id="services" className="mx-auto max-w-7xl px-4 py-12 sm:px-8 sm:py-16">
+        <section className="mx-auto max-w-3xl px-4 py-7 sm:px-8">
+          <div className="rounded-3xl border border-primary/20 bg-card p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="rounded-2xl bg-primary/10 p-3 text-primary"><FileText className="size-5" /></span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black text-primary">شارك في الصفحة الإعلامية</p>
+                <h2 className="mt-1 text-lg font-black">اكتب باسمك وصفتك</h2>
+                <p className="mt-1 text-xs leading-6 text-muted-foreground">الطالب وولي الأمر والمعلم يمكنهم إرسال مشاركة. لا تظهر للعامة إلا بعد موافقة الموجه الطلابي.</p>
+              </div>
+            </div>
+            {!contributionOpen ? (
+              <button type="button" onClick={() => setContributionOpen(true)} className="mt-4 w-full rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground">إرسال مشاركة للنشر</button>
+            ) : contributionSent ? (
+              <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800">تم استلام مشاركتك للمراجعة. ستظهر باسمك وصفتك بعد اعتماد الموجه.</div>
+            ) : (
+              <form className="mt-4 space-y-3" onSubmit={async (event) => {
+                event.preventDefault();
+                setContributionSaving(true);
+                const result = await (supabase as any).rpc("submit_counselor_contribution", {
+                  p_token: token,
+                  p_author_name: contribution.name,
+                  p_author_role: contribution.role,
+                  p_title: contribution.title,
+                  p_body: contribution.body,
+                });
+                setContributionSaving(false);
+                if (result.error) { window.alert(result.error.message); return; }
+                setContributionSent(true);
+              }}>
+                <div className="grid grid-cols-2 gap-2">
+                  <input required minLength={2} value={contribution.name} onChange={(e) => setContribution({ ...contribution, name: e.target.value })} placeholder="الاسم" className="h-11 rounded-xl border bg-background px-3 text-sm" />
+                  <input required minLength={2} value={contribution.role} onChange={(e) => setContribution({ ...contribution, role: e.target.value })} placeholder="الصفة: طالب، معلم…" className="h-11 rounded-xl border bg-background px-3 text-sm" />
+                </div>
+                <input required minLength={3} value={contribution.title} onChange={(e) => setContribution({ ...contribution, title: e.target.value })} placeholder="عنوان المشاركة" className="h-11 w-full rounded-xl border bg-background px-3 text-sm" />
+                <textarea required minLength={10} rows={5} value={contribution.body} onChange={(e) => setContribution({ ...contribution, body: e.target.value })} placeholder="اكتب مشاركتك…" className="w-full rounded-xl border bg-background p-3 text-sm leading-6" />
+                <div className="flex gap-2">
+                  <button disabled={contributionSaving} className="flex-1 rounded-xl bg-primary py-3 text-sm font-black text-primary-foreground">{contributionSaving ? "جارٍ الإرسال…" : "إرسال للمراجعة"}</button>
+                  <button type="button" onClick={() => setContributionOpen(false)} className="rounded-xl border px-4 text-sm font-bold">إلغاء</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
+
+        <section id="services" className="mx-auto hidden max-w-7xl px-4 py-12 sm:block sm:px-8 sm:py-16">
           <div>
             <p className="text-sm font-bold text-primary">مجالات الدعم</p>
             <h2 className="mt-1 text-2xl font-black sm:text-3xl">خدمات التوجيه الطلابي</h2>
