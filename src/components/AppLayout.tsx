@@ -202,11 +202,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="brand-mark-well flex size-16 shrink-0 items-center justify-center rounded-xl p-0.5 ring-2 ring-sidebar-primary/40">
-              <img src="/brand-icon.svg?v=20261001e" alt="شعار الذات" className="size-full object-contain" />
+              <img src="/brand-icon.svg?v=20261001f" alt="شعار الذات" className="size-full object-contain" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-sidebar-primary">الذات</p>
-              <p className="mt-1 text-xs text-sidebar-foreground/70">منصة الموجه الطلابي</p>
+              <p className="text-xs font-bold text-sidebar-foreground/70">نظام التوجيه الطلابي</p>
             </div>
           </div>
         </div>
@@ -326,9 +325,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
               <div className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-[#073B4C] shadow-[0_10px_30px_-18px_rgba(0,0,0,.9)]">
                 <img
-                  src="/brand-icon.svg?v=20261001e"
+                  src="/brand-icon.svg?v=20261001f"
                   alt="شعار الذات"
-                  className="size-[50px] object-cover sm:size-[56px]"
+                  className="size-[50px] object-contain p-1 sm:size-[56px]"
                 />
               </div>
 
@@ -337,9 +336,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <p className="truncate text-base font-black tracking-tight text-white sm:text-lg">
                     {workspaceSchool?.name || school?.school_name || "اسم المدرسة غير محدد"}
                   </p>
-                  <span className="hidden rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-[#D8F1EE] sm:inline-flex">
-                    الذات
-                  </span>
+                  
                 </div>
                 <p className="mt-0.5 truncate text-[11px] font-medium text-[#C7E4E1] sm:text-xs">
                   {workspaceSchool?.education_dept || school?.education_dept || "بيانات إدارة التعليم غير محددة"}
