@@ -48,7 +48,10 @@ export function OfficialHeader({
             alt="شعار وزارة التعليم"
             width={150}
             height={88}
-            className="official-ministry-logo h-[72px] w-[140px] object-contain"\n          />\n          <AthatDocumentMark />\n        </section>
+            className="official-ministry-logo h-[72px] w-[140px] object-contain"
+          />
+          <AthatDocumentMark />
+        </section>
 
         <section
           className="official-document-meta flex min-h-[7.75rem] flex-col items-center justify-center text-center text-[10px] leading-[1.9]"
