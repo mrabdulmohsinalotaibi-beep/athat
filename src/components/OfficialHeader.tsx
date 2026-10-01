@@ -9,67 +9,70 @@ function todayDate() {
 export function OfficialHeader({
   school,
   title,
-  reportType,
   reportNo,
-  period,
+  attachments,
 }: {
   school?: SchoolSettings | null | undefined;
   title: string;
   reportType?: string | undefined;
   reportNo?: string | undefined;
   period?: string | undefined;
+  attachments?: string | number | undefined;
 }) {
   return (
-    <header data-pdf-header="true" className="official-letterhead bg-white text-[#272727]">
-      <div className="official-letterhead-accent" />
+    <header data-pdf-header="true" className="official-letterhead bg-white text-[#123d49]">
+      <div className="official-header-corner official-header-corner-right" aria-hidden="true" />
+      <div className="official-header-corner official-header-corner-left" aria-hidden="true" />
 
-      <div className="official-header-grid grid grid-cols-[1fr_auto_1fr] items-start gap-5 px-7 pb-4 pt-5">
-        <section className="official-authority-block text-right text-[10px] leading-[1.85]">
-          <p className="text-[11px] font-black">المملكة العربية السعودية</p>
-          <p className="font-bold">وزارة التعليم</p>
+      <div className="official-header-grid grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-9 pb-4 pt-6">
+        <section
+          className="official-authority-block flex min-h-[7.5rem] flex-col items-center justify-center text-center text-[10.5px] font-bold leading-[1.9]"
+          dir="rtl"
+        >
+          <p className="text-[11.5px] font-black">المملكة العربية السعودية</p>
+          <p className="font-black">وزارة التعليم</p>
           <p>{school?.education_dept || "إدارة التعليم"}</p>
-          <p className="mt-0.5 font-bold">{school?.school_name || "اسم المدرسة"}</p>
+          <p className="font-black">{school?.school_name || "اسم المدرسة"}</p>
         </section>
 
-        <section className="official-ministry-block flex min-w-32 flex-col items-center">
+        <section className="official-ministry-block flex min-w-40 flex-col items-center justify-center">
           <img
             src={school?.ministry_logo_url || moeLogo}
             alt="شعار وزارة التعليم"
-            width={132}
-            height={82}
-            className="official-ministry-logo h-[72px] w-[132px] object-contain"
+            width={150}
+            height={88}
+            className="official-ministry-logo h-[82px] w-[150px] object-contain"
           />
-          <div className="mt-2 h-px w-20 bg-[#b8aea0]" />
         </section>
 
-        <section className="official-document-meta text-left text-[9.5px] leading-[1.8]" dir="rtl">
-          <div className="inline-grid min-w-[11.5rem] gap-0.5 text-right">
-            <p><span className="font-black">العام الدراسي:</span> {school?.academic_year || "—"}</p>
-            <p><span className="font-black">الفصل الدراسي:</span> {school?.semester || "—"}</p>
-            {reportNo && <p><span className="font-black">رقم المستند:</span> {reportNo}</p>}
-            {period && <p><span className="font-black">الفترة:</span> {period}</p>}
-          </div>
+        <section
+          className="official-document-meta flex min-h-[7.5rem] flex-col items-center justify-center text-center text-[10px] leading-[1.9]"
+          dir="rtl"
+        >
+          <p>
+            <span className="font-black">رقم المستند:</span>{" "}
+            <span>{reportNo || "........................"}</span>
+          </p>
+          <p>
+            <span className="font-black">التاريخ:</span>{" "}
+            <span>{todayDate()}</span>
+          </p>
+          <p className="max-w-[13rem]">
+            <span className="font-black">الموضوع:</span>{" "}
+            <span>{title}</span>
+          </p>
+          <p>
+            <span className="font-black">المرفقات:</span>{" "}
+            <span>{attachments ?? "—"}</span>
+          </p>
         </section>
       </div>
 
-      <div className="official-title-band mx-7 border-y border-[#d8d2c8] py-3.5 text-center">
-        <p className="text-[9px] font-bold text-[#756f67]">
-          {reportType || "مستند رسمي"}
-        </p>
-        <h2 className="official-document-title mx-auto mt-1 max-w-[92%] text-[19px] font-black leading-relaxed text-[#2f2f2f]">
-          {title}
-        </h2>
+      <div className="official-letterhead-rule" aria-hidden="true">
+        <span className="official-letterhead-rule-teal" />
+        <span className="official-letterhead-emblem">◆</span>
+        <span className="official-letterhead-rule-gold" />
       </div>
-
-      {school?.logo_url && (
-        <div className="official-school-seal absolute bottom-3 left-7">
-          <img
-            src={school.logo_url}
-            alt="شعار المدرسة"
-            className="official-school-logo h-10 max-w-24 object-contain opacity-90"
-          />
-        </div>
-      )}
     </header>
   );
 }
@@ -127,15 +130,16 @@ export function OfficialFooter({
         </div>
       )}
 
-      <div data-pdf-footer="true" className="official-footer-line mx-auto mt-4 w-[94%] text-center">
-        <div className="h-px w-full bg-[#d8d2c8]" />
-        <p className="py-2 text-[8.5px] font-medium text-[#77716a]">
-          <span className="font-black text-[#3c3c3c]">{school?.school_name || "المدرسة"}</span>
-          <span className="mx-2 text-[#b0a79a]">|</span>
-          <span>منصة الذات · ATHAT</span>
-          <span className="mx-2 text-[#b0a79a]">|</span>
-          <span>{todayDate()}</span>
-        </p>
+      <div data-pdf-footer="true" className="official-footer-brand">
+        <span className="official-footer-line official-footer-line-right" aria-hidden="true" />
+        <div className="official-footer-logo" aria-label="ذات THAT">
+          <div className="text-center leading-none">
+            <p className="text-[18px] font-black text-[#07566a]">ذات</p>
+            <p className="mt-1 text-[7px] font-black tracking-[0.28em] text-[#c79a5b]">THAT</p>
+          </div>
+          <img src="/brand-mark.svg" alt="" className="h-11 w-8 object-contain" />
+        </div>
+        <span className="official-footer-line official-footer-line-left" aria-hidden="true" />
       </div>
     </footer>
   );
