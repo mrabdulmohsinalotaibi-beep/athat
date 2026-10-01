@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
   CheckSquare,
   Copy,
@@ -10,6 +10,7 @@ import {
   QrCode,
   RotateCcw,
   Send,
+  Share2,
   Square,
   Star,
   Trash2,
@@ -23,6 +24,8 @@ import { useSchool } from "@/lib/school";
 
 import { normalizeSaudiPhone, shareOnWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
+import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
+import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatHijriDate, formatHijriDateTime } from "@/lib/date";
@@ -143,6 +146,8 @@ export default function MessagesDashboard() {
   const [assignee, setAssignee] = useState("الكل");
 
   const [rotatingLink, setRotatingLink] = useState(false);
+  const [documentMessage, setDocumentMessage] = useState<FeedbackMessage | null>(null);
+  const documentRef = useRef<HTMLDivElement>(null);
 
 
   const { data: messages = [], isLoading, isError } = useQuery({
@@ -245,6 +250,11 @@ export default function MessagesDashboard() {
         ) / rated.length
       ).toFixed(1)
     : "—";
+
+  function openOfficialDocument(item: FeedbackMessage) {
+    setDocumentMessage(item);
+    window.setTimeout(() => documentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
 
   function sendWhatsApp() {
     if (!selected.length) return;
@@ -784,7 +794,7 @@ export default function MessagesDashboard() {
                   <select aria-label="الجهة المسؤولة" value={item.assigned_to || "الموجه الطلابي"} onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")} className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs">{ASSIGNEES.map((value) => <option key={value}>{value}</option>)}</select>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "whatsapp")}><MessageCircle /> رد واتساب</Button>
+                  <Button size="sm" variant="outline" onClick={() => openOfficialDocument(item)}><Share2 /> مستند رسمي</Button>\n                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "whatsapp")}><MessageCircle /> رد واتساب</Button>
                   <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "email")}><Mail /> بريد</Button>
                   <Button size="icon" variant="ghost" className="mr-auto text-destructive" onClick={() => void deleteMessage(item.id)} title="حذف المشاركة" aria-label="حذف المشاركة"><Trash2 /></Button>
                 </div>
