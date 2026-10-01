@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,6 +56,7 @@ export function PublicRequestForm({
 }: PublicRequestFormProps) {
   const [anonymous, setAnonymous] = useState(false);
   const [requestNo, setRequestNo] = useState<string | null>(null);
+  const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const submit = useMutation({
@@ -76,8 +78,29 @@ export function PublicRequestForm({
         p_portal_token: portalToken?.trim() || null,
       };
 
+      const v3 = await (supabase as any).rpc("submit_public_request_v3", args);
+      if (!v3.error && v3.data && typeof v3.data === "object") {
+        return {
+          requestNo: String(v3.data.request_no || "تم الاستلام"),
+          trackingCode:
+            typeof v3.data.tracking_code === "string" ? v3.data.tracking_code : null,
+        };
+      }
+
+      const v3Missing =
+        !v3.error ||
+        /Could not find the function|schema cache|PGRST202|PGRST205|public_requests/i.test(
+          v3.error.message,
+        );
+      if (!v3Missing && v3.error) throw v3.error;
+
       const { data, error } = await (supabase as any).rpc("submit_public_request_v2", args);
-      if (!error) return typeof data === "string" ? data : null;
+      if (!error) {
+        return {
+          requestNo: typeof data === "string" ? data : "تم الاستلام",
+          trackingCode: null,
+        };
+      }
 
       const missingRequestChannel =
         /Could not find the function|schema cache|PGRST202|PGRST205|public_requests/i.test(error.message);
@@ -101,7 +124,12 @@ export function PublicRequestForm({
         p_slug: args.p_slug,
       };
       const legacy = await (supabase as any).rpc("submit_public_request", legacyArgs);
-      if (!legacy.error) return typeof legacy.data === "string" ? legacy.data : null;
+      if (!legacy.error) {
+        return {
+          requestNo: typeof legacy.data === "string" ? legacy.data : "تم الاستلام",
+          trackingCode: null,
+        };
+      }
 
       const legacyMissing =
         /Could not find the function|schema cache|PGRST202|PGRST205|public_requests/i.test(
@@ -136,7 +164,7 @@ export function PublicRequestForm({
         });
 
         if (!feedback.error) {
-          return "تم الاستلام";
+          return { requestNo: "تم الاستلام", trackingCode: null };
         }
       }
 
@@ -162,16 +190,22 @@ export function PublicRequestForm({
         },
       });
 
-      if (typeof fallback === "string") return fallback;
+      if (typeof fallback === "string") {
+        return { requestNo: fallback, trackingCode: null };
+      }
       if (fallback && typeof fallback === "object" && "requestNo" in fallback) {
         const value = (fallback as { requestNo?: unknown }).requestNo;
-        return typeof value === "string" ? value : "تم الاستلام";
+        return {
+          requestNo: typeof value === "string" ? value : "تم الاستلام",
+          trackingCode: null,
+        };
       }
-      return "تم الاستلام";
+      return { requestNo: "تم الاستلام", trackingCode: null };
     },
-    onSuccess: (no) => {
+    onSuccess: (result) => {
       setSubmitted(true);
-      setRequestNo(no?.trim() || "تم الاستلام");
+      setRequestNo(result.requestNo?.trim() || "تم الاستلام");
+      setTrackingCode(result.trackingCode?.trim() || null);
       toast.success("تم إرسال الاستمارة بنجاح");
     },
     onError: (error: Error) => {
@@ -204,14 +238,37 @@ export function PublicRequestForm({
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
           وصل الطلب إلى صندوق الطلبات لدى الموجه الطلابي وسيتم التعامل معه وفق الأولوية.
         </p>
-        <p className="mt-4 inline-flex rounded-full bg-card px-4 py-2 text-sm font-bold">
-          رقم الطلب: {requestNo}
-        </p>
-        <div className="mt-6">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <p className="inline-flex rounded-full bg-card px-4 py-2 text-sm font-bold">
+            رقم الطلب: {requestNo}
+          </p>
+          {trackingCode && (
+            <p className="inline-flex rounded-full bg-card px-4 py-2 text-sm font-bold">
+              رمز التتبع: {trackingCode}
+            </p>
+          )}
+        </div>
+        {trackingCode && (
+          <p className="mx-auto mt-3 max-w-lg text-xs leading-6 text-muted-foreground">
+            احتفظ برقم الطلب ورمز التتبع. لا يمكن الاطلاع على حالة الطلب من الصفحة العامة بدونهما.
+          </p>
+        )}
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {trackingCode && (
+            <Button asChild>
+              <Link
+                to="/request-status"
+                search={{ request: requestNo, code: trackingCode }}
+              >
+                تتبع حالة الطلب
+              </Link>
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => {
               setRequestNo(null);
+              setTrackingCode(null);
               setSubmitted(false);
               setAnonymous(false);
             }}
