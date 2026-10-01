@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated/committees")({
     meta: [
       { title: "اللجان والاجتماعات | الذات" },
       { name: "description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },
-      { property: "og:title", content: "اللجان والاجتماعات | منصة الذات" },
+      { property: "og:title", content: "اللجان والاجتماعات | الذات" },
       { property: "og:description", content: "محاضر لجنة التوجيه الطلابي والقرارات والتوصيات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
