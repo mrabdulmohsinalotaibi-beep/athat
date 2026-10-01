@@ -45,7 +45,7 @@ jobs:
         run: npm install --no-save @capacitor/core@7.4.3 @capacitor/android@7.4.3 @capacitor/cli@7.4.3
 
       - name: Prepare native shell
-        run: cp public/brand-logo.png native-shell/brand-logo.png
+        run: cp public/brand-icon.svg native-shell/brand-icon.svg
 
       - name: Generate Android project
         run: |
