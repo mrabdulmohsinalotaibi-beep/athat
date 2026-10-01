@@ -203,19 +203,13 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <div className="mx-auto flex w-fit items-center gap-4 rounded-[2rem] border border-primary/10 bg-card px-5 py-4 shadow-[var(--shadow-card)]">
+          <div className="brand-hero-panel mx-auto flex w-full max-w-sm justify-center rounded-[2rem] p-5 shadow-[var(--shadow-card)]">
             <img
-              src="/brand-icon.svg?v=20261001b"
+              src="/brand-icon.svg?v=20261001c"
               alt="شعار الذات"
-              className="size-20 rounded-[1.35rem] shadow-lg"
+              className="h-auto w-full max-w-[18rem] drop-shadow-[0_14px_20px_rgba(3,45,102,.16)]"
             />
-            <div className="text-right">
-              <p className="text-3xl font-black leading-none text-primary">الذات</p>
-            </div>
           </div>
-          <p className="mt-3 text-xs font-bold tracking-wide text-primary">
-            علم النفس · التوجيه الطلابي · النمو
-          </p>
         </div>
         <div className="space-y-2 rounded-3xl border bg-card p-6 text-center shadow-[var(--shadow-soft)]">
           <h1 className="text-3xl font-bold tracking-tight">
