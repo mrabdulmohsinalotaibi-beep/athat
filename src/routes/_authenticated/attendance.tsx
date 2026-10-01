@@ -66,9 +66,9 @@ function AttendancePage() {
 
       const preview: PreviewRow[] = parsed.map((row) => {
         const student = studentById.get(row.nationalId);
-        if (!student) return { ...row, status: "review" };
+        if (!student) return { ...row, status: "review" as const };
         const key = String(student.id || student.student_no || "") + "|" + row.date;
-        return { ...row, studentId: student.id, studentNo: student.student_no || undefined, matchedName: student.full_name || row.studentName, status: existing.has(key) ? "duplicate" : "new" };
+        return { ...row, studentId: student.id, studentNo: student.student_no || undefined, matchedName: student.full_name || row.studentName, status: (existing.has(key) ? "duplicate" : "new") as "duplicate" | "new" };
       });
       setRows(preview);
       toast.success("تمت قراءة ومطابقة " + preview.length + " سجلًا من كشف إتقان.");
@@ -81,7 +81,7 @@ function AttendancePage() {
 
   const approveImport = async () => {
     const ready = rows.filter((row) => row.status === "new" && row.studentId);
-    if (!ready.length) return toast.info("لا توجد سجلات جديدة جاهزة للحفظ.");
+    if (!ready.length) { toast.info("لا توجد سجلات جديدة جاهزة للحفظ."); return; }
     setSaving(true);
     try {
       const payload = ready.map((row) => ({
