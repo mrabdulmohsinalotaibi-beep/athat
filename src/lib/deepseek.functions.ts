@@ -308,7 +308,7 @@ export const generateFreeDocument = createServerFn({ method: "POST" })
         temperature: 0.25,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: "أنت مساعد كتابة رسمي لمنصة الذات في المدارس السعودية. اكتب عربية فصيحة مهنية. لا تختلق أسماء أو أرقامًا أو تواريخ أو وقائع. لا تضف تشخيصًا نفسيًا أو طبيًا. أعد JSON فقط بالشكل {\\"text\\":\\"...\\"}." },
+          { role: "system", content: "أنت مساعد كتابة رسمي لمنصة الذات في المدارس السعودية. اكتب عربية فصيحة مهنية. لا تختلق أسماء أو أرقامًا أو تواريخ أو وقائع. لا تضف تشخيصًا نفسيًا أو طبيًا. أعد JSON فقط بالشكل {"text":"..."}." },
           { role: "user", content: JSON.stringify({ المهمة: modeLabel, تعليمات_المستخدم: data.instruction, النص_الحالي: data.currentText }) },
         ],
       }),
