@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Search, X } from "lucide-react";
 
@@ -66,6 +66,7 @@ export function StudentCombobox({
   } = useStudentOptions();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const selectedNames = useMemo(
     () => value.split(/\s*[،,]\s*/).map((name) => name.trim()).filter(Boolean),
@@ -112,7 +113,7 @@ export function StudentCombobox({
           </button>
         )}
       </div>
-      <PopoverContent dir="rtl" align="start" className="w-[min(26rem,94vw)] max-h-[min(32rem,75dvh)] overflow-hidden p-0">
+      <PopoverContent dir="rtl" align="start" sideOffset={6} collisionPadding={12} onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} className="w-[min(26rem,94vw)] max-h-[min(34rem,82dvh)] overflow-hidden p-0">
         <div className="relative border-b p-2">
           <Search className="absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -123,7 +124,7 @@ export function StudentCombobox({
             className="pr-9"
           />
         </div>
-        <div className="max-h-[min(22rem,55dvh)] overflow-y-auto overscroll-contain touch-pan-y p-1 [-webkit-overflow-scrolling:touch]">
+        <div ref={scrollRef} onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()} style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y", overscrollBehavior: "contain" }} className="h-[min(22rem,55dvh)] overflow-y-scroll p-1">
           {isLoading && <p className="p-3 text-center text-xs text-muted-foreground">جارٍ التحميل...</p>}
           {isError && (
             <div className="p-3 text-center text-xs">
