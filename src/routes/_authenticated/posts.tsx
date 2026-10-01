@@ -15,6 +15,8 @@ import {
   ImageIcon,
   Inbox,
   CalendarClock,
+  CheckCircle2,
+  XCircle,
   Search,
   Sparkles,
   Loader2,
@@ -102,6 +104,44 @@ function CounselorPortalManager() {
         .limit(250);
       if (error) throw error;
       return data ?? [];
+    },
+  });
+
+  const { data: contributions = [] } = useQuery({
+    queryKey: ["counselor-contributions"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("counselor_contributions")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const approveContribution = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).rpc("approve_counselor_contribution", { p_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم اعتماد المشاركة ونشرها باسم صاحبها وصفته");
+      qc.invalidateQueries({ queryKey: ["counselor-contributions"] });
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
+      qc.invalidateQueries({ queryKey: ["public-counselor-blog"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const rejectContribution = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from("counselor_contributions")
+        .update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم رفض المشاركة");
+      qc.invalidateQueries({ queryKey: ["counselor-contributions"] });
     },
   });
 
@@ -239,6 +279,32 @@ function CounselorPortalManager() {
           <p className="text-xs text-muted-foreground">إجمالي الطلبات الواردة</p>
         </div>
       </section>
+
+      {contributions.filter((item: any) => item.status === "pending").length > 0 && (
+        <section className="rounded-3xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-amber-700">بانتظار اعتمادك</p>
+              <h2 className="mt-1 text-lg font-black">مشاركات القراء</h2>
+              <p className="mt-1 text-xs text-muted-foreground">راجع الكتابة قبل ظهورها في الصفحة الإعلامية العامة.</p>
+            </div>
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">{contributions.filter((item: any) => item.status === "pending").length}</span>
+          </div>
+          <div className="mt-4 grid gap-3">
+            {contributions.filter((item: any) => item.status === "pending").map((item: any) => (
+              <article key={item.id} className="rounded-2xl border bg-card p-4">
+                <div className="flex flex-wrap items-center gap-2 text-xs"><strong>{item.author_name}</strong><span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">{item.author_role}</span></div>
+                <h3 className="mt-2 font-black">{item.title}</h3>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{item.body}</p>
+                <div className="mt-4 flex gap-2 border-t pt-3">
+                  <Button size="sm" onClick={() => approveContribution.mutate(item.id)} disabled={approveContribution.isPending}><CheckCircle2 className="size-4" /> اعتماد ونشر</Button>
+                  <Button size="sm" variant="outline" onClick={() => rejectContribution.mutate(item.id)} disabled={rejectContribution.isPending}><XCircle className="size-4" /> رفض</Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="grid gap-3 md:grid-cols-3">
         <Link
