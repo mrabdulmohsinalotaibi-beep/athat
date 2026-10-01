@@ -279,3 +279,51 @@ export const generateCounselorAssistant = createServerFn({ method: "POST" })
       throw new Error("تعذّرت قراءة إجابة الذكاء الاصطناعي. حاول مرة أخرى.");
     }
   });
+
+
+const freeDocumentInputSchema = z.object({
+  instruction: z.string().min(3).max(4000),
+  currentText: z.string().max(12000).default(""),
+  mode: z.enum(["write", "rewrite", "expand", "shorten"]).default("write"),
+});
+const freeDocumentOutputSchema = z.object({ text: z.string().min(1).max(12000) });
+
+export const generateFreeDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(freeDocumentInputSchema)
+  .handler(async ({ data, context }) => {
+    const apiKey = getServerSetting("DEEPSEEK_API_KEY", context);
+    if (!apiKey) throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
+    const modeLabel = {
+      write: "اكتب مستندًا جديدًا بناءً على التعليمات",
+      rewrite: "أعد صياغة النص الحالي صياغة رسمية دون إضافة وقائع جديدة",
+      expand: "وسّع النص الحالي بصورة مهنية مع الحفاظ على المعلومات الموجودة فقط",
+      shorten: "اختصر النص الحالي مع الحفاظ على المعنى والمعلومات الأساسية",
+    }[data.mode];
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: getServerSetting("DEEPSEEK_MODEL", context) || "deepseek-chat",
+        temperature: 0.25,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: "أنت مساعد كتابة رسمي لمنصة الذات في المدارس السعودية. اكتب عربية فصيحة مهنية. لا تختلق أسماء أو أرقامًا أو تواريخ أو وقائع. لا تضف تشخيصًا نفسيًا أو طبيًا. أعد JSON فقط بالشكل {\\"text\\":\\"...\\"}." },
+          { role: "user", content: JSON.stringify({ المهمة: modeLabel, تعليمات_المستخدم: data.instruction, النص_الحالي: data.currentText }) },
+        ],
+      }),
+    });
+    if (!response.ok) {
+      if (response.status === 429) throw new Error("تم تجاوز حد طلبات DeepSeek مؤقتًا.");
+      throw new Error("تعذّر الاتصال بخدمة DeepSeek.");
+    }
+    const payload = (await response.json()) as { choices?: Array<{ message?: { content?: string | null } }> };
+    const raw = payload.choices?.[0]?.message?.content?.trim();
+    if (!raw) throw new Error("لم تُرجع خدمة الذكاء الاصطناعي نصًا.");
+    try {
+      const parsed = JSON.parse(raw.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, ""));
+      return freeDocumentOutputSchema.parse(parsed);
+    } catch {
+      throw new Error("تعذّرت قراءة النص المقترح من الذكاء الاصطناعي.");
+    }
+  });
