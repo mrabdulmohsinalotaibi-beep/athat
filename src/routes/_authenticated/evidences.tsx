@@ -10,9 +10,9 @@ import { recordByKey } from "@/lib/records";
 export const Route = createFileRoute("/_authenticated/evidences")({
   head: () => ({
     meta: [
-      { title: "الشواهد والتوثيق | منصة الذات" },
+      { title: "الشواهد والتوثيق | الذات" },
       { name: "description", content: "رفع وتصفح شواهد برامج وأنشطة التوجيه الطلابي." },
-      { property: "og:title", content: "الشواهد والتوثيق | منصة الذات" },
+      { property: "og:title", content: "الشواهد والتوثيق | الذات" },
       { property: "og:description", content: "رفع وتصفح الشواهد المرتبطة بأعمال التوجيه الطلابي." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
