@@ -17,7 +17,7 @@ async function getSession() {
 async function authFetch(path, init = {}) {
   const config = await getConfig();
   const session = await getSession();
-  if (!session?.access_token) throw new Error("سجّل الدخول إلى منصة الذات أولاً.");
+  if (!session?.access_token) throw new Error("سجّل الدخول إلى الذات أولاً.");
   const headers = new Headers(init.headers || {});
   headers.set("apikey", config.publishableKey);
   headers.set("Authorization", `Bearer ${session.access_token}`);
