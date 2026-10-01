@@ -459,12 +459,28 @@ function PortalLinksPanel() {
       url: token ? `${origin}/forms/referral${suffix}` : "",
       teacherOnly: true,
     },
+    {
+      key: "feedback",
+      title: "رابط الرأي والمقترحات",
+      description: "رابط للمستفيدين لإرسال الرأي والمقترحات دون خلطها بسجلات الحالات والطلبات.",
+      icon: Megaphone,
+      url: feedbackToken ? `${origin}/feedback/${feedbackToken}` : "",
+    },
   ];
 
   async function copyLink(url: string, label: string) {
     if (!url) return;
     await navigator.clipboard.writeText(url);
     toast.success(`تم نسخ ${label}`);
+  }
+
+  async function shareLink(url: string, label: string) {
+    if (!url) return;
+    if (navigator.share) {
+      await navigator.share({ title: label, url });
+      return;
+    }
+    await copyLink(url, label);
   }
 
   return (
@@ -524,6 +540,14 @@ function PortalLinksPanel() {
                   onClick={() => void copyLink(item.url, item.title)}
                 >
                   <Copy className="size-4" /> نسخ الرابط
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!item.url}
+                  onClick={() => void shareLink(item.url, item.title)}
+                >
+                  <HeartHandshake className="size-4" /> مشاركة
                 </Button>
                 <Button asChild size="sm" variant="ghost" disabled={!item.url}>
                   <a href={item.url || "#"} target="_blank" rel="noreferrer">
