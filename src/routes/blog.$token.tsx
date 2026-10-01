@@ -15,6 +15,7 @@ import {
   HeartPulse,
   LockKeyhole,
   Megaphone,
+  MessageCircle,
   MessageCircleQuestion,
   School,
   Search,
@@ -552,13 +553,27 @@ function PublicContentSection({
                         {post.body?.trim() && <p className="mt-3 line-clamp-4 whitespace-pre-line text-sm leading-7">{post.body}</p>}
                       </>
                     )}
-                    <Link
-                      to="/posts/$slug"
-                      params={{ slug: post.slug }}
-                      className="mt-4 inline-flex items-center gap-1 text-xs font-black text-primary"
-                    >
-                      فتح المنشور <ArrowLeft className="size-3.5" />
-                    </Link>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <Link
+                        to="/posts/$slug"
+                        params={{ slug: post.slug }}
+                        className="inline-flex items-center gap-1 text-xs font-black text-primary"
+                      >
+                        فتح المنشور <ArrowLeft className="size-3.5" />
+                      </Link>
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                          `${post.title}\n\n${typeof window !== "undefined" ? window.location.origin : "https://athat.app"}/posts/${encodeURIComponent(post.slug)}\n\nمن منصة الذات`,
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-3.5 py-2 text-xs font-black text-white shadow-sm transition hover:bg-[#1da851]"
+                        aria-label={`مشاركة ${post.title} عبر واتساب`}
+                      >
+                        <MessageCircle className="size-4" />
+                        مشاركة عبر واتساب
+                      </a>
+                    </div>
                   </div>
                 </article>
               );
