@@ -541,7 +541,7 @@ export async function sharePdfFile({
   ) {
     await navigator.share({
       title: title || filename,
-      text: "ملف PDF من منصة الذات",
+      text: "ملف PDF من الذات",
       files: [file],
     });
     return "shared" as const;
