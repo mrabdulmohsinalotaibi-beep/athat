@@ -229,34 +229,99 @@ select {
 .official-letterhead {
     position: relative;
     overflow: hidden;
-    padding-bottom: 1rem;
+    padding-bottom: 0.55rem;
     border: 0;
     border-radius: 0;
     background: #fff;
   }
-.official-letterhead-accent {
-    height: 4px;
-    background: linear-gradient(90deg, #3c3c3c 0 78%, #8a8175 78% 100%);
-  }
-.official-title-band {
+.official-header-grid {
     position: relative;
+    z-index: 2;
   }
-.official-title-band::after {
+.official-header-corner {
     position: absolute;
-    bottom: -1px;
-    left: 50%;
-    width: 54px;
-    height: 2px;
-    content: "";
-    transform: translateX(-50%);
-    background: #8a8175;
-  }
-.official-document-meta {
-    color: #5f5a54;
-  }
-.official-school-seal {
+    top: 0;
+    z-index: 1;
+    width: 7.5rem;
+    height: 4.8rem;
+    background: linear-gradient(135deg, #07566a 0 72%, #c79a5b 72% 79%, transparent 79%);
+    opacity: 0.98;
     pointer-events: none;
   }
+.official-header-corner-right {
+    right: -2.2rem;
+    transform: skewX(-18deg);
+  }
+.official-header-corner-left {
+    left: -2.2rem;
+    transform: scaleX(-1) skewX(-18deg);
+  }
+.official-authority-block,
+.official-document-meta {
+    color: #123d49;
+  }
+.official-letterhead-rule {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.55rem;
+    padding-inline: 0;
+  }
+.official-letterhead-rule-teal,
+.official-letterhead-rule-gold {
+    display: block;
+    height: 3px;
+    border-top: 2px solid #07566a;
+    border-bottom: 1px solid #c79a5b;
+  }
+.official-letterhead-emblem {
+    display: grid;
+    width: 1.5rem;
+    height: 1.5rem;
+    place-items: center;
+    color: #c79a5b;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+.official-document-footer {
+    color: #17343d;
+  }
+.official-footer-brand {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 0.85rem;
+    width: 100%;
+    margin-top: 1rem;
+  }
+.official-footer-line {
+    display: block;
+    height: 5px;
+    border-top: 2px solid #07566a;
+    border-bottom: 1px solid #c79a5b;
+  }
+.official-footer-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-width: 5.4rem;
+    padding-bottom: 0.1rem;
+  }
+.official-footer-logo img {
+    display: block;
+  }
+.official-signature-block {
+    color: #36322e;
+  }
+@media print {
+  .official-letterhead,
+  .official-document-footer {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
 }
 html {
   overflow-x: hidden;
