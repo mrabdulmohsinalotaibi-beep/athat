@@ -1,7 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254" role="img" aria-label="شعار الذات">
 <defs>
- <linearGradient id="g" x1=".15" y1="1" x2=".75" y2="0"><stop offset="0" stop-color="#062D66"/><stop offset=".34" stop-color="#075A88"/><stop offset=".58" stop-color="#00A8C4"/><stop offset=".76" stop-color="#42CFAF"/><stop offset=".9" stop-color="#BCE7B4"/><stop offset="1" stop-color="#F2C55C"/></linearGradient>
- <linearGradient id="g2" x1=".1" y1="1" x2=".82" y2="0"><stop offset="0" stop-color="#032A62"/><stop offset=".42" stop-color="#0878A4"/><stop offset=".67" stop-color="#16C5C0"/><stop offset=".84" stop-color="#77D6A4"/><stop offset="1" stop-color="#FFD06A"/></linearGradient>
+ <linearGradient id="g" x1=".18" y1=".96" x2=".78" y2=".04">
+  <stop offset="0" stop-color="#062B63"/>
+  <stop offset=".28" stop-color="#07518A"/>
+  <stop offset=".49" stop-color="#009EBD"/>
+  <stop offset=".67" stop-color="#24C8B3"/>
+  <stop offset=".82" stop-color="#86D9A9"/>
+  <stop offset=".93" stop-color="#D9DEA0"/>
+  <stop offset="1" stop-color="#F5C65B"/>
+ </linearGradient>
+ <linearGradient id="g2" x1=".08" y1=".92" x2=".88" y2=".08">
+  <stop offset="0" stop-color="#05275F"/>
+  <stop offset=".31" stop-color="#075D91"/>
+  <stop offset=".52" stop-color="#00B2C7"/>
+  <stop offset=".70" stop-color="#45D4B1"/>
+  <stop offset=".84" stop-color="#A5E2AF"/>
+  <stop offset="1" stop-color="#FFD36D"/>
+ </linearGradient>
+ <linearGradient id="gold" x1="0" y1="1" x2="1" y2="0">
+  <stop offset="0" stop-color="#73D6AE"/>
+  <stop offset=".45" stop-color="#C8E0A3"/>
+  <stop offset="1" stop-color="#F5C65B"/>
+ </linearGradient>
 </defs>
 <g fill="url(#g)">
 <path d="M1054 966V198q0-58 59-58h9q68 0 68 80v742q0 128-67 128h-9q-60 0-60-124Z"/>
@@ -12,11 +32,19 @@
 <rect x="219" y="338" width="142" height="136" rx="35"/>
 <rect x="636" y="340" width="138" height="135" rx="35"/>
 </g>
-<g opacity=".72" fill="url(#g2)">
+<g opacity=".88" fill="url(#g2)">
 <path d="M56 640c115 38 220 105 305 177v127q0 146-91 146H148q-92 0-92-146Z"/>
 <path d="M391 450c58 43 101 101 134 169v383q0 89-61 89h-11q-62 0-62-79Z"/>
 <path d="M553 658c83 70 179 111 304 136v104q0 44 24 44l8-28v51q0 125-80 125H577q-25 0-25-56v-25q0-43 47-43h53q42 0 42-64V766c-55-18-101-53-141-108Z"/>
 <path d="M889 326c36 56 82 99 137 126v505q0 133-80 133h-57Z"/>
 <path d="M1054 438c57 24 102 66 136 126v398q0 128-67 128h-9q-60 0-60-124Z"/>
+</g>
+<g fill="url(#gold)" opacity=".98">
+ <path d="M56 338h141v50c-45-12-91-27-141-48Z"/>
+ <path d="M219 338h142v58c-44-19-91-33-142-41Z"/>
+ <path d="M391 219q0-78 60-78h8q66 0 66 89v104c-39-58-83-98-134-119Z"/>
+ <path d="M636 340h138v62c-42-23-88-38-138-44Z"/>
+ <path d="M889 214q0-75 63-75h10q64 0 64 91v119c-47-41-93-70-137-88Z"/>
+ <path d="M1054 198q0-58 59-58h9q68 0 68 80v181c-44-44-89-76-136-96Z"/>
 </g>
 </svg>
