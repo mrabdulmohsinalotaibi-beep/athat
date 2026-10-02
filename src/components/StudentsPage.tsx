@@ -10,6 +10,8 @@ import { StudentsImportDialog } from "@/components/StudentsImportDialog";
 import { StudentProfileDialog } from "@/components/StudentProfileDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useStudentOptions } from "@/components/StudentCombobox";
+import { normalizeSaudiGrade, normalizeSaudiStage, SAUDI_STAGE_GRADES } from "@/lib/saudi-school";
 
 
 type StudentRow = Record<string, unknown>;
@@ -74,6 +76,8 @@ export function StudentsPage() {
     );
   }, []);
 
+  const { data: studentOptions = [] } = useStudentOptions();
+
   const { data: filterOptions } = useQuery({
     queryKey: ["students-filter-options"],
     retry: 1,
@@ -82,18 +86,31 @@ export function StudentsPage() {
       const { data, error } = await (supabase as any).rpc("get_student_filter_options");
       if (error) throw error;
       return (data ?? {}) as {
-        stages?: string[];
-        grades?: string[];
-        classrooms?: string[];
         nationalities?: string[];
         statuses?: string[];
       };
     },
   });
 
-  const stages = filterOptions?.stages ?? [];
-  const grades = filterOptions?.grades ?? [];
-  const classrooms = filterOptions?.classrooms ?? [];
+  const stages = ["ابتدائي", "متوسط", "ثانوي"];
+  const grades = stage
+    ? SAUDI_STAGE_GRADES[stage as keyof typeof SAUDI_STAGE_GRADES] ?? []
+    : [];
+
+  const classrooms = Array.from(
+    new Set(
+      studentOptions
+        .filter((student) => {
+          const normalizedStage = normalizeSaudiStage(student.grade) || normalizeSaudiStage((student as any).stage);
+          const actualStage = normalizedStage || normalizeSaudiStage((student as any).stage);
+          if (stage && actualStage !== stage) return false;
+          if (grade && normalizeSaudiGrade(student.grade, actualStage) !== grade) return false;
+          return Boolean(student.classroom?.trim());
+        })
+        .map((student) => student.classroom.trim()),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "ar", { numeric: true }));
+
   const nationalities = filterOptions?.nationalities ?? [];
   const studentStatuses = filterOptions?.statuses ?? [];
 
@@ -130,8 +147,25 @@ export function StudentsPage() {
         }
         filters={
           <>
-            <Filter label="المرحلة" value={stage} options={stages} onChange={setStage} />
-            <Filter label="الصف" value={grade} options={grades} onChange={setGrade} />
+            <Filter
+              label="المرحلة"
+              value={stage}
+              options={stages}
+              onChange={(value) => {
+                setStage(value);
+                setGrade("");
+                setClassroom("");
+              }}
+            />
+            <Filter
+              label="الصف"
+              value={grade}
+              options={grades}
+              onChange={(value) => {
+                setGrade(value);
+                setClassroom("");
+              }}
+            />
             <Filter label="الفصل" value={classroom} options={classrooms} onChange={setClassroom} />
             <details className="rounded-lg border px-3 py-1.5">
               <summary className="cursor-pointer text-xs font-semibold">فلاتر إضافية</summary>
