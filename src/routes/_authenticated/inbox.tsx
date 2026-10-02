@@ -119,7 +119,7 @@ function UnifiedInboxPage() {
 
   return (
     <div dir="rtl" className="space-y-4">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+      <section className="relative overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -141,9 +141,9 @@ function UnifiedInboxPage() {
 
       <div className="grid gap-3 xl:grid-cols-2">
         {data?.guidanceAllowed && (
-          <Link to="/posts" className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] transition hover:border-primary/35">
+          <Link to="/posts" className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] transition hover:border-[#89AA74]">
             <div className="flex items-start justify-between gap-3">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-[#E4ECDF] text-[#264938]">
                 <HeartHandshake className="size-5" />
               </span>
               <strong className="text-2xl">{isLoading ? "—" : guidanceCount}</strong>
@@ -154,9 +154,9 @@ function UnifiedInboxPage() {
           </Link>
         )}
 
-        <Link to="/school-inbox" className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] transition hover:border-primary/35">
+        <Link to="/school-inbox" className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] transition hover:border-[#89AA74]">
           <div className="flex items-start justify-between gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#E4ECDF] text-[#264938]">
               <FileCheck2 className="size-5" />
             </span>
             <strong className="text-2xl">{isLoading ? "—" : administrative.length}</strong>
@@ -168,21 +168,21 @@ function UnifiedInboxPage() {
       </div>
 
       {data?.guidanceAllowed && guidanceCount > 0 && (
-        <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <div className="flex items-center gap-2">
             <MessageSquareText className="size-4 text-primary" />
             <h2 className="text-sm font-black">الوارد من المستفيدين</h2>
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {serviceRequests.slice(0, 4).map((item: any) => (
-              <Link key={item.id} to="/posts" className="rounded-2xl border p-3 transition hover:border-primary/35 hover:bg-primary/[0.02]">
+              <Link key={item.id} to="/posts" className="rounded-2xl border p-3 transition hover:border-[#89AA74] hover:bg-primary/[0.02]">
                 <p className="text-[10px] font-black text-primary">{item.kind || "طلب خدمة"}</p>
                 <p className="mt-1 text-xs font-bold">{item.status || "جديد"}</p>
                 <p className="mt-1 text-[10px] text-muted-foreground">{item.created_at ? new Date(item.created_at).toLocaleString("ar-SA") : ""}</p>
               </Link>
             ))}
             {serviceFeedback.slice(0, 4).map((item: any) => (
-              <Link key={item.id} to="/posts" className="rounded-2xl border p-3 transition hover:border-primary/35 hover:bg-primary/[0.02]">
+              <Link key={item.id} to="/posts" className="rounded-2xl border p-3 transition hover:border-[#89AA74] hover:bg-primary/[0.02]">
                 <p className="flex items-center gap-1 text-[10px] font-black text-primary">
                   {item.category === "إبلاغ سري" && <ShieldAlert className="size-3" />}
                   {item.category || "رسالة"}
@@ -196,14 +196,14 @@ function UnifiedInboxPage() {
       )}
 
       {administrative.length > 0 && (
-        <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <div className="flex items-center gap-2">
             <FileCheck2 className="size-4 text-primary" />
             <h2 className="text-sm font-black">إجراءات إدارية قريبة</h2>
           </div>
           <div className="mt-3 space-y-2">
             {administrative.slice(0, 5).map((item: any) => (
-              <Link key={item.id} to="/school-inbox" className="flex items-center justify-between gap-3 rounded-2xl border p-3 transition hover:border-primary/35 hover:bg-primary/[0.02]">
+              <Link key={item.id} to="/school-inbox" className="flex items-center justify-between gap-3 rounded-2xl border p-3 transition hover:border-[#89AA74] hover:bg-primary/[0.02]">
                 <div className="min-w-0">
                   <p className="truncate text-xs font-black">{item.title || "تقرير إداري"}</p>
                   <p className="mt-1 text-[10px] text-muted-foreground">
