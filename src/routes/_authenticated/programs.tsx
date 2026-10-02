@@ -741,10 +741,10 @@ function ProgramsPage() {
   }
 
   return (
-    <div dir="rtl" className="space-y-5">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5 lg:flex lg:items-center lg:justify-between">
+    <div dir="rtl" className="reference-screen space-y-4">
+      <section className="reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5 xl:flex xl:items-center xl:justify-between">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
-        <div className="relative flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">البرامج والأنشطة</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -766,7 +766,7 @@ function ProgramsPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Stat title="إجمالي البرامج" value={programs.length} />
         <Stat title="منفذ" value={programs.filter((p) => ["منفذ", "مكتمل"].includes(String(p.exec_status ?? ""))).length} />
         <Stat
@@ -795,7 +795,7 @@ function ProgramsPage() {
             تعذّر تحميل البرامج حاليًا.
           </div>
         ) : isLoading ? (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 xl:grid-cols-3">
             {[0, 1, 2].map((item) => (
               <div key={item} className="h-40 animate-pulse rounded-2xl bg-muted" />
             ))}
@@ -811,7 +811,7 @@ function ProgramsPage() {
             <span className="mt-1 text-xs text-muted-foreground">أنشئ البرنامج واربطه بالخطة والشواهد.</span>
           </button>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 xl:grid-cols-3">
             {programs.map((program) => {
               const status = value(program.exec_status) || "لم يبدأ";
               const statusTone =
@@ -890,7 +890,7 @@ function ProgramsPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 bg-muted/20 p-4 lg:grid-cols-[300px_1fr]">
+          <div className="grid gap-4 bg-muted/20 p-4 xl:grid-cols-[300px_1fr]">
             <div className="space-y-4 rounded-xl border bg-card p-4">
               <div>
                 <Label className="mb-1.5 block">اسم البرنامج من القائمة المنسدلة</Label>
