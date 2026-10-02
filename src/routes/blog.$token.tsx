@@ -251,14 +251,14 @@ function PublicCounselorBlogPage() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-[#176678] bg-[#073B4C] text-white shadow-sm">
+      <header className="sticky top-0 z-40 border-b border-primary/10 bg-background/95 text-foreground shadow-sm backdrop-blur-xl">
         <div className="mx-auto grid max-w-7xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-3 px-4 py-3 sm:px-8">
           <button
             type="button"
             onClick={() => window.history.length > 1 ? window.history.back() : window.location.assign("/")}
             aria-label="رجوع"
             title="رجوع"
-            className="order-3 grid size-10 place-items-center justify-self-start rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/15"
+            className="order-3 grid size-10 place-items-center justify-self-start rounded-xl border bg-card text-primary transition hover:border-primary/30 hover:bg-primary/5"
           >
             <ArrowLeft className="size-4.5 rotate-180" />
           </button>
@@ -267,11 +267,11 @@ function PublicCounselorBlogPage() {
             <img
               src={profile?.logo_url || "/brand-final.svg?v=20261001-psychology"}
               alt="شعار بوابة التوجيه الطلابي"
-              className="size-10 shrink-0 rounded-xl bg-white/95 object-contain p-1"
+              className="size-10 shrink-0 rounded-xl bg-[var(--brand-mark-surface)] object-contain p-1 shadow-sm"
             />
             <div className="min-w-0">
-              <p className="truncate text-base font-black text-white sm:text-lg">بوابة التوجيه الطلابي</p>
-              <p className="truncate text-[10px] text-[#C7E4E1]">{schoolName} · {counselorName}</p>
+              <p className="truncate text-base font-black text-navy sm:text-lg">بوابة التوجيه الطلابي</p>
+              <p className="truncate text-[10px] text-muted-foreground">{schoolName} · {counselorName}</p>
             </div>
           </div>
 
@@ -279,7 +279,7 @@ function PublicCounselorBlogPage() {
             to="/request-status"
             aria-label="تتبع طلب"
             title="تتبع طلب"
-            className="order-1 grid size-10 place-items-center justify-self-end rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/15"
+            className="order-1 grid size-10 place-items-center justify-self-end rounded-xl border bg-card text-primary transition hover:border-primary/30 hover:bg-primary/5"
           >
             <Search className="size-4" />
           </Link>
@@ -317,7 +317,7 @@ function PublicCounselorBlogPage() {
         </section>
 
         <section className="mx-auto max-w-3xl px-4 pb-5 sm:px-8">
-          <div className="rounded-3xl border border-primary/20 bg-card p-5 shadow-sm">
+          <div className="rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-card)]">
             <div className="flex items-start gap-3">
               <span className="rounded-2xl bg-primary/10 p-3 text-primary"><FileText className="size-5" /></span>
               <div className="min-w-0 flex-1">
