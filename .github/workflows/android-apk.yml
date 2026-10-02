@@ -62,7 +62,7 @@ jobs:
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
             mkdir -p "$dir"
-            rsvg-convert -w "$size" -h "$size" public/athat-icon-hq.webp -o "$dir/ic_launcher.png"
+            convert public/athat-icon-hq.webp -resize "${size}x${size}" "$dir/ic_launcher.png"
             cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
           done
           # Keep the adaptive-icon background and foreground consistent with the same identity.
@@ -77,7 +77,7 @@ jobs:
             density="${spec%%:*}"
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
-            rsvg-convert -w "$size" -h "$size" public/athat-icon-hq.webp -o "$dir/ic_launcher_foreground.png"
+            convert public/athat-icon-hq.webp -resize "${size}x${size}" "$dir/ic_launcher_foreground.png"
           done
 
       - name: Build installable APK
