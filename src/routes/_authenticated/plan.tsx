@@ -56,7 +56,7 @@ function PlanPage() {
     <div dir="rtl" className="space-y-4">
       <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <span className="text-[11px] font-black text-primary">1. الخطة التشغيلية</span>
             <h1 className="mt-1 text-xl font-black">من المهمة إلى التقرير</h1>
