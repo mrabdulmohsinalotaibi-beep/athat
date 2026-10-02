@@ -21,19 +21,22 @@ function Filter({
   value,
   options,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: string;
   options: string[];
   onChange: (v: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="w-full sm:w-auto">
       <Label className="mb-1.5 block text-xs">{label}</Label>
       <select
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:min-w-36"
+        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-36"
       >
         <option value="">الكل</option>
         {options.map((o) => (
@@ -92,7 +95,15 @@ export function StudentsPage() {
     },
   });
 
-  const stages = ["ابتدائي", "متوسط", "ثانوي"];
+  const stageOrder = ["ابتدائي", "متوسط", "ثانوي"];
+  const stages = Array.from(
+    new Set(
+      studentOptions
+        .map((student) => normalizeSaudiStage(student.stage) || normalizeSaudiStage(student.grade))
+        .filter(Boolean),
+    ),
+  ).sort((a, b) => stageOrder.indexOf(a) - stageOrder.indexOf(b));
+
   const grades = stage
     ? SAUDI_STAGE_GRADES[stage as keyof typeof SAUDI_STAGE_GRADES] ?? []
     : [];
@@ -160,12 +171,19 @@ export function StudentsPage() {
               label="الصف"
               value={grade}
               options={grades}
+              disabled={!stage}
               onChange={(value) => {
                 setGrade(value);
                 setClassroom("");
               }}
             />
-            <Filter label="الفصل" value={classroom} options={classrooms} onChange={setClassroom} />
+            <Filter
+              label="الفصل"
+              value={classroom}
+              options={classrooms}
+              disabled={!stage || !grade}
+              onChange={setClassroom}
+            />
             <details className="rounded-lg border px-3 py-1.5">
               <summary className="cursor-pointer text-xs font-semibold">فلاتر إضافية</summary>
               <div className="mt-2 flex flex-wrap items-end gap-3">
