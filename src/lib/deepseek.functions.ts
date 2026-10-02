@@ -327,3 +327,85 @@ export const generateFreeDocument = createServerFn({ method: "POST" })
       throw new Error("تعذّرت قراءة النص المقترح من الذكاء الاصطناعي.");
     }
   });
+
+
+const attendanceAiInputSchema = z.object({
+  text: z.string().min(1).max(50000),
+});
+const attendanceAiRowSchema = z.object({
+  student_no: z.string().max(30).default(""),
+  student_name: z.string().max(200).default(""),
+  adate: z.string().max(20).default(""),
+  case_type: z.literal("غياب").default("غياب"),
+  count_days: z.number().int().min(1).max(365).default(1),
+  action: z.string().max(300).default("متابعة الغياب"),
+  source: z.string().max(1000).default(""),
+});
+const attendanceAiOutputSchema = z.object({
+  records: z.array(attendanceAiRowSchema).max(1000),
+});
+
+const ATTENDANCE_AI_SYSTEM_PROMPT = `أنت محلل بيانات مخصص لمنصة "الذات" المدرسية.
+ستستقبل نصًا مستخرجًا من كشف غياب PDF صادر من نظام إتقان أو من تنسيق مشابه.
+مهمتك استخراج سجلات الغياب فقط وتحويلها إلى JSON منظم.
+
+قواعد إلزامية:
+- لا تخترع أي اسم أو رقم طالب أو تاريخ غير موجود في النص.
+- لا تدمج طالبين في سجل واحد.
+- إن كان رقم الطالب غير واضح أعده فارغًا.
+- إن كان التاريخ غير واضح أعده فارغًا.
+- حوّل الأرقام العربية والهندية إلى أرقام 0-9.
+- التاريخ الميلادي يكون YYYY-MM-DD متى أمكن. لا تحوّل التاريخ الهجري إلى ميلادي بالتخمين.
+- count_days يكون 1 ما لم يذكر النص عدد أيام صريحًا.
+- case_type دائمًا "غياب".
+- action دائمًا "متابعة الغياب".
+- source ضع فيه مقتطفًا قصيرًا من السطر أو الجزء الذي استخرج منه السجل.
+- تجاهل العناوين والتذييلات والإجماليات وأي صف ليس سجل طالب.
+- أعد JSON فقط بالشكل: {"records":[{"student_no":"","student_name":"","adate":"","case_type":"غياب","count_days":1,"action":"متابعة الغياب","source":""}]}`;
+
+export const parseAttendanceWithDeepSeek = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(attendanceAiInputSchema)
+  .handler(async ({ data, context }) => {
+    const apiKey = getServerSetting("DEEPSEEK_API_KEY", context);
+    if (!apiKey) throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
+
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: getServerSetting("DEEPSEEK_MODEL", context) || "deepseek-chat",
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: ATTENDANCE_AI_SYSTEM_PROMPT },
+          { role: "user", content: data.text },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403)
+        throw new Error("مفتاح DeepSeek غير صحيح أو غير متاح للخدمة.");
+      if (response.status === 402)
+        throw new Error("حساب DeepSeek لا يملك رصيدًا كافيًا لاستخدام الخدمة.");
+      if (response.status === 429)
+        throw new Error("تم تجاوز حد طلبات DeepSeek مؤقتًا. حاول بعد قليل.");
+      throw new Error("تعذّر الاتصال بخدمة DeepSeek لتحليل كشف الغياب.");
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+    const raw = payload.choices?.[0]?.message?.content?.trim();
+    if (!raw) throw new Error("لم تُرجع خدمة DeepSeek بيانات قابلة للقراءة.");
+
+    try {
+      const parsed = JSON.parse(
+        raw.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, ""),
+      );
+      return attendanceAiOutputSchema.parse(parsed);
+    } catch {
+      throw new Error("تعذّر تفسير بيانات الغياب المستخرجة من DeepSeek.");
+    }
+  });
