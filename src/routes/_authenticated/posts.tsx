@@ -243,6 +243,21 @@ function CounselorPortalManager() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const setFeatured = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await (supabase as any).rpc("set_featured_post", {
+        p_post_id: active ? null : id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(variables.active ? "تم إلغاء المحتوى المميز" : "تم اختيار المحتوى المميز");
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
+      qc.invalidateQueries({ queryKey: ["public-counselor-blog"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const articles = useMemo(() => posts.filter((item) => item.kind === "article"), [posts]);
   const shortPosts = useMemo(() => posts.filter((item) => item.kind !== "article"), [posts]);
   const publishedCount = useMemo(() => posts.filter((item) => item.is_public).length, [posts]);
@@ -484,6 +499,8 @@ function CounselorPortalManager() {
           })
         }
         onDelete={(id) => remove.mutate(id)}
+        onFeatured={(id, active) => setFeatured.mutate({ id, active })}
+        featuring={setFeatured.isPending}
       />
       )}
 
@@ -507,6 +524,8 @@ function CounselorPortalManager() {
           })
         }
         onDelete={(id) => remove.mutate(id)}
+        onFeatured={(id, active) => setFeatured.mutate({ id, active })}
+        featuring={setFeatured.isPending}
       />
       )}
 
@@ -1106,6 +1125,8 @@ function ContentSection({
   onCreate,
   onEdit,
   onDelete,
+  onFeatured,
+  featuring = false,
 }: {
   title: string;
   subtitle: string;
@@ -1114,6 +1135,8 @@ function ContentSection({
   onCreate: () => void;
   onEdit: (item: any) => void;
   onDelete: (id: string) => void;
+  onFeatured: (id: string, active: boolean) => void;
+  featuring?: boolean;
 }) {
   return (
     <section className="rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
@@ -1162,6 +1185,19 @@ function ContentSection({
               </div>
             </div>
             <div className="flex gap-1">
+              {item.is_public && (
+                <Button
+                  size="sm"
+                  variant={item.is_featured ? "default" : "outline"}
+                  disabled={featuring}
+                  title={item.is_featured ? "إلغاء المحتوى المميز" : "اختيار كمحتوى مميز"}
+                  onClick={() => onFeatured(item.id, Boolean(item.is_featured))}
+                  className="gap-1"
+                >
+                  <Sparkles className="size-4" />
+                  {item.is_featured ? "مميز" : "تمييز"}
+                </Button>
+              )}
               <Button size="icon" variant="ghost" title="تعديل" onClick={() => onEdit(item)}>
                 <Pencil className="size-4" />
               </Button>
