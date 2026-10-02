@@ -304,7 +304,7 @@ type FieldProps = {
 
 function Stat({ title, value }: { title: string; value: number }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+    <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
       <p className="text-[11px] font-bold text-muted-foreground">{title}</p>
       <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
     </div>
@@ -354,7 +354,7 @@ function Field({ label, value, onChange, options, type = "text" }: FieldProps) {
         <select
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+          className="h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
         >
           <option value="">— اختر —</option>
           {options.map((option) => (
@@ -753,7 +753,7 @@ function ProgramsPage() {
 
   return (
     <div dir="rtl" className="reference-screen space-y-4">
-      <section className="reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5 xl:flex xl:items-center xl:justify-between">
+      <section className="reference-hero relative overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5 xl:flex xl:items-center xl:justify-between">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div>
@@ -864,7 +864,7 @@ function ProgramsPage() {
                         {program.name || "برنامج بدون اسم"}
                       </h3>
                     </div>
-                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#E4ECDF] text-[#264938]">
                       <Sparkles className="size-5" />
                     </span>
                   </div>
@@ -925,7 +925,7 @@ function ProgramsPage() {
                 <select
                   value={value(editing?.name)}
                   onChange={(e) => selectMinistryProgram(e.target.value)}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  className="h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
                 >
                   <option value="">— اختر برنامجاً وزارياً أو اكتب اسماً أدناه —</option>
                   {MINISTRY_PROGRAMS.map((p) => (
@@ -1010,7 +1010,7 @@ function ProgramsPage() {
           </div>
 
           <div className="space-y-4 border-t bg-background p-5">
-            <div className="rounded-xl border border-primary/15 bg-primary/5 p-3">
+            <div className="rounded-xl border border-[#89AA74]/30 bg-[#E4ECDF]/70 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Label className="flex items-center gap-2 font-black text-primary">
                   <Sparkles className="size-4" /> التعبئة بالذكاء الاصطناعي
@@ -1108,7 +1108,7 @@ function ProgramsPage() {
                   onChange={(e) =>
                     setEditing((x) => ({ ...(x ?? emptyDraft()), plan_task_id: e.target.value }))
                   }
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  className="h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
                 >
                   <option value="">— اختر المهمة المرتبطة بالخطة —</option>
                   {planTasks.map((task) => (
