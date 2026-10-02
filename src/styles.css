@@ -520,8 +520,8 @@ textarea {
   }
 }
 
-/* Mobile app shell */
-@media (max-width: 1023px) {
+/* Mobile and tablet app shell */
+@media (max-width: 1279px) {
   .athat-premium-shell {
     background:
       radial-gradient(circle at 90% 0%, rgb(15 124 122 / 0.07), transparent 28rem),
