@@ -203,14 +203,17 @@ function AuthPage() {
   return (
     <div
       dir="rtl"
-      className="athat-premium-shell flex min-h-screen flex-col items-center justify-center bg-background px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]"
+      className="athat-premium-shell relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]"
     >
-      <div className="w-full max-w-md space-y-5">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-24 top-10 size-64 rounded-full bg-primary/10 blur-2xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -left-24 bottom-10 size-64 rounded-full bg-amber-200/25 blur-2xl" />
+      <div className="relative w-full max-w-md space-y-5">
         <div className="flex flex-col items-center text-center">
           <div className="grid size-24 place-items-center overflow-hidden rounded-3xl bg-[var(--brand-mark-surface)] shadow-[var(--shadow-soft)]">
             <BrandLogo className="size-full" />
           </div>
-          <p className="mt-3 text-xs font-bold text-primary">نظام التوجيه الطلابي</p>
+          <span className="mt-3 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[11px] font-black text-primary">نظام التوجيه الطلابي</span>
+          <p className="mt-2 max-w-xs text-xs leading-5 text-muted-foreground">إدارة أعمال التوجيه والمتابعة اليومية في مكان واحد، بتجربة مصممة للجوال أولاً.</p>
         </div>
 
         <form
@@ -223,7 +226,7 @@ function AuthPage() {
                   ? handleRecover
                   : handleReset
           }
-          className="space-y-4 rounded-3xl border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-7"
+          className="space-y-4 rounded-[2rem] border border-white/70 bg-card/95 p-6 shadow-[var(--shadow-soft)] backdrop-blur-xl sm:p-7"
         >
           <div className="space-y-1 pb-1 text-center">
             <h1 className="text-2xl font-black text-navy">
