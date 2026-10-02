@@ -399,7 +399,7 @@ export function EvidenceGallery() {
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {items.map((it) => (
           <div key={String(it.id)} className="overflow-hidden rounded-xl border bg-card shadow-sm">
             <button
