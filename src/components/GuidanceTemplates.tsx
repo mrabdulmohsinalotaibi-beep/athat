@@ -327,7 +327,7 @@ export function GuidanceTemplates() {
 
       <div>
         <h3 className="mb-3 text-sm font-extrabold">قوالب سريعة</h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {QUICK_TEMPLATES.map((item) => {
             const Icon = item.icon;
             return (
