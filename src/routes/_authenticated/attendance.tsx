@@ -50,8 +50,9 @@ function AttendancePage() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 font-black">
               <FileText className="size-5 text-primary" />
@@ -88,7 +89,7 @@ function AttendancePage() {
         </div>
       </section>
 
-      <RecordPage config={recordByKey("attendance")} />
+      <section className="rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4"><RecordPage config={recordByKey("attendance")} /></section>
     </div>
   );
 }
