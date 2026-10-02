@@ -52,17 +52,17 @@ export function PublicLayout({
 
   return (
     <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
-      {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-[#176678] bg-[#073B4C] text-white backdrop-blur-xl">
+      {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-primary/10 bg-background/95 text-foreground shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
               src="/brand-final.svg?v=20261001-finalbrandbrand"
               alt="شعار الذات"
-              className="size-11 rounded-lg bg-[var(--brand-mark-surface)] object-contain"
+              className="size-11 rounded-xl bg-[var(--brand-mark-surface)] object-contain shadow-sm"
             />
             <div>
-              <p className="text-lg font-black text-white sm:text-xl">الذات</p>
-              <p className="text-[10px] font-medium text-[#C7E4E1] sm:text-xs">
+              <p className="text-lg font-black text-navy sm:text-xl">الذات</p>
+              <p className="text-[10px] font-medium text-muted-foreground sm:text-xs">
                 {profile?.school_name
                   ? `التوجيه الطلابي · ${profile.school_name}`
                   : "نظام التوجيه الطلابي"}
@@ -71,7 +71,7 @@ export function PublicLayout({
           </Link>
 
           <nav
-            className="hidden items-center gap-5 text-sm font-semibold text-[#DDF1EF] lg:flex"
+            className="hidden items-center gap-3 text-sm font-semibold text-muted-foreground lg:flex"
             aria-label="التنقل الرئيسي"
           >
             {visibleNav.map((item) => (
@@ -79,8 +79,8 @@ export function PublicLayout({
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "rounded-md px-2 py-2 transition-colors hover:bg-muted hover:text-primary",
-                  pathname === item.to && "bg-secondary text-primary",
+                  "rounded-xl px-3 py-2 transition-colors hover:bg-primary/5 hover:text-primary",
+                  pathname === item.to && "bg-primary/10 text-primary",
                 )}
               >
                 {item.label}
@@ -93,7 +93,7 @@ export function PublicLayout({
       </header>}
 
       {title && (
-        <section className="border-b border-border/60 bg-secondary/40">
+        <section className="border-b border-border/60 bg-gradient-to-b from-primary/[0.04] to-background">
           <div className="mx-auto max-w-7xl px-4 py-8 sm:px-8 sm:py-10">
             <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
             {subtitle && (
@@ -108,7 +108,7 @@ export function PublicLayout({
       <main className={cn("flex-1", pathname !== "/" && "pb-20 lg:pb-0")}>
         {globalSettings?.maintenance_mode ? (
           <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-8">
-            <div className="rounded-3xl border border-amber-500/20 bg-card p-8 shadow-sm">
+            <div className="rounded-3xl border border-amber-500/20 bg-card p-8 shadow-[var(--shadow-card)]">
               <h1 className="text-2xl font-black">المنصة تحت الصيانة</h1>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
                 نعمل حاليًا على تحديث الذات. يرجى المحاولة لاحقًا.
@@ -117,7 +117,7 @@ export function PublicLayout({
           </div>
         ) : currentPublicHidden ? (
           <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-8">
-            <div className="rounded-3xl border bg-card p-8 shadow-sm">
+            <div className="rounded-3xl border bg-card p-8 shadow-[var(--shadow-card)]">
               <h1 className="text-2xl font-black">الصفحة غير متاحة حاليًا</h1>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
                 تم إخفاء هذه الصفحة مؤقتًا من إدارة المنصة.
@@ -129,7 +129,7 @@ export function PublicLayout({
         )}
       </main>
 
-      {pathname !== "/" && <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
+      {pathname !== "/" && <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 rounded-t-[1.75rem] border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-soft)] backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
         {[
           { to: "/" as const, label: "الرئيسية", icon: Home },
           { to: "/services" as const, label: "الخدمات", icon: BookOpen },
