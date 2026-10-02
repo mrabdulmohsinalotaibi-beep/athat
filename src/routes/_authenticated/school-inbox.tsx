@@ -295,7 +295,7 @@ function SchoolInboxPage() {
 
   return (
     <div dir="rtl" className="space-y-5">
-      <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary">
@@ -315,7 +315,7 @@ function SchoolInboxPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border bg-card p-3 shadow-sm">
+        <aside className="rounded-3xl border bg-card p-3 shadow-[var(--shadow-card)]">
           <div className="mb-3 grid grid-cols-2 gap-2">
             <Button variant={mode === "received" ? "default" : "outline"} onClick={() => { setMode("received"); setSelectedId(null); }}>
               <Inbox className="size-4" /> الوارد {pendingActions ? `(${pendingActions})` : ""}
@@ -363,7 +363,7 @@ function SchoolInboxPage() {
           </div>
         </aside>
 
-        <main className="min-w-0 rounded-2xl border bg-card p-4 shadow-sm">
+        <main className="min-w-0 rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
           {!selected ? (
             <div className="flex min-h-80 flex-col items-center justify-center text-center">
               <FileCheck2 className="size-10 text-primary/40" />
