@@ -70,7 +70,7 @@ export function AiCounselorAssistant({ compact = false }: { compact?: boolean })
         </span>
       </div>
       <div
-        className={`mt-5 grid gap-4 ${compact ? "lg:grid-cols-[1fr_1.2fr]" : "lg:grid-cols-[320px_1fr]"}`}
+        className={`mt-5 grid gap-4 ${compact ? "xl:grid-cols-[1fr_1.2fr]" : "xl:grid-cols-[320px_1fr]"}`}
       >
         <div className="space-y-3 rounded-2xl border bg-background/60 p-4">
           <label className="block text-xs font-bold">نوع المساعدة</label>
