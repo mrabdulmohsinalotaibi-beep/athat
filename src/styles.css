@@ -1486,3 +1486,59 @@ select:focus-visible {
 .reference-screen .border-dashed {
   border-color: rgb(154 108 120 / .30);
 }
+
+
+/* Step 7 — public experience and authentication */
+.public-screen,
+.public-portal,
+.public-feedback,
+.athat-premium-shell {
+  background-color: #FBF7F1;
+}
+.public-screen .athat-site-header {
+  border-color: rgb(217 192 163 / .45) !important;
+  background: rgb(255 253 249 / .97) !important;
+}
+.public-screen main section > div.rounded-3xl,
+.public-portal article,
+.public-feedback form {
+  border-color: rgb(217 192 163 / .40);
+}
+.public-screen input,
+.public-screen select,
+.public-screen textarea,
+.public-portal input,
+.public-portal select,
+.public-portal textarea,
+.public-feedback input,
+.public-feedback select,
+.public-feedback textarea,
+.athat-premium-shell input {
+  border-color: rgb(217 192 163 / .52);
+  background: #FFFDF9;
+}
+.public-screen input:focus,
+.public-screen select:focus,
+.public-screen textarea:focus,
+.public-portal input:focus,
+.public-portal select:focus,
+.public-portal textarea:focus,
+.public-feedback input:focus,
+.public-feedback select:focus,
+.public-feedback textarea:focus,
+.athat-premium-shell input:focus {
+  border-color: #89AA74;
+  box-shadow: 0 0 0 3px rgb(137 170 116 / .12);
+}
+.public-portal header {
+  border-color: rgb(217 192 163 / .42) !important;
+  background: rgb(255 253 249 / .97) !important;
+}
+.public-portal .text-primary,
+.public-feedback .text-primary {
+  color: #264938;
+}
+.public-portal .bg-primary,
+.public-feedback .bg-primary {
+  background-color: #264938;
+}
