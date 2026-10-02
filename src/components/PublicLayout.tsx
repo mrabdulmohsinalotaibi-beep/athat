@@ -53,10 +53,10 @@ export function PublicLayout({
   return (
     <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
       {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-primary/10 bg-background/95 text-foreground shadow-sm backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
+        <div className="mx-auto flex max-w-3xl xl:max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
-              src="/brand-approved-icon.webp?v=20261002-approved-icon"
+              src="/athat-icon-hq.webp?v=20261002-hq"
               alt="شعار الذات"
               className="size-11 rounded-xl bg-[var(--brand-mark-surface)] object-contain shadow-sm"
             />
@@ -71,7 +71,7 @@ export function PublicLayout({
           </Link>
 
           <nav
-            className="hidden items-center gap-3 text-sm font-semibold text-muted-foreground lg:flex"
+            className="hidden items-center gap-3 text-sm font-semibold text-muted-foreground xl:flex"
             aria-label="التنقل الرئيسي"
           >
             {visibleNav.map((item) => (
@@ -94,7 +94,7 @@ export function PublicLayout({
 
       {title && (
         <section className="border-b border-border/60 bg-gradient-to-b from-primary/[0.04] to-background">
-          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-8 sm:py-10">
+          <div className="mx-auto max-w-3xl xl:max-w-7xl px-4 py-8 sm:px-8 sm:py-10">
             <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
             {subtitle && (
               <p className="mt-3 max-w-3xl text-sm leading-8 text-muted-foreground sm:text-base">
@@ -105,7 +105,7 @@ export function PublicLayout({
         </section>
       )}
 
-      <main className={cn("flex-1", pathname !== "/" && "pb-20 lg:pb-0")}>
+      <main className={cn("flex-1", pathname !== "/" && "pb-20 xl:pb-0")}>
         {globalSettings?.maintenance_mode ? (
           <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-8">
             <div className="rounded-3xl border border-amber-500/20 bg-card p-8 shadow-[var(--shadow-card)]">
@@ -129,7 +129,7 @@ export function PublicLayout({
         )}
       </main>
 
-      {pathname !== "/" && <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 rounded-t-[1.75rem] border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-soft)] backdrop-blur-xl lg:hidden" aria-label="التنقل السريع">
+      {pathname !== "/" && <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 rounded-t-[1.75rem] border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-soft)] backdrop-blur-xl xl:hidden" aria-label="التنقل السريع">
         {[
           { to: "/" as const, label: "الرئيسية", icon: Home },
           { to: "/services" as const, label: "الخدمات", icon: BookOpen },
@@ -146,7 +146,7 @@ export function PublicLayout({
 
       {pathname === "/" ? null : (
         <footer className="border-t border-border/60 bg-card">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-3xl xl:max-w-7xl gap-8 px-4 py-10 sm:px-8 xl:grid-cols-3">
             <div>
               <p className="text-lg font-black text-primary">الذات</p>
               <p className="mt-2 text-xs leading-7 text-muted-foreground">
