@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, CheckSquare, FileText, RotateCcw, Send, ShieldCheck, Square } from "lucide-react";
 import { toast } from "sonner";
+import { HijriDatePicker } from "@/components/HijriDatePicker";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -731,11 +732,11 @@ function ReportsPage() {
           <div className="grid gap-3 xl:grid-cols-2">
             <div>
               <Label htmlFor="report-from">من تاريخ</Label>
-              <input id="report-from" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm" />
+              <HijriDatePicker className="mt-2" value={fromDate} onChange={setFromDate} />
             </div>
             <div>
               <Label htmlFor="report-to">إلى تاريخ</Label>
-              <input id="report-to" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm" />
+              <HijriDatePicker className="mt-2" value={toDate} onChange={setToDate} />
             </div>
           </div>
 
