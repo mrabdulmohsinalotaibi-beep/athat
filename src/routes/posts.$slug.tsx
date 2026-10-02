@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, CheckCircle2, Home, Share2 } from "lucide-react";
+import { ArrowRight, CalendarDays, Home, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Copyright } from "@/components/Copyright";
 import { PUBLIC_POST_FIELDS, formatPostDate, kindLabel, type PublicPost } from "@/lib/posts";
 
 export const Route = createFileRoute("/posts/$slug")({
@@ -41,8 +39,11 @@ function PostPage() {
     const url = `${window.location.origin}/posts/${cleanSlug}${portal ? `?portal=${encodeURIComponent(portal)}` : ""}`;
     const excerpt = post.excerpt?.trim();
     const message = [post.title, excerpt, url, "من الذات"].filter(Boolean).join("\n\n");
+    if (navigator.share) {
+      void navigator.share({ title: post.title, text: excerpt || post.title, url }).catch(() => undefined);
+      return;
+    }
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-
     window.location.assign(whatsappUrl);
   }
 
@@ -87,3 +88,4 @@ function PostPage() {
       <footer className="border-t border-[#D9C0A3]/40 bg-[#FFFDF9] px-4 py-4 text-center text-[10px] text-muted-foreground">مدونة الموجه الطلابي · الذات | ATHAT</footer>
     </div>
   );
+}
