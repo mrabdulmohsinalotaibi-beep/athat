@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/svg+xml", href: "/brand-final.svg?v=20261001-finalbrandbrand" },
+      { rel: "icon", type: "image/webp", href: "/brand-approved.webp?v=20261002-approved" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261002-ios2" },
     ],
   }),
@@ -85,7 +85,7 @@ function Landing() {
             <div className="order-2 md:order-1">
               <div className="mx-auto max-w-sm rounded-[2rem] border border-[#2D665B]/10 bg-white/72 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 md:mx-0">
                 <img
-                  src="/brand-reference.webp?v=20261002-concept"
+                  src="/brand-approved.webp?v=20261002-approved"
                   alt="شعار ذات المعتمد من التصميم المرجعي"
                   className="mx-auto h-auto w-full max-w-[19rem] rounded-2xl object-contain sm:max-w-[21rem]"
                 />
