@@ -1016,7 +1016,7 @@ function ProgramsPage() {
                 لا تضع أسماء الطلاب أو أرقامهم أو أرقام الجوال في الملخص.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <Field
                 label="نوع البرنامج"
                 value={value(editing?.ptype)}
