@@ -822,8 +822,8 @@ function Dashboard() {
 
   return (
     <div dir="rtl" className="dashboard-shell space-y-3">
-      <section className="dashboard-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-bl from-[#EDF5F0] via-card to-[#F7ECDB] px-4 py-4 text-foreground shadow-[var(--shadow-soft)] sm:px-5 sm:py-5">
-        <div aria-hidden="true" className="pointer-events-none absolute -left-10 -top-14 size-44 rounded-full border-[26px] border-primary/[0.04]" />
+      <section className="dashboard-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/40 bg-gradient-to-bl from-[#E4ECDF] via-[#FFFDF9] to-[#EFE1D7] px-4 py-4 text-[#264938] shadow-[var(--shadow-soft)] sm:px-5 sm:py-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-10 -top-14 size-44 rounded-full border-[26px] border-[#9A6C78]/[0.07]" />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
@@ -865,7 +865,7 @@ function Dashboard() {
             <div
               className="dashboard-progress-ring grid size-[76px] place-items-center rounded-full p-[6px]"
               style={{
-                background: `conic-gradient(var(--primary) ${dashboardProgress}%, rgba(15,124,122,.12) 0)`,
+                background: `conic-gradient(#4A141F ${dashboardProgress}%, rgba(217,192,163,.42) 0)`,
               }}
               aria-label={`${dashboardProgressLabel} ${dashboardProgress}%`}
             >
@@ -890,10 +890,10 @@ function Dashboard() {
         {dashboardDueCount > 0 && (
           <a
             href="#today-work"
-            className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-[10px] font-bold text-amber-900"
+            className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-[#D9C0A3]/70 bg-[#F4ECE3]/90 px-3 py-2 text-[10px] font-bold text-[#4A141F]"
           >
             <span className="inline-flex min-w-0 items-center gap-1.5">
-              <BellRing className="size-3.5 shrink-0 text-amber-600" />
+              <BellRing className="size-3.5 shrink-0 text-[#4A141F]" />
               <span className="truncate">{dashboardDueCount} عنصر مستحق يحتاج متابعتك</span>
             </span>
             <ArrowLeft className="size-3.5 shrink-0" />
@@ -901,7 +901,7 @@ function Dashboard() {
         )}
       </section>
 
-      <section className="dashboard-actions-panel rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
+      <section className="dashboard-actions-panel rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3.5 shadow-[var(--shadow-card)] sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-black">إجراء سريع · {schoolRoleLabel}</h2>
@@ -916,9 +916,9 @@ function Dashboard() {
               <a
                 key={item.label}
                 href={item.to}
-                className="flex min-h-14 items-center gap-2 rounded-2xl border bg-[#FBF8F1] px-3 py-2.5 text-xs font-black transition hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/[0.04]"
+                className="flex min-h-14 items-center gap-2 rounded-2xl border border-[#D9C0A3]/35 bg-[#FBF7F1] px-3 py-2.5 text-xs font-black text-[#264938] transition hover:-translate-y-0.5 hover:border-[#89AA74] hover:bg-[#E4ECDF]"
               >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#E4ECDF] text-[#264938]">
                   <Icon className="size-4" />
                 </span>
                 <span>{item.label}</span>
@@ -929,21 +929,21 @@ function Dashboard() {
       </section>
 
       {isCounselorDashboard && (
-        <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)]">
+        <section className="rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black text-primary">الخطة الأسبوعية</p>
+              <p className="text-[10px] font-black text-[#9A6C78]">الخطة الأسبوعية</p>
               <h2 className="mt-0.5 text-sm font-black">تقدم أعمال التوجيه</h2>
               <p className="mt-1 text-[10px] text-muted-foreground">{planDone} مكتملة من أصل {planTasks.length} مهمة</p>
             </div>
             <div className="flex items-center gap-2">
-              <strong className="text-2xl font-black text-primary">{planPercent}%</strong>
+              <strong className="text-2xl font-black text-[#4A141F]">{planPercent}%</strong>
               <Link to="/plan" className="rounded-xl border px-3 py-2 text-[10px] font-black">فتح الخطة</Link>
-              <Link to="/reports" className="rounded-xl bg-primary px-3 py-2 text-[10px] font-black text-primary-foreground">تقرير الأسبوع</Link>
+              <Link to="/reports" className="rounded-xl bg-[#4A141F] px-3 py-2 text-[10px] font-black text-white">تقرير الأسبوع</Link>
             </div>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${planPercent}%` }} />
+            <div className="h-full rounded-full bg-[#89AA74] transition-all" style={{ width: `${planPercent}%` }} />
           </div>
         </section>
       )}
@@ -955,10 +955,10 @@ function Dashboard() {
             <Link
               key={card.label}
               to={card.to}
-              className="group rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md"
+              className="group rounded-[1.5rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3.5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-[#89AA74] hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="rounded-xl bg-primary/10 p-2 text-primary">
+                <span className="rounded-xl bg-[#E4ECDF] p-2 text-[#264938]">
                   <Icon className="size-4" />
                 </span>
                 <strong className="text-xl font-black sm:text-2xl">
@@ -974,7 +974,7 @@ function Dashboard() {
         })}
       </section>
 
-      <section className="dashboard-shortcuts-panel rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
+      <section className="dashboard-shortcuts-panel rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3.5 shadow-[var(--shadow-card)] sm:p-4">
         <div className="mb-2 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-black">اختصارات العمل</h2>
@@ -989,7 +989,7 @@ function Dashboard() {
               <Link
                 key={item.label}
                 to={item.to}
-                className="flex min-h-20 items-center gap-2 rounded-xl border bg-background/70 p-2.5 transition hover:border-primary/35 hover:bg-primary/[0.04]"
+                className="flex min-h-20 items-center gap-2 rounded-2xl border border-[#D9C0A3]/35 bg-[#FBF7F1] p-2.5 transition hover:border-[#89AA74] hover:bg-[#E4ECDF]"
               >
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="size-4" />
