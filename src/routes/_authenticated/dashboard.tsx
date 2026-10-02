@@ -910,7 +910,7 @@ function Dashboard() {
           <QuickActionLauncher guidanceAllowed={isCounselorDashboard} />
         </div>
         <div className="dashboard-quick-actions mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-5">
-          {quickActions.map((item) => {
+          {quickActions.slice(0, 4).map((item) => {
             const Icon = item.icon;
             return (
               <a
@@ -982,7 +982,7 @@ function Dashboard() {
           </div>
           <span className="text-[10px] font-bold text-primary">اضغط للفتح</span>
         </div>
-        <div className="dashboard-shortcuts grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="dashboard-shortcuts grid grid-cols-2 gap-2 xl:grid-cols-6">
           {shortcuts.map((item) => {
             const Icon = item.icon;
             return (
@@ -1025,7 +1025,7 @@ function Dashboard() {
             </span>
           </div>
 
-          <div className="mt-2 grid gap-2 lg:grid-cols-2">
+          <div className="mt-2 grid gap-2 xl:grid-cols-2">
             {isCounselorDashboard && openRequests > 0 && (
               <Link
                 to="/posts"
@@ -1074,7 +1074,7 @@ function Dashboard() {
         </section>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-3 xl:grid-cols-2">
         <section className="rounded-2xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
