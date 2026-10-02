@@ -4,7 +4,7 @@
   "description": "الذات لإدارة أعمال الموجه الطلابي ودعم التوجيه النفسي والتربوي.",
   "icons": [
     {
-      "src": "/icon-192x192.png?v=20261002-ios2",
+      "src": "/icon-192x192.png?v=20261002-hq",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
@@ -20,8 +20,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F3EBDD",
-  "theme_color": "#073B4C",
+  "background_color": "#F7F2E8",
+  "theme_color": "#2D665B",
   "dir": "rtl",
   "lang": "ar"
 }
