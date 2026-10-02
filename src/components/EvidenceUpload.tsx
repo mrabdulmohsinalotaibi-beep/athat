@@ -213,8 +213,7 @@ export function EvidenceUploadDialog({
             </div>
             <div>
               <Label className="mb-1.5 block text-xs">تاريخ الشاهد</Label>
-              <div className="relative">
-                <HijriDatePicker value={edate} onChange={setEdate} />
+              <HijriDatePicker value={edate} onChange={setEdate} />
             </div>
           </div>
           <div>
