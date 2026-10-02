@@ -205,7 +205,7 @@ export function StudentProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto" dir="rtl">
+      <DialogContent className="max-h-[94dvh] w-[calc(100vw-1rem)] max-w-[46rem] overflow-y-auto rounded-[1.75rem] p-3 sm:p-4 xl:max-w-4xl" dir="rtl">
         <DialogHeader data-pdf-exclude="true">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <DialogTitle className="flex items-center gap-2">
@@ -216,11 +216,25 @@ export function StudentProfileDialog({
           </div>
         </DialogHeader>
 
-        <div ref={printRef} className="record-pdf-document space-y-5 rounded-xl bg-paper p-4 pt-2 text-paper-foreground">
+        <div ref={printRef} className="record-pdf-document space-y-4 rounded-2xl bg-paper p-3 text-paper-foreground sm:p-4">
           <OfficialHeader school={school} title={`ملف الطالب: ${fullName || "—"}`} reportType="ملف طالب" reportNo={studentNo || undefined} />
           {/* بيانات الطالب الأساسية */}
-          <div className="rounded-xl border bg-muted/30 p-4">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+          <div className="rounded-3xl border border-primary/10 bg-gradient-to-bl from-[#EDF5F0] via-white to-[#F8EEDC] p-4 shadow-[var(--shadow-card)]">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                <UserRound className="size-6" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-base font-black text-navy">{fullName || "طالب"}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  {[student["stage"], student["grade"], student["classroom"]].filter(Boolean).join(" · ") || "البيانات الأساسية"}
+                </p>
+              </div>
+              <Badge className="mr-auto rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+                {displayRecordValue(student["status"]) || "نشط"}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm xl:grid-cols-3">
               {infoFields.map((f) => (
                 <div key={f.key}>
                   <p className="text-[11px] text-muted-foreground">{f.label}</p>
@@ -261,7 +275,7 @@ export function StudentProfileDialog({
           </div>
 
           {!isLoading && nextStudentAction && (
-            <div data-pdf-exclude="true" className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+            <div data-pdf-exclude="true" className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-3 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10px] font-black text-primary">
@@ -283,9 +297,9 @@ export function StudentProfileDialog({
             </div>
           )}
 
-          <div data-pdf-exclude="true" className="rounded-xl border border-primary/15 bg-primary/5 p-3">
+          <div data-pdf-exclude="true" className="rounded-2xl border border-primary/15 bg-primary/5 p-3">
             <p className="mb-2 text-xs font-black text-primary">إجراء جديد للطالب</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 xl:flex xl:flex-wrap">
               <Button asChild size="sm" variant="outline"><a href={`/cases?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ClipboardList className="size-4" /> فتح حالة</a></Button>
               <Button asChild size="sm" variant="outline"><a href={`/interviews?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><MessageSquare className="size-4" /> إضافة جلسة</a></Button>
               <Button asChild size="sm" variant="outline"><a href={`/referrals?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ExternalLink className="size-4" /> إنشاء إحالة</a></Button>
@@ -307,12 +321,12 @@ export function StudentProfileDialog({
           </div>
 
           {!isLoading && (
-            <section className="break-inside-avoid rounded-xl border border-paper-border bg-paper-muted p-4">
+            <section className="break-inside-avoid rounded-2xl border border-paper-border bg-paper-muted p-4">
               <div className="mb-3 flex items-center gap-2">
                 <ClipboardList className="size-4 text-primary" />
                 <h3 className="text-sm font-black">ملخص متابعة التوجيه الطلابي</h3>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <FollowStat label="الحالات النشطة" value={activeCases.length} />
                 <FollowStat label="الجلسات" value={interviews.length} />
                 <FollowStat label="متابعات مستحقة" value={overdueFollowups.length} />
@@ -330,7 +344,7 @@ export function StudentProfileDialog({
           )}
 
           {!isLoading && timeline.length > 0 && (
-            <section className="break-inside-avoid rounded-xl border border-paper-border bg-paper p-4">
+            <section className="break-inside-avoid rounded-2xl border border-paper-border bg-paper p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Activity className="size-4 text-primary" />
