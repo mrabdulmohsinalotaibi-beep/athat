@@ -61,7 +61,7 @@ function LogoField({
   onChange: (value: string | null) => void;
 }) {
   return (
-    <div className="rounded-lg border border-dashed p-3">
+    <div className="rounded-2xl border border-dashed p-3">
       <Label className="mb-1.5 block text-xs">{label}</Label>
       <div className="flex items-center gap-3">
         {value ? (
@@ -237,11 +237,15 @@ function SettingsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">بيانات المدرسة والمستندات</h1>
-        <p className="mt-1 text-sm text-muted-foreground">هذه البيانات هي المصدر الموحد للكليشة الرسمية في جميع ملفات PDF وتقارير A4.</p>
-      </div>
+    <div className="space-y-5" dir="rtl">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative">
+          <span className="inline-flex rounded-full border border-primary/15 bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary">إعدادات الهوية والمستندات</span>
+          <h1 className="mt-2 text-2xl font-black text-navy">بيانات المدرسة والمستندات</h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">هذه البيانات هي المصدر الموحد للكليشة الرسمية في جميع ملفات PDF وتقارير A4.</p>
+        </div>
+      </section>
 
       {schoolError && (
         <div
@@ -277,7 +281,7 @@ function SettingsPage() {
         </div>
       )}
 
-      <section className="rounded-xl border bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <h2 className="mb-1 font-bold">بيانات المدرسة والموجه</h2>
         <p className="mb-4 text-xs text-muted-foreground">أدخلها مرة واحدة؛ ستظهر تلقائيًا في التقارير وملف الطالب والخطة والبرامج.</p>
         <form
@@ -368,7 +372,7 @@ function SettingsPage() {
                 onChange={setPrincipalSignature}
               />
             </div>
-            <div className="mb-5 grid gap-3 rounded-lg border border-dashed p-3 sm:grid-cols-2">
+            <div className="mb-5 grid gap-3 rounded-2xl border border-dashed p-3 sm:grid-cols-2">
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -401,7 +405,7 @@ function SettingsPage() {
         </form>
       </section>
 
-      <section className="rounded-xl border bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="mb-4 flex items-center gap-2">
           <FileText className="size-5 text-primary" />
           <div>
@@ -418,7 +422,7 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <h2 className="mb-1 font-bold">القوائم المرجعية</h2>
         <p className="mb-4 text-xs text-muted-foreground">
           أضف أو عدّل الخيارات التي تظهر في نماذج الحالات والإحالات والإجراءات واللجان.
@@ -458,7 +462,7 @@ function SettingsPage() {
           {lookups.map((item) => (
             <li
               key={item.id}
-              className="flex items-center justify-between rounded-lg bg-secondary/60 px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-sm"
             >
               {editingLookup?.id === item.id ? (
                 <Input
