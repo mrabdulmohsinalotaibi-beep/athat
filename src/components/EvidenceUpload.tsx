@@ -166,7 +166,7 @@ export function EvidenceUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="max-h-[96vh] max-w-3xl overflow-y-auto">
+      <DialogContent dir="rtl" className="max-h-[96dvh] w-[calc(100vw-1rem)] max-w-[46rem] overflow-y-auto rounded-[1.75rem] p-4 xl:max-w-3xl">
         <DialogHeader>
           <DialogTitle>رفع شاهد جديد</DialogTitle>
           <DialogDescription>صور (JPG/PNG) · مقاطع فيديو (MP4) · مستندات (PDF/Word/Excel) — حتى 50 ميجابايت.</DialogDescription>
@@ -185,12 +185,12 @@ export function EvidenceUploadDialog({
               if (chosen && chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); e.target.value = ""; return; }
               setFile(chosen); if (chosen && !name) setName(chosen.name);
             }} />
-            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-lg border border-dashed bg-muted/30 p-5 text-center">
+            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const chosen=e.dataTransfer.files?.[0]; if (!chosen) return; if (chosen.size > MAX_BYTES) { toast.error("حجم الملف يتجاوز 50 ميجابايت"); return; } setFile(chosen); if (!name) setName(chosen.name); }} className="rounded-3xl border border-dashed border-primary/25 bg-primary/[0.035] p-6 text-center shadow-inner">
               {previewUrl ? <img src={previewUrl} alt="معاينة الشاهد" className="mx-auto mb-3 max-h-[55vh] min-h-64 w-full rounded-xl border bg-black/5 object-contain" /> : <Upload className="mx-auto size-7 text-primary" />}
               <p className="mt-2 break-all text-sm font-bold">{file?.name || "اسحب الملف هنا"}</p>
               {file && <p className="mt-1 text-xs font-semibold text-primary">{typeLabel(kindOf(file.type, file.name))} · {fileSizeLabel(file.size)}</p>}
               <p className="mt-1 text-xs text-muted-foreground">صور، فيديو، PDF، Word أو Excel — حتى 50 ميجابايت</p>
-              <div className="mt-3 flex flex-wrap justify-center gap-2"><Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>اختيار ملف</Button><Button type="button" variant="outline" size="sm" onClick={() => cameraRef.current?.click()}>التقاط صورة</Button></div>
+              <div className="mt-4 grid grid-cols-2 gap-2"><Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>اختيار ملف</Button><Button type="button" variant="outline" size="sm" onClick={() => cameraRef.current?.click()}>التقاط صورة</Button></div>
             </div>
           </div>
           <div>
@@ -203,7 +203,7 @@ export function EvidenceUploadDialog({
               <select
                 value={linkedType}
                 onChange={(e) => setLinkedType(e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
               >
                 {["برنامج", "حالة", "مقابلة", "اجتماع", "مهمة"].map((o) => (
                   <option key={o}>{o}</option>
@@ -226,7 +226,7 @@ export function EvidenceUploadDialog({
               <select
                 value={linkedRef}
                 onChange={(e) => setLinkedRef(e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
               >
                 <option value="">— اختر البرنامج —</option>
                 {programs.map((p) => (
@@ -399,12 +399,12 @@ export function EvidenceGallery() {
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {items.map((it) => (
-          <div key={String(it.id)} className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <div key={String(it.id)} className="overflow-hidden rounded-2xl border bg-card shadow-[var(--shadow-card)]">
             <button
               type="button"
-              className="flex h-32 w-full items-center justify-center bg-muted/50"
+              className="flex h-36 w-full items-center justify-center bg-[#F3F5F2]"
               onClick={() => setPreview({ url: it.url, kind: it.kind, name: String(it.name ?? ""), id: String(it.id), status: String(it.doc_status ?? "قيد المراجعة"), notes: it.notes })}
             >
               {it.kind === "image" && it.url ? (
@@ -415,7 +415,7 @@ export function EvidenceGallery() {
                 <FileText className="size-10 text-primary" />
               )}
             </button>
-            <div className="space-y-1 p-3">
+            <div className="space-y-1.5 p-3">
               <p className="truncate text-sm font-bold">{String(it.name ?? "—")}</p>
               <p className="truncate text-[11px] text-muted-foreground">
                 {String(it.linked_type ?? "")} {it.linked_ref ? `· ${displayRecordValue(it.linked_ref)}` : ""} ·{" "}
