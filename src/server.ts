@@ -111,9 +111,32 @@ export default {
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
+      // Do not let an SSR-only rendering failure take the whole ATHAT app down.
+      // The authenticated application is client-driven, so return the app shell and
+      // let the browser hydrate/navigate instead of replacing it with a permanent 500 page.
+      try {
+        const url = new URL(request.url);
+        const handler = await getServerEntry();
+        const shellRequest = new Request(new URL("/", url.origin), {
+          method: "GET",
+          headers: request.headers,
+        });
+        const shell = await handler.fetch(shellRequest, {
+          ...opts,
+          context: { ...(opts?.context ?? {}), cloudflareEnv: stringEnv },
+        });
+        if (shell.ok && (shell.headers.get("content-type") ?? "").includes("text/html")) {
+          return new Response(await shell.text(), {
+            status: 200,
+            headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+          });
+        }
+      } catch (recoveryError) {
+        console.error("[SSR recovery failed]", recoveryError);
+      }
       return new Response(renderErrorPage(), {
         status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
+        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
       });
     }
   },
