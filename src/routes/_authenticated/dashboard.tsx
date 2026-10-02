@@ -822,12 +822,12 @@ function Dashboard() {
 
   return (
     <div dir="rtl" className="dashboard-shell space-y-3">
-      <section className="dashboard-hero rounded-2xl border border-primary/20 bg-primary px-4 py-4 text-primary-foreground shadow-md">
+      <section className="dashboard-hero rounded-3xl border border-primary/15 bg-card px-4 py-4 text-foreground shadow-[var(--shadow-soft)] sm:px-5 sm:py-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <div className="min-w-0">
-                <p className="text-[10px] font-bold text-white/70">{formatHijriDate(new Date())}</p>
+                <p className="text-[10px] font-bold text-primary">{formatHijriDate(new Date())}</p>
                 <h1 className="truncate text-lg font-black sm:text-xl">
                   {schoolMembership?.display_name
                     ? `مرحبًا، ${schoolMembership.display_name}`
@@ -835,7 +835,7 @@ function Dashboard() {
                       ? `مرحبًا، ${school.counselor_name}`
                       : dashboardTitle}
                 </h1>
-                <p className="truncate text-[10px] text-white/70">
+                <p className="truncate text-[10px] text-muted-foreground">
                   {dashboardTitle} · {school?.school_name || "الذات"}
                 </p>
               </div>
@@ -844,18 +844,18 @@ function Dashboard() {
             <div className="dashboard-today-strip mt-4 grid grid-cols-3 gap-2">
               <a href="#today-work" className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm">
                 <strong className="block text-base font-black">{attentionCount}</strong>
-                <span className="block truncate text-[9px] text-white/75">تحتاج إجراء</span>
+                <span className="block truncate text-[9px] text-muted-foreground">تحتاج إجراء</span>
               </a>
               <Link to="/calendar" className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm">
                 <strong className="block text-base font-black">{todayAgenda.length}</strong>
-                <span className="block truncate text-[9px] text-white/75">مواعيد اليوم</span>
+                <span className="block truncate text-[9px] text-muted-foreground">مواعيد اليوم</span>
               </Link>
               <Link
                 to={isCounselorDashboard ? "/execution" : "/school-tasks"}
                 className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm"
               >
                 <strong className="block text-base font-black">{dashboardApprovalCount}</strong>
-                <span className="block truncate text-[9px] text-white/75">بانتظار الاعتماد</span>
+                <span className="block truncate text-[9px] text-muted-foreground">بانتظار الاعتماد</span>
               </Link>
             </div>
           </div>
@@ -879,7 +879,7 @@ function Dashboard() {
               type="button"
               onClick={() => void refetch()}
               disabled={isFetching}
-              className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[9px] font-bold hover:bg-white/20 disabled:opacity-60"
+              className="rounded-full border border-border bg-white/80 px-3 py-1 text-[9px] font-bold text-muted-foreground hover:border-primary/30 hover:text-primary disabled:opacity-60"
             >
               {isFetching ? "تحديث…" : "تحديث البيانات"}
             </button>
@@ -889,10 +889,10 @@ function Dashboard() {
         {dashboardDueCount > 0 && (
           <a
             href="#today-work"
-            className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[10px] font-bold"
+            className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-[10px] font-bold text-amber-900"
           >
             <span className="inline-flex min-w-0 items-center gap-1.5">
-              <BellRing className="size-3.5 shrink-0 text-sand" />
+              <BellRing className="size-3.5 shrink-0 text-amber-600" />
               <span className="truncate">{dashboardDueCount} عنصر مستحق يحتاج متابعتك</span>
             </span>
             <ArrowLeft className="size-3.5 shrink-0" />
@@ -900,7 +900,7 @@ function Dashboard() {
         )}
       </section>
 
-      <section className="dashboard-actions-panel rounded-2xl border bg-card p-3 shadow-sm">
+      <section className="dashboard-actions-panel rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-black">إجراء سريع · {schoolRoleLabel}</h2>
@@ -928,7 +928,7 @@ function Dashboard() {
       </section>
 
       {isCounselorDashboard && (
-        <section className="rounded-2xl border border-primary/15 bg-card p-4 shadow-sm">
+        <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-black text-primary">الخطة الأسبوعية</p>
@@ -973,7 +973,7 @@ function Dashboard() {
         })}
       </section>
 
-      <section className="dashboard-shortcuts-panel rounded-2xl border bg-card p-3 shadow-sm">
+      <section className="dashboard-shortcuts-panel rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
         <div className="mb-2 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-black">اختصارات العمل</h2>
@@ -1009,7 +1009,7 @@ function Dashboard() {
       </section>
 
       {(actions.length > 0 || (isCounselorDashboard && (openRequests > 0 || missingDocumentation.length > 0))) && (
-        <section id="today-work" className="scroll-mt-28 rounded-2xl border border-primary/15 bg-card p-3 shadow-sm">
+        <section id="today-work" className="scroll-mt-28 rounded-3xl border border-primary/15 bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-black">مركز عمل اليوم</h2>
