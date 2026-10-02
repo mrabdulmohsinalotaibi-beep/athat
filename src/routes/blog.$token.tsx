@@ -488,7 +488,7 @@ function PublicContentSection({
                       <Link
                         to="/posts/$slug"
                         params={{ slug: post.slug }}
-                        search={{ portal: typeof window !== "undefined" ? window.location.pathname.split("/blog/")[1]?.split("?")[0] : undefined }}
+                        search={typeof window !== "undefined" && window.location.pathname.split("/blog/")[1]?.split("?")[0] ? { portal: window.location.pathname.split("/blog/")[1]!.split("?")[0]! } : {}}
                         className="inline-flex items-center gap-1 text-[11px] font-black text-[#4A141F]"
                       >
                         {compact ? "عرض كامل" : "فتح المنشور"} <ArrowLeft className="size-3.5" />
