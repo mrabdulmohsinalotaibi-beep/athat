@@ -45,9 +45,13 @@ export function useRecordAttachments(recordId: string | null) {
     queryKey: ["record-attachments", recordId],
     enabled: !!recordId,
     queryFn: async () => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
       const { data, error } = await supabase
         .from("evidences")
         .select("*")
+        .eq("user_id", authData.user.id)
         .eq("linked_ref", recordId ?? "")
         .not("file_path", "is", null)
         .order("created_at", { ascending: false });
@@ -153,6 +157,7 @@ export function RecordAttachmentsDialog({
         file_path: path,
         file_name: file.name,
         mime_type: contentType,
+        user_id: uid,
       } as never);
       if (error) {
         // لا نترك ملفًا يتيمًا في التخزين إذا فشل إنشاء سجل قاعدة البيانات.
@@ -175,7 +180,12 @@ export function RecordAttachmentsDialog({
 
   async function removeItem(id: string, path: string) {
     if (!confirm("هل تريد حذف هذا المرفق وملفه؟")) return;
-    const { error } = await supabase.from("evidences").delete().eq("id", id);
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      toast.error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+      return;
+    }
+    const { error } = await supabase.from("evidences").delete().eq("id", id).eq("user_id", authData.user.id);
     if (error) {
       toast.error(`تعذّر حذف سجل المرفق: ${error.message}`);
       return;
