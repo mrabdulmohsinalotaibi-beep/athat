@@ -7,6 +7,7 @@ import { RecordPage } from "@/components/RecordPage";
 import { Button } from "@/components/ui/button";
 import { recordByKey } from "@/lib/records";
 import { supabase } from "@/integrations/supabase/client";
+import { parseAttendanceWithDeepSeek } from "@/lib/deepseek.functions";
 
 type ImportedAttendance = {
   student_no: string;
@@ -97,9 +98,32 @@ function AttendancePage() {
         const content = await page.getTextContent();
         pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
       }
-      const parsed = parseAttendanceText(pages.join("\n"));
+      const extractedText = pages.join("\n").trim();
+      let parsed = parseAttendanceText(extractedText);
+
+      // إذا لم ينجح المحلل التقليدي، نرسل النص المستخرج إلى DeepSeek
+      // لفهم تنسيق إتقان وتوزيع الحقول بطريقة أكثر مرونة.
+      if (!parsed.length && extractedText.length > 20) {
+        toast.info("لم يتعرف القارئ التقليدي على التنسيق، جارٍ التحليل الذكي عبر DeepSeek...");
+        const ai = await parseAttendanceWithDeepSeek({ data: { text: extractedText } });
+        parsed = (ai.records ?? []).map((row) => ({
+          student_no: row.student_no || "",
+          student_name: row.student_name || "طالب من كشف إتقان",
+          adate: row.adate || "",
+          case_type: "غياب" as const,
+          count_days: row.count_days || 1,
+          action: row.action || "متابعة الغياب",
+          selected: true,
+          source: row.source || "",
+        }));
+      }
+
       if (!parsed.length) {
-        toast.error("تم فتح PDF لكن لم أجد سجلات غياب قابلة للقراءة. قد يكون الملف صورة ممسوحة أو تنسيق إتقان مختلف.");
+        toast.error(
+          extractedText.length <= 20
+            ? "تم فتح PDF لكنه يبدو كصورة ممسوحة ولا يحتوي نصًا قابلًا للاستخراج. نحتاج إضافة OCR للملفات المصورة."
+            : "تم فتح PDF لكن لم أجد سجلات غياب قابلة للقراءة حتى بعد التحليل الذكي.",
+        );
         return;
       }
       setRows(parsed);
@@ -138,7 +162,7 @@ function AttendancePage() {
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 font-black"><FileText className="size-5 text-primary" />استيراد غياب إتقان PDF</div>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">ارفع كشف الغياب PDF الصادر من إتقان، راجع السجلات المستخرجة، ثم اعتمدها. يتم فحص رقم الطالب والتاريخ لتجاوز التكرار.</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">ارفع كشف الغياب PDF الصادر من إتقان. يحاول النظام القراءة المباشرة أولًا، ثم يستخدم DeepSeek تلقائيًا لفهم التنسيق وتوزيع البيانات، وبعدها تراجع السجلات قبل اعتمادها.</p>
             {pdf && <p className="mt-2 text-xs font-bold text-primary">الملف المحدد: {pdf.name} — {(pdf.size / 1024 / 1024).toFixed(2)} MB</p>}
           </div>
           <div className="flex flex-wrap gap-2">
