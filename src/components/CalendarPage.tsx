@@ -101,8 +101,9 @@ export function CalendarPage() {
 
   return (
     <div className="space-y-5" dir="rtl">
-      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-sm sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <CalendarDays className="size-5" aria-hidden="true" />
@@ -135,7 +136,7 @@ export function CalendarPage() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-7 gap-1 sm:gap-2">
+        <div className="mt-4 grid grid-cols-7 gap-1 overflow-x-auto sm:gap-2">
           {visibleDays.map((date) => {
             const key = dateKey(date);
             const dayEvents = eventsByDay.get(key) ?? [];
@@ -177,7 +178,7 @@ export function CalendarPage() {
           })}
         </div>
 
-        <div className="mt-4 rounded-2xl border bg-background/70 p-3">
+        <div className="mt-4 rounded-2xl border bg-background/80 p-3 shadow-[var(--shadow-card)]">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-black">مواعيد {selectedLabel}</h3>
             <span className="text-[11px] text-muted-foreground">{selectedEvents.length} موعد</span>
@@ -205,9 +206,9 @@ export function CalendarPage() {
         </div>
       </section>
 
-      <div id="calendar-records" className="scroll-mt-28">
+      <section id="calendar-records" className="scroll-mt-28 rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
         <RecordPage config={{ ...recordByKey("calendar"), title: "إدارة المواعيد" }} />
-      </div>
+      </section>
     </div>
   );
 }
