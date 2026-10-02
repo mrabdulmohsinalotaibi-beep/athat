@@ -204,7 +204,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* القائمة الجانبية */}
       <aside
         className={cn(
-          "athat-sidebar fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-hidden border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none",
+          "athat-sidebar fixed inset-y-0 right-0 z-40 flex w-72 shrink-0 flex-col overflow-hidden border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 xl:sticky xl:top-0 xl:h-screen xl:translate-x-0 xl:shadow-none",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -318,21 +318,21 @@ export function AppLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* محتوى الصفحة الرئيسي */}
-      <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
+      <div className="flex min-w-0 flex-1 flex-col pb-20 xl:pb-0">
         <header className="athat-topbar sticky top-0 z-20 border-b bg-card text-foreground">
-          <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:px-5 lg:px-8">
+          <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:px-5 xl:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label="فتح القائمة الجانبية"
                 onClick={() => setOpen(true)}
-                className="shrink-0 rounded-xl text-foreground hover:bg-muted lg:hidden"
+                className="shrink-0 rounded-xl text-foreground hover:bg-muted xl:hidden"
               >
                 <Menu className="size-5" />
               </Button>
 
-              <Link to="/dashboard" aria-label="الرئيسية" className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-xl bg-[var(--brand-mark-surface)] lg:hidden">
+              <Link to="/dashboard" aria-label="الرئيسية" className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-xl bg-[var(--brand-mark-surface)] xl:hidden">
                 <BrandLogo className="size-10" />
               </Link>
 
@@ -346,7 +346,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <p className="mt-0.5 truncate text-[11px] font-medium text-muted-foreground sm:text-xs">
                   {workspaceSchool?.name || school?.school_name || "اسم المدرسة غير محدد"}
                 </p>
-                <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground lg:flex">
+                <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground xl:flex">
                   <span>{guidanceNavigationAllowed ? "الموجه الطلابي" : roleLabel}: <b className="font-bold text-foreground">{currentWorkspaceMember?.display_name || school?.counselor_name || "—"}</b></span>
                   <span className="text-border">•</span>
                   <span>{school?.academic_year || "العام الدراسي"}</span>
@@ -415,10 +415,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 pb-28 pt-3 sm:p-6 lg:p-8">
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 pb-28 pt-3 sm:px-5 sm:pb-28 sm:pt-5 xl:p-8">
           {currentSection && pathname !== "/dashboard" && (
             <nav
-              className="sticky top-16 z-10 mb-4 -mx-3 -mt-3 border-b bg-card/90 px-3 py-2 backdrop-blur-xl lg:hidden"
+              className="sticky top-16 z-10 mb-4 -mx-3 -mt-3 border-b bg-card/90 px-3 py-2 backdrop-blur-xl xl:hidden"
               aria-label={"روابط " + currentSection.title}
             >
               <div className="flex min-w-0 gap-2 overflow-x-auto">
@@ -448,7 +448,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </main>
 
         <nav
-          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center rounded-t-[1.75rem] border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center rounded-t-[1.75rem] border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl xl:hidden"
           aria-label="التنقل الرئيسي"
         >
           {visibleBottomNavigation.slice(0, 2).map((item) => {
@@ -492,7 +492,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <footer className="hidden border-t px-4 py-4 lg:block">
+        <footer className="hidden border-t px-4 py-4 xl:block">
           <Copyright />
         </footer>
       </div>
