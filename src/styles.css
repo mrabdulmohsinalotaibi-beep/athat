@@ -1630,3 +1630,44 @@ select:focus-visible {
   transform: translateY(-2px);
 }
 :root[data-theme] ::selection { background: var(--primary); color: var(--primary-foreground); }
+
+
+/* Sidebar follows the selected account theme clearly */
+:root[data-theme="green"] {
+  --sidebar:#264938; --sidebar-foreground:#fffdf9;
+  --sidebar-primary:#d9c0a3; --sidebar-primary-foreground:#264938;
+  --sidebar-accent:#365d49; --sidebar-accent-foreground:#ffffff;
+  --sidebar-border:#52715f; --sidebar-ring:#89aa74;
+}
+:root[data-theme="gold"] {
+  --sidebar:#6b4b08; --sidebar-foreground:#fffaf0;
+  --sidebar-primary:#ffd56a; --sidebar-primary-foreground:#513600;
+  --sidebar-accent:#84610f; --sidebar-accent-foreground:#ffffff;
+  --sidebar-border:#a17c27; --sidebar-ring:#e5bd4e;
+}
+:root[data-theme="blue"] {
+  --sidebar:#173f5b; --sidebar-foreground:#f7fbff;
+  --sidebar-primary:#9ed0ed; --sidebar-primary-foreground:#12364f;
+  --sidebar-accent:#245a7d; --sidebar-accent-foreground:#ffffff;
+  --sidebar-border:#3c7293; --sidebar-ring:#6fa6c9;
+}
+:root[data-theme="burgundy"] {
+  --sidebar:#641f2f; --sidebar-foreground:#fff8fa;
+  --sidebar-primary:#e8b6c1; --sidebar-primary-foreground:#521725;
+  --sidebar-accent:#7d3041; --sidebar-accent-foreground:#ffffff;
+  --sidebar-border:#985064; --sidebar-ring:#b87582;
+}
+:root[data-theme] .athat-sidebar {
+  background: linear-gradient(180deg, var(--sidebar) 0%, color-mix(in srgb, var(--sidebar) 90%, #000 10%) 100%) !important;
+  color: var(--sidebar-foreground) !important;
+  border-color: var(--sidebar-border) !important;
+}
+:root[data-theme] .athat-sidebar [aria-current="page"] {
+  background: var(--sidebar-accent) !important;
+  color: var(--sidebar-primary) !important;
+  border-color: var(--sidebar-primary) !important;
+}
+:root[data-theme] .athat-sidebar button:hover,
+:root[data-theme] .athat-sidebar a:hover {
+  background-color: var(--sidebar-accent);
+}
