@@ -18,7 +18,7 @@ export function NoorConnectionPanel() {
   return (
     <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
       <div className="border-b bg-gradient-to-l from-primary/10 via-card to-card p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center lg:justify-between">
           <div>
             <p className="flex items-center gap-2 text-xl font-black">
               <Chrome className="size-5 text-primary" /> إضافة «ذات» لنور ومدرستي
@@ -44,7 +44,7 @@ export function NoorConnectionPanel() {
         </div>
       </div>
 
-      <div className="grid gap-4 p-5 lg:grid-cols-3">
+      <div className="grid gap-4 p-5 xl:grid-cols-3">
         <Step
           number="1"
           icon={LockKeyhole}
