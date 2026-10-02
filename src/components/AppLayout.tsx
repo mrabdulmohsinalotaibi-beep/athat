@@ -3,12 +3,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
+  Check,
   ChevronDown,
   ClipboardList,
   LayoutDashboard,
   LogOut,
   Menu,
   MessageSquareText,
+  Palette,
   BarChart3,
   Users,
   FileText,
@@ -68,6 +70,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [uiTheme, setUiTheme] = useState("green");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: accessContext } = useQuery({
     queryKey: ["school-access-context"],
@@ -182,6 +186,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       const next = value && allowed.has(value) ? value : "green";
       document.documentElement.dataset.theme = next;
       localStorage.setItem("athat-ui-theme", next);
+      setUiTheme(next);
     };
     apply(localStorage.getItem("athat-ui-theme"));
     void supabase.auth.getUser().then(({ data }) => apply(String(data.user?.user_metadata?.ui_theme ?? localStorage.getItem("athat-ui-theme") ?? "green")));
@@ -206,6 +211,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
       document.body.style.overflow = previous;
     };
   }, [open]);
+
+  async function selectUiTheme(next: "green" | "gold" | "blue" | "burgundy") {
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("athat-ui-theme", next);
+    setUiTheme(next);
+    window.dispatchEvent(new CustomEvent("athat-theme-change", { detail: next }));
+    const { error } = await supabase.auth.updateUser({ data: { ui_theme: next } });
+    if (error) console.warn("[theme] could not sync account theme:", error.message);
+  }
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -309,6 +323,37 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </nav>
         <div className="mt-auto border-t border-sidebar-border p-3">
+          <div className="mb-2">
+            <button type="button" onClick={() => setThemeOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-bold text-sidebar-foreground/90 transition hover:bg-sidebar-accent"
+              aria-expanded={themeOpen}>
+              <span className="flex items-center gap-2"><Palette className="size-4" /> لون الواجهة</span>
+              <span className="flex gap-1.5" aria-hidden="true">
+                {[
+                  ["green","#89AA74"],["gold","#E5BD4E"],["blue","#6FA6C9"],["burgundy","#B87582"]
+                ].map(([id,color]) => <span key={id} className={cn("size-3 rounded-full ring-2 ring-offset-1 ring-offset-sidebar", uiTheme === id ? "ring-sidebar-primary" : "ring-transparent")} style={{backgroundColor:color}} />)}
+              </span>
+            </button>
+            {themeOpen && (
+              <div className="mt-2 grid grid-cols-4 gap-2 rounded-2xl border border-sidebar-border bg-sidebar-accent/45 p-2.5">
+                {[
+                  ["green","أخضر","#89AA74"],
+                  ["gold","ذهبي","#E5BD4E"],
+                  ["blue","أزرق","#6FA6C9"],
+                  ["burgundy","عنابي","#B87582"],
+                ].map(([id,label,color]) => (
+                  <button key={id} type="button" title={label}
+                    onClick={() => void selectUiTheme(id as "green" | "gold" | "blue" | "burgundy")}
+                    className={cn("flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-[9px] font-bold transition hover:bg-sidebar-accent", uiTheme === id && "bg-sidebar-accent text-sidebar-primary")}>
+                    <span className={cn("grid size-8 place-items-center rounded-full border-2 shadow-sm", uiTheme === id ? "border-sidebar-primary" : "border-white/70")} style={{backgroundColor:color}}>
+                      {uiTheme === id && <Check className="size-4 text-white drop-shadow" />}
+                    </span>
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <Button
             variant="ghost"
             onClick={signOut}
