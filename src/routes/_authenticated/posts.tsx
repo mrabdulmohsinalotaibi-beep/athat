@@ -240,10 +240,10 @@ function CounselorPortalManager() {
   );
 
   return (
-    <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+    <div className="reference-screen space-y-4">
+      <section className="reference-hero reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full bg-primary/10 blur-3xl" />
-        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-1 text-xs font-black text-primary">
               <Newspaper className="size-4" /> مدونة الموجه الطلابي
@@ -585,7 +585,7 @@ function PortalLinksPanel() {
         </div>
       )}
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2">
+      <div className="mt-5 grid gap-3 xl:grid-cols-2">
         {links.map((item) => {
           const Icon = item.icon;
           return (
