@@ -169,7 +169,7 @@ function OwnerAdminPage() {
     <div dir="rtl" className="mx-auto max-w-6xl space-y-6">
       <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
         <div aria-hidden="true" className="pointer-events-none absolute -left-14 -top-14 size-44 rounded-full bg-primary/8 blur-2xl" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
               <ShieldCheck className="size-4" />
@@ -206,7 +206,7 @@ function OwnerAdminPage() {
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 xl:grid-cols-2">
           <div>
             <Label htmlFor="admin-site-name" className="mb-1.5 block">اسم المنصة</Label>
             <Input
@@ -255,7 +255,7 @@ function OwnerAdminPage() {
             <p className="mt-1 text-xs text-muted-foreground">{group.description}</p>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 xl:grid-cols-2">
             {group.items.map((item) => {
               const enabled = flags[item.key];
               return (
