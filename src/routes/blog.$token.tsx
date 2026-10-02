@@ -334,12 +334,15 @@ function PublicCounselorBlogPage() {
               <form className="mt-4 space-y-3" onSubmit={async (event) => {
                 event.preventDefault();
                 setContributionSaving(true);
+                // PostgREST resolves overloaded RPCs by the exact argument signature.
+                // Keep the payload keys sorted to match the deployed function signature
+                // and avoid stale schema-cache mismatches.
                 const result = await (supabase as any).rpc("submit_counselor_contribution", {
-                  p_token: token,
                   p_author_name: contribution.name,
                   p_author_role: contribution.role,
-                  p_title: contribution.title,
                   p_body: contribution.body,
+                  p_title: contribution.title,
+                  p_token: token,
                 });
                 setContributionSaving(false);
                 if (result.error) { window.alert(result.error.message); return; }
