@@ -44,7 +44,7 @@ jobs:
         run: npm install --no-save @capacitor/core@7.4.3 @capacitor/android@7.4.3 @capacitor/cli@7.4.3
 
       - name: Prepare native shell
-        run: cp public/brand-final.svg native-shell/brand-final.svg
+        run: cp public/athat-icon-hq.webp native-shell/athat-icon-hq.webp
 
       - name: Generate Android project
         run: |
@@ -60,7 +60,7 @@ jobs:
           cat > android/app/src/main/res/values/ic_launcher_background.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <color name="ic_launcher_background">#073B4C</color>
+              <color name="ic_launcher_background">#F7F2E8</color>
           </resources>
           EOF
           for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
@@ -68,14 +68,14 @@ jobs:
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
             mkdir -p "$dir"
-            convert "public/brand-final.svg" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher.png"
+            convert "public/athat-icon-hq.webp" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher.png"
             cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
           done
           for spec in "mdpi:108" "hdpi:162" "xhdpi:216" "xxhdpi:324" "xxxhdpi:432"; do
             density="${spec%%:*}"
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
-            convert "public/brand-final.svg" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher_foreground.png"
+            convert "public/athat-icon-hq.webp" -alpha on -filter Lanczos -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "PNG32:$dir/ic_launcher_foreground.png"
           done
 
       - name: Restore release keystore
