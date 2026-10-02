@@ -14,6 +14,7 @@ import {
   UserRound,
   ArrowDownUp,
   Activity,
+  FileArchive,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -423,13 +424,13 @@ export function StudentProfileDialog({
                   {linkedDocuments.slice(0, 10).map((doc) => (
                     <div key={doc.id} className="rounded-lg border border-paper-border p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-xs font-black">{String(doc.title ?? "مستند")}</p>
+                        <p className="truncate text-xs font-black">{String(doc["title"] ?? "مستند")}</p>
                         <span className="text-[10px] text-paper-muted-foreground">
-                          {displayRecordValue(doc.updated_at)}
+                          {displayRecordValue(doc["updated_at"])}
                         </span>
                       </div>
                       <p className="mt-1 text-[10px] text-paper-muted-foreground">
-                        {doc.document_kind === "electronic-template" ? "نموذج إلكتروني محفوظ" : "مستند محفوظ"}
+                        {doc["document_kind"] === "electronic-template" ? "نموذج إلكتروني محفوظ" : "مستند محفوظ"}
                       </p>
                     </div>
                   ))}
