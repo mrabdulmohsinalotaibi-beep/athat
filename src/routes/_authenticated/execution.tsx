@@ -284,7 +284,7 @@ function ExecutionFlowPage() {
     <div dir="rtl" className="space-y-4">
       <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <span className="text-[11px] font-black text-primary">مسار عمل مترابط</span>
             <h1 className="mt-1 text-xl font-black">الخطة ← البرنامج ← التنفيذ ← الشاهد ← التقرير</h1>
@@ -378,7 +378,7 @@ function ExecutionFlowPage() {
             const primaryProgram = taskPrograms[0];
             return (
               <article key={task.id} className="overflow-hidden rounded-3xl border bg-card shadow-[var(--shadow-card)]">
-                <div className="flex flex-col gap-3 border-b bg-muted/20 p-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-3 border-b bg-muted/20 p-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-primary/10 px-2 py-1 text-[9px] font-black text-primary">
@@ -475,7 +475,7 @@ function ExecutionFlowPage() {
                   </div>
                 )}
 
-                <div className="grid gap-0 md:grid-cols-4">
+                <div className="grid gap-0 xl:grid-cols-4">
                   <Step
                     number="1"
                     title="الخطة"
@@ -537,7 +537,7 @@ function ExecutionFlowPage() {
                 {taskPrograms.length > 0 && (
                   <div className="border-t p-3">
                     <p className="mb-2 text-[10px] font-black text-muted-foreground">البرامج المرتبطة بهذه المهمة</p>
-                    <div className="grid gap-2 lg:grid-cols-2">
+                    <div className="grid gap-2 xl:grid-cols-2">
                       {taskPrograms.map((program) => {
                         const programEvidences = evidenceForProgram(program);
                         const programUrl = "/programs?programId=" + encodeURIComponent(program.id);
@@ -581,7 +581,7 @@ function ExecutionFlowPage() {
               <p className="text-[10px] text-muted-foreground">هذه البرامج موجودة ولم تُربط بعد بمهمة من الخطة. لن نحذفها أو نكررها.</p>
             </div>
           </div>
-          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <div className="mt-3 grid gap-3 xl:grid-cols-2">
             {unlinkedPrograms.map((program) => {
               const programUrl = "/programs?programId=" + encodeURIComponent(program.id);
               const selectedTaskId = linkSelections[program.id] ?? "";
