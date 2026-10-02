@@ -33,13 +33,14 @@ export const Route = createFileRoute("/_authenticated/integrations")({
 function IntegrationsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6" dir="rtl">
-      <section className="overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-bl from-primary/10 via-card to-accent/10 p-6 shadow-sm sm:p-8">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-14 -top-14 size-44 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
             <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">
               <Workflow className="size-3.5" /> مركز التكامل المدرسي
             </span>
-            <h1 className="mt-4 text-3xl font-black sm:text-4xl">نور ومدرستي × الذات</h1>
+            <h1 className="mt-4 text-2xl font-black text-navy sm:text-3xl">نور ومدرستي × الذات</h1>
             <p className="mt-3 text-sm leading-8 text-muted-foreground sm:text-base">
               نقطة عمل واحدة لجلب بيانات الطلاب إلى «الذات»، مراجعتها وتنظيفها، ثم تجهيز أعمال
               التوجيه التي تحتاج توثيقًا في نور مع سجل يمنع التكرار ويحفظ حالة كل عملية.
@@ -65,8 +66,8 @@ function IntegrationsPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 lg:grid-cols-3">
-        <div className="rounded-2xl border bg-card p-5">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
           <p className="flex items-center gap-2 text-sm font-black">
             <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">1</span>
             استيراد آمن
@@ -76,7 +77,7 @@ function IntegrationsPage() {
             وكشف التكرار قبل الحفظ.
           </p>
         </div>
-        <div className="rounded-2xl border bg-card p-5">
+        <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
           <p className="flex items-center gap-2 text-sm font-black">
             <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">2</span>
             العمل داخل الذات
@@ -86,7 +87,7 @@ function IntegrationsPage() {
             بدل إعادة إدخالها في كل سجل.
           </p>
         </div>
-        <div className="rounded-2xl border bg-card p-5">
+        <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
           <p className="flex items-center gap-2 text-sm font-black">
             <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">3</span>
             تجهيز وتوثيق نور
@@ -98,7 +99,7 @@ function IntegrationsPage() {
         </div>
       </section>
 
-      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 text-sm leading-7">
+      <div className="rounded-3xl border border-emerald-500/25 bg-emerald-500/5 p-4 text-sm leading-7 shadow-[var(--shadow-card)]">
         <p className="flex items-center gap-2 font-black text-emerald-800">
           <ShieldCheck className="size-4" /> تكامل يحافظ على صلاحيات الأنظمة الرسمية
         </p>
@@ -108,7 +109,7 @@ function IntegrationsPage() {
         </p>
       </div>
 
-      <section className="rounded-2xl border border-primary/20 bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="flex items-center gap-2 text-xl font-black">
@@ -151,7 +152,7 @@ function IntegrationsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-primary/20 bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="flex items-center gap-2 text-lg font-black">
@@ -185,7 +186,7 @@ function IntegrationsPage() {
       <ExternalPlatformImporter />
       <NoorExportCenter />
 
-      <section className="rounded-2xl border bg-card p-5">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="mb-4 flex items-center gap-2">
           <CheckCircle2 className="size-5 text-primary" />
           <div>
