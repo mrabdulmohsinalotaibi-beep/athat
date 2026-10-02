@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, CheckCircle2, CircleDot, Inbox, Mail, MessageCircle, RotateCcw, ShieldAlert, Send } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDot, Inbox, Mail, MessageCircle, Pencil, RotateCcw, ShieldAlert, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -208,6 +208,7 @@ export function RequestsInbox() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editRequest, setEditRequest] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -276,6 +277,57 @@ export function RequestsInbox() {
       toast.success("تم تحديث الطلب");
     },
     onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deleteRequest = useMutation({
+    mutationFn: async (request: PublicRequestRow) => {
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!data.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+      const table = request.source === "feedback_messages" ? "feedback_messages" : "public_requests";
+      const { error } = await supabase.from(table).delete().eq("id", request.id).eq("user_id", data.user.id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setSelectedId(null);
+      await queryClient.invalidateQueries({ queryKey: ["public_requests"] });
+      toast.success("تم حذف الطلب");
+    },
+    onError: (error: Error) => toast.error(`تعذر حذف الطلب: ${error.message}`),
+  });
+
+  const editDetails = useMutation({
+    mutationFn: async (values: { request: PublicRequestRow; topic: string; details: string; requester_name: string; student_name: string }) => {
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!data.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+      if (values.request.source === "feedback_messages") {
+        const tagged = [
+          values.topic ? `[الموضوع] ${values.topic}` : "",
+          values.student_name ? `[الطالب] ${values.student_name}` : "",
+          values.details,
+        ].filter(Boolean).join("\n");
+        const { error } = await supabase.from("feedback_messages").update({
+          sender_name: values.requester_name || values.request.requester_name || "مجهول",
+          message: tagged,
+        } as never).eq("id", values.request.id).eq("user_id", data.user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("public_requests").update({
+          requester_name: values.requester_name || null,
+          student_name: values.student_name || null,
+          topic: values.topic || null,
+          details: values.details,
+        } as never).eq("id", values.request.id).eq("user_id", data.user.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: async () => {
+      setEditRequest(false);
+      await queryClient.invalidateQueries({ queryKey: ["public_requests"] });
+      toast.success("تم تعديل بيانات الطلب");
+    },
+    onError: (error: Error) => toast.error(`تعذر تعديل الطلب: ${error.message}`),
   });
 
   const convertToRecord = useMutation({
@@ -801,6 +853,38 @@ export function RequestsInbox() {
                 )}
               </div>
             </section>
+
+              <div className="mb-4 flex flex-wrap justify-end gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => setEditRequest((value) => !value)}>
+                  <Pencil className="size-4" /> {editRequest ? "إلغاء التعديل" : "تعديل الطلب"}
+                </Button>
+                <Button type="button" size="sm" variant="destructive" disabled={deleteRequest.isPending}
+                  onClick={() => {
+                    if (window.confirm("هل تريد حذف هذا الطلب نهائيًا؟ لن يؤثر الحذف على أي سجل تم تحويل الطلب إليه.")) deleteRequest.mutate(selected);
+                  }}>
+                  <Trash2 className="size-4" /> {deleteRequest.isPending ? "جارٍ الحذف..." : "حذف الطلب"}
+                </Button>
+              </div>
+              {editRequest && (
+                <form className="mb-5 grid gap-3 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4 sm:grid-cols-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    editDetails.mutate({
+                      request: selected,
+                      requester_name: String(data.get("edit_requester_name") ?? ""),
+                      student_name: String(data.get("edit_student_name") ?? ""),
+                      topic: String(data.get("edit_topic") ?? ""),
+                      details: String(data.get("edit_details") ?? ""),
+                    });
+                  }}>
+                  <div><Label>اسم مقدم الطلب</Label><Input name="edit_requester_name" defaultValue={selected.requester_name ?? ""} className="mt-1.5" /></div>
+                  <div><Label>اسم الطالب</Label><Input name="edit_student_name" defaultValue={selected.student_name ?? ""} className="mt-1.5" /></div>
+                  <div className="sm:col-span-2"><Label>الموضوع</Label><Input name="edit_topic" defaultValue={selected.topic ?? ""} className="mt-1.5" /></div>
+                  <div className="sm:col-span-2"><Label>التفاصيل</Label><Textarea name="edit_details" rows={5} defaultValue={selected.details} className="mt-1.5" /></div>
+                  <div className="sm:col-span-2"><Button type="submit" disabled={editDetails.isPending}>{editDetails.isPending ? "جارٍ الحفظ..." : "حفظ التعديلات"}</Button></div>
+                </form>
+              )}
 
             <form
               className="mt-5 grid gap-3 border-t pt-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]"
