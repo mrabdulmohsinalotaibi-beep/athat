@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
-  BadgeCheck,
   BarChart3,
   CalendarRange,
   ClipboardList,
-  FileCheck2,
+  HeartHandshake,
+  Leaf,
   ShieldCheck,
+  Target,
   UsersRound,
 } from "lucide-react";
 
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "الذات — نظام التوجيه الطلابي" },
       {
         property: "og:description",
-        content: "أعمال الموجه الطلابي في مكان واحد، بخصوصية وسهولة.",
+        content: "مساندة الطالب نحو مستقبل أكثر إشراقًا عبر متابعة تربوية ونفسية وسلوكية متكاملة.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -38,25 +39,32 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+const values = [
+  { title: "بيئة آمنة", subtitle: "وسهلة الاستخدام", icon: ShieldCheck },
+  { title: "متابعة شاملة", subtitle: "ومتكاملة", icon: Target },
+  { title: "دعم مهني", subtitle: "للمرشدين", icon: UsersRound },
+  { title: "نمو وتمكين", subtitle: "للطالب", icon: Leaf },
+] as const;
+
 const workAreas = [
   {
-    title: "الخطط والبرامج",
-    description: "إعداد الخطة ومتابعة التنفيذ",
+    title: "البرامج والأنشطة",
+    description: "خطط وبرامج مع مؤشرات التنفيذ وتفاصيل البرنامج.",
     icon: CalendarRange,
   },
   {
     title: "الحالات الطلابية",
-    description: "متابعة الحالة وخطة التدخل",
+    description: "قائمة الحالات الحالية وخطط التدخل والمتابعة.",
     icon: ClipboardList,
   },
   {
-    title: "المقابلات الطلابية",
-    description: "توثيق المقابلات والمتابعة",
+    title: "المقابلات والاستشارات",
+    description: "إدارة المواعيد وتسجيل المقابلات والاستشارات.",
     icon: UsersRound,
   },
   {
-    title: "التقارير والشواهد",
-    description: "توثيق الأثر ورفع الشواهد",
+    title: "التقارير والإحصاءات",
+    description: "مؤشرات ورسوم وإمكانية التصدير والطباعة.",
     icon: BarChart3,
   },
 ] as const;
@@ -64,96 +72,122 @@ const workAreas = [
 function Landing() {
   return (
     <PublicLayout>
-      <div className="landing-app relative min-h-screen overflow-hidden bg-[#F8F6F1] text-[#103847]">
-        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_20%_0%,rgba(99,199,194,.28),transparent_42%),radial-gradient(circle_at_90%_18%,rgba(229,194,123,.20),transparent_34%)]" />
-        <div aria-hidden="true" className="absolute -left-28 top-52 size-72 rounded-full border-[44px] border-[#1C8F92]/[0.06]" />
-        <div aria-hidden="true" className="absolute -right-32 top-80 size-80 rounded-full border-[54px] border-[#C99548]/[0.07]" />
+      <div className="relative min-h-screen overflow-hidden bg-[#F7F2E8] text-[#123748]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(74,135,115,.17),transparent_22rem),radial-gradient(circle_at_92%_5%,rgba(211,165,109,.17),transparent_21rem)]"
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 top-20 size-72 rounded-full border-[44px] border-[#527E70]/[0.05]" />
+        <div aria-hidden="true" className="pointer-events-none absolute -left-20 top-[28rem] size-72 rounded-full border-[46px] border-[#D1A56E]/[0.06]" />
 
-        <main className="relative mx-auto flex w-full max-w-6xl flex-col px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-8 sm:pt-8">
-          <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
-            <div className="flex w-full max-w-xl justify-center p-6 sm:p-8">
-              <img
-                src="/brand-final.svg?v=20261001-finalbrandbrand"
-                alt="شعار الذات"
-                className="h-auto w-full max-w-[22rem] rounded-2xl object-contain sm:max-w-[27rem]"
-              />
-            </div>
-
-            <span className="mt-7 rounded-full border border-[#07566A]/10 bg-white/70 px-3 py-1 text-[11px] font-black text-[#07566A] shadow-sm backdrop-blur">
-              نظام التوجيه الطلابي
-            </span>
-            <h1 className="mt-3 text-3xl font-black leading-[1.35] text-[#073B4C] sm:text-5xl">
-              أعمال الموجه الطلابي
-              <br className="sm:hidden" /> في مكان واحد
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#52717B] sm:text-base">
-              منصة عملية لإدارة الخطط والبرامج والحالات والمقابلات والشواهد والتقارير،
-              ومتابعة العمل اليومي بصورة منظمة.
-            </p>
-
-            <Button
-              asChild
-              className="mt-6 h-13 min-w-[250px] gap-2 rounded-2xl bg-[#07566A] px-7 text-sm font-black text-white shadow-lg shadow-[#07566A]/15 hover:bg-[#06495A]"
-            >
-              <Link to="/auth" search={{ next: "/dashboard", mode: "signin" }}>
-                دخول الموجه الطلابي
-                <ArrowLeft className="size-4" />
-              </Link>
-            </Button>
-          </section>
-
-          <section className="mx-auto mt-8 grid w-full max-w-4xl grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-            {workAreas.map(({ title, description, icon: Icon }) => (
-              <article
-                key={title}
-                className="rounded-2xl border border-[#07566A]/10 bg-white/85 p-3.5 text-center shadow-sm backdrop-blur sm:p-4"
-              >
-                <span className="mx-auto grid size-11 place-items-center rounded-2xl bg-[#E8F3F1] text-[#07566A]">
-                  <Icon className="size-5" />
-                </span>
-                <h2 className="mt-3 text-xs font-black text-[#073B4C] sm:text-sm">{title}</h2>
-                <p className="mt-1 text-[10px] leading-5 text-[#6B7E84] sm:text-[11px]">{description}</p>
-              </article>
-            ))}
-          </section>
-
-          <section className="mx-auto mt-4 w-full max-w-4xl rounded-[1.5rem] border border-[#07566A]/10 bg-white/80 p-5 shadow-sm backdrop-blur sm:p-6">
-            <div className="flex items-start gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#D9EFEC] text-[#07566A]">
-                <BadgeCheck className="size-5" />
-              </span>
-              <div>
-                <h2 className="text-base font-black text-[#073B4C]">ماذا يقدم الموجه الطلابي؟</h2>
-                <p className="mt-2 text-xs leading-6 text-[#52717B] sm:text-sm sm:leading-7">
-                  يتابع احتياجات الطلاب، ويخطط لبرامج التوجيه الطلابي، ويدرس الحالات ويجري المقابلات،
-                  ويتعاون مع الأسرة والمعلمين وإدارة المدرسة، ثم يوثق الإجراءات والشواهد والتقارير
-                  لدعم الطالب ومتابعة تقدمه.
-                </p>
+        <main className="relative mx-auto w-full max-w-7xl px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 md:px-8 md:pt-7">
+          <section className="grid items-center gap-6 md:grid-cols-[0.9fr_1.1fr] md:gap-8 lg:gap-12">
+            <div className="order-2 md:order-1">
+              <div className="mx-auto max-w-sm rounded-[2rem] border border-[#2D665B]/10 bg-white/72 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 md:mx-0">
+                <img
+                  src="/brand-final.svg?v=20261001-finalbrandbrand"
+                  alt="شعار الذات"
+                  className="mx-auto h-auto w-full max-w-[15rem] object-contain sm:max-w-[17rem]"
+                />
+                <p className="mt-3 text-sm font-black text-[#143A49]">منصة التوجيه الطلابي</p>
+                <p className="mt-1 text-[11px] font-bold tracking-wide text-[#71827E]">دعم · توجيه · نمو · لمستقبل أفضل</p>
               </div>
             </div>
 
-            <div className="mt-5 grid gap-2 border-t border-[#07566A]/10 pt-4 sm:grid-cols-3">
-              {[
-                { icon: ShieldCheck, text: "خصوصية وتنظيم للبيانات" },
-                { icon: FileCheck2, text: "توثيق الأعمال والشواهد" },
-                { icon: UsersRound, text: "تكامل مع فريق المدرسة" },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-2 rounded-xl bg-[#F3F8F6] px-3 py-2.5">
-                  <Icon className="size-4 shrink-0 text-[#07566A]" />
-                  <span className="text-[11px] font-bold text-[#355C68]">{text}</span>
-                </div>
+            <div className="order-1 text-center md:order-2 md:text-right">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#2D665B]/10 bg-white/70 px-3 py-1.5 text-[11px] font-black text-[#2D665B] shadow-sm">
+                <HeartHandshake className="size-3.5" />
+                منصة يومية للموجه الطلابي
+              </span>
+              <h1 className="mt-4 text-3xl font-black leading-[1.45] text-[#123748] sm:text-4xl lg:text-5xl">
+                مساندتهم ..
+                <br className="hidden sm:block" />
+                نحو مستقبل أكثر إشراقًا
+              </h1>
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5F7478] sm:text-base md:mx-0">
+                منصة ذات لإدارة التوجيه الطلابي، تجمع التقنية والخبرة الإنسانية لدعم الطالب ومتابعة رحلته التعليمية والنفسية والسلوكية في تجربة واحدة واضحة.
+              </p>
+
+              <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                {values.map(({ title, subtitle, icon: Icon }, index) => (
+                  <div key={title} className="rounded-2xl border border-[#2D665B]/10 bg-white/78 px-2.5 py-3 text-center shadow-sm backdrop-blur">
+                    <span
+                      className={
+                        "mx-auto grid size-10 place-items-center rounded-full " +
+                        (index === 1
+                          ? "bg-[#F5E8D5] text-[#B6763A]"
+                          : index === 2
+                            ? "bg-[#E8EFEA] text-[#496F62]"
+                            : index === 3
+                              ? "bg-[#E8EEF3] text-[#214D62]"
+                              : "bg-[#E7F1EC] text-[#2D665B]")
+                      }
+                    >
+                      <Icon className="size-4.5" />
+                    </span>
+                    <p className="mt-2 text-[11px] font-black text-[#123748]">{title}</p>
+                    <p className="mt-0.5 text-[9px] font-semibold text-[#72817E]">{subtitle}</p>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                asChild
+                className="mt-6 h-12 min-w-[220px] rounded-2xl bg-[#2D665B] px-7 text-sm font-black text-white shadow-lg shadow-[#2D665B]/15 hover:bg-[#244F47]"
+              >
+                <Link to="/auth" search={{ next: "/dashboard", mode: "signin" }}>
+                  دخول الموجه الطلابي
+                  <ArrowLeft className="size-4" />
+                </Link>
+              </Button>
+            </div>
+          </section>
+
+          <section className="mt-8 rounded-[2rem] border border-[#2D665B]/10 bg-white/64 p-3 shadow-[0_20px_50px_-40px_rgba(18,55,72,.45)] backdrop-blur sm:p-4 md:mt-10">
+            <div className="mb-3 flex items-center justify-between gap-3 px-1">
+              <div>
+                <p className="text-[10px] font-black text-[#2D665B]">أهم مساحات العمل</p>
+                <h2 className="mt-0.5 text-lg font-black text-[#123748] sm:text-xl">كل أدوات التوجيه في واجهة واحدة</h2>
+              </div>
+              <span className="hidden rounded-full bg-[#EDF4F0] px-3 py-1 text-[10px] font-bold text-[#2D665B] sm:inline-flex">Mobile-first</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+              {workAreas.map(({ title, description, icon: Icon }, index) => (
+                <article key={title} className="rounded-2xl border border-[#2D665B]/10 bg-white p-3.5 shadow-sm">
+                  <span
+                    className={
+                      "grid size-10 place-items-center rounded-xl " +
+                      (index === 1
+                        ? "bg-[#FFF1E4] text-[#BD7543]"
+                        : index === 2
+                          ? "bg-[#E8F1F3] text-[#2C6170]"
+                          : index === 3
+                            ? "bg-[#EEEAF6] text-[#6D5892]"
+                            : "bg-[#E8F2ED] text-[#2D665B]")
+                    }
+                  >
+                    <Icon className="size-5" />
+                  </span>
+                  <h3 className="mt-3 text-xs font-black text-[#123748] sm:text-sm">{title}</h3>
+                  <p className="mt-1 text-[10px] leading-5 text-[#6B7D7A] sm:text-[11px]">{description}</p>
+                </article>
               ))}
             </div>
           </section>
 
-          <footer className="mx-auto mt-5 w-full max-w-4xl border-t border-[#07566A]/10 pt-4 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <img src="/brand-final.svg?v=20261001-finalbrandbrand" alt="" className="size-7 rounded-lg" />
-            </div>
-            <p className="mt-2 text-[10px] font-semibold text-[#6B7E84]">
-              جميع الحقوق محفوظة لـ Abdulmo7sin
-            </p>
-          </footer>
+          <section className="mt-4 grid gap-3 md:grid-cols-3">
+            {[
+              { title: "رحلة مترابطة", text: "من الحالة والمقابلة إلى خطة التدخل والمتابعة والتقرير." },
+              { title: "تصميم هادئ وواضح", text: "ألوان وهوية مستوحاة من الإرشاد النفسي والنمو الشخصي." },
+              { title: "جاهز للجوال والتابلت", text: "نفس التجربة المصغرة تبقى واضحة قبل الانتقال لواجهة سطح المكتب." },
+            ].map((item) => (
+              <div key={item.title} className="rounded-2xl border border-[#2D665B]/10 bg-white/72 p-4 shadow-sm">
+                <p className="text-xs font-black text-[#123748]">{item.title}</p>
+                <p className="mt-1 text-[11px] leading-6 text-[#6B7D7A]">{item.text}</p>
+              </div>
+            ))}
+          </section>
         </main>
       </div>
     </PublicLayout>
