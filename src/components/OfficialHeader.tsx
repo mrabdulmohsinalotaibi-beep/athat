@@ -84,13 +84,26 @@ export function OfficialHeader({
   );
 }
 
+export type DocumentSignatureOptions = {
+  counselorName?: boolean;
+  counselorSignature?: boolean;
+  principalName?: boolean;
+  principalSignature?: boolean;
+};
+
 export function OfficialFooter({
   school,
+  signatureOptions,
 }: {
   school?: SchoolSettings | null | undefined;
+  signatureOptions?: DocumentSignatureOptions;
 }) {
-  const showCounselor = school?.show_counselor_on_documents !== false;
-  const showPrincipal = school?.show_principal_on_documents !== false;
+  const showCounselorName = signatureOptions?.counselorName ?? (school?.show_counselor_on_documents !== false);
+  const showCounselorSignature = signatureOptions?.counselorSignature ?? (school?.show_counselor_on_documents !== false);
+  const showPrincipalName = signatureOptions?.principalName ?? (school?.show_principal_on_documents !== false);
+  const showPrincipalSignature = signatureOptions?.principalSignature ?? (school?.show_principal_on_documents !== false);
+  const showCounselor = showCounselorName || showCounselorSignature;
+  const showPrincipal = showPrincipalName || showPrincipalSignature;
   const visibleSignatures = Number(showCounselor) + Number(showPrincipal);
 
   return (
@@ -103,7 +116,7 @@ export function OfficialFooter({
           {showCounselor && (
             <div className="official-signature-block flex min-h-24 flex-col items-center text-center">
               <p className="font-black">الموجه الطلابي</p>
-              {school?.counselor_signature ? (
+              {showCounselorSignature && school?.counselor_signature ? (
                 <img
                   src={school.counselor_signature}
                   alt="توقيع الموجه الطلابي"
@@ -112,15 +125,17 @@ export function OfficialFooter({
               ) : (
                 <div className="h-12" />
               )}
-              <p className="border-t border-[#cfc7bc] px-5 pt-1.5 font-bold">
-                {school?.counselor_name || "........................"}
-              </p>
+              {showCounselorName && (
+                <p className="border-t border-[#cfc7bc] px-5 pt-1.5 font-bold">
+                  {school?.counselor_name || "........................"}
+                </p>
+              )}
             </div>
           )}
           {showPrincipal && (
             <div className="official-signature-block flex min-h-24 flex-col items-center text-center">
               <p className="font-black">مدير المدرسة</p>
-              {school?.principal_signature ? (
+              {showPrincipalSignature && school?.principal_signature ? (
                 <img
                   src={school.principal_signature}
                   alt="توقيع مدير المدرسة"
@@ -129,9 +144,11 @@ export function OfficialFooter({
               ) : (
                 <div className="h-12" />
               )}
-              <p className="border-t border-[#cfc7bc] px-5 pt-1.5 font-bold">
-                {school?.principal_name || "........................"}
-              </p>
+              {showPrincipalName && (
+                <p className="border-t border-[#cfc7bc] px-5 pt-1.5 font-bold">
+                  {school?.principal_name || "........................"}
+                </p>
+              )}
             </div>
           )}
         </div>
