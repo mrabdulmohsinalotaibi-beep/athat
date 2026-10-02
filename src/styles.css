@@ -650,8 +650,8 @@ textarea {
   [data-pdf-exclude="true"] { display: none; }
 }
 
-/* Mobile record ergonomics */
-@media (max-width: 767px) {
+/* Mobile and tablet record ergonomics */
+@media (max-width: 1279px) {
   .record-toolbar > button,
   .record-toolbar > a {
     min-height: 2.75rem;
