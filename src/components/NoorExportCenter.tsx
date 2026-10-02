@@ -304,7 +304,7 @@ export function NoorExportCenter() {
     visibleKeys.length > 0 && visibleKeys.every((key) => selected.includes(key));
 
   return (
-    <section className="space-y-5 rounded-2xl border bg-card p-5 shadow-sm">
+    <section className="space-y-5 rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-xl font-black">
@@ -430,7 +430,7 @@ export function NoorExportCenter() {
             return (
               <label
                 key={key}
-                className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border p-3 text-sm hover:bg-muted/40"
+                className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border p-3 text-sm hover:bg-muted/40"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <input
@@ -498,7 +498,7 @@ export function NoorExportCenter() {
             {jobs.slice(0, 40).map((job) => (
               <div
                 key={job.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 text-sm"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3 text-sm"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   {job.status === "submitted" ? (
