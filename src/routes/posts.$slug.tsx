@@ -68,7 +68,15 @@ function PostPage() {
           </div>
         ) : (
           <article className="overflow-hidden rounded-2xl border border-[#D9C0A3]/50 bg-[#FFFDF9] shadow-sm">
-            {post.cover_url && <img src={post.cover_url} alt={post.title} className="max-h-[520px] w-full object-cover" />}
+            {post.cover_url && (
+              <div className="flex w-full items-center justify-center bg-[#F4ECE3]/35 p-2 sm:p-3">
+                <img
+                  src={post.cover_url}
+                  alt={post.title}
+                  className="block h-auto max-h-[82vh] w-auto max-w-full rounded-xl object-contain"
+                />
+              </div>
+            )}
             <div className="p-4 sm:p-6">
               <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
                 <span className="rounded-full bg-[#E4ECDF] px-2.5 py-1 text-[#264938]">{kindLabel(post.kind)}</span>
