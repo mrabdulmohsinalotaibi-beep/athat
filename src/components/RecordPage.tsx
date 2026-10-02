@@ -670,7 +670,7 @@ export function RecordPage({
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
-        <div className="grid gap-2.5 md:hidden print:hidden">
+        <div className="grid gap-2.5 xl:hidden print:hidden">
           {isLoading && (
             <div className="rounded-2xl border bg-muted/30 p-6 text-center text-sm text-muted-foreground">جارٍ التحميل...</div>
           )}
@@ -769,7 +769,7 @@ export function RecordPage({
           })}
         </div>
 
-        <div className="record-table-scroll hidden overflow-x-auto md:block print:block">
+        <div className="record-table-scroll hidden overflow-x-auto xl:block print:block">
           <table className="w-full text-right text-sm">
             <thead>
               <tr className="border-b bg-muted/60 text-xs">
