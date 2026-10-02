@@ -188,7 +188,7 @@ function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card p-4 shadow-sm",
+        "rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]",
         tone === "amber" && "border-amber-300/60 bg-amber-50/60",
         tone === "rose" && "border-rose-300/60 bg-rose-50/60",
       )}
@@ -582,7 +582,7 @@ export function RequestsInbox() {
         <StatCard label="بلاغات سرية" value={stats.reports} hint="تنمر ومشكلات السلامة" />
       </div>
 
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="min-w-48 flex-1">
           <Label className="mb-1.5 block text-xs">بحث</Label>
           <Input
@@ -638,7 +638,7 @@ export function RequestsInbox() {
                 type="button"
                 onClick={() => setSelectedId(item.id)}
                 className={cn(
-                  "w-full rounded-lg border p-3 text-right text-sm transition-colors hover:bg-muted",
+                  "w-full rounded-xl border p-3 text-right text-sm transition-colors hover:bg-muted",
                   selected?.id === item.id && "border-primary bg-primary/5",
                 )}
               >
@@ -672,7 +672,7 @@ export function RequestsInbox() {
         </ul>
 
         {selected ? (
-          <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <div className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b pb-4">
               <div>
                 <h2 className="text-lg font-extrabold">
