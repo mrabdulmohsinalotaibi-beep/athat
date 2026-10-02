@@ -4,6 +4,7 @@ import {
   CheckSquare,
   Copy,
   Download,
+  FileCheck2,
   Link2,
   Mail,
   MessageCircle,
@@ -154,10 +155,13 @@ export default function MessagesDashboard() {
   const [status, setStatus] = useState("الكل");
   const [assignee, setAssignee] = useState("الكل");
   const [archiveTab, setArchiveTab] = useState<"sent" | "received">("sent");
+  const [selectedSentActionIds, setSelectedSentActionIds] = useState<string[]>([]);
+  const [outgoingProofActions, setOutgoingProofActions] = useState<FeedbackAction[]>([]);
 
   const [rotatingLink, setRotatingLink] = useState(false);
   const [documentMessage, setDocumentMessage] = useState<FeedbackMessage | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
+  const outgoingProofRef = useRef<HTMLDivElement>(null);
 
 
   const { data: messages = [], isLoading, isError } = useQuery({
@@ -287,6 +291,26 @@ export default function MessagesDashboard() {
   function openOfficialDocument(item: FeedbackMessage) {
     setDocumentMessage(item);
     window.setTimeout(() => documentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
+
+  function toggleSentAction(id: string) {
+    setSelectedSentActionIds((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
+    );
+  }
+
+  function openOutgoingProof(actions: FeedbackAction[]) {
+    if (!actions.length) {
+      toast.info("حدد رسالة صادرة واحدة على الأقل.");
+      return;
+    }
+    setOutgoingProofActions(actions);
+    window.setTimeout(
+      () => outgoingProofRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      50,
+    );
   }
 
   async function recordOutgoingAction(
@@ -830,6 +854,21 @@ export default function MessagesDashboard() {
               <Archive className="size-4" />
               الوارد المؤرشف ({archivedMessages.length})
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!selectedSentActionIds.length}
+              onClick={() =>
+                openOutgoingProof(
+                  sentActions.filter((action) =>
+                    selectedSentActionIds.includes(action.id),
+                  ),
+                )
+              }
+            >
+              <FileCheck2 className="size-4" />
+              مستند المحدد ({selectedSentActionIds.length})
+            </Button>
             <Button size="sm" variant="outline" onClick={exportCommunicationArchiveCsv}>
               <Download className="size-4" />
               تصدير السجل
@@ -844,7 +883,20 @@ export default function MessagesDashboard() {
                 {sentActions.slice(0, 100).map((action) => {
                   const related = messages.find((item) => item.id === action.feedback_id);
                   return (
-                    <div key={action.id} className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                    <div key={action.id} className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => toggleSentAction(action.id)}
+                        aria-label={selectedSentActionIds.includes(action.id) ? "إلغاء تحديد الرسالة الصادرة" : "تحديد الرسالة الصادرة"}
+                      >
+                        {selectedSentActionIds.includes(action.id) ? (
+                          <CheckSquare className="size-4 text-primary" />
+                        ) : (
+                          <Square className="size-4 text-muted-foreground" />
+                        )}
+                      </Button>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <strong className="text-sm">{related?.sender_name || "مستفيد"}</strong>
@@ -856,9 +908,15 @@ export default function MessagesDashboard() {
                           {action.notes || related?.response_note || "لا توجد تفاصيل إضافية."}
                         </p>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatHijriDateTime(action.created_at)}
-                      </span>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatHijriDateTime(action.created_at)}
+                        </span>
+                        <Button size="sm" variant="outline" onClick={() => openOutgoingProof([action])}>
+                          <FileCheck2 className="size-4" />
+                          مستند رسمي
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
@@ -1123,6 +1181,104 @@ export default function MessagesDashboard() {
           </table>
         </div>
       </section>
+
+      {outgoingProofActions.length > 0 && (
+        <section className="rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-black">مستند إثبات الرسائل الصادرة</h2>
+              <p className="text-xs text-muted-foreground">
+                مستند رسمي من سجل منصة الذات يوضح الرسالة، المستفيد، وسيلة الإرسال، والتاريخ. يمكن طباعته لرسالة واحدة أو لعدة رسائل مجمعة.
+              </p>
+            </div>
+            <PdfPreviewButton
+              elementRef={outgoingProofRef}
+              filename={
+                outgoingProofActions.length === 1
+                  ? `إثبات-رسالة-صادرة-${outgoingProofActions[0]!.id.slice(0, 8)}.pdf`
+                  : `إثبات-رسائل-صادرة-${outgoingProofActions.length}-رسائل.pdf`
+              }
+              title={outgoingProofActions.length === 1 ? "إثبات رسالة صادرة" : "إثبات رسائل صادرة مجمعة"}
+            />
+          </div>
+
+          <div className="overflow-auto rounded-lg bg-muted/30 p-2 sm:p-4">
+            <article
+              ref={outgoingProofRef}
+              dir="rtl"
+              className="mx-auto flex min-h-[1123px] w-[794px] max-w-none flex-col bg-white text-[#24211f] shadow-sm"
+            >
+              <OfficialHeader
+                school={school}
+                title={outgoingProofActions.length === 1 ? "إثبات رسالة صادرة" : "كشف إثبات رسائل صادرة"}
+                reportNo={
+                  outgoingProofActions.length === 1
+                    ? outgoingProofActions[0]!.id.slice(0, 8).toUpperCase()
+                    : `MSG-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`
+                }
+              />
+
+              <main className="flex-1 px-12 py-9 text-[13px] leading-7">
+                <h1 className="mb-2 text-center text-xl font-black text-[#123d49]">
+                  {outgoingProofActions.length === 1 ? "إثبات تسجيل رسالة صادرة" : "كشف الرسائل الصادرة"}
+                </h1>
+                <p className="mb-7 text-center text-[11px] text-[#6b625a]">
+                  عدد الرسائل: {outgoingProofActions.length} · تاريخ إصدار المستند: {formatHijriDateTime(new Date().toISOString())}
+                </p>
+
+                <div className="space-y-5">
+                  {outgoingProofActions.map((action, index) => {
+                    const related = messages.find((item) => item.id === action.feedback_id);
+                    const actionLines = (action.notes || "").split("\n");
+                    const contactLine = actionLines.find((line) => line.startsWith("التواصل:"));
+                    const detailsStart = actionLines.findIndex((line) => line.trim() === "");
+                    const messageBody =
+                      detailsStart >= 0
+                        ? actionLines.slice(detailsStart + 1).join("\n").trim()
+                        : action.notes || related?.response_note || "—";
+
+                    return (
+                      <section key={action.id} className="break-inside-avoid rounded-lg border border-[#ddd6cc]">
+                        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-[#ddd6cc] bg-[#faf9f7] px-4 py-3">
+                          <span className="grid size-7 place-items-center rounded-full bg-[#123d49] text-[11px] font-black text-white">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="font-black text-[#123d49]">{related?.sender_name || "مستفيد"}</p>
+                            <p className="text-[10px] text-[#6b625a]">{related?.category || "رسالة"}</p>
+                          </div>
+                          <span className="text-[10px] text-[#6b625a]">
+                            {formatHijriDateTime(action.created_at)}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2 px-4 py-3 text-[11px]">
+                          <p><strong>رقم السجل:</strong> {action.id.slice(0, 8).toUpperCase()}</p>
+                          <p><strong>رقم الرسالة الأصلية:</strong> {action.feedback_id.slice(0, 8).toUpperCase()}</p>
+                          <p><strong>قناة الإرسال:</strong> {action.action.replace(/^.*عبر\s*/, "") || "—"}</p>
+                          <p><strong>المستفيد:</strong> {related?.sender_name || "مستفيد"}</p>
+                          <p className="col-span-2"><strong>بيانات التواصل:</strong> {contactLine?.replace("التواصل:", "").trim() || related?.sender_contact || "غير محدد"}</p>
+                        </div>
+
+                        <div className="border-t border-[#ddd6cc] px-4 py-4">
+                          <p className="mb-1 text-[11px] font-black text-[#123d49]">نص الرسالة الصادرة</p>
+                          <div className="whitespace-pre-wrap text-[12px] leading-7">{messageBody}</div>
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-7 rounded-lg border border-[#ddd6cc] bg-[#faf9f7] p-4 text-[10px] leading-6 text-[#5c554e]">
+                  <strong>إيضاح التوثيق:</strong> هذا المستند صادر من سجل المراسلات داخل منصة الذات، ويثبت تسجيل عملية الإرسال من داخل المنصة مع النص والقناة والتاريخ. إذا كانت القناة تطبيقًا خارجيًا مثل واتساب أو البريد، فإن إثبات التسليم أو القراءة لدى الطرف الآخر يعتمد على بيانات ذلك التطبيق الخارجي.
+                </div>
+              </main>
+
+              <OfficialFooter school={school} />
+            </article>
+          </div>
+        </section>
+      )}
 
       {documentMessage && (
         <section className="rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-5">
