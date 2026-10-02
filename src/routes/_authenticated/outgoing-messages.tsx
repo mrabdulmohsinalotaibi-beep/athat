@@ -12,6 +12,7 @@ import {
   Send,
   Sparkles,
   Square,
+  Trash2,
   Users,
   WandSparkles,
 } from "lucide-react";
@@ -101,6 +102,7 @@ function OutgoingMessagesPage() {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiAssisted, setAiAssisted] = useState(false);
   const [preparing, setPreparing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
   const [historyStatus, setHistoryStatus] = useState<"all" | OutgoingMessage["status"]>("all");
   const [lastBatchId, setLastBatchId] = useState<string | null>(null);
@@ -420,6 +422,87 @@ function OutgoingMessagesPage() {
     await queryClient.invalidateQueries({ queryKey: ["outgoing-messages"] });
   }
 
+  function removeDeletedFromLocalState(ids: string[]) {
+    const deleted = new Set(ids);
+    setSelectedProofIds((current) => current.filter((id) => !deleted.has(id)));
+    setProofRows((current) => current.filter((row) => !deleted.has(row.id)));
+  }
+
+  async function deleteMessage(row: OutgoingMessage) {
+    const recipient = row.student_name || row.recipient_name || "المستلم";
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `هل تريد حذف رسالة «${recipient}» نهائيًا من سجل الرسائل الصادرة؟\n\nلا يمكن التراجع عن الحذف.`,
+      )
+    ) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("outgoing_messages")
+        .delete()
+        .eq("id", row.id);
+      if (error) throw error;
+
+      removeDeletedFromLocalState([row.id]);
+      await queryClient.invalidateQueries({ queryKey: ["outgoing-messages"] });
+      toast.success("تم حذف الرسالة من السجل.");
+    } catch (error) {
+      toast.error(
+        `تعذّر حذف الرسالة: ${
+          error instanceof Error ? error.message : "خطأ غير معروف"
+        }`,
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function deleteSelectedMessages() {
+    const ids = selectedProofIds.filter((id) => rows.some((row) => row.id === id));
+    if (!ids.length) {
+      toast.info("حدد رسالة واحدة على الأقل للحذف.");
+      return;
+    }
+
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `هل تريد حذف ${ids.length} رسالة محددة نهائيًا من سجل الرسائل الصادرة؟\n\nلا يمكن التراجع عن الحذف.`,
+      )
+    ) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("outgoing_messages")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+
+      removeDeletedFromLocalState(ids);
+      await queryClient.invalidateQueries({ queryKey: ["outgoing-messages"] });
+      toast.success(
+        ids.length === 1
+          ? "تم حذف الرسالة المحددة."
+          : `تم حذف ${ids.length} رسائل محددة.`,
+      );
+    } catch (error) {
+      toast.error(
+        `تعذّر حذف الرسائل المحددة: ${
+          error instanceof Error ? error.message : "خطأ غير معروف"
+        }`,
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function toggleProof(id: string) {
     setSelectedProofIds((current) =>
       current.includes(id)
@@ -678,6 +761,20 @@ function OutgoingMessagesPage() {
               <FileCheck2 className="size-4" />
               مستند المحدد ({selectedProofIds.length})
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              disabled={!selectedProofIds.length || deleting}
+              onClick={() => void deleteSelectedMessages()}
+            >
+              {deleting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
+              حذف المحدد ({selectedProofIds.length})
+            </Button>
           </div>
         </div>
 
@@ -763,6 +860,19 @@ function OutgoingMessagesPage() {
                         أرشفة
                       </Button>
                     )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      disabled={deleting}
+                      onClick={() => void deleteMessage(row)}
+                      title="حذف الرسالة نهائيًا"
+                      aria-label={`حذف رسالة ${row.student_name || row.recipient_name || "المستلم"}`}
+                    >
+                      <Trash2 className="size-4" />
+                      حذف
+                    </Button>
                   </div>
                 </div>
               </article>
