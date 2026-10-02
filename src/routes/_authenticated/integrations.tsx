@@ -47,7 +47,7 @@ function IntegrationsPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 text-center text-xs xl:grid-cols-4">
             {[
               [FileSpreadsheet, "ملف رسمي"],
               [ArrowDownToLine, "استيراد"],
@@ -66,7 +66,7 @@ function IntegrationsPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-3 xl:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
           <p className="flex items-center gap-2 text-sm font-black">
             <span className="grid size-7 place-items-center rounded-full bg-[#E4ECDF] text-[#264938]">1</span>
@@ -130,7 +130,7 @@ function IntegrationsPage() {
             </p>
           </div>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 xl:grid-cols-3">
           <div className="rounded-xl border p-3 text-xs">
             <b>نور ← الذات</b>
             <p className="mt-1 leading-6 text-muted-foreground">
@@ -168,7 +168,7 @@ function IntegrationsPage() {
             <MousePointerClick className="size-4" /> Chrome / Edge على الكمبيوتر
           </span>
         </div>
-        <div className="mt-4 grid gap-2 text-xs sm:grid-cols-4">
+        <div className="mt-4 grid gap-2 text-xs xl:grid-cols-4">
           {[
             "1. تثبيت Athat Bridge",
             "2. فتح نور وتسجيل الدخول",
