@@ -30,10 +30,10 @@ jobs:
 
       - name: Generate browser and install icons
         run: |
-          rsvg-convert -w 180 -h 180 public/athat-logo-final.png -o public/apple-touch-icon.png
-          rsvg-convert -w 192 -h 192 public/athat-logo-final.png -o public/icon-192x192.png
-          rsvg-convert -w 512 -h 512 public/athat-logo-final.png -o public/icon-512x512.png
-          rsvg-convert -w 64 -h 64 public/athat-logo-final.png -o public/favicon.png
+          convert public/athat-logo-final.png -resize 180x180 public/apple-touch-icon.png
+          convert public/athat-logo-final.png -resize 192x192 public/icon-192x192.png
+          convert public/athat-logo-final.png -resize 512x512 public/icon-512x512.png
+          convert public/athat-logo-final.png -resize 64x64 public/favicon.png
           convert public/favicon.png -define icon:auto-resize=64,48,32,16 public/favicon.ico
 
       - name: Commit generated icons
