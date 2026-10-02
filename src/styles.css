@@ -1427,3 +1427,28 @@ select:focus-visible {
   color: #264938 !important;
   background: #E4ECDF !important;
 }
+
+
+/* Step 5 — referrals, evidence, meetings and reports */
+.reference-screen .reference-hero {
+  background:
+    radial-gradient(circle at 92% 10%, rgb(137 170 116 / .18), transparent 12rem),
+    radial-gradient(circle at 5% 100%, rgb(154 108 120 / .09), transparent 11rem),
+    linear-gradient(145deg, #FFFDF9 0%, #F4ECE3 60%, #E8EFE3 100%) !important;
+}
+.reference-screen > section:not(.reference-hero) {
+  border-color: rgb(217 192 163 / .38);
+}
+.reference-screen .text-primary {
+  color: #264938;
+}
+.reference-screen .bg-primary {
+  background-color: #264938;
+}
+.reference-screen .reference-tabs button.bg-primary {
+  background: #264938 !important;
+  color: #FFFDF9 !important;
+}
+.reports-preview {
+  border-color: #E3D7CC !important;
+}
