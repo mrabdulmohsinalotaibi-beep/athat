@@ -270,7 +270,7 @@ function ExecutionFlowPage() {
 
   if (isError) {
     return (
-      <div dir="rtl" className="mx-auto max-w-xl rounded-2xl border bg-card p-6 text-center">
+      <div dir="rtl" className="mx-auto max-w-xl rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-6 text-center">
         <AlertTriangle className="mx-auto size-7 text-destructive" />
         <p className="mt-2 font-black">تعذر تحميل مسار التنفيذ.</p>
         <Button className="mt-3" variant="outline" onClick={() => void refetch()}>
@@ -281,8 +281,8 @@ function ExecutionFlowPage() {
   }
 
   return (
-    <div dir="rtl" className="space-y-4">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+    <div dir="rtl" className="reference-screen space-y-4">
+      <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
@@ -311,7 +311,7 @@ function ExecutionFlowPage() {
         />
       </section>
 
-      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-sm font-black">مؤشر المسار الحالي</h2>
@@ -333,13 +333,13 @@ function ExecutionFlowPage() {
       </section>
 
       {(data?.failures.length ?? 0) > 0 && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-800">
+        <div className="rounded-xl border border-[#D9C0A3]/55 bg-[#F4ECE3]/80 p-3 text-xs text-[#4A141F]">
           تعذر تحميل جزء من المسار: {data?.failures.join("، ")}. لم يتم تعديل أي بيانات.
         </div>
       )}
 
       {isLoading ? (
-        <div className="flex min-h-48 items-center justify-center rounded-2xl border bg-card">
+        <div className="flex min-h-48 items-center justify-center rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9]">
           <Loader2 className="size-6 animate-spin text-primary" />
         </div>
       ) : tasks.length === 0 ? (
@@ -377,11 +377,11 @@ function ExecutionFlowPage() {
             const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);
             const primaryProgram = taskPrograms[0];
             return (
-              <article key={task.id} className="overflow-hidden rounded-3xl border bg-card shadow-[var(--shadow-card)]">
+              <article key={task.id} className="overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-[var(--shadow-card)]">
                 <div className="flex flex-col gap-3 border-b bg-muted/20 p-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[9px] font-black text-primary">
+                      <span className="rounded-full bg-[#E4ECDF] px-2 py-1 text-[9px] font-black text-primary">
                         {task.seq ? "#" + task.seq : "مهمة خطة"}
                       </span>
                       {task.domain && <span className="text-[10px] text-muted-foreground">{task.domain}</span>}
@@ -434,7 +434,7 @@ function ExecutionFlowPage() {
                 {taskDone && documented && !evidenceApproved && (
                   <div className="flex flex-col gap-3 border-b border-amber-500/25 bg-amber-500/[0.06] p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs font-black text-amber-800">الشاهد ينتظر المراجعة</p>
+                      <p className="text-xs font-black text-[#4A141F]">الشاهد ينتظر المراجعة</p>
                       <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
                         التنفيذ معتمد، لكن لا يمكن اعتماد التوثيق قبل مراجعة شاهد واحد على الأقل واعتماده.
                       </p>
@@ -573,7 +573,7 @@ function ExecutionFlowPage() {
       )}
 
       {unlinkedPrograms.length > 0 && (
-        <section className="rounded-2xl border border-amber-500/25 bg-card p-4 shadow-sm">
+        <section className="rounded-2xl border border-[#D9C0A3]/55 bg-[#FFFDF9] p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <Link2 className="size-4 text-amber-700" />
             <div>
@@ -658,7 +658,7 @@ function ExecutionFlowPage() {
 function ProgressMetric({ label, value }: { label: string; value: number }) {
   const safeValue = Math.max(0, Math.min(100, value));
   return (
-    <div className="rounded-xl border bg-background/70 p-2">
+    <div className="rounded-xl border bg-[#FBF7F1] p-2">
       <strong className="text-lg">{safeValue}%</strong>
       <p className="text-[9px] font-bold text-muted-foreground">{label}</p>
     </div>
@@ -682,7 +682,7 @@ function MiniProgress({ label, value }: { label: string; value: number }) {
 
 function Stat({ title, value, hint }: { title: string; value: number; hint: string }) {
   return (
-    <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+    <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
       <strong className="text-2xl">{value}</strong>
       <p className="mt-2 text-sm font-black">{title}</p>
       <p className="mt-1 text-[10px] text-muted-foreground">{hint}</p>
