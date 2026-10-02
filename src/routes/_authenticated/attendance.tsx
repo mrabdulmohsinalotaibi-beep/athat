@@ -76,7 +76,7 @@ function AttendancePage() {
   };
 
   const startImport = async () => {
-    if (!pdf) return inputRef.current?.click();
+    if (!pdf) { inputRef.current?.click(); return; }
     setBusy(true);
     try {
       const bytes = new Uint8Array(await pdf.arrayBuffer());
@@ -101,7 +101,7 @@ function AttendancePage() {
 
   const saveRows = async () => {
     const selected = rows.filter((r) => r.selected);
-    if (!selected.length) return toast.error("حدد سجلًا واحدًا على الأقل.");
+    if (!selected.length) { toast.error("حدد سجلًا واحدًا على الأقل."); return; }
     setBusy(true);
     try {
       const { data: auth, error: authError } = await supabase.auth.getUser();
@@ -111,7 +111,7 @@ function AttendancePage() {
       if (existingError) throw existingError;
       const keys = new Set((existing ?? []).map((r: any) => `${r.student_no ?? ""}|${r.adate ?? ""}`));
       const fresh = selected.filter((r) => !keys.has(`${r.student_no}|${r.adate}`));
-      if (!fresh.length) return toast.info("كل السجلات المحددة موجودة مسبقًا.");
+      if (!fresh.length) { toast.info("كل السجلات المحددة موجودة مسبقًا."); return; }
       const payload = fresh.map(({ selected: _selected, source: _source, ...r }) => ({ ...r, user_id: auth.user!.id }));
       const { error } = await supabase.from("attendance").insert(payload as never);
       if (error) throw error;
