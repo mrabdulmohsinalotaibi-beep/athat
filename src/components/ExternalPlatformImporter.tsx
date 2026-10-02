@@ -215,7 +215,7 @@ export function ExternalPlatformImporter() {
   ] as const;
 
   return (
-    <section className="space-y-5 rounded-2xl border bg-card p-5 shadow-sm">
+    <section className="space-y-5 rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-xl font-black">
@@ -325,7 +325,7 @@ export function ExternalPlatformImporter() {
             />
           </div>
 
-          <div className="rounded-xl border p-4">
+          <div className="rounded-2xl border p-4">
             <p className="mb-3 text-sm font-black">مطابقة أعمدة الملف مع «الذات»</p>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {mappedFields.map(([field, label]) => (
