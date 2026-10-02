@@ -44,6 +44,7 @@ function EvidencesPage() {
             <Link to="/reports"><FileText className="size-4" /> 4. التقرير <ArrowLeft className="size-3.5" /></Link>
           </Button>
         </div>
+        </div>
       </section>
 
       <section className="rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
@@ -63,7 +64,6 @@ function EvidencesPage() {
       </section>
 
       <EvidenceUploadDialog open={open} onOpenChange={setOpen} />
-      </div>
     </div>
   );
 }
