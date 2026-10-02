@@ -501,7 +501,7 @@ function SchoolInboxPage() {
                 <div className="rounded-xl border p-4">
                   <div className="flex items-center gap-2 text-primary"><Eye className="size-4" /><span className="text-xs font-black">نسخة ثابتة للقراءة فقط</span></div>
                   <h3 className="mt-2 text-lg font-black">{selected.snapshot?.report_title || selected.title}</h3>
-                  <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-3 grid gap-2 text-xs xl:grid-cols-2 xl:grid-cols-4">
                     <p><strong>رقم المستند:</strong> {selected.snapshot?.document_no || "—"}</p>
                     <p><strong>الفترة:</strong> {selected.snapshot?.period || "—"}</p>
                     <p><strong>من:</strong> {selected.snapshot?.from_date || "—"}</p>
