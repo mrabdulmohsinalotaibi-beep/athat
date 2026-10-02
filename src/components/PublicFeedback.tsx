@@ -87,8 +87,8 @@ export function PublicFeedback({ token }: { token: string }) {
         className="mx-auto flex min-h-screen max-w-xl items-center justify-center px-4 py-10"
         dir="rtl"
       >
-        <section className="w-full rounded-[2rem] border border-primary/15 bg-card p-8 text-center shadow-xl shadow-primary/10">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+        <section className="w-full rounded-[2rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-8 text-center shadow-xl shadow-primary/10">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-[#E4ECDF] text-[#264938]">
             <CheckCircle2 className="size-9" />
           </div>
           <h1 className="mt-5 text-2xl font-black text-foreground">شكرًا لمشاركتك</h1>
@@ -105,7 +105,7 @@ export function PublicFeedback({ token }: { token: string }) {
 
   return (
     <main
-      className="min-h-screen bg-[radial-gradient(circle_at_top_right,_color-mix(in_oklab,_var(--accent)_70%,transparent),_transparent_32rem)] px-4 py-8 sm:py-14"
+      className="public-feedback min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(137,170,116,.18),_transparent_32rem),radial-gradient(circle_at_bottom_left,_rgba(217,192,163,.22),_transparent_28rem),#FBF7F1] px-4 py-8 sm:py-14"
       dir="rtl"
     >
       <div className="mx-auto max-w-2xl">
@@ -123,7 +123,7 @@ export function PublicFeedback({ token }: { token: string }) {
 
         <form
           onSubmit={submit}
-          className="rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-8"
+          className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-soft)] sm:p-8"
         >
           <div className="mb-6 rounded-2xl bg-accent/60 p-4 text-sm leading-7 text-accent-foreground">
             نرحب برأيك ومقترحاتك حول خدمات التوجيه الطلابي. جميع الحقول اختيارية عدا نص المشاركة،
@@ -158,7 +158,7 @@ export function PublicFeedback({ token }: { token: string }) {
                 id="feedback-role"
                 value={senderRole}
                 onChange={(e) => setSenderRole(e.target.value)}
-                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                className="flex h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               >
                 {PARTICIPANT_ROLES.map((role) => (
                   <option key={role}>{role}</option>
@@ -171,7 +171,7 @@ export function PublicFeedback({ token }: { token: string }) {
                 id="feedback-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                className="flex h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               >
                 {FEEDBACK_CATEGORIES.map((item) => (
                   <option key={item}>{item}</option>
@@ -195,7 +195,7 @@ export function PublicFeedback({ token }: { token: string }) {
                   className="rounded-xl p-1.5 transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Star
-                    className={`size-7 ${satisfaction && value <= satisfaction ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
+                    className={`size-7 ${satisfaction && value <= satisfaction ? "fill-[#D9C0A3] text-[#4A141F]" : "text-muted-foreground"}`}
                   />
                 </button>
               ))}
