@@ -387,7 +387,7 @@ function PublicCounselorBlogPage() {
                 </a>;
               })}
             </div>
-            {(profile?.contact_phone || profile?.contact_email || profile?.office_hours) && (
+            {(profile?.contact_email || profile?.office_hours) && (
               <div className="mt-3 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] p-3 text-[11px] leading-6">
                 {profile?.office_hours && <p><strong>أوقات التواصل:</strong> {profile.office_hours}</p>}
                 {profile?.contact_phone && <p><strong>الهاتف:</strong> {profile.contact_phone}</p>}
