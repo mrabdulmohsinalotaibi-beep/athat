@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, Home, Share2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, CalendarDays, Heart, Home, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PUBLIC_POST_FIELDS, formatPostDate, kindLabel, type PublicPost } from "@/lib/posts";
 
@@ -23,6 +24,9 @@ function PostPage() {
   const { slug } = Route.useParams();
   const { portal } = Route.useSearch();
   const blogHref = portal ? `/blog/${encodeURIComponent(portal)}` : "/";
+  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [likeBusy, setLikeBusy] = useState(false);
   const { data: post, isLoading } = useQuery({
     queryKey: ["public-post", slug],
     queryFn: async () => {
@@ -31,6 +35,39 @@ function PostPage() {
       return data as PublicPost | null;
     },
   });
+
+  useEffect(() => {
+    if (!post?.slug) return;
+    const clientId = getLikeClientId();
+    if (!clientId) return;
+    void (async () => {
+      const { data } = await (supabase as any).rpc("get_post_like_state", {
+        p_slug: post.slug,
+        p_client_id: clientId,
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return;
+      setLikeCount(Number(row.like_count) || 0);
+      setLiked(Boolean(row.liked));
+    })();
+  }, [post?.slug]);
+
+  async function toggleLike() {
+    if (!post?.slug || likeBusy) return;
+    const clientId = getLikeClientId();
+    if (!clientId) return;
+    setLikeBusy(true);
+    const { data, error } = await (supabase as any).rpc("toggle_post_like", {
+      p_slug: post.slug,
+      p_client_id: clientId,
+    });
+    setLikeBusy(false);
+    if (error) return;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return;
+    setLikeCount(Number(row.like_count) || 0);
+    setLiked(Boolean(row.liked));
+  }
 
   function sharePost() {
     if (!post) return;
@@ -83,9 +120,21 @@ function PostPage() {
                 <span className="inline-flex items-center gap-1 text-muted-foreground"><CalendarDays className="size-3.5" />{formatPostDate(post.published_at ?? post.created_at)}</span>
               </div>
               <h1 className="mt-3 text-2xl font-black leading-tight sm:text-3xl">{post.title}</h1>
-              <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
                 <span>{post.author_name || "الموجه الطلابي"}</span>
-                <button type="button" onClick={sharePost} className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9C0A3]/55 px-2.5 py-1.5 font-black text-[#4A141F]"><Share2 className="size-4" /> مشاركة</button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void toggleLike()}
+                    disabled={likeBusy}
+                    aria-pressed={liked}
+                    className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 font-black transition " + (liked ? "border-[#9A6C78]/40 bg-[#F1E5E8] text-[#4A141F]" : "border-[#D9C0A3]/55 text-[#264938]")}
+                  >
+                    <Heart className={"size-4 " + (liked ? "fill-current" : "")} />
+                    {liked ? "أعجبني" : "إعجاب"} · {likeCount}
+                  </button>
+                  <button type="button" onClick={sharePost} className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9C0A3]/55 px-2.5 py-1.5 font-black text-[#4A141F]"><Share2 className="size-4" /> مشاركة</button>
+                </div>
               </div>
               {post.excerpt?.trim() && post.excerpt.trim().replace(/\\s+/g, " ") !== post.body?.trim().replace(/\\s+/g, " ") && (
                 <p className="mt-5 rounded-xl bg-[#F4ECE3]/65 p-3 text-sm font-bold leading-7">{post.excerpt}</p>
@@ -98,4 +147,18 @@ function PostPage() {
       <footer className="border-t border-[#D9C0A3]/40 bg-[#FFFDF9] px-4 py-4 text-center text-[10px] text-muted-foreground">مدونة الموجه الطلابي · الذات | ATHAT</footer>
     </div>
   );
+}
+
+
+function getLikeClientId(): string {
+  if (typeof window === "undefined") return "";
+  const key = "athat-public-like-client";
+  let value = window.localStorage.getItem(key);
+  if (!value) {
+    value = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `client-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    window.localStorage.setItem(key, value);
+  }
+  return value;
 }
