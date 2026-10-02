@@ -481,8 +481,8 @@ function ReportsPage() {
   });
 
   return (
-    <div className="min-w-0 space-y-6" dir="rtl">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+    <div className="reference-screen min-w-0 space-y-4" dir="rtl">
+      <section className="reference-hero reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <div className="flex items-center gap-2 text-primary">
