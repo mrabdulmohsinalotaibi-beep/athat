@@ -375,7 +375,10 @@ export function RecordPage({
 
   const save = useMutation({
     mutationFn: async (values: Partial<Row>) => {
-      const payload: Record<string, unknown> = {};
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+      const payload: Record<string, unknown> = { user_id: authData.user.id };
       config.fields
         .filter((field) => !field.generated)
         .forEach((f) => {
@@ -391,7 +394,8 @@ export function RecordPage({
         const { error } = await supabase
           .from(config.table as never)
           .update(payload as never)
-          .eq("id", values.id);
+          .eq("id", values.id)
+          .eq("user_id", authData.user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from(config.table as never).insert(payload as never);
@@ -412,10 +416,14 @@ export function RecordPage({
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
       const { error } = await supabase
         .from(config.table as never)
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", authData.user.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -451,7 +459,11 @@ export function RecordPage({
         toast.error("لم يتم العثور على بيانات مطابقة. تأكد من تطابق عناوين الأعمدة.");
         return;
       }
-      const { error } = await supabase.from(config.table as never).insert(payloads as never);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+      const ownedPayloads = payloads.map((payload) => ({ ...payload, user_id: authData.user.id }));
+      const { error } = await supabase.from(config.table as never).insert(ownedPayloads as never);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: [config.table] });
       toast.success(`تم استيراد ${payloads.length} سجلاً`);
