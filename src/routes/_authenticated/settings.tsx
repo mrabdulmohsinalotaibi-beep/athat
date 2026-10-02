@@ -123,7 +123,7 @@ function ThemeSelector() {
 
   async function chooseTheme(next: UiTheme) {
     setTheme(next);
-    document.documentElement.dataset.theme = next;
+    document.documentElement.dataset['theme'] = next;
     localStorage.setItem("athat-ui-theme", next);
     window.dispatchEvent(new CustomEvent("athat-theme-change", { detail: next }));
     setSaving(true);
