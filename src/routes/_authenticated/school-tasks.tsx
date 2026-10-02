@@ -448,7 +448,7 @@ function SchoolTasksPage() {
 
         {roleTemplates.length ? (
           <>
-            <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-4 grid gap-2 xl:grid-cols-2 xl:grid-cols-3">
               {roleTemplates.map((template) => {
                 const active = activeTemplateKeys.has(template.key);
                 const checked = selectedTemplateKeys.includes(template.key);
@@ -599,7 +599,7 @@ function SchoolTasksPage() {
         </div>
 
         {higherMembers.length && reportableTasks.length ? (
-          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-2">
               {reportableTasks.map((task) => {
                 const checked = selectedReportTaskIds.includes(task.id);
