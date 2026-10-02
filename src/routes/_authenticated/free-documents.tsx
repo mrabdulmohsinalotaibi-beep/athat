@@ -40,7 +40,8 @@ function FreeDocumentsPage() {
   const [documentNo, setDocumentNo] = useState("");
   const [content, setContent] = useState("");
   const [instruction, setInstruction] = useState("");
-  const [aiBusy, setAiBusy] = useState(false);\n  const [archiveSearch, setArchiveSearch] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [archiveSearch, setArchiveSearch] = useState("");
 
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ["free-documents"],
