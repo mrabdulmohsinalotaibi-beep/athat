@@ -25,7 +25,7 @@ function ProtectedAreaError({ error, reset }: { error: Error; reset: () => void 
 
   return (
     <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md rounded-3xl border bg-card p-7 text-center shadow-sm">
+      <div className="w-full max-w-md rounded-3xl border bg-card p-7 text-center shadow-[var(--shadow-soft)]">
         <h1 className="text-xl font-black">
           {authProblem ? "تحتاج إلى تسجيل الدخول من جديد" : "تعذّر فتح هذه الصفحة"}
         </h1>
