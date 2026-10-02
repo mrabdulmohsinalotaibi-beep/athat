@@ -51,12 +51,12 @@ export function PublicLayout({
     currentPublicFeature && globalSettings?.feature_flags?.[currentPublicFeature] === false;
 
   return (
-    <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-background text-foreground">
-      {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-primary/10 bg-background/95 text-foreground shadow-sm backdrop-blur-xl">
+    <div dir="rtl" className="app-screen public-screen flex min-h-screen flex-col bg-[#FBF7F1] text-[#264938]">
+      {pathname !== "/" && <header className="athat-site-header sticky top-0 z-50 border-b border-[#D9C0A3]/40 bg-[#FFFDF9]/95 text-foreground shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl xl:max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
-              src="/athat-icon.svg?v=20261002-vector"
+              src="/athat-icon-hq.webp?v=20261002-palette"
               alt="شعار الذات"
               className="size-11 rounded-xl bg-[var(--brand-mark-surface)] object-contain shadow-sm"
             />
@@ -79,8 +79,8 @@ export function PublicLayout({
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "rounded-xl px-3 py-2 transition-colors hover:bg-primary/5 hover:text-primary",
-                  pathname === item.to && "bg-primary/10 text-primary",
+                  "rounded-xl px-3 py-2 transition-colors hover:bg-[#E4ECDF] hover:text-[#264938]",
+                  pathname === item.to && "bg-[#E4ECDF] text-[#264938]",
                 )}
               >
                 {item.label}
@@ -93,7 +93,7 @@ export function PublicLayout({
       </header>}
 
       {title && (
-        <section className="border-b border-border/60 bg-gradient-to-b from-primary/[0.04] to-background">
+        <section className="border-b border-border/60 bg-gradient-to-b from-[#EFE1D7]/65 to-[#FBF7F1]">
           <div className="mx-auto max-w-3xl xl:max-w-7xl px-4 py-8 sm:px-8 sm:py-10">
             <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
             {subtitle && (
@@ -117,7 +117,7 @@ export function PublicLayout({
           </div>
         ) : currentPublicHidden ? (
           <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-8">
-            <div className="rounded-3xl border bg-card p-8 shadow-[var(--shadow-card)]">
+            <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-8 shadow-[var(--shadow-card)]">
               <h1 className="text-2xl font-black">الصفحة غير متاحة حاليًا</h1>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
                 تم إخفاء هذه الصفحة مؤقتًا من إدارة المنصة.
@@ -129,7 +129,7 @@ export function PublicLayout({
         )}
       </main>
 
-      {pathname !== "/" && <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 rounded-t-[1.75rem] border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-soft)] backdrop-blur-xl xl:hidden" aria-label="التنقل السريع">
+      {pathname !== "/" && <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 rounded-t-[1.75rem] border-t border-border border-[#D9C0A3]/35 bg-[#FFFDF9]/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-soft)] backdrop-blur-xl xl:hidden" aria-label="التنقل السريع">
         {[
           { to: "/" as const, label: "الرئيسية", icon: Home },
           { to: "/services" as const, label: "الخدمات", icon: BookOpen },
