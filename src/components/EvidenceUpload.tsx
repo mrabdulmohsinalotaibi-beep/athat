@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Download, FileText, Film, ImageIcon, Loader2, RotateCcw, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { HijriDatePicker } from "@/components/HijriDatePicker";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -213,9 +214,7 @@ export function EvidenceUploadDialog({
             <div>
               <Label className="mb-1.5 block text-xs">تاريخ الشاهد</Label>
               <div className="relative">
-                <Input type="date" value={edate} onChange={(e) => setEdate(e.target.value)} className="text-transparent caret-transparent" aria-label="تاريخ الشاهد" />
-                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground">{formatHijriDate(edate)}</span>
-              </div>
+                <HijriDatePicker value={edate} onChange={setEdate} />
             </div>
           </div>
           <div>
