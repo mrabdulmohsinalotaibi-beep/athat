@@ -60,28 +60,31 @@
 }
 :root {
   color-scheme: light;
-  --radius: 0.9rem;
+  --radius: 1rem;
 
-  /* هوية ذات: كحلي بترولي + تركوازي + ذهبي هادئ + عاجي */
-  --background: #f8f6f1;
-  --foreground: #103847;
+  /* هوية الذات v3: كحلي عميق للعناوين + teal للأزرار + أخضر هادئ + رملي دافئ */
+  --background: #f6f1e8;
+  --foreground: #0f2a3d;
   --card: #ffffff;
-  --card-foreground: #103847;
+  --card-foreground: #0f2a3d;
   --popover: #ffffff;
-  --popover-foreground: #103847;
-  --primary: #07566a;
+  --popover-foreground: #0f2a3d;
+  --primary: #0f7c7a;
   --primary-foreground: #ffffff;
-  --secondary: #e8f3f1;
-  --secondary-foreground: #0b5263;
-  --muted: #f1f4f2;
-  --muted-foreground: #66777b;
-  --accent: #d9efec;
-  --accent-foreground: #07566a;
+  --secondary: #e6f2ee;
+  --secondary-foreground: #0f4f55;
+  --muted: #f1ece2;
+  --muted-foreground: #6b7774;
+  --accent: #dcefe6;
+  --accent-foreground: #0f5f5c;
   --destructive: #c74d55;
   --destructive-foreground: #ffffff;
-  --border: #d9e3e1;
-  --input: #d5e0de;
-  --ring: #2a9d8f;
+  --border: #e6e1d6;
+  --input: #e0dbcf;
+  --ring: #0f7c7a;
+  --navy: #0f2a3d;
+  --calm-green: #5fa37f;
+  --sand: #efe6d6;
   --chart-1: #07566a;
   --chart-2: #2a9d8f;
   --chart-3: #d4af7c;
@@ -105,8 +108,8 @@
   --letterhead-primary: #07566a;
   --letterhead-secondary: #c79a5b;
   --letterhead-soft: #eef6f4;
-  --shadow-soft: 0 20px 48px -28px rgb(7 59 76 / 0.28);
-  --shadow-card: 0 12px 32px -24px rgb(7 59 76 / 0.22);
+  --shadow-soft: 0 18px 40px -26px rgb(15 42 61 / 0.22);
+  --shadow-card: 0 6px 20px -12px rgb(15 42 61 / 0.14);
 }
 .dark {
   color-scheme: dark;
