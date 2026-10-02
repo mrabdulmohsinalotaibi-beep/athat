@@ -144,7 +144,8 @@ function AttendancePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pdf, setPdf] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const [rows, setRows] = useState<ImportedAttendance[]>([]);\n  const [importStatus, setImportStatus] = useState<OcrProgress | null>(null);
+  const [rows, setRows] = useState<ImportedAttendance[]>([]);
+  const [importStatus, setImportStatus] = useState<OcrProgress | null>(null);
 
   const pickPdf = (file?: File) => {
     if (!file) return;
