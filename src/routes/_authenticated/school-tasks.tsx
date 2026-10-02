@@ -350,7 +350,7 @@ function SchoolTasksPage() {
   const selectedReportTasks = reportableTasks.filter((task) => selectedReportTaskIds.includes(task.id));
 
   if (query.isLoading) {
-    return <div dir="rtl" className="rounded-2xl border bg-card p-8 text-center text-sm text-muted-foreground">جارٍ تحميل المهام المدرسية...</div>;
+    return <div dir="rtl" className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-8 text-center text-sm text-muted-foreground">جارٍ تحميل المهام المدرسية...</div>;
   }
 
   if (query.isError) {
@@ -364,7 +364,7 @@ function SchoolTasksPage() {
 
   if (!membership) {
     return (
-      <div dir="rtl" className="rounded-2xl border bg-card p-6">
+      <div dir="rtl" className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-6">
         <h1 className="text-xl font-black">اربط حسابك بفريق المدرسة أولًا</h1>
         <p className="mt-2 text-sm text-muted-foreground">بعد ربط الحساب بالمدرسة ستظهر مهامك وإمكانية الإسناد حسب دورك.</p>
         <a href="/school-team" className="mt-4 inline-block text-sm font-black text-primary hover:underline">فتح فريق المدرسة والصلاحيات</a>
@@ -374,7 +374,7 @@ function SchoolTasksPage() {
 
   return (
     <div dir="rtl" className="space-y-5">
-      <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
+      <section className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary"><ClipboardCheck className="size-5" /><span className="text-xs font-black">دورة تنفيذ واضحة</span></div>
@@ -391,7 +391,7 @@ function SchoolTasksPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border bg-card p-3 shadow-sm">
+      <section className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-black">تركيز العمل</p>
@@ -456,7 +456,7 @@ function SchoolTasksPage() {
                   <label
                     key={template.key}
                     className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition ${
-                      active ? "border-emerald-500/20 bg-emerald-500/5" : checked ? "border-primary/40 bg-primary/5" : "bg-card hover:border-primary/30"
+                      active ? "border-emerald-500/20 bg-emerald-500/5" : checked ? "border-primary/40 bg-[#E4ECDF]/70" : "bg-card hover:border-primary/30"
                     }`}
                   >
                     <input
@@ -525,7 +525,7 @@ function SchoolTasksPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <aside className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <aside className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <div className="flex items-center gap-2"><Plus className="size-4 text-primary" /><h2 className="font-black">إسناد مهمة جديدة</h2></div>
           {lowerMembers.length ? (
             <div className="mt-4 space-y-3">
@@ -557,7 +557,7 @@ function SchoolTasksPage() {
           )}
         </aside>
 
-        <div className="space-y-4">
+        <div className="reference-screen space-y-4">
           <TaskGroup
             title="مهامي"
             empty="لا توجد مهام مسندة إليك."
@@ -587,7 +587,7 @@ function SchoolTasksPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="font-black">رفع تقرير إنجاز المهام</h2>
@@ -595,7 +595,7 @@ function SchoolTasksPage() {
               حدد المهام المكتملة أو المعتمدة ثم حوّلها إلى نسخة تقرير ثابتة تُرفع للمسؤول الأعلى للقراءة فقط.
             </p>
           </div>
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{selectedReportTasks.length} محددة</span>
+          <span className="rounded-full bg-[#E4ECDF] px-3 py-1 text-xs font-black text-primary">{selectedReportTasks.length} محددة</span>
         </div>
 
         {higherMembers.length && reportableTasks.length ? (
@@ -698,7 +698,7 @@ function TaskGroup({
   reviewTask: { mutate: (variables: { id: string; action: "اعتماد" | "إعادة" | "إلغاء" }) => void };
 }) {
   return (
-    <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+    <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
       <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-black">{title}</h2><span className="text-xs text-muted-foreground">{tasks.length} مهمة</span></div>
       <div className="space-y-3">
         {tasks.map((task) => {
