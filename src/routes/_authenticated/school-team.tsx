@@ -220,7 +220,7 @@ function SchoolTeamPage() {
           <p className="mt-2 text-sm leading-7 text-muted-foreground">أنشئ مساحة للمدرسة أو أدخل الرمز الذي استلمته من مسؤول المدرسة.</p>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-2">
+        <section className="grid gap-4 xl:grid-cols-2">
           <div className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
             <h2 className="font-black">إنشاء مساحة مدرسة</h2>
             <div className="mt-4 space-y-3">
@@ -336,7 +336,7 @@ function SchoolTeamPage() {
             {pending.map((member) => {
               const selectedRole = pendingRoles[member.id] ?? "teacher";
               return (
-                <div key={member.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 lg:flex-row lg:items-center lg:justify-between">
+                <div key={member.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 xl:flex-row xl:items-center xl:justify-between">
                   <div><p className="font-black">{member.display_name || "عضو جديد"}</p><p className="text-[11px] text-muted-foreground">طلب جديد للانضمام</p></div>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
@@ -358,7 +358,7 @@ function SchoolTeamPage() {
 
       <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><Users className="size-4 text-primary" /><h2 className="font-black">فريق المدرسة</h2></div><span className="text-xs text-muted-foreground">{active.length} عضو</span></div>
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2 xl:grid-cols-2 xl:grid-cols-3">
           {active.map((member) => (
             <article key={member.id} className="rounded-xl border p-3">
               <div className="flex items-start justify-between gap-2">
@@ -401,7 +401,7 @@ function SchoolTeamPage() {
             <h2 className="font-black">عضويات معلقة</h2>
             <span className="text-xs text-muted-foreground">{suspended.length} عضو</span>
           </div>
-          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-2 xl:grid-cols-2 xl:grid-cols-3">
             {suspended.map((member) => (
               <article key={member.id} className="rounded-xl border border-dashed p-3">
                 <p className="text-sm font-black">{member.display_name || "عضو المدرسة"}</p>
@@ -420,7 +420,7 @@ function SchoolTeamPage() {
           <ShieldCheck className="size-4 text-primary" />
           <h2 className="text-sm font-black">صلاحيات الذات | ATHAT الفعلية</h2>
         </div>
-        <div className="mt-3 grid gap-2 md:grid-cols-3">
+        <div className="mt-3 grid gap-2 xl:grid-cols-3">
           <div className="rounded-xl border bg-background p-3">
             <p className="text-xs font-black">الموجه الطلابي</p>
             <p className="mt-1 text-[10px] leading-5 text-muted-foreground">سجلات التوجيه والحالات والجلسات والخطة والبرامج والشواهد، إضافة إلى مهام المدرسة.</p>
