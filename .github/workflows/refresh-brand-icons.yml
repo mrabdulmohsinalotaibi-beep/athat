@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "public/athat-icon-hq.webp"
+      - "public/athat-icon.svg"
       - ".github/workflows/refresh-brand-icons.yml"
 
 permissions:
@@ -23,17 +23,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Install image tools
+      - name: Install SVG tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq imagemagick
+          sudo apt-get install -y -qq librsvg2-bin imagemagick
 
       - name: Generate browser and install icons
         run: |
-          convert public/athat-icon-hq.webp -alpha on -filter Lanczos -resize 180x180 -background none -gravity center -extent 180x180 public/apple-touch-icon.png
-          convert public/athat-icon-hq.webp -alpha on -filter Lanczos -resize 192x192 -background none -gravity center -extent 192x192 public/icon-192x192.png
-          convert public/athat-icon-hq.webp -alpha on -filter Lanczos -resize 512x512 -background none -gravity center -extent 512x512 public/icon-512x512.png
-          convert public/athat-icon-hq.webp -alpha on -filter Lanczos -resize 64x64 -background none -gravity center -extent 64x64 public/favicon.png
+          rsvg-convert -w 180 -h 180 public/athat-icon.svg -o public/apple-touch-icon.png
+          rsvg-convert -w 192 -h 192 public/athat-icon.svg -o public/icon-192x192.png
+          rsvg-convert -w 512 -h 512 public/athat-icon.svg -o public/icon-512x512.png
+          rsvg-convert -w 64 -h 64 public/athat-icon.svg -o public/favicon.png
           convert public/favicon.png -define icon:auto-resize=64,48,32,16 public/favicon.ico
 
       - name: Commit generated icons
