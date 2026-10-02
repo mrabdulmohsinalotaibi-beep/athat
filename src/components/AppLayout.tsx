@@ -8,7 +8,9 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Settings,
+  MessageSquareText,
+  BarChart3,
+  Users,
   FileText,
   UserRound,
 } from "lucide-react";
@@ -20,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { QuickActionLauncher } from "@/components/QuickActionLauncher";
+import { BrandLogo } from "@/components/BrandLogo";
 import { filterWorkspaceSections, isGuidanceWorkspaceMember } from "@/lib/school-access";
 
 function isPathActive(pathname: string, route: string) {
@@ -52,9 +55,9 @@ function AlertLink({
 
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-  { to: "/plan", label: "الخطة", icon: ClipboardList, activeRoutes: ["/plan", "/execution", "/programs"] },
-  { to: "/evidences", label: "الشواهد", icon: FileText, activeRoutes: ["/evidences", "/reports"] },
-  { to: "/settings", label: "المزيد", icon: Settings, activeRoutes: ["/settings", "/school-team", "/school-tasks", "/integrations", "/trash", "/health", "/profile", "/students", "/cases", "/interviews", "/calendar", "/attendance", "/behavior", "/referrals", "/committees", "/toolkit", "/weekly-poster", "/inbox", "/school-inbox", "/posts", "/messages"] },
+  { to: "/students", label: "السجلات", icon: Users, activeRoutes: ["/students", "/cases", "/interviews", "/referrals", "/attendance", "/behavior", "/plan", "/execution", "/programs", "/evidences"] },
+  { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox", "/school-inbox", "/posts"] },
+  { to: "/reports", label: "التقارير", icon: BarChart3, activeRoutes: ["/reports", "/free-documents"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -165,6 +168,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const currentSection = visibleSections.find((section) =>
     section.items.some((item) => isPathActive(pathname, item.to)),
   );
+  const pageTitle =
+    pathname === "/dashboard"
+      ? "الرئيسية"
+      : pathname.startsWith("/profile")
+        ? "حسابي"
+        : currentSection?.items.find((item) => isPathActive(pathname, item.to))?.label ?? "الذات";
 
   useEffect(() => {
     setOpen(false);
@@ -202,7 +211,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[var(--brand-mark-surface)]">
-              <img src="/brand-final.svg?v=20261001-finalbrandbrand" alt="شعار الذات" className="size-full object-contain" />
+              <BrandLogo className="size-full" />
             </div>
             <div>
               <p className="text-xs font-bold text-sidebar-foreground/70">نظام التوجيه الطلابي</p>
@@ -310,42 +319,38 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
-        <header className="athat-topbar sticky top-0 z-20 border-b border-white/10 bg-[#073B4C] text-white shadow-sm">
-          <div className="mx-auto flex min-h-[72px] w-full items-center justify-between gap-3 px-3 py-2.5 sm:px-5 lg:px-8">
+        <header className="athat-topbar sticky top-0 z-20 border-b bg-card text-foreground">
+          <div className="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3 py-2.5 sm:px-5 lg:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label="فتح القائمة الجانبية"
                 onClick={() => setOpen(true)}
-                className="shrink-0 text-white hover:bg-white/10 hover:text-white lg:hidden"
+                className="shrink-0 rounded-xl text-foreground hover:bg-muted lg:hidden"
               >
                 <Menu className="size-5" />
               </Button>
 
-              <div className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-xl bg-[var(--brand-mark-surface)]">
-                <img
-                  src="/brand-final.svg?v=20261001-finalbrandbrand"
-                  alt="شعار الذات"
-                  className="size-[50px] object-contain sm:size-[56px]"
-                />
-              </div>
+              <Link to="/dashboard" aria-label="الرئيسية" className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-xl bg-[var(--brand-mark-surface)] lg:hidden">
+                <BrandLogo className="size-10" />
+              </Link>
 
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <p className="truncate text-base font-black tracking-tight text-white sm:text-lg">
-                    {workspaceSchool?.name || school?.school_name || "اسم المدرسة غير محدد"}
-                  </p>
+                  <h1 className="truncate text-base font-black tracking-tight text-navy sm:text-lg">
+                    {pageTitle}
+                  </h1>
                   
                 </div>
-                <p className="mt-0.5 truncate text-[11px] font-medium text-[#C7E4E1] sm:text-xs">
-                  {workspaceSchool?.education_dept || school?.education_dept || "بيانات إدارة التعليم غير محددة"}
+                <p className="mt-0.5 truncate text-[11px] font-medium text-muted-foreground sm:text-xs">
+                  {workspaceSchool?.name || school?.school_name || "اسم المدرسة غير محدد"}
                 </p>
-                <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#B8D7D5] sm:flex">
-                  <span>{guidanceNavigationAllowed ? "الموجه الطلابي" : roleLabel}: <b className="font-bold text-white">{currentWorkspaceMember?.display_name || school?.counselor_name || "—"}</b></span>
-                  <span className="text-white/25">•</span>
+                <div className="mt-1.5 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground lg:flex">
+                  <span>{guidanceNavigationAllowed ? "الموجه الطلابي" : roleLabel}: <b className="font-bold text-foreground">{currentWorkspaceMember?.display_name || school?.counselor_name || "—"}</b></span>
+                  <span className="text-border">•</span>
                   <span>{school?.academic_year || "العام الدراسي"}</span>
-                  <span className="text-white/25">•</span>
+                  <span className="text-border">•</span>
                   <span>{school?.semester || "الفصل الدراسي"}</span>
                 </div>
               </div>
@@ -354,7 +359,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <QuickActionLauncher
                 guidanceAllowed={guidanceNavigationAllowed}
-                className="hidden border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white sm:inline-flex"
+                className="hidden rounded-xl sm:inline-flex"
               />
               {guidanceNavigationAllowed && <div className="hidden md:block"><GlobalSearch /></div>}
               <div className="relative">
@@ -363,7 +368,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   size="icon"
                   aria-label="التنبيهات"
                   onClick={() => setAlertsOpen((value) => !value)}
-                  className="relative text-white hover:bg-white/10 hover:text-white"
+                  className="relative rounded-xl text-foreground hover:bg-muted"
                 >
                   <Bell className="size-5" />
                   {alertCount > 0 && (
@@ -400,7 +405,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 asChild
                 variant="outline"
                 size="sm"
-                className="h-10 gap-2 border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+                className="h-10 gap-2 rounded-xl"
               >
                 <Link to="/profile" title="حسابي الشخصي">
                   <UserRound className="size-4 shrink-0" />
@@ -410,7 +415,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 p-4 pb-28 sm:p-6 lg:p-8">
           {currentSection && pathname !== "/dashboard" && (
             <nav
               className="mb-4 -mx-4 -mt-4 border-b bg-card/70 px-4 py-2 lg:hidden"
@@ -443,7 +448,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </main>
 
         <nav
-          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center rounded-t-3xl border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
           aria-label="التنقل الرئيسي"
         >
           {visibleBottomNavigation.slice(0, 2).map((item) => {
@@ -460,7 +465,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 )}
               >
                 <Icon className="size-5" aria-hidden="true" />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
@@ -481,13 +486,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 )}
               >
                 <Icon className="size-5" aria-hidden="true" />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <footer className="border-t px-4 py-4">
+        <footer className="hidden border-t px-4 py-4 lg:block">
           <Copyright />
         </footer>
       </div>
