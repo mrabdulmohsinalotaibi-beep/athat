@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -11,8 +11,11 @@ import {
   ExternalLink,
   FileText,
   GraduationCap,
+  Heart,
   HeartHandshake,
   HeartPulse,
+  ImageIcon,
+  Loader2,
   LockKeyhole,
   Megaphone,
   Share2,
@@ -67,6 +70,7 @@ type BlogPortalRow = {
   created_at: string | null;
   slug: string | null;
   is_featured: boolean | null;
+  like_count: number | null;
 };
 
 type GuidanceProfile = {
@@ -123,7 +127,8 @@ function PublicCounselorBlogPage() {
   const [contributionOpen, setContributionOpen] = useState(false);
   const [contributionSent, setContributionSent] = useState(false);
   const [contributionSaving, setContributionSaving] = useState(false);
-  const [contribution, setContribution] = useState({ name: "", role: "", title: "", body: "" });
+  const [contributionImageBusy, setContributionImageBusy] = useState(false);
+  const [contribution, setContribution] = useState({ name: "", role: "", title: "", body: "", cover_url: "" });
 
   const {
     data = [],
@@ -329,7 +334,10 @@ function PublicCounselorBlogPage() {
             <div className="mb-4 rounded-2xl border border-[#D9C0A3]/55 bg-gradient-to-l from-[#F4E8D9] to-[#E4ECDF] p-3 shadow-sm">
               <div className="flex items-center gap-2"><Sparkles className="size-4 text-[#4A141F]" /><span className="text-[10px] font-black text-[#4A141F]">محتوى مميز</span></div>
               <h2 className="mt-1.5 line-clamp-1 text-sm font-black">{featuredPost.title}</h2>
-              <Link to="/posts/$slug" params={{ slug: featuredPost.slug }} search={{ portal: token }} className="mt-2 inline-flex items-center gap-1 text-[11px] font-black text-[#264938]">اقرأ الآن <ArrowLeft className="size-3" /></Link>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <Link to="/posts/$slug" params={{ slug: featuredPost.slug }} search={{ portal: token }} className="inline-flex items-center gap-1 text-[11px] font-black text-[#264938]">اقرأ الآن <ArrowLeft className="size-3" /></Link>
+                <LikeButton slug={featuredPost.slug} initialCount={featuredPost.like_count ?? 0} compact />
+              </div>
             </div>
           )}
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 py-2">
@@ -378,6 +386,7 @@ function PublicCounselorBlogPage() {
                   p_author_name: contribution.name,
                   p_author_role: contribution.role,
                   p_body: contribution.body,
+                  p_cover_url: contribution.cover_url || null,
                   p_title: contribution.title,
                   p_token: token,
                 });
@@ -390,9 +399,51 @@ function PublicCounselorBlogPage() {
                   <input required minLength={2} value={contribution.role} onChange={(e) => setContribution({ ...contribution, role: e.target.value })} placeholder="الصفة" className="h-11 min-w-0 rounded-xl border bg-background px-3 text-sm" />
                 </div>
                 <input required minLength={3} value={contribution.title} onChange={(e) => setContribution({ ...contribution, title: e.target.value })} placeholder="عنوان المشاركة" className="h-11 w-full rounded-xl border bg-background px-3 text-sm" />
-                <textarea required minLength={10} rows={4} value={contribution.body} onChange={(e) => setContribution({ ...contribution, body: e.target.value })} placeholder="اكتب مشاركتك…" className="w-full rounded-xl border bg-background p-3 text-sm leading-6" />
+                <textarea rows={4} value={contribution.body} onChange={(e) => setContribution({ ...contribution, body: e.target.value })} placeholder="اكتب مشاركتك… ويمكن الاكتفاء بصورة مع عنوان" className="w-full rounded-xl border bg-background p-3 text-sm leading-6" />
+                <div className="rounded-2xl border border-dashed border-[#D9C0A3]/60 bg-[#FBF8F1] p-3">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="size-4 text-primary" />
+                    <div>
+                      <p className="text-xs font-black">إضافة صورة للمشاركة</p>
+                      <p className="text-[10px] leading-5 text-muted-foreground">تُرسل الصورة للموجه للمراجعة، ولا تظهر للعامة إلا بعد اعتماده للمشاركة.</p>
+                    </div>
+                  </div>
+                  <label htmlFor="community-image-upload" className="mt-3 flex min-h-20 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-primary/35 bg-white px-3 py-4 text-xs font-black text-primary">
+                    {contributionImageBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageIcon className="size-4" />}
+                    {contributionImageBusy ? "جارٍ تجهيز الصورة…" : "اختيار صورة من الجهاز"}
+                  </label>
+                  <input
+                    id="community-image-upload"
+                    className="sr-only"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={contributionImageBusy}
+                    onChange={(event) => {
+                      const file = event.currentTarget.files?.[0] ?? null;
+                      event.currentTarget.value = "";
+                      if (!file) return;
+                      void (async () => {
+                        setContributionImageBusy(true);
+                        try {
+                          const cover_url = await contributionImageDataUrl(file);
+                          setContribution((current) => ({ ...current, cover_url }));
+                        } catch (error) {
+                          window.alert(error instanceof Error ? error.message : "تعذّر تجهيز الصورة");
+                        } finally {
+                          setContributionImageBusy(false);
+                        }
+                      })();
+                    }}
+                  />
+                  {contribution.cover_url && (
+                    <div className="mt-3 overflow-hidden rounded-xl border bg-white">
+                      <img src={contribution.cover_url} alt="معاينة صورة المشاركة" className="max-h-[420px] w-full object-contain" />
+                      <button type="button" onClick={() => setContribution((current) => ({ ...current, cover_url: "" }))} className="w-full border-t px-3 py-2 text-xs font-black text-[#4A141F]">إزالة الصورة</button>
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2">
-                  <button disabled={contributionSaving} className="flex-1 rounded-xl bg-primary py-3 text-sm font-black text-primary-foreground">{contributionSaving ? "جارٍ الإرسال…" : "إرسال للموافقة"}</button>
+                  <button disabled={contributionSaving || contributionImageBusy || (!contribution.body.trim() && !contribution.cover_url)} className="flex-1 rounded-xl bg-primary py-3 text-sm font-black text-primary-foreground disabled:opacity-50">{contributionSaving ? "جارٍ الإرسال…" : "إرسال للموافقة"}</button>
                   <button type="button" onClick={() => setContributionOpen(false)} className="rounded-xl border px-4 text-sm font-bold">إلغاء</button>
                 </div>
               </form>
@@ -533,6 +584,7 @@ function PublicContentSection({
                         <Share2 className="size-5" />
                         مشاركة
                       </a>
+                      <LikeButton slug={post.slug} initialCount={post.like_count ?? 0} compact />
                     </div>
                   </div>
                 </article>
@@ -543,4 +595,113 @@ function PublicContentSection({
       </div>
     </section>
   );
+}
+
+
+function getLikeClientId(): string {
+  if (typeof window === "undefined") return "";
+  const key = "athat-public-like-client";
+  let value = window.localStorage.getItem(key);
+  if (!value) {
+    value = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `client-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    window.localStorage.setItem(key, value);
+  }
+  return value;
+}
+
+function LikeButton({ slug, initialCount = 0, compact = false }: { slug: string; initialCount?: number; compact?: boolean }) {
+  const [count, setCount] = useState(Number(initialCount) || 0);
+  const [liked, setLiked] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const clientId = getLikeClientId();
+    if (!clientId) return;
+    void (async () => {
+      const { data } = await (supabase as any).rpc("get_post_like_state", {
+        p_slug: slug,
+        p_client_id: clientId,
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return;
+      setCount(Number(row.like_count) || 0);
+      setLiked(Boolean(row.liked));
+    })();
+  }, [slug]);
+
+  async function toggle() {
+    const clientId = getLikeClientId();
+    if (!clientId || busy) return;
+    setBusy(true);
+    const { data, error } = await (supabase as any).rpc("toggle_post_like", {
+      p_slug: slug,
+      p_client_id: clientId,
+    });
+    setBusy(false);
+    if (error) return;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return;
+    setCount(Number(row.like_count) || 0);
+    setLiked(Boolean(row.liked));
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void toggle()}
+      disabled={busy}
+      aria-pressed={liked}
+      aria-label={liked ? "إلغاء الإعجاب" : "إعجاب"}
+      className={"inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 font-black transition " +
+        (liked ? "border-[#9A6C78]/40 bg-[#F1E5E8] text-[#4A141F]" : "border-[#D9C0A3]/55 bg-[#FFFDF9] text-[#264938]") +
+        (compact ? " text-[10px]" : " text-xs")}
+    >
+      <Heart className={"size-4 " + (liked ? "fill-current" : "")} />
+      <span>{count}</span>
+      <span>{liked ? "أعجبني" : "إعجاب"}</span>
+    </button>
+  );
+}
+
+async function contributionImageDataUrl(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("اختر ملف صورة فقط.");
+  if (file.size > 10 * 1024 * 1024) throw new Error("حجم الصورة يجب ألا يتجاوز 10 ميجابايت.");
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("تعذّر قراءة الصورة المحددة."));
+      img.src = objectUrl;
+    });
+
+    const maxSide = 1400;
+    const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("تعذّر تجهيز الصورة.");
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    let quality = 0.82;
+    let blob: Blob | null = null;
+    do {
+      blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+      quality -= 0.08;
+    } while (blob && blob.size > 620000 && quality >= 0.34);
+
+    if (!blob || blob.size > 700000) throw new Error("الصورة كبيرة جدًا. اختر صورة أصغر.");
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("تعذّر تجهيز الصورة."));
+      reader.onerror = () => reject(new Error("تعذّر تجهيز الصورة."));
+      reader.readAsDataURL(blob!);
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
