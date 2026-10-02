@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/admin/upgrade-requests/")(
 
 function AdminUpgradeRequestsPage() {
   return (
-    <div dir="rtl" className="mx-auto max-w-3xl space-y-6">
+    <div dir="rtl" className="reference-screen mx-auto max-w-3xl space-y-6">
       <div>
         <Badge variant="secondary" className="gap-1.5">
           <ShieldCheck className="size-3.5 text-primary" />
@@ -29,9 +29,9 @@ function AdminUpgradeRequestsPage() {
         </p>
       </div>
 
-      <section className="rounded-lg border border-border bg-card p-6">
+      <section className="rounded-lg border border-border border-[#D9C0A3]/35 bg-[#FFFDF9] p-6">
         <div className="flex items-start gap-4">
-          <span className="rounded-md bg-secondary p-3 text-primary">
+          <span className="rounded-xl bg-[#E4ECDF] p-3 text-[#264938]">
             <Clock3 className="size-5" />
           </span>
           <div>
