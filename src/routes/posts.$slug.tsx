@@ -7,6 +7,7 @@ import { Copyright } from "@/components/Copyright";
 import { PUBLIC_POST_FIELDS, formatPostDate, kindLabel, type PublicPost } from "@/lib/posts";
 
 export const Route = createFileRoute("/posts/$slug")({
+  validateSearch: (search: Record<string, unknown>): { portal?: string } => ({ portal: typeof search["portal"] === "string" ? search["portal"] : undefined }),
   head: () => ({
     meta: [
       { title: "منشور | الذات" },
@@ -22,6 +23,8 @@ export const Route = createFileRoute("/posts/$slug")({
 
 function PostPage() {
   const { slug } = Route.useParams();
+  const { portal } = Route.useSearch();
+  const blogHref = portal ? `/blog/${encodeURIComponent(portal)}` : "/";
   const { data: post, isLoading } = useQuery({
     queryKey: ["public-post", slug],
     queryFn: async () => {
@@ -47,7 +50,7 @@ function PostPage() {
     <div dir="rtl" className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b border-border/60 bg-card/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-8">
-          <Link to="/" className="flex items-center gap-2 text-sm font-bold text-primary"><ArrowRight className="size-4" /> الرئيسية</Link>
+          <a href={blogHref} className="flex items-center gap-2 text-sm font-bold text-primary"><ArrowRight className="size-4" /> المدونة</a>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex"><Link to="/auth" search={{ next: "" }}>دخول الموجه الطلابي</Link></Button>
             <Link to="/" className="text-lg font-black text-primary">الذات</Link>
@@ -62,7 +65,7 @@ function PostPage() {
             <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Home className="size-7" /></div>
             <h1 className="mt-6 text-2xl font-black">المنشور غير متاح</h1>
             <p className="mt-2 text-muted-foreground">قد يكون حُذف أو لم يعد منشورًا للعامة.</p>
-            <Button asChild className="mt-6"><Link to="/">العودة إلى المنشورات العامة</Link></Button>
+            <Button asChild className="mt-6"><a href={blogHref}>العودة إلى المدونة</a></Button>
           </div>
         ) : (
           <article>
