@@ -265,7 +265,7 @@ function PublicCounselorBlogPage() {
 
           <div className="order-2 flex min-w-0 items-center justify-center gap-3 text-center">
             <img
-              src={profile?.logo_url || "/athat-icon-hq.webp?v=20261002-hq"}
+              src={profile?.logo_url || "/athat-icon.svg?v=20261002-vector"}
               alt="شعار بوابة التوجيه الطلابي"
               className="size-10 shrink-0 rounded-xl bg-[var(--brand-mark-surface)] object-contain p-1 shadow-sm"
             />
