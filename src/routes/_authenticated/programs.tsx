@@ -763,6 +763,7 @@ function ProgramsPage() {
             <CalendarRange className="size-4" /> الخطة الوزارية 1448هـ
           </Button>
         </div>
+        </div>
       </section>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
