@@ -285,7 +285,7 @@ export function RecordPage({
             return;
           }
           if (config.key === "students" && key === "grade") {
-            query = query.in(key, gradeAliases(value, serverFilters.stage));
+            query = query.in(key, gradeAliases(value, serverFilters["stage"]));
             return;
           }
           query = query.eq(key, value);
