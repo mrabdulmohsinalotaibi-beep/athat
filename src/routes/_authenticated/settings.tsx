@@ -237,11 +237,11 @@ function SettingsPage() {
   });
 
   return (
-    <div className="space-y-5" dir="rtl">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+    <div className="reference-screen space-y-5" dir="rtl">
+      <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-soft)] sm:p-6">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative">
-          <span className="inline-flex rounded-full border border-primary/15 bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary">إعدادات الهوية والمستندات</span>
+          <span className="inline-flex rounded-full border border-primary/15 bg-[#E4ECDF]/70 px-2.5 py-1 text-[10px] font-black text-primary">إعدادات الهوية والمستندات</span>
           <h1 className="mt-2 text-2xl font-black text-navy">بيانات المدرسة والمستندات</h1>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">هذه البيانات هي المصدر الموحد للكليشة الرسمية في جميع ملفات PDF وتقارير A4.</p>
         </div>
@@ -281,7 +281,7 @@ function SettingsPage() {
         </div>
       )}
 
-      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <h2 className="mb-1 font-bold">بيانات المدرسة والموجه</h2>
         <p className="mb-4 text-xs text-muted-foreground">أدخلها مرة واحدة؛ ستظهر تلقائيًا في التقارير وملف الطالب والخطة والبرامج.</p>
         <form
@@ -337,7 +337,7 @@ function SettingsPage() {
                 id={f.name}
                 name={f.name}
                 rows={3}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 py-2 text-sm"
                 defaultValue={
                   ((school as Record<string, unknown> | null)?.[f.name] as string) ?? ""
                 }
@@ -405,7 +405,7 @@ function SettingsPage() {
         </form>
       </section>
 
-      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="mb-4 flex items-center gap-2">
           <FileText className="size-5 text-primary" />
           <div>
@@ -422,7 +422,7 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <h2 className="mb-1 font-bold">القوائم المرجعية</h2>
         <p className="mb-4 text-xs text-muted-foreground">
           أضف أو عدّل الخيارات التي تظهر في نماذج الحالات والإحالات والإجراءات واللجان.
@@ -443,7 +443,7 @@ function SettingsPage() {
           <select
             name="category"
             required
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-11 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
           >
             <option value="">اختر القائمة</option>
             {LOOKUP_CATEGORIES.map((category) => (
@@ -462,7 +462,7 @@ function SettingsPage() {
           {lookups.map((item) => (
             <li
               key={item.id}
-              className="flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-xl bg-[#F2E9DF] px-3 py-2 text-sm"
             >
               {editingLookup?.id === item.id ? (
                 <Input
