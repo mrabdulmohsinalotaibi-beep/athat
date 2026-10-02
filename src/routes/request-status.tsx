@@ -81,8 +81,8 @@ function RequestStatusPage() {
       subtitle="اطّلع على حالة طلبك دون عرض أي بيانات شخصية أو تفاصيل سرية."
     >
       <section className="mx-auto max-w-3xl px-4 py-12 sm:px-8 sm:py-16">
-        <div className="rounded-3xl border bg-card p-5 shadow-sm sm:p-8">
-          <div className="flex items-start gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+        <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-sm sm:p-8">
+          <div className="flex items-start gap-3 rounded-2xl border border-[#89AA74]/35 bg-[#E4ECDF]/70 p-4">
             <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
             <p className="text-xs leading-6 text-muted-foreground">
               للحماية، يلزم رقم الطلب ورمز التتبع معًا. لا تعرض هذه الصفحة اسم الطالب أو
@@ -134,7 +134,7 @@ function RequestStatusPage() {
           )}
 
           {lookup.data && (
-            <div className="mt-7 rounded-2xl border border-primary/20 bg-background p-5 sm:p-6">
+            <div className="mt-7 rounded-2xl border border-[#D9C0A3]/40 bg-[#FBF7F1] p-5 sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold text-primary">طلب رقم {lookup.data.request_no}</p>
@@ -143,7 +143,7 @@ function RequestStatusPage() {
                     <p className="mt-1 text-sm text-muted-foreground">{lookup.data.topic}</p>
                   )}
                 </div>
-                <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-black text-primary">
+                <span className="rounded-full bg-[#E4ECDF] px-3 py-1.5 text-xs font-black text-primary">
                   {lookup.data.status}
                 </span>
               </div>
