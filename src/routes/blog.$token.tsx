@@ -117,6 +117,8 @@ function PublicCounselorBlogPage() {
   const { school: schoolFromLink, feedback } = Route.useSearch();
   const [audience, setAudience] = useState<Audience>("student");
   const [section, setSection] = useState<"home" | "posts" | "articles" | "services">("home");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [kindFilter, setKindFilter] = useState("all");
   const [contributionOpen, setContributionOpen] = useState(false);
   const [contributionSent, setContributionSent] = useState(false);
   const [contributionSaving, setContributionSaving] = useState(false);
@@ -164,6 +166,15 @@ function PublicCounselorBlogPage() {
     new Date(b.published_at ?? b.created_at).getTime() - new Date(a.published_at ?? a.created_at).getTime(),
   );
   const weeklyPost = dailyPosts[0] ?? null;
+  const filteredPosts = useMemo(() => {
+    const source = section === "articles" ? articles : section === "posts" ? updates : dailyPosts;
+    const q = searchTerm.trim().toLowerCase();
+    return source.filter((post) => {
+      const matchesKind = kindFilter === "all" || post.kind === kindFilter;
+      const haystack = [post.title, post.excerpt, post.body, post.author_name].filter(Boolean).join(" ").toLowerCase();
+      return matchesKind && (!q || haystack.includes(q));
+    });
+  }, [articles, dailyPosts, kindFilter, searchTerm, section]);
 
   const formParams = useMemo(() => {
     const params = new URLSearchParams();
@@ -313,14 +324,30 @@ function PublicCounselorBlogPage() {
 
         {section !== "services" && (
         <section id="daily-feed" className="mx-auto max-w-4xl scroll-mt-20 px-3 py-4 sm:px-5">
+          {section === "home" && weeklyPost && (
+            <div className="mb-4 rounded-2xl border border-[#D9C0A3]/55 bg-gradient-to-l from-[#F4E8D9] to-[#E4ECDF] p-3 shadow-sm">
+              <div className="flex items-center gap-2"><Sparkles className="size-4 text-[#4A141F]" /><span className="text-[10px] font-black text-[#4A141F]">محتوى مميز</span></div>
+              <h2 className="mt-1.5 line-clamp-1 text-sm font-black">{weeklyPost.title}</h2>
+              <Link to="/posts/$slug" params={{ slug: weeklyPost.slug }} search={{ portal: token }} className="mt-2 inline-flex items-center gap-1 text-[11px] font-black text-[#264938]">اقرأ الآن <ArrowLeft className="size-3" /></Link>
+            </div>
+          )}
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 py-2">
+            <Search className="size-4 shrink-0 text-[#9A6C78]" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="ابحث في المدونة…" className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground" />
+          </div>
+          <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+            {[["all","الكل"],["article","مقالات"],["announcement","إعلانات"],["tip","إرشادي"],["news","أخبار"]].map(([key,label]) => (
+              <button key={key} type="button" onClick={() => setKindFilter(key!)} className={"shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black " + (kindFilter === key ? "border-[#4A141F] bg-[#4A141F] text-white" : "border-[#D9C0A3]/55 bg-[#FFFDF9]")}>{label}</button>
+            ))}
+          </div>
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-[11px] font-black text-primary">اليوميات</p>
               <h2 className="text-lg font-black">{section === "articles" ? "المقالات" : section === "posts" ? "المنشورات" : "أحدث المحتوى"}</h2>
             </div>
-            <span className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">{(section === "articles" ? articles : section === "posts" ? updates : dailyPosts).length} عنصر</span>
+            <span className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">{filteredPosts.length} عنصر</span>
           </div>
-          <PublicContentSection eyebrow="" title="" count={(section === "articles" ? articles : section === "posts" ? updates : dailyPosts).length} items={section === "articles" ? articles : section === "posts" ? updates : dailyPosts} compact />
+          <PublicContentSection eyebrow="" title="" count={filteredPosts.length} items={filteredPosts} compact />
         </section>
         )}
 
