@@ -139,7 +139,7 @@ function OwnerAdminPage() {
 
   if (adminLoading || settingsLoading) {
     return (
-      <div className="mx-auto max-w-5xl rounded-3xl border bg-card p-10 text-center">
+      <div className="mx-auto max-w-5xl rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-10 text-center">
         <RefreshCw className="mx-auto size-6 animate-spin text-primary" />
         <p className="mt-3 text-sm text-muted-foreground">جارٍ التحقق من صلاحيات الإدارة...</p>
       </div>
@@ -148,8 +148,8 @@ function OwnerAdminPage() {
 
   if (!admin?.isAdmin) {
     return (
-      <div dir="rtl" className="mx-auto max-w-2xl rounded-3xl border border-amber-500/25 bg-card p-8 text-center shadow-[var(--shadow-card)]">
-        <ShieldCheck className="mx-auto size-10 text-amber-600" />
+      <div dir="rtl" className="mx-auto max-w-2xl rounded-3xl border border-[#D9C0A3]/55 bg-[#FFFDF9] p-8 text-center shadow-[var(--shadow-card)]">
+        <ShieldCheck className="mx-auto size-10 text-[#4A141F]" />
         <h1 className="mt-4 text-2xl font-black">لوحة المالك محمية</h1>
         <p className="mt-3 text-sm leading-7 text-muted-foreground">
           حسابك مسجل في المنصة، لكن لم يتم منحه دور المالك بعد. ربط دور المالك يتم من قاعدة البيانات
@@ -166,12 +166,12 @@ function OwnerAdminPage() {
   const totalCount = Object.keys(flags).length;
 
   return (
-    <div dir="rtl" className="mx-auto max-w-6xl space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
+    <div dir="rtl" className="reference-screen mx-auto max-w-6xl space-y-6">
+      <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
         <div aria-hidden="true" className="pointer-events-none absolute -left-14 -top-14 size-44 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#89AA74]/35 bg-[#E4ECDF]/70 px-3 py-1 text-xs font-bold text-primary">
               <ShieldCheck className="size-4" />
               {admin.role === "owner" ? "مالك المنصة" : "مشرف المنصة"}
             </div>
@@ -183,11 +183,11 @@ function OwnerAdminPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="rounded-2xl border bg-background/80 px-5 py-3 shadow-[var(--shadow-card)]">
+            <div className="rounded-2xl border bg-[#FBF7F1] px-5 py-3 shadow-[var(--shadow-card)]">
               <p className="text-2xl font-black">{enabledCount}</p>
               <p className="text-[11px] text-muted-foreground">خاصية ظاهرة</p>
             </div>
-            <div className="rounded-2xl border bg-background/80 px-5 py-3 shadow-[var(--shadow-card)]">
+            <div className="rounded-2xl border bg-[#FBF7F1] px-5 py-3 shadow-[var(--shadow-card)]">
               <p className="text-2xl font-black">{totalCount - enabledCount}</p>
               <p className="text-[11px] text-muted-foreground">خاصية مخفية</p>
             </div>
@@ -195,9 +195,9 @@ function OwnerAdminPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-5 flex items-center gap-3">
-          <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+          <div className="rounded-2xl bg-[#E4ECDF] p-2.5 text-primary">
             <SlidersHorizontal className="size-5" />
           </div>
           <div>
@@ -223,8 +223,8 @@ function OwnerAdminPage() {
               className={
                 "flex min-h-10 w-full items-center justify-between rounded-xl border px-4 py-2 text-sm font-bold transition " +
                 (maintenanceMode
-                  ? "border-amber-500/40 bg-amber-500/10 text-amber-800"
-                  : "border-border bg-background text-foreground")
+                  ? "border-amber-500/40 bg-amber-500/10 text-[#4A141F]"
+                  : "border-[#D9C0A3]/45 bg-[#FFFDF9] text-foreground")
               }
             >
               <span className="flex items-center gap-2">
@@ -249,7 +249,7 @@ function OwnerAdminPage() {
       </section>
 
       {FEATURE_GROUPS.map((group) => (
-        <section key={group.title} className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <section key={group.title} className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="mb-5">
             <h2 className="font-black">{group.title}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{group.description}</p>
@@ -271,14 +271,14 @@ function OwnerAdminPage() {
                   className={
                     "flex items-center gap-4 rounded-2xl border p-4 text-right transition " +
                     (enabled
-                      ? "border-emerald-500/25 bg-emerald-500/5"
+                      ? "border-[#89AA74]/45 bg-[#E4ECDF]/70"
                       : "border-border bg-muted/30 opacity-75")
                   }
                 >
                   <span
                     className={
                       "flex size-10 shrink-0 items-center justify-center rounded-xl " +
-                      (enabled ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")
+                      (enabled ? "bg-[#E4ECDF] text-[#264938]" : "bg-muted text-muted-foreground")
                     }
                   >
                     {enabled ? <Eye className="size-5" /> : <EyeOff className="size-5" />}
@@ -289,7 +289,7 @@ function OwnerAdminPage() {
                   </span>
                   <span className={
                     "rounded-full px-2.5 py-1 text-[10px] font-black " +
-                    (enabled ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")
+                    (enabled ? "bg-[#E4ECDF] text-[#264938]" : "bg-muted text-muted-foreground")
                   }>
                     {enabled ? "ظاهر" : "مخفي"}
                   </span>
@@ -300,9 +300,9 @@ function OwnerAdminPage() {
         </section>
       ))}
 
-      <div className="sticky bottom-20 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card/95 p-4 shadow-xl backdrop-blur lg:bottom-4">
+      <div className="sticky bottom-20 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9]/95 p-4 shadow-xl backdrop-blur lg:bottom-4">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <CheckCircle2 className="size-4 text-emerald-600" />
+          <CheckCircle2 className="size-4 text-[#264938]" />
           التغييرات تُطبق على جميع الحسابات بعد الحفظ.
         </div>
         <div className="flex gap-2">
