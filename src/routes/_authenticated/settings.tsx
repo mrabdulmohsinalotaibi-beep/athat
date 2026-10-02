@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, FileText, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, FileText, Palette, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
@@ -101,6 +101,66 @@ function LogoField({
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">{hint}</p>
     </div>
+  );
+}
+
+
+const UI_THEMES = [
+  { id: "green", name: "أخضر", description: "هادئ ومتوازن", primary: "#264938", secondary: "#89AA74", surface: "#F3F7F1" },
+  { id: "gold", name: "ذهبي", description: "دافئ ومشرق", primary: "#C58A0A", secondary: "#E5BD4E", surface: "#FFF9E8" },
+  { id: "blue", name: "أزرق", description: "احترافي وواضح", primary: "#1F5F8B", secondary: "#6FA6C9", surface: "#F2F7FA" },
+  { id: "burgundy", name: "عنابي", description: "رسمي ومميز", primary: "#7A2638", secondary: "#B87582", surface: "#FBF3F4" },
+] as const;
+
+type UiTheme = (typeof UI_THEMES)[number]["id"];
+
+function ThemeSelector() {
+  const [theme, setTheme] = useState<UiTheme>(() => {
+    if (typeof window === "undefined") return "green";
+    return (localStorage.getItem("athat-ui-theme") as UiTheme) || "green";
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function chooseTheme(next: UiTheme) {
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("athat-ui-theme", next);
+    window.dispatchEvent(new CustomEvent("athat-theme-change", { detail: next }));
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ data: { ui_theme: next } });
+    setSaving(false);
+    if (error) toast.error("تم تطبيق اللون على هذا الجهاز، وتعذر مزامنته مع الحساب");
+    else toast.success("تم حفظ قالب الألوان في حسابك");
+  }
+
+  return (
+    <section className="theme-picker rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <div className="mb-4 flex items-start gap-3">
+        <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Palette className="size-5" /></span>
+        <div>
+          <h2 className="font-black text-foreground">قالب ألوان الواجهة</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">اختر اللون الذي يناسبك. يتغير اللون الأساسي في كامل مساحة العمل ويُحفظ في حسابك.</p>
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {UI_THEMES.map((item) => {
+          const active = theme === item.id;
+          return (
+            <button key={item.id} type="button" onClick={() => void chooseTheme(item.id)}
+              aria-pressed={active}
+              className={"theme-choice relative overflow-hidden rounded-2xl border-2 p-3 text-right transition-all " + (active ? "is-active shadow-lg" : "border-border hover:-translate-y-0.5 hover:shadow-md")}>
+              <div className="mb-3 h-16 rounded-xl border border-black/5" style={{ background: `linear-gradient(135deg, ${item.primary} 0 58%, ${item.secondary} 58% 76%, ${item.surface} 76%)` }} />
+              <div className="flex items-center justify-between gap-2">
+                <div><p className="font-black">{item.name}</p><p className="text-[11px] text-muted-foreground">{item.description}</p></div>
+                <span className="size-7 rounded-full border-4 border-white shadow" style={{ backgroundColor: item.primary }} />
+              </div>
+              {active && <span className="absolute left-2 top-2 flex size-7 items-center justify-center rounded-full bg-white text-primary shadow"><Check className="size-4" /></span>}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-[11px] font-bold text-primary">{saving ? "جارٍ مزامنة القالب مع حسابك…" : "القالب المحدد يطبق مباشرة على الكمبيوتر والجوال."}</p>
+    </section>
   );
 }
 
@@ -247,7 +307,7 @@ function SettingsPage() {
         </div>
       </section>
 
-      {schoolError && (
+      <ThemeSelector />\n\n      {schoolError && (
         <div
           role="alert"
           className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm xl:flex-row xl:items-center xl:justify-between"
