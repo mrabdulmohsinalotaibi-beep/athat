@@ -384,6 +384,7 @@ function ProgramsPage() {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [programFilter, setProgramFilter] = useState<"all" | "program" | "activity">("all");
   const programPrintRef = useRef<HTMLDivElement>(null);
 
 
@@ -459,6 +460,16 @@ function ProgramsPage() {
   }, [programs]);
 
   const ministryNames = useMemo(() => new Set<string>(MINISTRY_PROGRAMS.map((p) => p[1])), []);
+  const visiblePrograms = useMemo(
+    () =>
+      programs.filter((program) => {
+        if (programFilter === "all") return true;
+        const type = value(program.ptype);
+        if (programFilter === "activity") return type.includes("نشاط");
+        return !type.includes("نشاط");
+      }),
+    [programs, programFilter],
+  );
   const linkedPlanTask = useMemo(
     () => planTasks.find((task) => String(task.id) === value(editing?.plan_task_id)),
     [planTasks, editing?.plan_task_id],
@@ -779,6 +790,23 @@ function ProgramsPage() {
         />
       </div>
 
+      <div className="reference-tabs flex gap-1 rounded-2xl border bg-card p-1.5 shadow-[var(--shadow-card)]">
+        {[
+          ["all", "الكل"],
+          ["program", "البرامج"],
+          ["activity", "الأنشطة"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setProgramFilter(key as "all" | "program" | "activity")}
+            className={`flex-1 rounded-xl px-3 py-2 text-[11px] font-black transition ${programFilter === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <section className="rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -786,7 +814,7 @@ function ProgramsPage() {
             <p className="mt-0.5 text-[10px] text-muted-foreground">افتح أي برنامج للتعديل والتوثيق وإضافة الشواهد.</p>
           </div>
           <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">
-            {programs.length} برنامج
+            {visiblePrograms.length} برنامج
           </span>
         </div>
 
@@ -800,7 +828,7 @@ function ProgramsPage() {
               <div key={item} className="h-40 animate-pulse rounded-2xl bg-muted" />
             ))}
           </div>
-        ) : programs.length === 0 ? (
+        ) : visiblePrograms.length === 0 ? (
           <button
             type="button"
             onClick={openNew}
@@ -812,7 +840,7 @@ function ProgramsPage() {
           </button>
         ) : (
           <div className="grid gap-3 xl:grid-cols-3">
-            {programs.map((program) => {
+            {visiblePrograms.map((program) => {
               const status = value(program.exec_status) || "لم يبدأ";
               const statusTone =
                 status === "منفذ" || status === "مكتمل"
