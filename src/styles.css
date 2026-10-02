@@ -1386,3 +1386,44 @@ select:focus-visible {
 .dashboard-quick-actions > a:nth-child(4n+2) > span:first-child { background:#F1E5E8 !important; color:#9A6C78 !important; }
 .dashboard-quick-actions > a:nth-child(4n+3) > span:first-child { background:#F4E8D9 !important; color:#4A141F !important; }
 .dashboard-quick-actions > a:nth-child(4n+4) > span:first-child { background:#EDF2E8 !important; color:#89AA74 !important; }
+
+
+/* Operational records — approved ATHAT reference */
+.reference-screen {
+  --record-burgundy: #4A141F;
+  --record-rose: #9A6C78;
+  --record-beige: #D9C0A3;
+  --record-sage: #89AA74;
+  --record-green: #264938;
+}
+.reference-screen .reference-hero,
+.record-page-header {
+  border-color: rgb(217 192 163 / .42) !important;
+}
+.reference-screen .reference-tabs,
+.record-page .reference-tabs {
+  border-color: rgb(217 192 163 / .45) !important;
+  background: #FFFDF9 !important;
+}
+.reference-screen .reference-tabs button.bg-primary,
+.record-page .reference-tabs button.bg-primary {
+  background: #264938 !important;
+  color: #FFFDF9 !important;
+}
+.record-page article,
+.record-page .record-card {
+  border-color: rgb(217 192 163 / .38) !important;
+  background: #FFFDF9 !important;
+}
+.record-page article:hover,
+.record-page .record-card:hover {
+  border-color: #89AA74 !important;
+}
+.record-page [data-record-status="urgent"] {
+  color: #4A141F !important;
+  background: #F1E5E8 !important;
+}
+.record-page [data-record-status="active"] {
+  color: #264938 !important;
+  background: #E4ECDF !important;
+}
