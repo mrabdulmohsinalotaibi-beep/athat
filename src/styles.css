@@ -1803,3 +1803,13 @@ select:focus-visible {
 :root[data-theme] .app-shell [class*="border-[#264938]"] { border-color:var(--border) !important; }
 :root[data-theme] .app-shell [class*="bg-[#4A141F]"],
 :root[data-theme] .app-shell [class*="bg-[#264938]"] { background-color:var(--primary) !important; color:var(--primary-foreground) !important; }
+
+
+/* Per-document optional names and signatures.
+   PdfPreviewButton writes the choices on the printable document root. */
+.record-pdf-document[data-show-counselor-name="false"] [data-signature-role="counselorName"],
+.record-pdf-document[data-show-counselor-signature="false"] [data-signature-role="counselorSignature"],
+.record-pdf-document[data-show-principal-name="false"] [data-signature-role="principalName"],
+.record-pdf-document[data-show-principal-signature="false"] [data-signature-role="principalSignature"] {
+  display: none !important;
+}
