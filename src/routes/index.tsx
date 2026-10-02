@@ -72,68 +72,68 @@ const workAreas = [
 function Landing() {
   return (
     <PublicLayout>
-      <div className="relative min-h-screen overflow-hidden bg-[#F7F2E8] text-[#123748]">
+      <div className="relative min-h-screen overflow-hidden bg-[#FBF7F1] text-[#264938]">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(74,135,115,.17),transparent_22rem),radial-gradient(circle_at_92%_5%,rgba(211,165,109,.17),transparent_21rem)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(137,170,116,.20),transparent_22rem),radial-gradient(circle_at_92%_5%,rgba(217,192,163,.22),transparent_21rem)]"
         />
-        <div aria-hidden="true" className="pointer-events-none absolute -right-20 top-20 size-72 rounded-full border-[44px] border-[#527E70]/[0.05]" />
-        <div aria-hidden="true" className="pointer-events-none absolute -left-20 top-[28rem] size-72 rounded-full border-[46px] border-[#D1A56E]/[0.06]" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 top-20 size-72 rounded-full border-[44px] border-[#89AA74]/[0.05]" />
+        <div aria-hidden="true" className="pointer-events-none absolute -left-20 top-[28rem] size-72 rounded-full border-[46px] border-[#D9C0A3]/[0.06]" />
 
         <main className="relative mx-auto w-full max-w-3xl xl:max-w-7xl px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 xl:px-8 xl:pt-7">
           <section className="grid items-center gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:gap-8 lg:gap-12">
             <div className="order-2 xl:order-1">
-              <div className="mx-auto max-w-sm rounded-[2rem] border border-[#2D665B]/10 bg-white/72 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 xl:mx-0">
+              <div className="mx-auto max-w-sm rounded-[2rem] border border-[#D9C0A3]/35 bg-white/78 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 xl:mx-0">
                 <img
                   src="/athat-logo-hq.webp?v=20261002-hq"
                   alt="شعار ذات المعتمد من التصميم المرجعي"
                   className="mx-auto h-auto w-full max-w-[19rem] rounded-2xl object-contain sm:max-w-[21rem]"
                 />
-                <p className="mt-3 text-sm font-black text-[#143A49]">منصة التوجيه الطلابي</p>
-                <p className="mt-1 text-[11px] font-bold tracking-wide text-[#71827E]">دعم · توجيه · نمو · لمستقبل أفضل</p>
+                <p className="mt-3 text-sm font-black text-[#264938]">منصة التوجيه الطلابي</p>
+                <p className="mt-1 text-[11px] font-bold tracking-wide text-[#766C68]">دعم · توجيه · نمو · لمستقبل أفضل</p>
               </div>
             </div>
 
             <div className="order-1 text-center xl:order-2 xl:text-right">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#2D665B]/10 bg-white/70 px-3 py-1.5 text-[11px] font-black text-[#2D665B] shadow-sm">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#D9C0A3]/35 bg-white/80 px-3 py-1.5 text-[11px] font-black text-[#264938] shadow-sm">
                 <HeartHandshake className="size-3.5" />
                 منصة يومية للموجه الطلابي
               </span>
-              <h1 className="mt-4 text-3xl font-black leading-[1.45] text-[#123748] sm:text-4xl lg:text-5xl">
+              <h1 className="mt-4 text-3xl font-black leading-[1.45] text-[#264938] sm:text-4xl lg:text-5xl">
                 مساندتهم ..
                 <br className="hidden sm:block" />
                 نحو مستقبل أكثر إشراقًا
               </h1>
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5F7478] sm:text-base xl:mx-0">
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#766C68] sm:text-base xl:mx-0">
                 منصة ذات لإدارة التوجيه الطلابي، تجمع التقنية والخبرة الإنسانية لدعم الطالب ومتابعة رحلته التعليمية والنفسية والسلوكية في تجربة واحدة واضحة.
               </p>
 
               <div className="mt-5 grid grid-cols-2 gap-2.5 xl:grid-cols-4">
                 {values.map(({ title, subtitle, icon: Icon }, index) => (
-                  <div key={title} className="rounded-2xl border border-[#2D665B]/10 bg-white/78 px-2.5 py-3 text-center shadow-sm backdrop-blur">
+                  <div key={title} className="rounded-2xl border border-[#264938]/10 bg-white/78 px-2.5 py-3 text-center shadow-sm backdrop-blur">
                     <span
                       className={
                         "mx-auto grid size-10 place-items-center rounded-full " +
                         (index === 1
-                          ? "bg-[#F5E8D5] text-[#B6763A]"
+                          ? "bg-[#EFE1D7] text-[#4A141F]"
                           : index === 2
-                            ? "bg-[#E8EFEA] text-[#496F62]"
+                            ? "bg-[#E4ECDF] text-[#264938]"
                             : index === 3
-                              ? "bg-[#E8EEF3] text-[#214D62]"
-                              : "bg-[#E7F1EC] text-[#2D665B]")
+                              ? "bg-[#EEE0E4] text-[#9A6C78]"
+                              : "bg-[#E4ECDF] text-[#264938]")
                       }
                     >
                       <Icon className="size-4.5" />
                     </span>
-                    <p className="mt-2 text-[11px] font-black text-[#123748]">{title}</p>
-                    <p className="mt-0.5 text-[9px] font-semibold text-[#72817E]">{subtitle}</p>
+                    <p className="mt-2 text-[11px] font-black text-[#264938]">{title}</p>
+                    <p className="mt-0.5 text-[9px] font-semibold text-[#766C68]">{subtitle}</p>
                   </div>
                 ))}
               </div>
 
               <Button
                 asChild
-                className="mt-6 h-12 min-w-[220px] rounded-2xl bg-[#2D665B] px-7 text-sm font-black text-white shadow-lg shadow-[#2D665B]/15 hover:bg-[#244F47]"
+                className="mt-6 h-12 min-w-[220px] rounded-2xl bg-[#4A141F] px-7 text-sm font-black text-white shadow-lg shadow-[#4A141F]/15 hover:bg-[#264938]"
               >
                 <Link to="/auth" search={{ next: "/dashboard", mode: "signin" }}>
                   دخول الموجه الطلابي
@@ -143,34 +143,34 @@ function Landing() {
             </div>
           </section>
 
-          <section className="mt-8 rounded-[2rem] border border-[#2D665B]/10 bg-white/64 p-3 shadow-[0_20px_50px_-40px_rgba(18,55,72,.45)] backdrop-blur sm:p-4 xl:mt-10">
+          <section className="mt-8 rounded-[2rem] border border-[#D9C0A3]/35 bg-white/70 p-3 shadow-[0_20px_50px_-40px_rgba(18,55,72,.45)] backdrop-blur sm:p-4 xl:mt-10">
             <div className="mb-3 flex items-center justify-between gap-3 px-1">
               <div>
-                <p className="text-[10px] font-black text-[#2D665B]">أهم مساحات العمل</p>
-                <h2 className="mt-0.5 text-lg font-black text-[#123748] sm:text-xl">كل أدوات التوجيه في واجهة واحدة</h2>
+                <p className="text-[10px] font-black text-[#264938]">أهم مساحات العمل</p>
+                <h2 className="mt-0.5 text-lg font-black text-[#264938] sm:text-xl">كل أدوات التوجيه في واجهة واحدة</h2>
               </div>
-              <span className="hidden rounded-full bg-[#EDF4F0] px-3 py-1 text-[10px] font-bold text-[#2D665B] sm:inline-flex">Mobile-first</span>
+              <span className="hidden rounded-full bg-[#E4ECDF] px-3 py-1 text-[10px] font-bold text-[#264938] sm:inline-flex">Mobile-first</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
               {workAreas.map(({ title, description, icon: Icon }, index) => (
-                <article key={title} className="rounded-2xl border border-[#2D665B]/10 bg-white p-3.5 shadow-sm">
+                <article key={title} className="rounded-2xl border border-[#D9C0A3]/35 bg-white p-3.5 shadow-sm">
                   <span
                     className={
                       "grid size-10 place-items-center rounded-xl " +
                       (index === 1
-                        ? "bg-[#FFF1E4] text-[#BD7543]"
+                        ? "bg-[#EFE1D7] text-[#4A141F]"
                         : index === 2
-                          ? "bg-[#E8F1F3] text-[#2C6170]"
+                          ? "bg-[#EEE0E4] text-[#9A6C78]"
                           : index === 3
-                            ? "bg-[#EEEAF6] text-[#6D5892]"
-                            : "bg-[#E8F2ED] text-[#2D665B]")
+                            ? "bg-[#EEE0E4] text-[#9A6C78]"
+                            : "bg-[#E4ECDF] text-[#264938]")
                     }
                   >
                     <Icon className="size-5" />
                   </span>
-                  <h3 className="mt-3 text-xs font-black text-[#123748] sm:text-sm">{title}</h3>
-                  <p className="mt-1 text-[10px] leading-5 text-[#6B7D7A] sm:text-[11px]">{description}</p>
+                  <h3 className="mt-3 text-xs font-black text-[#264938] sm:text-sm">{title}</h3>
+                  <p className="mt-1 text-[10px] leading-5 text-[#766C68] sm:text-[11px]">{description}</p>
                 </article>
               ))}
             </div>
@@ -182,9 +182,9 @@ function Landing() {
               { title: "تصميم هادئ وواضح", text: "ألوان وهوية مستوحاة من الإرشاد النفسي والنمو الشخصي." },
               { title: "جاهز للجوال والتابلت", text: "نفس التجربة المصغرة تبقى واضحة قبل الانتقال لواجهة سطح المكتب." },
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-[#2D665B]/10 bg-white/72 p-4 shadow-sm">
-                <p className="text-xs font-black text-[#123748]">{item.title}</p>
-                <p className="mt-1 text-[11px] leading-6 text-[#6B7D7A]">{item.text}</p>
+              <div key={item.title} className="rounded-2xl border border-[#D9C0A3]/35 bg-white/76 p-4 shadow-sm">
+                <p className="text-xs font-black text-[#264938]">{item.title}</p>
+                <p className="mt-1 text-[11px] leading-6 text-[#766C68]">{item.text}</p>
               </div>
             ))}
           </section>
