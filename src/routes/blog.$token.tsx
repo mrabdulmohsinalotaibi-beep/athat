@@ -250,15 +250,15 @@ function PublicCounselorBlogPage() {
     "تابع آخر برامج ورسائل التوجيه الطلابي من خلال هذه البوابة.";
 
   return (
-    <div dir="rtl" className="public-portal min-h-screen bg-[#FBF7F1] text-[#264938]">
-      <header className="sticky top-0 z-40 border-b border-[#D9C0A3]/40 bg-[#FFFDF9]/95 text-foreground shadow-sm backdrop-blur-xl">
-        <div className="mx-auto grid max-w-7xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-3 px-4 py-3 sm:px-8">
+    <div dir="rtl" className="public-portal public-blog min-h-screen bg-[#F8F5EF] text-[#264938]">
+      <header className="sticky top-0 z-40 border-b border-[#D9C0A3]/45 bg-[#FFFDF9]/95 text-foreground shadow-sm backdrop-blur-xl">
+        <div className="mx-auto grid max-w-4xl grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2 px-3 py-2 sm:px-5">
           <button
             type="button"
             onClick={() => window.history.length > 1 ? window.history.back() : window.location.assign("/")}
             aria-label="رجوع"
             title="رجوع"
-            className="order-3 grid size-10 place-items-center justify-self-start rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] text-primary transition hover:border-[#89AA74] hover:bg-[#E4ECDF]/70"
+            className="order-3 grid size-9 place-items-center justify-self-start rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] text-primary transition hover:border-[#89AA74] hover:bg-[#E4ECDF]/70"
           >
             <ArrowLeft className="size-4.5 rotate-180" />
           </button>
@@ -267,10 +267,10 @@ function PublicCounselorBlogPage() {
             <img
               src={profile?.logo_url || "/athat-logo-final.png?v=20261002-final"}
               alt="شعار بوابة التوجيه الطلابي"
-              className="size-10 shrink-0 rounded-xl bg-[var(--brand-mark-surface)] object-contain p-1 shadow-sm"
+              className="size-9 shrink-0 rounded-xl bg-[var(--brand-mark-surface)] object-contain p-1 shadow-sm"
             />
             <div className="min-w-0">
-              <p className="truncate text-base font-black text-navy sm:text-lg">بوابة التوجيه الطلابي</p>
+              <p className="truncate text-sm font-black text-navy sm:text-base">بوابة التوجيه الطلابي</p>
               <p className="truncate text-[10px] text-muted-foreground">{schoolName} · {counselorName}</p>
             </div>
           </div>
@@ -279,7 +279,7 @@ function PublicCounselorBlogPage() {
             to="/request-status"
             aria-label="تتبع طلب"
             title="تتبع طلب"
-            className="order-1 grid size-10 place-items-center justify-self-end rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] text-primary transition hover:border-[#89AA74] hover:bg-[#E4ECDF]/70"
+            className="order-1 grid size-9 place-items-center justify-self-end rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] text-primary transition hover:border-[#89AA74] hover:bg-[#E4ECDF]/70"
           >
             <Search className="size-4" />
           </Link>
@@ -287,47 +287,47 @@ function PublicCounselorBlogPage() {
       </header>
 
       <main className="pb-8">
-        <section className="border-b border-border/60 bg-gradient-to-bl from-[#E4ECDF] via-background to-accent/10">
-          <div className="mx-auto max-w-3xl px-4 py-5 sm:px-8 sm:py-8">
+        <section className="border-b border-[#D9C0A3]/45 bg-gradient-to-bl from-[#E4ECDF]/85 via-[#F8F5EF] to-[#F1E5E8]/75">
+          <div className="mx-auto max-w-4xl px-3 py-4 sm:px-5 sm:py-5">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-black text-primary">الصفحة الإعلامية اليومية</p>
-                <h1 className="mt-1 text-2xl font-black">مدونة الموجه الطلابي</h1>
+                <h1 className="mt-0.5 text-xl font-black sm:text-2xl">مدونة الموجه الطلابي</h1>
                 <p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">{weeklyMessage}</p>
               </div>
-              <Megaphone className="size-8 shrink-0 text-primary/50" />
+              <Megaphone className="size-7 shrink-0 text-[#9A6C78]" />
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <a href="#daily-feed" className="rounded-xl bg-primary px-3 py-2.5 text-center text-xs font-black text-primary-foreground">المنشورات</a>
-              <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] px-3 py-2.5 text-xs font-black text-primary">اكتب وانشر</button>
-              <a href="#contact" className="rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] px-3 py-2.5 text-center text-xs font-black">تواصل</a>
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
+              <a href="#daily-feed" className="rounded-xl bg-[#4A141F] px-2.5 py-2 text-center text-xs font-black text-primary-foreground">المنشورات</a>
+              <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl border border-[#D9C0A3]/55 bg-[#FFFDF9] px-2.5 py-2 text-xs font-black text-primary">اكتب وانشر</button>
+              <a href="#contact" className="rounded-xl border border-[#D9C0A3]/55 bg-[#FFFDF9] px-2.5 py-2 text-center text-xs font-black">تواصل</a>
             </div>
           </div>
         </section>
 
-        <section id="daily-feed" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-5 sm:px-8">
+        <section id="daily-feed" className="mx-auto max-w-4xl scroll-mt-20 px-3 py-4 sm:px-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-[11px] font-black text-primary">اليوميات</p>
-              <h2 className="text-xl font-black">آخر المنشورات</h2>
+              <h2 className="text-lg font-black">آخر المنشورات</h2>
             </div>
             <span className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">{dailyPosts.length} منشور</span>
           </div>
           <PublicContentSection eyebrow="" title="" count={dailyPosts.length} items={dailyPosts} compact />
         </section>
 
-        <section className="mx-auto max-w-3xl px-4 pb-5 sm:px-8">
-          <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-card)]">
+        <section className="mx-auto max-w-4xl px-3 pb-4 sm:px-5">
+          <div className="rounded-2xl border border-[#D9C0A3]/45 bg-[#FFFDF9] p-4 shadow-sm">
             <div className="flex items-start gap-3">
-              <span className="rounded-2xl bg-[#E4ECDF] p-3 text-primary"><FileText className="size-5" /></span>
+              <span className="rounded-xl bg-[#E4ECDF] p-2.5 text-[#264938]"><FileText className="size-5" /></span>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-black text-primary">مساحة المجتمع المدرسي</p>
-                <h2 className="mt-1 text-lg font-black">اكتب باسمك وصفتك</h2>
+                <h2 className="mt-0.5 text-base font-black">اكتب باسمك وصفتك</h2>
                 <p className="mt-1 text-xs leading-6 text-muted-foreground">يمكن للطالب وولي الأمر والمعلم إرسال كتابة للنشر. لن تظهر في الصفحة إلا بعد موافقة الموجه الطلابي، وعند اعتمادها يظهر اسم الكاتب وصفته.</p>
               </div>
             </div>
             {!contributionOpen ? (
-              <button type="button" onClick={() => setContributionOpen(true)} className="mt-4 w-full rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground">كتابة مشاركة</button>
+              <button type="button" onClick={() => setContributionOpen(true)} className="mt-3 w-full rounded-xl bg-[#264938] px-3 py-2.5 text-xs font-black text-white">كتابة مشاركة</button>
             ) : contributionSent ? (
               <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800">تم استلام مشاركتك. ستظهر في المدونة بعد موافقة الموجه الطلابي.</div>
             ) : (
@@ -363,18 +363,18 @@ function PublicCounselorBlogPage() {
           </div>
         </section>
 
-        <section id="contact" className="border-t bg-muted/20">
-          <div className="mx-auto max-w-3xl px-4 py-6 sm:px-8">
+        <section id="contact" className="border-t border-[#D9C0A3]/40 bg-[#F1E5E8]/35">
+          <div className="mx-auto max-w-4xl px-3 py-5 sm:px-5">
             <div className="mb-4">
               <p className="text-[11px] font-black text-primary">التواصل والخدمات</p>
-              <h2 className="text-xl font-black">تواصل مع الموجه الطلابي</h2>
+              <h2 className="text-lg font-black">تواصل مع الموجه الطلابي</h2>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">اختر صفتك ثم الخدمة المناسبة. الطلبات تصل إلى مساحة الموجه الخاصة ولا تظهر في المدونة.</p>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {AUDIENCES.map((item) => {
                 const Icon = item.icon;
                 const active = audience === item.key;
-                return <button key={item.key} type="button" onClick={() => setAudience(item.key)} className={"rounded-2xl border p-3 text-center transition " + (active ? "border-primary bg-primary text-primary-foreground" : "bg-card")}>
+                return <button key={item.key} type="button" onClick={() => setAudience(item.key)} className={"rounded-xl border p-2.5 text-center transition " + (active ? "border-[#264938] bg-[#264938] text-white shadow-sm" : "border-[#D9C0A3]/45 bg-[#FFFDF9] hover:bg-[#E4ECDF]/55")}>
                   <Icon className="mx-auto size-5" /><p className="mt-2 text-xs font-black">{item.label.replace("أنا ", "")}</p>
                 </button>;
               })}
@@ -382,13 +382,13 @@ function PublicCounselorBlogPage() {
             <div className="mt-3 grid grid-cols-2 gap-2">
               {audienceActions.map((action) => {
                 const Icon = action.icon;
-                return <a key={action.title} href={action.href} className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-sm">
-                  <Icon className="size-5 text-primary" /><p className="mt-2 text-sm font-black">{action.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground">{action.description}</p>
+                return <a key={action.title} href={action.href} className="rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] p-3 shadow-sm transition hover:border-[#89AA74]">
+                  <Icon className="size-4.5 text-[#4A141F]" /><p className="mt-1.5 text-xs font-black">{action.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground">{action.description}</p>
                 </a>;
               })}
             </div>
             {(profile?.contact_phone || profile?.contact_email || profile?.office_hours) && (
-              <div className="mt-4 rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 text-xs leading-6">
+              <div className="mt-3 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] p-3 text-[11px] leading-6">
                 {profile?.office_hours && <p><strong>أوقات التواصل:</strong> {profile.office_hours}</p>}
                 {profile?.contact_phone && <p><strong>الهاتف:</strong> {profile.contact_phone}</p>}
                 {profile?.contact_email && <p><strong>البريد:</strong> {profile.contact_email}</p>}
@@ -398,7 +398,7 @@ function PublicCounselorBlogPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
+      <footer className="border-t border-[#D9C0A3]/40 bg-[#FFFDF9] px-4 py-5 text-center text-[11px] text-muted-foreground">
         <p className="font-bold text-foreground">{schoolName}</p>
         <p className="mt-1">بوابة الموجه الطلابي · الذات | ATHAT</p>
       </footer>
@@ -437,25 +437,25 @@ function PublicContentSection({
             لا يوجد محتوى منشور في هذا القسم حتى الآن.
           </p>
         ) : (
-          <div className={compact ? "grid gap-3" : "mt-8 grid gap-5 lg:grid-cols-2"}>
+          <div className={compact ? "grid gap-2.5 sm:grid-cols-2" : "mt-8 grid gap-5 lg:grid-cols-2"}>
             {items.map((post) => {
               const imageOnly = Boolean(post.cover_url && !post.body?.trim() && !post.excerpt?.trim());
               return (
-                <article key={`${post.slug}-${post.created_at}`} className={compact ? "overflow-hidden rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm" : "overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm"}>
+                <article key={`${post.slug}-${post.created_at}`} className={compact ? "overflow-hidden rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] shadow-sm" : "overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm"}>
                   {post.cover_url ? (
-                    <div className="bg-muted/15 p-2 sm:p-3">
+                    <div className="bg-[#F4ECE3]/45 p-1.5 sm:p-2">
                       <img
                         src={post.cover_url}
                         alt={post.title}
-                        className={"mx-auto w-full rounded-2xl object-contain " + (imageOnly ? "max-h-[720px]" : "max-h-[520px]")}
+                        className={"mx-auto w-full rounded-2xl object-contain " + (imageOnly ? "max-h-[520px]" : "max-h-[300px]")}
                       />
                     </div>
                   ) : (
-                    <div className="flex min-h-44 items-center justify-center bg-[#E4ECDF]/70">
-                      <FileText className="size-10 text-primary/30" />
+                    <div className="flex min-h-28 items-center justify-center bg-[#E4ECDF]/70">
+                      <FileText className="size-8 text-[#264938]/30" />
                     </div>
                   )}
-                  <div className="p-5 sm:p-6">
+                  <div className="p-3.5 sm:p-4">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <span className="rounded-full bg-[#E4ECDF] px-2.5 py-1 font-bold text-primary">
                         {POST_KINDS[post.kind as PostKind] ?? "منشور"}
@@ -467,12 +467,12 @@ function PublicContentSection({
                     </div>
                     {!imageOnly && (
                       <>
-                        <h3 className="mt-4 text-xl font-black">{post.title}</h3>
-                        {post.excerpt && <p className="mt-2 text-sm font-bold leading-7 text-muted-foreground">{post.excerpt}</p>}
-                        {post.body?.trim() && <p className="mt-3 line-clamp-4 whitespace-pre-line text-sm leading-7">{post.body}</p>}
+                        <h3 className="mt-2.5 text-base font-black sm:text-lg">{post.title}</h3>
+                        {post.excerpt && <p className="mt-1.5 text-xs font-bold leading-6 text-muted-foreground">{post.excerpt}</p>}
+                        {post.body?.trim() && <p className="mt-2 line-clamp-3 whitespace-pre-line text-xs leading-6">{post.body}</p>}
                       </>
                     )}
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Link
                         to="/posts/$slug"
                         params={{ slug: post.slug }}
