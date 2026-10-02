@@ -138,7 +138,24 @@ export function RecordPage({
   const [attachFor, setAttachFor] = useState<Row | null>(null);
   const [documentRow, setDocumentRow] = useState<Row | null>(null);
   const [signatureRow, setSignatureRow] = useState<Row | null>(null);
+  const [approvedSignatures, setApprovedSignatures] = useState<Array<{ name: string; role: string; signatureData: string; signedAt?: string | null }>>([]);
   const singleDocumentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!documentRow?.id) { setApprovedSignatures([]); return; }
+    let active = true;
+    void (async () => {
+      const { data, error } = await (supabase as any).from("document_signature_requests")
+        .select("signer_name,signer_role,signature_data,signed_at,status")
+        .eq("record_table", config.table).eq("record_id", documentRow.id)
+        .eq("status", "signed").order("signed_at", { ascending: true });
+      if (!active || error) return;
+      setApprovedSignatures((data ?? []).filter((item:any) => item.signature_data).map((item:any) => ({
+        name: item.signer_name, role: item.signer_role, signatureData: item.signature_data, signedAt: item.signed_at,
+      })));
+    })();
+    return () => { active = false; };
+  }, [config.table, documentRow?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
