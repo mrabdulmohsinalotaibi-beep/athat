@@ -282,8 +282,9 @@ function ExecutionFlowPage() {
 
   return (
     <div dir="rtl" className="space-y-4">
-      <section className="rounded-2xl border border-primary/15 bg-card p-4 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <span className="text-[11px] font-black text-primary">مسار عمل مترابط</span>
             <h1 className="mt-1 text-xl font-black">الخطة ← البرنامج ← التنفيذ ← الشاهد ← التقرير</h1>
@@ -299,7 +300,7 @@ function ExecutionFlowPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Stat title="مهام الخطة" value={tasks.length} hint="المصدر: الخطة التشغيلية" />
         <Stat title="برامج مرتبطة" value={linkedPrograms.length} hint={String(unlinkedPrograms.length) + " برنامج يحتاج ربطًا"} />
         <Stat title="مهام موثقة" value={documentedTasks.length} hint={String(evidences.length) + " شاهد محفوظ إجمالًا"} />
@@ -310,7 +311,7 @@ function ExecutionFlowPage() {
         />
       </section>
 
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-sm font-black">مؤشر المسار الحالي</h2>
@@ -376,7 +377,7 @@ function ExecutionFlowPage() {
             const newProgramUrl = "/programs?new=1&planTaskId=" + encodeURIComponent(task.id);
             const primaryProgram = taskPrograms[0];
             return (
-              <article key={task.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+              <article key={task.id} className="overflow-hidden rounded-3xl border bg-card shadow-[var(--shadow-card)]">
                 <div className="flex flex-col gap-3 border-b bg-muted/20 p-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -681,7 +682,7 @@ function MiniProgress({ label, value }: { label: string; value: number }) {
 
 function Stat({ title, value, hint }: { title: string; value: number; hint: string }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-sm">
+    <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
       <strong className="text-2xl">{value}</strong>
       <p className="mt-2 text-sm font-black">{title}</p>
       <p className="mt-1 text-[10px] text-muted-foreground">{hint}</p>
