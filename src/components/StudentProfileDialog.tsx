@@ -116,6 +116,28 @@ export function StudentProfileDialog({
     },
   });
 
+  const { data: linkedDocuments = [] } = useQuery({
+    queryKey: ["student-documents", studentId, studentNo, fullName],
+    enabled: open && Boolean(studentId || studentNo || fullName),
+    queryFn: async () => {
+      let query = (supabase as any)
+        .from("free_documents")
+        .select("id,title,document_kind,template_id,student_id,student_name,student_no,updated_at,status")
+        .order("updated_at", { ascending: false });
+
+      if (studentId) query = query.eq("student_id", studentId);
+      else if (studentNo) query = query.eq("student_no", studentNo);
+      else query = query.eq("student_name", fullName);
+
+      const { data, error } = await query;
+      if (error) {
+        console.warn("[student-profile] linked documents:", error.message);
+        return [];
+      }
+      return (data ?? []) as Array<Record<string, unknown> & { id: string }>;
+    },
+  });
+
   const stats = useMemo(
     () =>
       LINKED_SECTIONS.map((section) => ({
@@ -310,6 +332,9 @@ export function StudentProfileDialog({
 
           {/* ملخص عدد السجلات المرتبطة */}
           <div className="flex flex-wrap gap-2">
+            <Badge variant={linkedDocuments.length ? "default" : "outline"} className="gap-1">
+              المستندات: {linkedDocuments.length}
+            </Badge>
             {stats.map((s) => {
               const config = recordByKey(s.key)!;
               return (
@@ -375,6 +400,43 @@ export function StudentProfileDialog({
           )}
 
           {isLoading && <p className="text-sm text-muted-foreground">جارٍ تحميل ملف الطالب...</p>}
+
+          {!isLoading && (
+            <section className="break-inside-avoid rounded-2xl border border-paper-border bg-paper p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <FileArchive className="size-4 text-primary" />
+                  <h3 className="text-sm font-black">المستندات والنماذج المرتبطة ({linkedDocuments.length})</h3>
+                </div>
+                <Button asChild data-pdf-exclude="true" size="sm" variant="outline">
+                  <Link to="/free-documents" onClick={() => onOpenChange(false)}>
+                    فتح الأرشيف
+                  </Link>
+                </Button>
+              </div>
+              {linkedDocuments.length === 0 ? (
+                <p className="rounded-lg border border-dashed p-4 text-center text-xs text-paper-muted-foreground">
+                  لا توجد مستندات محفوظة مرتبطة بهذا الطالب حتى الآن.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {linkedDocuments.slice(0, 10).map((doc) => (
+                    <div key={doc.id} className="rounded-lg border border-paper-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-xs font-black">{String(doc.title ?? "مستند")}</p>
+                        <span className="text-[10px] text-paper-muted-foreground">
+                          {displayRecordValue(doc.updated_at)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[10px] text-paper-muted-foreground">
+                        {doc.document_kind === "electronic-template" ? "نموذج إلكتروني محفوظ" : "مستند محفوظ"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* الأقسام المرتبطة باسم الطالب */}
           {!isLoading && (
