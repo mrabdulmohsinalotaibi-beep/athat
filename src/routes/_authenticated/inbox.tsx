@@ -139,7 +139,7 @@ function UnifiedInboxPage() {
         </div>
       </section>
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-3 xl:grid-cols-2">
         {data?.guidanceAllowed && (
           <Link to="/posts" className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] transition hover:border-primary/35">
             <div className="flex items-start justify-between gap-3">
