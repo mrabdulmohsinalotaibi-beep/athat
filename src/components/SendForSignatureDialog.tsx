@@ -28,7 +28,7 @@ export function SendForSignatureDialog({
     refetchInterval:10000,
     queryFn:async()=>{
       const {data,error}=await (supabase as any).from("document_signature_requests")
-        .select("id,signer_name,signer_role,status,signed_at,created_at")
+        .select("id,signer_name,signer_role,status,signed_at,created_at,signature_data,signer_note")
         .eq("record_table",recordTable).eq("record_id",recordId)
         .order("created_at",{ascending:false});
       if(error)throw error;
