@@ -387,7 +387,7 @@ function PublicCounselorBlogPage() {
                 </a>;
               })}
             </div>
-            {(profile?.contact_email || profile?.office_hours) && (
+            {profile?.office_hours && (
               <div className="mt-3 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] p-3 text-[11px] leading-6">
                 {profile?.office_hours && <p><strong>أوقات التواصل:</strong> {profile.office_hours}</p>}
                 {profile?.contact_phone && <p><strong>الهاتف:</strong> {profile.contact_phone}</p>}
@@ -437,25 +437,25 @@ function PublicContentSection({
             لا يوجد محتوى منشور في هذا القسم حتى الآن.
           </p>
         ) : (
-          <div className={compact ? "grid gap-2.5 sm:grid-cols-2" : "mt-8 grid gap-5 lg:grid-cols-2"}>
+          <div className={compact ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "mt-8 grid gap-5 lg:grid-cols-2"}>
             {items.map((post) => {
               const imageOnly = Boolean(post.cover_url && !post.body?.trim() && !post.excerpt?.trim());
               return (
-                <article key={`${post.slug}-${post.created_at}`} className={compact ? "overflow-hidden rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] shadow-sm" : "overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm"}>
+                <article key={`${post.slug}-${post.created_at}`} className={compact ? "group overflow-hidden rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" : "overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm"}>
                   {post.cover_url ? (
                     <div className="bg-[#F4ECE3]/45 p-1.5 sm:p-2">
                       <img
                         src={post.cover_url}
                         alt={post.title}
-                        className={"mx-auto w-full rounded-2xl object-contain " + (imageOnly ? "max-h-[520px]" : "max-h-[300px]")}
+                        className={"mx-auto w-full rounded-lg object-cover " + (compact ? "aspect-[16/9] max-h-32" : (imageOnly ? "max-h-[520px]" : "max-h-[300px]"))}
                       />
                     </div>
                   ) : (
-                    <div className="flex min-h-28 items-center justify-center bg-[#E4ECDF]/70">
+                    <div className={compact ? "flex aspect-[16/9] items-center justify-center bg-[#E4ECDF]/70" : "flex min-h-28 items-center justify-center bg-[#E4ECDF]/70"}>
                       <FileText className="size-8 text-[#264938]/30" />
                     </div>
                   )}
-                  <div className="p-3.5 sm:p-4">
+                  <div className={compact ? "p-2.5" : "p-3.5 sm:p-4"}>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <span className="rounded-full bg-[#E4ECDF] px-2.5 py-1 font-bold text-primary">
                         {POST_KINDS[post.kind as PostKind] ?? "منشور"}
@@ -467,18 +467,18 @@ function PublicContentSection({
                     </div>
                     {!imageOnly && (
                       <>
-                        <h3 className="mt-2.5 text-base font-black sm:text-lg">{post.title}</h3>
-                        {post.excerpt && <p className="mt-1.5 text-xs font-bold leading-6 text-muted-foreground">{post.excerpt}</p>}
-                        {post.body?.trim() && <p className="mt-2 line-clamp-3 whitespace-pre-line text-xs leading-6">{post.body}</p>}
+                        <h3 className={compact ? "mt-2 line-clamp-2 text-sm font-black leading-5" : "mt-2.5 text-base font-black sm:text-lg"}>{post.title}</h3>
+                        {post.excerpt && !compact && <p className="mt-1.5 text-xs font-bold leading-6 text-muted-foreground">{post.excerpt}</p>}
+                        {post.body?.trim() && !compact && <p className="mt-2 line-clamp-3 whitespace-pre-line text-xs leading-6">{post.body}</p>}
                       </>
                     )}
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Link
                         to="/posts/$slug"
                         params={{ slug: post.slug }}
-                        className="inline-flex items-center gap-1 text-xs font-black text-primary"
+                        className="inline-flex items-center gap-1 text-[11px] font-black text-[#4A141F]"
                       >
-                        فتح المنشور <ArrowLeft className="size-3.5" />
+                        {compact ? "عرض كامل" : "فتح المنشور"} <ArrowLeft className="size-3.5" />
                       </Link>
                       <a
                         href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
