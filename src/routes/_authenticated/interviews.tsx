@@ -48,7 +48,9 @@ function InterviewsPage() {
 
   return (
     <div className="space-y-4" dir="rtl">
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-card p-4 shadow-sm">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-black">الجلسات والمتابعة</h1>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -56,9 +58,11 @@ function InterviewsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" variant="outline"><Link to="/calendar"><CalendarClock className="size-4" /> جدول المواعيد</Link></Button>
+          <Button asChild size="sm"><a href="/interviews?new=1"><MessageSquare className="size-4" /> مقابلة جديدة</a></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/calendar"><CalendarClock className="size-4" /> المواعيد</Link></Button>
           <Button asChild size="sm" variant="outline"><Link to="/cases"><ClipboardList className="size-4" /> الحالات</Link></Button>
-          <Button asChild size="sm" variant="outline"><Link to="/students"><Users className="size-4" /> ملفات الطلاب</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/students"><Users className="size-4" /> الطلاب</Link></Button>
+        </div>
         </div>
       </section>
 
@@ -71,7 +75,7 @@ function InterviewsPage() {
         </div>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Stat title="جلسات هذا الشهر" value={monthSessions.length} icon={<MessageSquare className="size-4" />} />
         <Stat title="متابعات مستحقة" value={dueFollowups.length} icon={<CalendarClock className="size-4" />} />
         <Stat title="مواعيد قادمة" value={upcomingAll.length} icon={<CheckCircle2 className="size-4" />} />
@@ -79,14 +83,14 @@ function InterviewsPage() {
       </section>
 
       {upcoming.length > 0 && (
-        <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-black">أقرب مواعيد المتابعة</h2>
             <Link to="/calendar" className="text-xs font-bold text-primary">عرض التقويم ←</Link>
           </div>
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {upcoming.map((row) => (
-              <div key={row.id} className="rounded-xl border p-3">
+              <div key={row.id} className="rounded-2xl border bg-background/80 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <strong className="truncate text-sm">{row.student_name || "طالب غير محدد"}</strong>
                   <span className="text-[11px] font-bold text-primary">{String(row.followup_at)}</span>
@@ -118,7 +122,7 @@ function InterviewsPage() {
 
 function Stat({ title, value, icon }: { title: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-sm">
+    <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between">
         <span className="rounded-xl bg-primary/10 p-2 text-primary">{icon}</span>
         <strong className="text-2xl">{value}</strong>
