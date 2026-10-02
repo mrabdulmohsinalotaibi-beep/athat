@@ -9,7 +9,7 @@ function todayDate() {
 function AthatDocumentMark() {
   return (
     <img
-      src="/brand-final.svg?v=20261001-finalbrandbrand"
+      src="/brand-approved.webp?v=20261002-approved"
       alt="شعار الذات"
       className="h-14 w-14 shrink-0 rounded-[14px] object-contain"
     />
