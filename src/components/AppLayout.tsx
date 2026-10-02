@@ -184,12 +184,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
     const allowed = new Set(["green", "gold", "blue", "burgundy"]);
     const apply = (value?: string | null) => {
       const next = value && allowed.has(value) ? value : "green";
-      document.documentElement.dataset.theme = next;
+      document.documentElement.dataset['theme'] = next;
       localStorage.setItem("athat-ui-theme", next);
       setUiTheme(next);
     };
     apply(localStorage.getItem("athat-ui-theme"));
-    void supabase.auth.getUser().then(({ data }) => apply(String(data.user?.user_metadata?.ui_theme ?? localStorage.getItem("athat-ui-theme") ?? "green")));
+    void supabase.auth.getUser().then(({ data }) => apply(String(data.user?.user_metadata?.['ui_theme'] ?? localStorage.getItem("athat-ui-theme") ?? "green")));
     const onTheme = (event: Event) => apply((event as CustomEvent<string>).detail);
     window.addEventListener("athat-theme-change", onTheme);
     return () => window.removeEventListener("athat-theme-change", onTheme);
@@ -213,7 +213,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, [open]);
 
   async function selectUiTheme(next: "green" | "gold" | "blue" | "burgundy") {
-    document.documentElement.dataset.theme = next;
+    document.documentElement.dataset['theme'] = next;
     localStorage.setItem("athat-ui-theme", next);
     setUiTheme(next);
     window.dispatchEvent(new CustomEvent("athat-theme-change", { detail: next }));
