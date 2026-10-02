@@ -121,7 +121,7 @@ function SummaryCard({
   icon?: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+    <div className="rounded-2xl border border-border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between text-muted-foreground">
         <span className="text-xs font-medium">{label}</span>
         {icon}
@@ -707,7 +707,7 @@ export default function MessagesDashboard() {
                 onChange={(event) =>
                   setCategory(event.target.value)
                 }
-                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-1 flex h-10 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               >
                 <option>الكل</option>
                 {categories.map((item) => (
@@ -724,7 +724,7 @@ export default function MessagesDashboard() {
                 onChange={(event) =>
                   setAssignee(event.target.value)
                 }
-                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-1 flex h-10 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               >
                 <option>الكل</option>
                 {ASSIGNEES.map((item) => (
@@ -741,7 +741,7 @@ export default function MessagesDashboard() {
                 onChange={(event) =>
                   setStatus(event.target.value)
                 }
-                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-1 flex h-10 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               >
                 <option>الكل</option>
                 {STATUSES.map((item) => (
@@ -790,8 +790,8 @@ export default function MessagesDashboard() {
                 <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{item.message}</p>
                 {item.sender_contact && <p className="mt-2 break-all text-xs text-muted-foreground">{item.sender_contact}</p>}
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <select aria-label="حالة المشاركة" value={item.status} onChange={(event) => void updateStatus(item.id, event.target.value)} className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs">{STATUSES.map((value) => <option key={value}>{value}</option>)}</select>
-                  <select aria-label="الجهة المسؤولة" value={item.assigned_to || "الموجه الطلابي"} onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")} className="h-9 min-w-0 rounded-md border border-input bg-background px-2 text-xs">{ASSIGNEES.map((value) => <option key={value}>{value}</option>)}</select>
+                  <select aria-label="حالة المشاركة" value={item.status} onChange={(event) => void updateStatus(item.id, event.target.value)} className="h-9 min-w-0 rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-2 text-xs">{STATUSES.map((value) => <option key={value}>{value}</option>)}</select>
+                  <select aria-label="الجهة المسؤولة" value={item.assigned_to || "الموجه الطلابي"} onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")} className="h-9 min-w-0 rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-2 text-xs">{ASSIGNEES.map((value) => <option key={value}>{value}</option>)}</select>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => openOfficialDocument(item)}><Share2 /> مستند رسمي</Button>\n                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "whatsapp")}><MessageCircle /> رد واتساب</Button>
@@ -856,7 +856,7 @@ export default function MessagesDashboard() {
                       <select
                         value={item.assigned_to || "الموجه الطلابي"}
                         onChange={(event) => void updateMessage(item.id, { assigned_to: event.target.value }, "تم توجيه الرسالة")}
-                        className="h-8 max-w-44 rounded-md border border-input bg-background px-2 text-xs"
+                        className="h-8 max-w-44 rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-2 text-xs"
                       >
                         {ASSIGNEES.map((name) => <option key={name}>{name}</option>)}
                       </select>
@@ -878,7 +878,7 @@ export default function MessagesDashboard() {
                       <select
                         value={item.status}
                         onChange={(event) => void updateStatus(item.id, event.target.value)}
-                        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        className="h-8 rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-2 text-xs"
                       >
                         {STATUSES.map((s) => <option key={s}>{s}</option>)}
                       </select>
