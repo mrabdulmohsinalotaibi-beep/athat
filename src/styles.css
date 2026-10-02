@@ -553,17 +553,41 @@ textarea {
     color: #79d2ca;
   }
   .dashboard-shell > section:first-child {
-    border-color: transparent;
+    border-color: rgb(15 124 122 / 0.14);
     background:
-      radial-gradient(circle at 12% 15%, rgb(239 230 214 / 0.22), transparent 10rem),
-      radial-gradient(circle at 90% 110%, rgb(95 163 127 / 0.35), transparent 15rem),
-      linear-gradient(140deg, #0f2a3d 0%, #0f5f66 55%, #0f7c7a 100%);
-    color: #fff;
+      radial-gradient(circle at 8% 15%, rgb(212 175 124 / 0.18), transparent 11rem),
+      radial-gradient(circle at 95% 15%, rgb(95 163 127 / 0.16), transparent 13rem),
+      linear-gradient(145deg, #ffffff 0%, #faf7f0 56%, #eef7f3 100%);
+    color: var(--foreground);
     box-shadow: var(--shadow-soft);
   }
   .dashboard-shell > section:not(:first-child) {
     border-color: var(--border);
     box-shadow: var(--shadow-card);
+    background-image: linear-gradient(160deg, rgb(255 255 255 / .98), rgb(255 255 255 / .92));
+  }
+
+  .dashboard-today-strip > a {
+    border: 1px solid rgb(15 124 122 / .10) !important;
+    background: rgb(255 255 255 / .82) !important;
+    color: var(--foreground);
+  }
+
+  .dashboard-stat-grid > a:nth-child(4n + 1) span:first-child {
+    background: #e5f3ef;
+    color: #0f7c7a;
+  }
+  .dashboard-stat-grid > a:nth-child(4n + 2) span:first-child {
+    background: #fff2dd;
+    color: #b87819;
+  }
+  .dashboard-stat-grid > a:nth-child(4n + 3) span:first-child {
+    background: #f0eafd;
+    color: #7351aa;
+  }
+  .dashboard-stat-grid > a:nth-child(4n + 4) span:first-child {
+    background: #e8f0fb;
+    color: #3568a8;
   }
 }
 
@@ -581,6 +605,17 @@ textarea {
   .dashboard-shell > section:first-child {
     min-height: 8.75rem;
     padding: 1rem;
+  }
+
+  .dashboard-stat-grid > a {
+    min-height: 7.25rem;
+    border-radius: 1.35rem;
+  }
+
+  .dashboard-actions-panel,
+  .dashboard-shortcuts-panel,
+  #today-work {
+    border-radius: 1.35rem;
   }
 }
 
