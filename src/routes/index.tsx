@@ -81,8 +81,8 @@ function Landing() {
         <div aria-hidden="true" className="pointer-events-none absolute -left-20 top-[28rem] size-72 rounded-full border-[46px] border-[#D9C0A3]/[0.06]" />
 
         <main className="relative mx-auto w-full max-w-3xl px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 xl:max-w-5xl xl:px-8 xl:pt-7">
-          <header className="mb-5 flex items-center justify-center gap-3 sm:mb-7 xl:justify-start">
-            <div className="grid size-20 shrink-0 place-items-center rounded-[1.4rem] border border-[#D9C0A3]/35 bg-white/90 p-2 shadow-[0_14px_34px_-22px_rgba(18,55,72,.5)] backdrop-blur sm:size-24">
+          <header className="mb-5 flex items-center justify-center gap-3 sm:mb-7 xl:absolute xl:right-8 xl:top-7 xl:z-20 xl:mb-0 xl:justify-start">
+            <div className="grid size-20 shrink-0 place-items-center rounded-[1.4rem] border border-[#D9C0A3]/35 bg-white/90 p-2 shadow-[0_14px_34px_-22px_rgba(18,55,72,.5)] backdrop-blur sm:size-24 xl:size-20">
               <img
                 src="/athat-logo-final.png?v=20261002-brand"
                 alt="شعار الذات"
@@ -98,7 +98,7 @@ function Landing() {
             </div>
           </header>
 
-          <section className="mx-auto max-w-3xl">
+          <section className="mx-auto max-w-3xl xl:pt-28">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#D9C0A3]/35 bg-white/80 px-3 py-1.5 text-[11px] font-black text-[#264938] shadow-sm">
                 <HeartHandshake className="size-3.5" />
