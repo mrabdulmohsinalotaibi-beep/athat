@@ -250,7 +250,7 @@ function SettingsPage() {
       {schoolError && (
         <div
           role="alert"
-          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm xl:flex-row xl:items-center xl:justify-between"
         >
           <div>
             <p className="font-bold text-destructive">تعذّر تحميل بيانات المدرسة</p>
@@ -267,7 +267,7 @@ function SettingsPage() {
       {lookupsError && (
         <div
           role="alert"
-          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm xl:flex-row xl:items-center xl:justify-between"
         >
           <div>
             <p className="font-bold text-destructive">تعذّر تحميل القوائم المخصصة</p>
@@ -287,7 +287,7 @@ function SettingsPage() {
         <form
           key={schoolFormKey}
           aria-busy={schoolLoading}
-          className="grid gap-4 sm:grid-cols-2"
+          className="grid gap-4 xl:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
             if (schoolLoading || schoolError) {
@@ -346,7 +346,7 @@ function SettingsPage() {
           ))}
 
           <div className="sm:col-span-2">
-            <div className="mb-5 grid gap-5 sm:grid-cols-2">
+            <div className="mb-5 grid gap-5 xl:grid-cols-2">
               <LogoField
                 label="شعار المدرسة"
                 hint="يظهر في الكليشة الرسمية للتقارير وفي الموقع العام."
@@ -360,7 +360,7 @@ function SettingsPage() {
                 onChange={setMinistryLogo}
               />
             </div>
-            <div className="mb-5 grid gap-5 sm:grid-cols-2">
+            <div className="mb-5 grid gap-5 xl:grid-cols-2">
               <SignaturePad
                 label="توقيع الموجه الطلابي"
                 value={counselorSignature ?? school?.counselor_signature ?? ""}
@@ -372,7 +372,7 @@ function SettingsPage() {
                 onChange={setPrincipalSignature}
               />
             </div>
-            <div className="mb-5 grid gap-3 rounded-2xl border border-dashed p-3 sm:grid-cols-2">
+            <div className="mb-5 grid gap-3 rounded-2xl border border-dashed p-3 xl:grid-cols-2">
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -428,7 +428,7 @@ function SettingsPage() {
           أضف أو عدّل الخيارات التي تظهر في نماذج الحالات والإحالات والإجراءات واللجان.
         </p>
         <form
-          className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_minmax(0,12rem)_auto]"
+          className="grid gap-2 xl:grid-cols-[minmax(0,12rem)_minmax(0,12rem)_auto]"
           onSubmit={(e) => {
             e.preventDefault();
             const form = e.currentTarget;
@@ -458,7 +458,7 @@ function SettingsPage() {
           </Button>
         </form>
 
-        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+        <ul className="mt-4 grid gap-2 xl:grid-cols-2">
           {lookups.map((item) => (
             <li
               key={item.id}
