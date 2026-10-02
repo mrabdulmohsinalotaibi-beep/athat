@@ -200,30 +200,16 @@ function AuthPage() {
   const isLoading = busy !== "";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <div className="mx-auto flex w-full max-w-sm justify-center p-5">
-            <img
-              src="/brand-final.svg?v=20261001-finalbrandbrand"
-              alt="شعار الذات"
-              className="h-auto w-full max-w-[18rem] rounded-2xl object-contain"
-            />
+    <div
+      dir="rtl"
+      className="athat-premium-shell flex min-h-screen flex-col items-center justify-center bg-background px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]"
+    >
+      <div className="w-full max-w-md space-y-5">
+        <div className="flex flex-col items-center text-center">
+          <div className="grid size-24 place-items-center overflow-hidden rounded-3xl bg-[var(--brand-mark-surface)] shadow-[var(--shadow-soft)]">
+            <BrandLogo className="size-full" />
           </div>
-        </div>
-        <div className="space-y-2 rounded-3xl border bg-card p-6 text-center shadow-[var(--shadow-soft)]">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {mode === "signin" && "تسجيل الدخول"}
-            {mode === "signup" && "إنشاء حساب"}
-            {mode === "recover" && "استعادة كلمة المرور"}
-            {mode === "reset" && "تعيين كلمة مرور جديدة"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {mode === "signin" && "أدخل بياناتك للمتابعة"}
-            {mode === "signup" && "أنشئ حسابك الجديد"}
-            {mode === "recover" && "سنرسل لك رابطاً لاستعادة كلمة المرور"}
-            {mode === "reset" && "أدخل كلمة المرور الجديدة"}
-          </p>
+          <p className="mt-3 text-xs font-bold text-primary">نظام التوجيه الطلابي</p>
         </div>
 
         <form
@@ -236,8 +222,22 @@ function AuthPage() {
                   ? handleRecover
                   : handleReset
           }
-          className="space-y-4 rounded-3xl border bg-card p-6 shadow-[var(--shadow-card)]"
+          className="space-y-4 rounded-3xl border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-7"
         >
+          <div className="space-y-1 pb-1 text-center">
+            <h1 className="text-2xl font-black text-navy">
+              {mode === "signin" && "تسجيل الدخول"}
+              {mode === "signup" && "إنشاء حساب"}
+              {mode === "recover" && "استعادة كلمة المرور"}
+              {mode === "reset" && "تعيين كلمة مرور جديدة"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {mode === "signin" && "أدخل بياناتك للمتابعة"}
+              {mode === "signup" && "أنشئ حسابك الجديد"}
+              {mode === "recover" && "سنرسل لك رابطاً لاستعادة كلمة المرور"}
+              {mode === "reset" && "أدخل كلمة المرور الجديدة"}
+            </p>
+          </div>
           {mode !== "reset" && (
             <div className="space-y-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>

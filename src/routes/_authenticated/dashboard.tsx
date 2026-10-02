@@ -634,11 +634,11 @@ function Dashboard() {
       : staffShortcuts;
 
   const counselorQuickActions = [
-    { label: "مسار التنفيذ", to: "/execution", icon: CheckCircle2 },
-    { label: "فتح حالة", to: "/cases?new=1", icon: HeartHandshake },
-    { label: "إضافة جلسة", to: "/interviews?new=1", icon: MessageSquareText },
-    { label: "إضافة برنامج", to: "/programs?new=1", icon: Sparkles },
+    { label: "إضافة حالة", to: "/cases?new=1", icon: HeartHandshake },
+    { label: "تسجيل مقابلة", to: "/interviews?new=1", icon: MessageSquareText },
     { label: "رفع شاهد", to: "/evidences?new=1", icon: UploadCloud },
+    { label: "إضافة برنامج", to: "/programs?new=1", icon: Sparkles },
+    { label: "مسار التنفيذ", to: "/execution", icon: CheckCircle2 },
     { label: "إنشاء تقرير", to: "/reports", icon: FileCheck2 },
     { label: "مهام المدرسة", to: "/school-tasks", icon: ClipboardCheck },
   ];
