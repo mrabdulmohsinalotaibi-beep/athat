@@ -27,6 +27,7 @@ import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 
 import { displayRecordValue } from "@/lib/display";
 import { formatHijriDate } from "@/lib/date";
+import { HijriDatePicker } from "@/components/HijriDatePicker";
 import { mergeLookupOptions } from "@/lib/lookups";
 import { referralMessage, shareOnWhatsApp } from "@/lib/whatsapp";
 import { generateSmartFill } from "@/lib/deepseek.functions";
@@ -1406,19 +1407,9 @@ export function RecordPage({
                           )}
                       </div>
                     ) : f.type === "date" ? (
-                      <div className="relative">
-                        <Input
-                          key={current}
-                          id={f.name}
-                          name={f.name}
-                          type="date"
-                          defaultValue={current}
-                          className="text-transparent caret-transparent"
-                          aria-label={f.label}
-                        />
-                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground">
-                          {current ? formatHijriDate(current) : "اختر التاريخ"}
-                        </span>
+                      <div>
+                        <HijriDatePicker key={current} value={current} onChange={(iso) => setAuto((values) => ({ ...values, [f.name]: iso }))} />
+                        <input type="hidden" id={f.name} name={f.name} value={auto[f.name] ?? current} />
                       </div>
                     ) : (
                       <Input
