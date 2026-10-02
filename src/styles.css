@@ -1452,3 +1452,37 @@ select:focus-visible {
 .reports-preview {
   border-color: #E3D7CC !important;
 }
+
+
+/* Step 6 — content, integrations, inbox, profile and settings */
+.reference-screen input:not([type="checkbox"]):not([type="radio"]),
+.reference-screen select,
+.reference-screen textarea {
+  border-color: rgb(217 192 163 / .48);
+  background-color: #FFFDF9;
+}
+.reference-screen input:focus,
+.reference-screen select:focus,
+.reference-screen textarea:focus {
+  border-color: #89AA74;
+  box-shadow: 0 0 0 3px rgb(137 170 116 / .12);
+}
+.reference-screen [role="dialog"],
+.reference-screen .dialog-content {
+  border-color: rgb(217 192 163 / .42);
+}
+.reference-screen .bg-destructive\/5 {
+  background-color: rgb(74 20 31 / .055);
+}
+.reference-screen .text-destructive {
+  color: #4A141F;
+}
+.reference-screen .border-destructive\/30 {
+  border-color: rgb(74 20 31 / .24);
+}
+.reference-screen .bg-secondary\/60 {
+  background-color: #F2E9DF;
+}
+.reference-screen .border-dashed {
+  border-color: rgb(154 108 120 / .30);
+}
