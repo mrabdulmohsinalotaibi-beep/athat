@@ -56,7 +56,7 @@ export function PublicLayout({
         <div className="mx-auto flex max-w-3xl xl:max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link to="/" className="flex items-center gap-3" aria-label="العودة إلى الرئيسية">
             <img
-              src="/athat-icon-hq.webp?v=20261002-palette"
+              src="/athat-logo-final.png?v=20261002-final"
               alt="شعار الذات"
               className="size-11 rounded-xl bg-[var(--brand-mark-surface)] object-contain shadow-sm"
             />
