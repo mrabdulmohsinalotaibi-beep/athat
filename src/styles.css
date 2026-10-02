@@ -1564,3 +1564,69 @@ select:focus-visible {
 .reference-screen a:focus-visible {
   outline-color: #89AA74;
 }
+
+
+/* =========================================================
+   ATHAT account color themes
+   The selected primary is intentionally dominant and visible.
+========================================================= */
+:root[data-theme="green"] {
+  --primary:#264938; --primary-foreground:#fffdf9; --foreground:#203e30;
+  --ring:#89aa74; --accent:#e4ecdf; --accent-foreground:#264938;
+  --secondary:#e9f0e5; --secondary-foreground:#264938; --border:#d7e1d2; --input:#cbd9c5;
+  --sidebar:#264938; --sidebar-primary:#d9c0a3; --sidebar-accent:#345d49; --sidebar-border:#456755;
+  --navy:#264938; --calm-green:#89aa74; --chart-1:#264938; --chart-2:#89aa74;
+  --theme-soft:#f3f7f1; --theme-glow:rgb(137 170 116 / .24);
+}
+:root[data-theme="gold"] {
+  --primary:#c58a0a; --primary-foreground:#fffdf8; --foreground:#493711;
+  --ring:#e5bd4e; --accent:#fff0bd; --accent-foreground:#694900;
+  --secondary:#fff6dc; --secondary-foreground:#694900; --border:#ead7a2; --input:#dec785;
+  --sidebar:#75520a; --sidebar-primary:#ffd76a; --sidebar-accent:#8b650f; --sidebar-border:#9e7721;
+  --navy:#694900; --calm-green:#e5bd4e; --chart-1:#c58a0a; --chart-2:#e5bd4e;
+  --theme-soft:#fff9e8; --theme-glow:rgb(229 189 78 / .28);
+}
+:root[data-theme="blue"] {
+  --primary:#1f5f8b; --primary-foreground:#ffffff; --foreground:#173f5b;
+  --ring:#6fa6c9; --accent:#dcecf6; --accent-foreground:#164b70;
+  --secondary:#eaf3f8; --secondary-foreground:#164b70; --border:#cbdde8; --input:#bdd4e2;
+  --sidebar:#173f5b; --sidebar-primary:#9bc5df; --sidebar-accent:#225576; --sidebar-border:#326786;
+  --navy:#173f5b; --calm-green:#6fa6c9; --chart-1:#1f5f8b; --chart-2:#6fa6c9;
+  --theme-soft:#f2f7fa; --theme-glow:rgb(111 166 201 / .25);
+}
+:root[data-theme="burgundy"] {
+  --primary:#7a2638; --primary-foreground:#ffffff; --foreground:#501c28;
+  --ring:#b87582; --accent:#f2dfe3; --accent-foreground:#681f30;
+  --secondary:#f8e9ec; --secondary-foreground:#681f30; --border:#e4cbd0; --input:#d8b8bf;
+  --sidebar:#641f2f; --sidebar-primary:#e4b7c0; --sidebar-accent:#7b2d3e; --sidebar-border:#914052;
+  --navy:#641f2f; --calm-green:#b87582; --chart-1:#7a2638; --chart-2:#b87582;
+  --theme-soft:#fbf3f4; --theme-glow:rgb(184 117 130 / .25);
+}
+
+:root[data-theme] body { background: linear-gradient(180deg, var(--theme-soft) 0, var(--background) 22rem); }
+:root[data-theme] .athat-topbar { border-bottom-color: color-mix(in srgb, var(--primary) 18%, transparent); }
+:root[data-theme] .athat-sidebar { box-shadow: -12px 0 34px -26px var(--primary); }
+:root[data-theme] .dashboard-shell > section:first-child,
+:root[data-theme] .reference-screen .reference-hero {
+  border-color: color-mix(in srgb, var(--primary) 18%, transparent) !important;
+  background:
+    radial-gradient(circle at 92% 10%, var(--theme-glow), transparent 13rem),
+    linear-gradient(145deg, #fff 0%, var(--theme-soft) 100%) !important;
+  color: var(--foreground) !important;
+}
+:root[data-theme] .dashboard-shell > section:first-child h1,
+:root[data-theme] .dashboard-shell > section:first-child h2,
+:root[data-theme] .dashboard-shell > section:first-child .text-white {
+  color: var(--primary) !important;
+}
+:root[data-theme] .dashboard-shell > section:first-child .text-white\/80,
+:root[data-theme] .dashboard-shell > section:first-child .text-white\/70 {
+  color: color-mix(in srgb, var(--foreground) 72%, transparent) !important;
+}
+:root[data-theme] .theme-choice.is-active {
+  border-color: var(--primary);
+  background: var(--theme-soft);
+  box-shadow: 0 12px 30px -18px var(--primary);
+  transform: translateY(-2px);
+}
+:root[data-theme] ::selection { background: var(--primary); color: var(--primary-foreground); }
