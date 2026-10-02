@@ -1542,3 +1542,25 @@ select:focus-visible {
 .public-feedback .bg-primary {
   background-color: #264938;
 }
+
+
+/* Step 8 — plan, execution, school workflow, weekly poster and admin */
+.reference-screen .reference-hero {
+  border-color: rgb(217 192 163 / .42) !important;
+  background:
+    radial-gradient(circle at 94% 5%, rgb(137 170 116 / .17), transparent 12rem),
+    radial-gradient(circle at 2% 100%, rgb(154 108 120 / .09), transparent 11rem),
+    linear-gradient(145deg, #FFFDF9 0%, #F4ECE3 62%, #E8EFE3 100%) !important;
+}
+.reference-screen section.rounded-3xl,
+.reference-screen section.rounded-\[1\.75rem\] {
+  border-color: rgb(217 192 163 / .38);
+}
+.reference-screen .sticky.bg-card\/95 {
+  background: rgb(255 253 249 / .97) !important;
+  border-color: rgb(217 192 163 / .45) !important;
+}
+.reference-screen button:focus-visible,
+.reference-screen a:focus-visible {
+  outline-color: #89AA74;
+}
