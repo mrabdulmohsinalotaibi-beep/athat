@@ -121,7 +121,7 @@ function SummaryCard({
   icon?: ReactNode;
 }) {
   return (
-    <div className="rounded-md border border-border bg-card p-4 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between text-muted-foreground">
         <span className="text-xs font-medium">{label}</span>
         {icon}
@@ -903,7 +903,7 @@ export default function MessagesDashboard() {
       </section>
 
       {documentMessage && (
-        <section className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
+        <section className="rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="font-black">مستند المشاركة الرسمي</h2>
