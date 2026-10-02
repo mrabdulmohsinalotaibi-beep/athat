@@ -84,13 +84,16 @@ function FreeDocumentsPage() {
   const filename = useMemo(() => (title.trim() || "مستند") + ".pdf", [title]);
 
   return <div dir="rtl" className="mx-auto max-w-7xl space-y-5">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h1 className="text-2xl font-black">المستندات الحرة</h1><p className="mt-1 text-sm text-muted-foreground">ورقة رسمية فارغة تكتب فيها ما تشاء، مع مساعد ذكاء اصطناعي وطباعة A4.</p></div>
+    <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+      <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
+      <div><h1 className="text-2xl font-black text-navy">المستندات الحرة</h1><p className="mt-1 text-sm text-muted-foreground">ورقة رسمية فارغة تكتب فيها ما تشاء، مع مساعد ذكاء اصطناعي وطباعة A4.</p></div>
       <Button onClick={fresh}><FilePlus2 className="size-4"/> مستند جديد</Button>
-    </div>
+      </div>
+    </section>
 
     <div className="grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
-      <aside className="rounded-2xl border bg-card p-3">
+      <aside className="rounded-3xl border bg-card p-3 shadow-[var(--shadow-card)]">
         <p className="mb-3 text-sm font-black">مستنداتي</p>
         {isLoading ? <Loader2 className="mx-auto size-5 animate-spin"/> : docs.length ? <div className="space-y-2">
           {docs.map((doc) => <button key={doc.id} onClick={() => load(doc)} className={"w-full rounded-xl border p-3 text-right text-xs transition hover:bg-accent " + (selectedId===doc.id?"border-primary bg-primary/5":"")}>
@@ -100,7 +103,7 @@ function FreeDocumentsPage() {
       </aside>
 
       <section className="space-y-4">
-        <div className="rounded-2xl border bg-card p-4">
+        <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <div className="grid gap-3 sm:grid-cols-2">
             <Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="عنوان المستند"/>
             <Input value={documentNo} onChange={(e)=>setDocumentNo(e.target.value)} placeholder="رقم المستند - اختياري"/>
@@ -124,7 +127,7 @@ function FreeDocumentsPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border bg-muted/30 p-2 sm:p-5">
+        <div className="overflow-x-auto rounded-3xl border bg-card p-2 shadow-[var(--shadow-card)] sm:p-5">
           <div ref={paperRef} className="mx-auto min-h-[1123px] w-[794px] bg-white text-[#17343d] shadow-sm">
             <OfficialHeader school={school} title={title || "مستند"} reportNo={documentNo || undefined}/>
             <article className="min-h-[690px] px-14 py-10">
