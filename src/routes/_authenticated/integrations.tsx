@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/integrations")({
 function IntegrationsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6" dir="rtl">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+      <section className="relative overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-soft)] sm:p-6">
         <div aria-hidden="true" className="pointer-events-none absolute -left-14 -top-14 size-44 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
@@ -67,9 +67,9 @@ function IntegrationsPage() {
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+        <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
           <p className="flex items-center gap-2 text-sm font-black">
-            <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">1</span>
+            <span className="grid size-7 place-items-center rounded-full bg-[#E4ECDF] text-[#264938]">1</span>
             استيراد آمن
           </p>
           <p className="mt-2 text-xs leading-6 text-muted-foreground">
@@ -77,9 +77,9 @@ function IntegrationsPage() {
             وكشف التكرار قبل الحفظ.
           </p>
         </div>
-        <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+        <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
           <p className="flex items-center gap-2 text-sm font-black">
-            <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">2</span>
+            <span className="grid size-7 place-items-center rounded-full bg-[#E4ECDF] text-[#264938]">2</span>
             العمل داخل الذات
           </p>
           <p className="mt-2 text-xs leading-6 text-muted-foreground">
@@ -87,9 +87,9 @@ function IntegrationsPage() {
             بدل إعادة إدخالها في كل سجل.
           </p>
         </div>
-        <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+        <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
           <p className="flex items-center gap-2 text-sm font-black">
-            <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">3</span>
+            <span className="grid size-7 place-items-center rounded-full bg-[#E4ECDF] text-[#264938]">3</span>
             تجهيز وتوثيق نور
           </p>
           <p className="mt-2 text-xs leading-6 text-muted-foreground">
@@ -109,7 +109,7 @@ function IntegrationsPage() {
         </p>
       </div>
 
-      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="flex items-center gap-2 text-xl font-black">
@@ -152,7 +152,7 @@ function IntegrationsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="flex items-center gap-2 text-lg font-black">
@@ -186,7 +186,7 @@ function IntegrationsPage() {
       <ExternalPlatformImporter />
       <NoorExportCenter />
 
-      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="mb-4 flex items-center gap-2">
           <CheckCircle2 className="size-5 text-primary" />
           <div>
