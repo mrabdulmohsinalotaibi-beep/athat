@@ -13,6 +13,7 @@ export interface StudentOption {
   full_name: string;
   student_no: string;
   national_id: string;
+  stage: string;
   grade: string;
   classroom: string;
   guardian_name: string;
@@ -27,7 +28,7 @@ export function useStudentOptions(enabled = true) {
     queryFn: async (): Promise<StudentOption[]> => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, full_name, student_no, national_id, grade, classroom, guardian_name, guardian_phone")
+        .select("id, full_name, student_no, national_id, stage, grade, classroom, guardian_name, guardian_phone")
         .order("full_name", { ascending: true });
       if (error) throw error;
       return (data ?? []).map((s) => ({
@@ -35,6 +36,7 @@ export function useStudentOptions(enabled = true) {
         full_name: String(s.full_name ?? ""),
         student_no: String(s.student_no ?? ""),
         national_id: String(s.national_id ?? ""),
+        stage: String(s.stage ?? ""),
         grade: String(s.grade ?? ""),
         classroom: String(s.classroom ?? ""),
         guardian_name: String(s.guardian_name ?? ""),
