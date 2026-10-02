@@ -482,7 +482,7 @@ function ReportsPage() {
 
   return (
     <div className="reference-screen min-w-0 space-y-4" dir="rtl">
-      <section className="reference-hero reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+      <section className="reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <div className="flex items-center gap-2 text-primary">
@@ -500,6 +500,37 @@ function ReportsPage() {
               <RotateCcw className="size-4" />
               إعادة ضبط
             </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+          <p className="text-[10px] font-black text-muted-foreground">إجمالي السجلات</p>
+          <div className="mt-2 flex items-end justify-between gap-2">
+            <strong className="text-2xl font-black text-navy">{totalRows}</strong>
+            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-700">مباشر</span>
+          </div>
+        </div>
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+          <p className="text-[10px] font-black text-muted-foreground">إنجاز الخطة</p>
+          <div className="mt-2 flex items-end justify-between gap-2">
+            <strong className="text-2xl font-black text-navy">{planProgress}%</strong>
+            <span className="text-[9px] font-bold text-primary">{planDone} من {planRows.length}</span>
+          </div>
+        </div>
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+          <p className="text-[10px] font-black text-muted-foreground">البرامج المنفذة</p>
+          <div className="mt-2 flex items-end justify-between gap-2">
+            <strong className="text-2xl font-black text-navy">{programDone}</strong>
+            <span className="text-[9px] font-bold text-primary">{programProgress}% إنجاز</span>
+          </div>
+        </div>
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+          <p className="text-[10px] font-black text-muted-foreground">الشواهد</p>
+          <div className="mt-2 flex items-end justify-between gap-2">
+            <strong className="text-2xl font-black text-navy">{evidenceRows.length}</strong>
+            <span className="text-[9px] font-bold text-muted-foreground">ملف موثق</span>
           </div>
         </div>
       </section>
@@ -586,7 +617,7 @@ function ReportsPage() {
                 className={`rounded-xl border-0 p-3 text-right transition ${reportMode === "single" ? "bg-primary text-primary-foreground shadow-sm" : "bg-transparent text-muted-foreground hover:bg-background"}`}
               >
                 <div className="flex items-center gap-3">
-                  <FileText className={`size-5 ${reportMode === "single" ? "text-primary" : ""}`} />
+                  <FileText className="size-5" />
                   <div>
                     <p className="font-bold">تقرير منفرد</p>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -602,7 +633,7 @@ function ReportsPage() {
               >
                 <div className="flex items-center gap-3">
                   <CheckSquare
-                    className={`size-5 ${reportMode === "combined" ? "text-primary" : ""}`}
+                    className="size-5"
                   />
                   <div>
                     <p className="font-bold">تقرير مجمع</p>
