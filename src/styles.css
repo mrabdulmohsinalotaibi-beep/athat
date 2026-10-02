@@ -1671,3 +1671,116 @@ select:focus-visible {
 :root[data-theme] .athat-sidebar a:hover {
   background-color: var(--sidebar-accent);
 }
+
+
+/* =========================================================
+   ATHAT Theme System v2 — complete coordinated palettes
+========================================================= */
+:root[data-theme="green"] {
+  --background:#f4f7f2; --foreground:#18382b;
+  --card:#fffefa; --card-foreground:#18382b; --popover:#fffefa; --popover-foreground:#18382b;
+  --primary:#24513d; --primary-foreground:#ffffff;
+  --secondary:#dfe9da; --secondary-foreground:#234735;
+  --muted:#e9efe5; --muted-foreground:#637368;
+  --accent:#cddfc5; --accent-foreground:#1d4432;
+  --destructive:#a83d4d; --destructive-foreground:#fff;
+  --border:#cedac8; --input:#c4d2bd; --ring:#79a767;
+  --chart-1:#24513d; --chart-2:#79a767; --chart-3:#c4a66a; --chart-4:#527b65; --chart-5:#9ebd91;
+  --sidebar:#1f4635; --sidebar-foreground:#f8fbf7; --sidebar-primary:#d6bd87; --sidebar-primary-foreground:#18382b;
+  --sidebar-accent:#315d48; --sidebar-accent-foreground:#fff; --sidebar-border:#496e5b; --sidebar-ring:#9abc8c;
+  --theme-soft:#edf4e9; --theme-soft-2:#dce9d6; --theme-glow:rgb(121 167 103 / .25);
+  --theme-hero:#e5efe0; --theme-elevated:#fffefa; --theme-strong:#183e2e;
+}
+:root[data-theme="gold"] {
+  --background:#fbf6e9; --foreground:#44330d;
+  --card:#fffdf6; --card-foreground:#44330d; --popover:#fffdf6; --popover-foreground:#44330d;
+  --primary:#a96f05; --primary-foreground:#fffdf6;
+  --secondary:#f3e2ae; --secondary-foreground:#634500;
+  --muted:#f5ead0; --muted-foreground:#796a43;
+  --accent:#ead08a; --accent-foreground:#5c4000;
+  --destructive:#a33d38; --destructive-foreground:#fff;
+  --border:#e4d29f; --input:#d9c387; --ring:#d7a92d;
+  --chart-1:#a96f05; --chart-2:#d7a92d; --chart-3:#75540d; --chart-4:#e5bf59; --chart-5:#9a7b2f;
+  --sidebar:#5b410b; --sidebar-foreground:#fffaf0; --sidebar-primary:#ffd66b; --sidebar-primary-foreground:#4b3300;
+  --sidebar-accent:#765714; --sidebar-accent-foreground:#fff; --sidebar-border:#947326; --sidebar-ring:#edc85f;
+  --theme-soft:#fff8e3; --theme-soft-2:#f4e4b7; --theme-glow:rgb(215 169 45 / .28);
+  --theme-hero:#f8e9bd; --theme-elevated:#fffdf6; --theme-strong:#5b410b;
+}
+:root[data-theme="blue"] {
+  --background:#f1f6fa; --foreground:#15384f;
+  --card:#fbfdff; --card-foreground:#15384f; --popover:#fbfdff; --popover-foreground:#15384f;
+  --primary:#1d628f; --primary-foreground:#fff;
+  --secondary:#d9e9f3; --secondary-foreground:#174d70;
+  --muted:#e7f0f6; --muted-foreground:#607786;
+  --accent:#c5dfef; --accent-foreground:#174d70;
+  --destructive:#a63e4d; --destructive-foreground:#fff;
+  --border:#c8dce8; --input:#b9d1df; --ring:#5f9fc6;
+  --chart-1:#1d628f; --chart-2:#5f9fc6; --chart-3:#17445f; --chart-4:#8abbd7; --chart-5:#477d9e;
+  --sidebar:#143f5a; --sidebar-foreground:#f7fbff; --sidebar-primary:#9dd2ef; --sidebar-primary-foreground:#10344b;
+  --sidebar-accent:#225a7c; --sidebar-accent-foreground:#fff; --sidebar-border:#39728f; --sidebar-ring:#78b2d3;
+  --theme-soft:#eaf3f9; --theme-soft-2:#d7e8f2; --theme-glow:rgb(95 159 198 / .25);
+  --theme-hero:#deedf6; --theme-elevated:#fbfdff; --theme-strong:#143f5a;
+}
+:root[data-theme="burgundy"] {
+  --background:#faf2f4; --foreground:#4b1b27;
+  --card:#fffafb; --card-foreground:#4b1b27; --popover:#fffafb; --popover-foreground:#4b1b27;
+  --primary:#7d293c; --primary-foreground:#fff;
+  --secondary:#efdce1; --secondary-foreground:#682033;
+  --muted:#f4e7ea; --muted-foreground:#80656c;
+  --accent:#e6c9d0; --accent-foreground:#642033;
+  --destructive:#9d2537; --destructive-foreground:#fff;
+  --border:#e2cbd1; --input:#d6b9c1; --ring:#b96f80;
+  --chart-1:#7d293c; --chart-2:#b96f80; --chart-3:#54202d; --chart-4:#d49aa7; --chart-5:#955063;
+  --sidebar:#591b2a; --sidebar-foreground:#fff8fa; --sidebar-primary:#edbbc6; --sidebar-primary-foreground:#481420;
+  --sidebar-accent:#762c3e; --sidebar-accent-foreground:#fff; --sidebar-border:#944b5c; --sidebar-ring:#cb8998;
+  --theme-soft:#f9e9ed; --theme-soft-2:#efd5db; --theme-glow:rgb(185 111 128 / .25);
+  --theme-hero:#f2dce1; --theme-elevated:#fffafb; --theme-strong:#591b2a;
+}
+
+/* Remove legacy fixed palette from the workspace when an account theme is active. */
+:root[data-theme] body,
+:root[data-theme] .bg-background { background-color:var(--background) !important; color:var(--foreground); }
+:root[data-theme] .bg-card { background-color:var(--card) !important; }
+:root[data-theme] .text-foreground { color:var(--foreground) !important; }
+:root[data-theme] .text-primary { color:var(--primary) !important; }
+:root[data-theme] .bg-primary { background-color:var(--primary) !important; }
+:root[data-theme] .border-border { border-color:var(--border) !important; }
+:root[data-theme] .reference-screen,
+:root[data-theme] .dashboard-shell { color:var(--foreground); }
+:root[data-theme] .reference-screen section,
+:root[data-theme] .dashboard-shell section {
+  border-color:color-mix(in srgb,var(--primary) 15%,var(--border)) !important;
+}
+:root[data-theme] .reference-screen .reference-hero,
+:root[data-theme] .dashboard-shell > section:first-child {
+  background:
+    radial-gradient(circle at 92% 8%,var(--theme-glow),transparent 13rem),
+    linear-gradient(140deg,var(--theme-elevated) 0%,var(--theme-hero) 100%) !important;
+  border-color:color-mix(in srgb,var(--primary) 30%,var(--border)) !important;
+}
+:root[data-theme] input:not([type="checkbox"]):not([type="radio"]),
+:root[data-theme] textarea,
+:root[data-theme] select {
+  background-color:var(--card) !important;
+  border-color:var(--input) !important;
+  color:var(--foreground) !important;
+}
+:root[data-theme] input:focus,
+:root[data-theme] textarea:focus,
+:root[data-theme] select:focus { border-color:var(--primary) !important; box-shadow:0 0 0 3px var(--theme-glow); }
+:root[data-theme] table thead,
+:root[data-theme] .bg-muted { background-color:var(--muted) !important; }
+:root[data-theme] table tbody tr:hover { background-color:var(--theme-soft) !important; }
+:root[data-theme] .shadow-sm,
+:root[data-theme] .shadow-md,
+:root[data-theme] .shadow-lg { --tw-shadow-color:color-mix(in srgb,var(--primary) 10%,transparent); }
+:root[data-theme] [role="dialog"] { border-color:var(--border); }
+:root[data-theme] .athat-topbar {
+  background:color-mix(in srgb,var(--card) 94%,var(--theme-soft)) !important;
+  border-color:var(--border) !important;
+}
+:root[data-theme] .athat-bottom-nav {
+  background:color-mix(in srgb,var(--card) 96%,var(--theme-soft)) !important;
+  border-color:var(--border) !important;
+}
+:root[data-theme] .theme-picker { background:linear-gradient(145deg,var(--card),var(--theme-soft)) !important; }
