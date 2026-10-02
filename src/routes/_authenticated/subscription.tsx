@@ -26,10 +26,12 @@ const allUnlockedFeatures = [
 function SubscriptionPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-7">
-      <div>
-        <div className="flex items-center gap-2">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="default" className="bg-emerald-600 gap-1.5">
-            <Sparkles className="size-3.5" /> جميع الخصائص مفتاحية ومجانية حالياً
+            <Sparkles className="size-3.5" /> جميع الخصائص مفتوحة ومجانية حالياً
           </Badge>
           <Badge variant="outline" className="text-amber-600 border-amber-300 gap-1.5">
             <Clock className="size-3.5" /> قريباً تفعيل الاشتراكات
@@ -39,9 +41,10 @@ function SubscriptionPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           نظراً للمرحلة الحالية، تم فتح كافة مميزات وخصائص المنصة بالكامل لجميع المستخدمين مجاناً ودون قيود، وسيتم إطلاق نظام الاشتراكات والترقيات رسمياً قريباً.
         </p>
-      </div>
+        </div>
+      </section>
 
-      <div className="rounded-xl border-2 border-primary/40 bg-card p-8 shadow-md">
+      <div className="rounded-3xl border border-primary/25 bg-card p-5 shadow-[var(--shadow-card)] sm:p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2">
@@ -65,7 +68,7 @@ function SubscriptionPage() {
 
         <div className="mt-8 border-t pt-6">
           <h3 className="text-sm font-bold text-foreground">الاشتراكات المستقبلية</h3>
-          <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-500/5 p-4 text-sm leading-7 text-muted-foreground">
+          <p className="mt-2 rounded-2xl border border-amber-300/60 bg-amber-500/5 p-4 text-sm leading-7 text-muted-foreground">
             التسجيل الإلكتروني للاهتمام بالباقات لم يُفعّل بعد. لن تعرض المنصة رسالة نجاح إلا بعد
             ربط الطلب بقاعدة البيانات وصلاحيات الإدارة بشكل فعلي.
           </p>
