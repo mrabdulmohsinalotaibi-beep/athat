@@ -221,7 +221,7 @@ function SchoolTeamPage() {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border bg-card p-5">
+          <div className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
             <h2 className="font-black">إنشاء مساحة مدرسة</h2>
             <div className="mt-4 space-y-3">
               <div><Label>اسم المدرسة</Label><Input value={schoolName} onChange={(e) => setSchoolName(e.target.value)} /></div>
@@ -247,7 +247,7 @@ function SchoolTeamPage() {
               </Button>
             </div>
           </div>
-          <div className="rounded-2xl border bg-card p-5">
+          <div className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
             <h2 className="font-black">الانضمام إلى مدرسة</h2>
             <p className="mt-1 text-xs text-muted-foreground">سيصل طلبك لمسؤول المدرسة للموافقة وتحديد دورك.</p>
             <div className="mt-4 space-y-3">
@@ -278,7 +278,7 @@ function SchoolTeamPage() {
 
   return (
     <div dir="rtl" className="space-y-5">
-      <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary"><ShieldCheck className="size-5" /><span className="text-xs font-black">مساحة المدرسة</span></div>
@@ -294,7 +294,7 @@ function SchoolTeamPage() {
       </section>
 
       {membership.is_admin && context?.join_code && (
-        <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black text-muted-foreground">رمز ربط حسابات المدرسة</p>
@@ -356,7 +356,7 @@ function SchoolTeamPage() {
         </section>
       )}
 
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><Users className="size-4 text-primary" /><h2 className="font-black">فريق المدرسة</h2></div><span className="text-xs text-muted-foreground">{active.length} عضو</span></div>
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {active.map((member) => (
@@ -396,7 +396,7 @@ function SchoolTeamPage() {
       </section>
 
       {membership.is_admin && suspended.length > 0 && (
-        <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-black">عضويات معلقة</h2>
             <span className="text-xs text-muted-foreground">{suspended.length} عضو</span>
@@ -415,7 +415,7 @@ function SchoolTeamPage() {
         </section>
       )}
 
-      <section className="rounded-2xl border bg-muted/20 p-4">
+      <section className="rounded-3xl border bg-muted/20 p-4">
         <div className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-primary" />
           <h2 className="text-sm font-black">صلاحيات الذات | ATHAT الفعلية</h2>
