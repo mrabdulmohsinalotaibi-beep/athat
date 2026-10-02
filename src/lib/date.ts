@@ -53,3 +53,39 @@ export function todayIsoDate(): string {
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+
+export const HIJRI_MONTHS = [
+  "محرم","صفر","ربيع الأول","ربيع الآخر","جمادى الأولى","جمادى الآخرة",
+  "رجب","شعبان","رمضان","شوال","ذو القعدة","ذو الحجة"
+] as const;
+
+function hijriParts(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura", {
+    year:"numeric", month:"numeric", day:"numeric"
+  }).formatToParts(date);
+  const get = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  return { year:get("year"), month:get("month"), day:get("day") };
+}
+
+/** تحويل تاريخ هجري أم القرى مختار من الواجهة إلى ISO للتخزين الداخلي. */
+export function hijriToIso(year: number, month: number, day: number): string {
+  const approxGregorianYear = year + 579;
+  const start = new Date(approxGregorianYear - 2, 0, 1);
+  const end = new Date(approxGregorianYear + 2, 11, 31);
+  for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+    const h = hijriParts(cursor);
+    if (h.year === year && h.month === month && h.day === day) {
+      const y = cursor.getFullYear();
+      const m = String(cursor.getMonth() + 1).padStart(2, "0");
+      const d = String(cursor.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+  }
+  return "";
+}
+
+export function isoToHijriParts(value?: string | null) {
+  const date = value ? parseDateValue(value) : new Date();
+  return hijriParts(date ?? new Date());
+}
