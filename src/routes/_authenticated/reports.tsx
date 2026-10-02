@@ -546,7 +546,7 @@ function ReportsPage() {
                 : "border-amber-500/25 bg-amber-500/[0.06]")
           }
         >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 {workflowReportApproved ? (
@@ -675,7 +675,7 @@ function ReportsPage() {
                   </Button>
                 </div>
               </div>
-              <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-[#D9C0A3]/35 p-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-[#D9C0A3]/35 p-3 xl:grid-cols-2 xl:grid-cols-3">
                 {reportableRecords.map((record) => {
                   const active = selectedKeys.includes(record.key);
                   const count = filteredSections[record.key]?.length ?? 0;
@@ -702,7 +702,7 @@ function ReportsPage() {
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 xl:grid-cols-3">
             <div>
               <Label htmlFor="report-document-no">رقم المستند</Label>
               <input id="report-document-no" value={documentNo} onChange={(event) => setDocumentNo(event.target.value)} placeholder="اختياري" className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm" />
@@ -728,7 +728,7 @@ function ReportsPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 xl:grid-cols-2">
             <div>
               <Label htmlFor="report-from">من تاريخ</Label>
               <input id="report-from" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm" />
@@ -760,7 +760,7 @@ function ReportsPage() {
 
           {isLoading && <p className="text-xs text-muted-foreground">جارٍ تحميل السجلات...</p>}
           {(data?.errors?.length ?? 0) > 0 && (
-        <div className="flex flex-col gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="font-black text-amber-800">بعض السجلات لم تُحمّل في التقرير</p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -870,14 +870,14 @@ function ReportsPage() {
             </div>
           )}
           <section className="report-cover block border-b border-paper-border pb-5 pt-5">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
               <ReportStat label="عدد السجلات" value={selectedRecords.length} />
               <ReportStat label="إجمالي الصفوف" value={totalRows} />
               <ReportStat label="عدد الطلاب" value={filteredSections["students"]?.length ?? 0} />
               <ReportStat label="عدد الشواهد" value={filteredSections["evidences"]?.length ?? 0} />
             </div>
             <div className="mt-5 rounded-xl border border-paper-border bg-paper-muted p-4">
-              <div className="grid gap-2 sm:grid-cols-2 text-xs">
+              <div className="grid gap-2 xl:grid-cols-2 text-xs">
                 <p>
                   <strong>الفترة:</strong> {period || "—"}
                 </p>
@@ -894,7 +894,7 @@ function ReportsPage() {
           {reportMode === "combined" && (
             <section className="mt-6 break-inside-avoid">
               <h2 className="mb-3 border-r-4 border-[var(--letterhead-primary)] pr-3 text-base font-black">الملخص التنفيذي للتنفيذ</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <ReportStat label="إنجاز الخطة" value={`${planProgress}%`} />
                 <ReportStat label="البرامج المنفذة" value={`${programDone} / ${programRows.length}`} />
                 <ReportStat label="إنجاز البرامج" value={`${programProgress}%`} />
@@ -911,7 +911,7 @@ function ReportsPage() {
               <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                 الشواهد المعتمدة
               </h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 xl:grid-cols-2">
                 {evidenceRows.map((evidence) => {
                   const fileUrl = String(evidence["file_url"] ?? "");
                   const imageEvidence =
@@ -947,7 +947,7 @@ function ReportsPage() {
               <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                 ملخص مؤشرات الأداء
               </h2>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-3 xl:grid-cols-2 xl:grid-cols-3">
                 {kpis.map((kpi) => (
                   <div
                     key={kpi.key}
