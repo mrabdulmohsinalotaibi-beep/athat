@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarClock, CheckCircle2, ClipboardList, FileText, Plus, UsersRound } from "lucide-react";
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/committees")({
 });
 
 function CommitteesPage() {
+  const [meetingTab, setMeetingTab] = useState<"all" | "meetings" | "committees">("all");
   const { data: meetings = [], isError, refetch } = useQuery({
     queryKey: ["committees-mobile-summary"],
     queryFn: async () => {
@@ -72,6 +74,23 @@ function CommitteesPage() {
         </div>
       </section>
 
+      <div className="reference-tabs flex gap-1 rounded-2xl border bg-card p-1.5 shadow-[var(--shadow-card)]">
+        {[
+          ["all", "الكل"],
+          ["meetings", "الاجتماعات"],
+          ["committees", "اللجان"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setMeetingTab(key as "all" | "meetings" | "committees")}
+            className={`flex-1 rounded-xl px-3 py-2 text-[11px] font-black transition ${meetingTab === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {isError && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-amber-300/60 bg-amber-50 p-3 text-xs text-amber-900">
           <span>تعذّر تحميل ملخص الاجتماعات، لكن السجل ما زال متاحًا.</span>
@@ -111,7 +130,14 @@ function CommitteesPage() {
         </section>
       )}
 
-      <RecordPage config={recordByKey("committees")} />
+      <RecordPage
+        config={recordByKey("committees")}
+        extraFilter={(row) => {
+          if (meetingTab === "all") return true;
+          const type = String(row["meeting_type"] ?? "");
+          return meetingTab === "committees" ? type.includes("لجنة") : !type.includes("لجنة");
+        }}
+      />
     </div>
   );
 }
