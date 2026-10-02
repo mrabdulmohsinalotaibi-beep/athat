@@ -329,6 +329,133 @@ export const generateFreeDocument = createServerFn({ method: "POST" })
   });
 
 
+
+const studentImportMappingInputSchema = z.object({
+  headers: z.array(z.string().min(1).max(200)).min(1).max(100),
+});
+
+const STUDENT_IMPORT_AI_FIELDS = [
+  ["student_no", "رقم الطالب"],
+  ["full_name", "اسم الطالب"],
+  ["national_id", "رقم الهوية / السجل المدني"],
+  ["nationality", "الجنسية"],
+  ["gender", "الجنس"],
+  ["stage", "المرحلة"],
+  ["grade", "الصف الدراسي"],
+  ["classroom", "الفصل / الشعبة"],
+  ["guardian_name", "اسم ولي الأمر"],
+  ["guardian_phone", "رقم جوال ولي الأمر"],
+  ["address", "السكن / العنوان"],
+  ["health_status", "الحالة الصحية"],
+  ["social_status", "الحالة الاجتماعية"],
+  ["status", "حالة القيد"],
+  ["notes", "ملاحظات"],
+] as const;
+
+const studentImportMappingOutputSchema = z.object({
+  mapping: z.record(z.string(), z.string()),
+});
+
+const STUDENT_IMPORT_MAPPING_SYSTEM_PROMPT = `أنت مساعد مطابقة أعمدة لملفات طلاب المدارس السعودية داخل منصة "الذات".
+ستستقبل أسماء عناوين الأعمدة فقط، ولن تستقبل بيانات الطلاب.
+
+المطلوب:
+- اربط كل حقل مستهدف بعنوان واحد فقط من عناوين الملف الأصلية.
+- أعد اسم عنوان العمود كما ورد حرفياً في القائمة، ولا تخترع عنواناً جديداً.
+- افهم الأخطاء الإملائية البسيطة، الاختصارات، الشرطات، الشرطة السفلية، العربية والإنجليزية.
+- لا تستخدم العمود نفسه لأكثر من حقل.
+- إذا لم يوجد عنوان مناسب، أعد قيمة فارغة للحقل.
+- "المرحلة" تعني ابتدائي/متوسط/ثانوي، و"الصف" يعني الصف الدراسي، و"الفصل" يعني الشعبة/الفصل.
+- فرّق بين رقم الطالب ورقم الهوية قدر الإمكان.
+- أعد JSON فقط بالشكل {"mapping":{"field_name":"original header"}}.`;
+
+export const suggestStudentImportMapping = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(studentImportMappingInputSchema)
+  .handler(async ({ data, context }) => {
+    const apiKey = getServerSetting("DEEPSEEK_API_KEY", context);
+    if (!apiKey) {
+      throw new Error("لم يتم إعداد مفتاح DeepSeek في متغيرات البيئة.");
+    }
+
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: getServerSetting("DEEPSEEK_MODEL", context) || "deepseek-chat",
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: STUDENT_IMPORT_MAPPING_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: JSON.stringify(
+              {
+                عناوين_الملف: data.headers,
+                الحقول_المستهدفة: STUDENT_IMPORT_AI_FIELDS.map(([name, label]) => ({
+                  name,
+                  label,
+                })),
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403)
+        throw new Error("مفتاح DeepSeek غير صحيح أو غير متاح للخدمة.");
+      if (response.status === 402)
+        throw new Error("حساب DeepSeek لا يملك رصيدًا كافيًا لاستخدام الخدمة.");
+      if (response.status === 429)
+        throw new Error("تم تجاوز حد طلبات DeepSeek مؤقتًا. حاول بعد قليل.");
+      throw new Error("تعذّر الاتصال بخدمة DeepSeek لمطابقة أعمدة الطلاب.");
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+    const raw = payload.choices?.[0]?.message?.content?.trim();
+    if (!raw) throw new Error("لم تُرجع خدمة DeepSeek مطابقة للأعمدة.");
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(
+        raw.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, ""),
+      );
+    } catch {
+      throw new Error("تعذّر قراءة مطابقة الأعمدة من DeepSeek.");
+    }
+
+    const source =
+      parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? ((parsed as { mapping?: unknown }).mapping ?? parsed)
+        : {};
+
+    const validHeaders = new Set(data.headers);
+    const validFields = new Set(STUDENT_IMPORT_AI_FIELDS.map(([name]) => name));
+    const usedHeaders = new Set<string>();
+    const mapping: Record<string, string> = {};
+
+    if (source && typeof source === "object" && !Array.isArray(source)) {
+      for (const [field, header] of Object.entries(source as Record<string, unknown>)) {
+        if (!validFields.has(field) || typeof header !== "string") continue;
+        const exactHeader = header.trim();
+        if (!exactHeader || !validHeaders.has(exactHeader) || usedHeaders.has(exactHeader)) continue;
+        mapping[field] = exactHeader;
+        usedHeaders.add(exactHeader);
+      }
+    }
+
+    return studentImportMappingOutputSchema.parse({ mapping });
+  });
+
 const attendanceAiInputSchema = z.object({
   text: z.string().min(1).max(50000),
 });
