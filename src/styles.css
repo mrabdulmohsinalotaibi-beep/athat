@@ -1291,3 +1291,52 @@ select:focus-visible {
   background: #264938 !important;
   color: #fffdf9 !important;
 }
+
+
+/* Navigation system — approved ATHAT palette */
+.athat-topbar {
+  background:
+    linear-gradient(90deg, rgb(137 170 116 / .045), transparent 30%),
+    rgb(255 253 249 / .965) !important;
+  color: #264938 !important;
+  border-color: rgb(217 192 163 / .38) !important;
+}
+.athat-topbar-logo {
+  box-shadow: 0 7px 18px -14px rgb(74 20 31 / .32) !important;
+}
+.athat-sidebar {
+  background:
+    radial-gradient(circle at 50% 0%, rgb(137 170 116 / .14), transparent 14rem),
+    linear-gradient(180deg, #264938 0%, #203d30 58%, #1b3429 100%) !important;
+}
+.athat-sidebar nav::-webkit-scrollbar {
+  width: .3rem;
+}
+.athat-sidebar nav::-webkit-scrollbar-thumb {
+  background: rgb(217 192 163 / .28);
+  border-radius: 999px;
+}
+.athat-mobile-nav {
+  background: rgb(255 253 249 / .975) !important;
+  border-color: rgb(217 192 163 / .48) !important;
+}
+.athat-bottom-item {
+  color: #766c68;
+}
+.athat-bottom-item[aria-current="page"] {
+  color: #264938 !important;
+}
+.athat-bottom-item[aria-current="page"]::after {
+  background: #4A141F !important;
+}
+.athat-bottom-item[aria-current="page"] > span:first-child {
+  background: #E4ECDF !important;
+  color: #264938 !important;
+}
+@media (min-width: 640px) and (max-width: 1279px) {
+  .athat-mobile-nav {
+    max-width: 46rem;
+    border-radius: 1.6rem !important;
+    box-shadow: 0 16px 38px -22px rgb(74 20 31 / .24) !important;
+  }
+}
