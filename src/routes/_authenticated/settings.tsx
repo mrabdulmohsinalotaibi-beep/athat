@@ -133,9 +133,9 @@ function SettingsPage() {
 
       if (!userId) throw new Error("انتهت جلسة الدخول؛ سجّل الدخول مجددًا ثم حاول الحفظ");
 
-      const preserveText = (key: keyof NonNullable<typeof school>) => {
-        const entered = String(values[String(key)] ?? "").trim();
-        const existing = String(school?.[key] ?? "").trim();
+      const preserveText = (key: string) => {
+        const entered = String(values[key] ?? "").trim();
+        const existing = String((school as Record<string, unknown> | null | undefined)?.[key] ?? "").trim();
         return entered || existing || null;
       };
 
