@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  Archive,
   CheckSquare,
   Copy,
   Download,
@@ -58,6 +59,14 @@ type FeedbackMessage = {
   assigned_channel?: string | null;
   responded_at?: string | null;
   status: string;
+  created_at: string;
+};
+
+type FeedbackAction = {
+  id: string;
+  feedback_id: string;
+  action: string;
+  notes: string | null;
   created_at: string;
 };
 
@@ -144,6 +153,7 @@ export default function MessagesDashboard() {
   const [category, setCategory] = useState("الكل");
   const [status, setStatus] = useState("الكل");
   const [assignee, setAssignee] = useState("الكل");
+  const [archiveTab, setArchiveTab] = useState<"sent" | "received">("sent");
 
   const [rotatingLink, setRotatingLink] = useState(false);
   const [documentMessage, setDocumentMessage] = useState<FeedbackMessage | null>(null);
@@ -163,6 +173,20 @@ export default function MessagesDashboard() {
       }
 
       return (data ?? []) as FeedbackMessage[];
+    },
+  });
+
+  const { data: feedbackActions = [] } = useQuery({
+    queryKey: ["feedback_actions"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("feedback_actions")
+        .select("id,feedback_id,action,notes,created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      if (error) throw error;
+      return (data ?? []) as FeedbackAction[];
     },
   });
 
@@ -237,6 +261,15 @@ export default function MessagesDashboard() {
       item.status !== "تم الرد",
   ).length;
 
+  const sentActions = feedbackActions.filter((item) =>
+    item.action.startsWith("تم فتح الإرسال") ||
+    item.action.startsWith("مشاركة صادرة"),
+  );
+
+  const archivedMessages = messages.filter(
+    (item) => item.status === "محفوظ",
+  );
+
   const rated = messages.filter(
     (item) => item.satisfaction != null,
   );
@@ -256,14 +289,52 @@ export default function MessagesDashboard() {
     window.setTimeout(() => documentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
-  function sendWhatsApp() {
-    if (!selected.length) return;
-    shareOnWhatsApp(
-      deliveryText(selected, school?.school_name || "التوجيه الطلابي"),
-    );
+  async function recordOutgoingAction(
+    items: FeedbackMessage[],
+    channel: "واتساب" | "البريد الإلكتروني",
+    body: string,
+    explicitContact?: string,
+    actionPrefix = "تم فتح الإرسال",
+  ) {
+    if (!items.length) return;
+
+    const payload = items.map((item) => ({
+      feedback_id: item.id,
+      action: `${actionPrefix} عبر ${channel}`,
+      notes: [
+        `المستفيد: ${item.sender_name || "مستفيد"}`,
+        `التواصل: ${explicitContact || item.sender_contact || "غير محدد"}`,
+        `التصنيف: ${item.category}`,
+        "",
+        body,
+      ].join("\n"),
+    }));
+
+    const { error } = await (supabase as any)
+      .from("feedback_actions")
+      .insert(payload);
+
+    if (error) {
+      toast.error(`تعذّر حفظ سجل الرسالة الصادرة: ${error.message}`);
+      return;
+    }
+
+    await queryClient.invalidateQueries({
+      queryKey: ["feedback_actions"],
+    });
   }
 
-  function sendEmail() {
+  async function sendWhatsApp() {
+    if (!selected.length) return;
+    const body = deliveryText(
+      selected,
+      school?.school_name || "التوجيه الطلابي",
+    );
+    await recordOutgoingAction(selected, "واتساب", body, undefined, "مشاركة صادرة");
+    shareOnWhatsApp(body);
+  }
+
+  async function sendEmail() {
     if (!selected.length) return;
     const emails = Array.from(
       new Set(
@@ -278,12 +349,14 @@ export default function MessagesDashboard() {
       return;
     }
 
-    const subject = encodeURIComponent(
-      `مشاركات التوجيه الطلابي — ${school?.school_name || "الذات"}`,
+    const subjectText = `مشاركات التوجيه الطلابي — ${school?.school_name || "الذات"}`;
+    const bodyText = deliveryText(
+      selected,
+      school?.school_name || "التوجيه الطلابي",
     );
-    const body = encodeURIComponent(
-      deliveryText(selected, school?.school_name || "التوجيه الطلابي"),
-    );
+    await recordOutgoingAction(selected, "البريد الإلكتروني", bodyText, emails.join(","), "مشاركة صادرة");
+    const subject = encodeURIComponent(subjectText);
+    const body = encodeURIComponent(bodyText);
     window.location.href = `mailto:${emails.join(",")}?subject=${subject}&body=${body}`;
   }
 
@@ -464,6 +537,49 @@ export default function MessagesDashboard() {
     toast.success("تم إنشاء رابط استبانة جديد");
   }
 
+  function exportCommunicationArchiveCsv() {
+    const sentRows = sentActions.map((action) => {
+      const message = messages.find((item) => item.id === action.feedback_id);
+      return [
+        "صادر",
+        message?.sender_name || "مستفيد",
+        message?.sender_contact ?? "",
+        message?.category ?? "",
+        action.action,
+        action.notes ?? "",
+        formatHijriDateTime(action.created_at),
+      ];
+    });
+
+    const receivedRows = archivedMessages.map((item) => [
+      "وارد مؤرشف",
+      item.sender_name,
+      item.sender_contact ?? "",
+      item.category,
+      item.status,
+      item.message,
+      formatHijriDateTime(item.created_at),
+    ]);
+
+    const csv = [
+      "الاتجاه,الاسم,التواصل,التصنيف,الحالة أو القناة,النص أو التفاصيل,التاريخ",
+      ...[...sentRows, ...receivedRows].map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      ),
+    ].join("\n");
+
+    const url = URL.createObjectURL(
+      new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "سجل_وأرشيف_الرسائل.csv";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
+
   function exportCsv() {
     const rows = filtered.map((item) => [
       item.sender_name,
@@ -550,15 +666,17 @@ export default function MessagesDashboard() {
     if (channel === "email" || (!channel && isEmail(item.sender_contact))) {
       const email = isEmail(item.sender_contact) ? item.sender_contact?.trim() : window.prompt("البريد الإلكتروني للمستفيد:");
       if (!email) return;
+      await recordOutgoingAction([item], "البريد الإلكتروني", responseText, email);
       window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`رد من ${school?.school_name || "التوجيه الطلابي"}`)}&body=${encodeURIComponent(responseText)}`;
     } else {
       const suggested = item.sender_contact && !isEmail(item.sender_contact)
         ? normalizeSaudiPhone(item.sender_contact) : "";
       const phone = suggested || window.prompt("رقم جوال المستفيد (اتركه فارغاً لاختيار المحادثة):", "");
       if (phone === null) return;
+      await recordOutgoingAction([item], "واتساب", responseText, phone || undefined);
       shareOnWhatsApp(responseText, phone);
     }
-    toast.info("يُفتح تطبيق التواصل لإرسال الرد؛ حدّث الحالة إلى «تم الرد» بعد التأكد من الإرسال.");
+    toast.info("تم حفظ الرسالة في سجل الصادر. تأكيد الإرسال النهائي يتم من حالة الرسالة بعد العودة من تطبيق التواصل.");
   }
 
   return (
@@ -683,6 +801,106 @@ export default function MessagesDashboard() {
         />
       </section>
 
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-primary">
+              <Archive className="size-5" />
+              <span className="text-xs font-black">سجل وأرشيف المراسلات</span>
+            </div>
+            <h2 className="mt-1 text-lg font-black">الرسائل المرسلة والمستقبلة</h2>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              يحتفظ الموقع بسجل الرسائل الصادرة، ويعرض الرسائل الواردة التي تم تحويل حالتها إلى «محفوظ».
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={archiveTab === "sent" ? "default" : "outline"}
+              onClick={() => setArchiveTab("sent")}
+            >
+              <Send className="size-4" />
+              الصادر ({sentActions.length})
+            </Button>
+            <Button
+              size="sm"
+              variant={archiveTab === "received" ? "default" : "outline"}
+              onClick={() => setArchiveTab("received")}
+            >
+              <Archive className="size-4" />
+              الوارد المؤرشف ({archivedMessages.length})
+            </Button>
+            <Button size="sm" variant="outline" onClick={exportCommunicationArchiveCsv}>
+              <Download className="size-4" />
+              تصدير السجل
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-2xl border">
+          {archiveTab === "sent" ? (
+            sentActions.length ? (
+              <div className="divide-y">
+                {sentActions.slice(0, 100).map((action) => {
+                  const related = messages.find((item) => item.id === action.feedback_id);
+                  return (
+                    <div key={action.id} className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <strong className="text-sm">{related?.sender_name || "مستفيد"}</strong>
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                            {action.action}
+                          </span>
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-6 text-muted-foreground">
+                          {action.notes || related?.response_note || "لا توجد تفاصيل إضافية."}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        {formatHijriDateTime(action.created_at)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="p-6 text-center text-xs text-muted-foreground">لا توجد رسائل صادرة مسجلة حتى الآن.</p>
+            )
+          ) : archivedMessages.length ? (
+            <div className="divide-y">
+              {archivedMessages.slice(0, 100).map((item) => (
+                <div key={item.id} className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="text-sm">{item.sender_name}</strong>
+                      <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                        {item.category}
+                      </span>
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-6 text-muted-foreground">
+                      {item.message}
+                    </p>
+                    {item.response_note && (
+                      <p className="mt-2 rounded-lg bg-muted/40 p-2 text-xs leading-6">
+                        <strong>الرد/الإجراء:</strong> {item.response_note}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="text-[10px] text-muted-foreground">{formatHijriDateTime(item.created_at)}</span>
+                    <Button size="sm" variant="ghost" onClick={() => void updateStatus(item.id, "قيد المراجعة")}>
+                      استعادة للوارد
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="p-6 text-center text-xs text-muted-foreground">لا توجد رسائل واردة مؤرشفة حتى الآن.</p>
+          )}
+        </div>
+      </section>
+
       <section className="border-y border-border py-5">
         <div className="flex flex-col gap-3 xl:flex-row lg:items-end xl:justify-between">
           <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -796,6 +1014,7 @@ export default function MessagesDashboard() {
                 <div className="mt-3 flex items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => openOfficialDocument(item)}><Share2 /> مستند رسمي</Button>\n                  <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "whatsapp")}><MessageCircle /> رد واتساب</Button>
                   <Button size="sm" variant="outline" onClick={() => void replyToBeneficiary(item, "email")}><Mail /> بريد</Button>
+                  <Button size="sm" variant="ghost" onClick={() => void updateStatus(item.id, "محفوظ")}><Archive /> أرشفة</Button>
                   <Button size="icon" variant="ghost" className="mr-auto text-destructive" onClick={() => void deleteMessage(item.id)} title="حذف المشاركة" aria-label="حذف المشاركة"><Trash2 /></Button>
                 </div>
                 <details className="mt-3 border-t border-border pt-3 text-sm">
@@ -888,6 +1107,9 @@ export default function MessagesDashboard() {
                         <Button size="icon" variant="ghost" onClick={() => openOfficialDocument(item)} title="مشاركة كمستند رسمي PDF" aria-label="مشاركة كمستند رسمي"><Share2 className="size-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => void replyToBeneficiary(item)} title="رد مباشر">
                           <Send className="size-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => void updateStatus(item.id, "محفوظ")} title="أرشفة">
+                          <Archive className="size-4" />
                         </Button>
                         <Button size="icon" variant="ghost" className="text-destructive" onClick={() => void deleteMessage(item.id)} title="حذف">
                           <Trash2 className="size-4" />
