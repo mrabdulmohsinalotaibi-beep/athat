@@ -84,11 +84,11 @@ function SpecialCasesPage() {
   const withNextAction = active.filter((row) => String(row.next_action ?? "").trim());
 
   return (
-    <div className="space-y-6">
+    <div className="reference-screen space-y-4">
       <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
         <div className="absolute -left-12 -top-16 size-48 rounded-full bg-primary/8 blur-2xl" />
         <div className="absolute -bottom-24 right-1/3 size-64 rounded-full bg-amber-200/20 blur-3xl" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <Badge className="mb-3 border border-primary/15 bg-primary/5 text-primary hover:bg-primary/10">
               مساحة عمل سرية
@@ -141,7 +141,7 @@ function SpecialCasesPage() {
             </div>
             <Link to="/interviews" className="text-xs font-bold text-primary">فتح الجلسات ←</Link>
           </div>
-          <div className="grid gap-2 md:grid-cols-2">
+          <div className="grid gap-2 xl:grid-cols-2">
             {overdue.slice(0, 6).map((row) => (
               <div key={row.id} className="rounded-xl border border-amber-200 bg-white p-3">
                 <div className="flex items-center justify-between gap-2">
