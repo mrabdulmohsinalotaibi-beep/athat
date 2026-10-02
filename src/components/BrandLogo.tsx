@@ -2,9 +2,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * Single source for the brand mark across the app.
- * When the official PNG is added to public/, change only this path.
+ * Approved counseling identity used across the application.
  */
-export const BRAND_LOGO_SRC = "/brand-final.svg?v=20261001-finalbrandbrand";
+export const BRAND_LOGO_SRC = "/brand-approved.webp?v=20261002-approved";
 
 export function BrandLogo({ className, alt = "شعار الذات" }: { className?: string; alt?: string }) {
   return (
