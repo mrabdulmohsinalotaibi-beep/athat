@@ -85,26 +85,34 @@ function SpecialCasesPage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-l from-primary via-primary to-accent p-6 text-primary-foreground shadow-lg shadow-primary/15 sm:p-8">
-        <div className="absolute -left-12 -top-16 size-48 rounded-full border border-white/15" />
-        <div className="absolute -bottom-24 right-1/3 size-64 rounded-full border border-white/15" />
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
+        <div className="absolute -left-12 -top-16 size-48 rounded-full bg-primary/8 blur-2xl" />
+        <div className="absolute -bottom-24 right-1/3 size-64 rounded-full bg-amber-200/20 blur-3xl" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <Badge className="mb-3 border-0 bg-white/15 text-white hover:bg-white/20">
+            <Badge className="mb-3 border border-primary/15 bg-primary/5 text-primary hover:bg-primary/10">
               مساحة عمل سرية
             </Badge>
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">الحالات الخاصة</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/80">
+            <h1 className="text-2xl font-black tracking-tight text-navy sm:text-3xl">الحالات الطلابية</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
               سجل موحد للموجه الطلابي لرصد الحالات الخاصة، إعداد خطة المساندة، متابعة التدخلات،
               وتوثيق الإغلاق أو الإحالة.
             </p>
           </div>
-          <Link
-            to="/reports"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-secondary"
-          >
-            <FileText className="size-4" /> إعداد تقرير رسمي <ArrowLeft className="size-4" />
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/cases?new=1"
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-black text-primary-foreground"
+            >
+              إضافة حالة
+            </a>
+            <Link
+              to="/reports"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border bg-white px-4 text-sm font-bold text-primary transition hover:border-primary/30"
+            >
+              <FileText className="size-4" /> تقرير رسمي <ArrowLeft className="size-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -117,7 +125,7 @@ function SpecialCasesPage() {
         </div>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <FollowupStat title="الحالات النشطة" value={active.length} hint="مفتوحة أو قيد المتابعة" />
         <FollowupStat title="متابعة مستحقة" value={overdue.length} hint="موعدها اليوم أو قبله" />
         <FollowupStat title="أولوية مرتفعة" value={urgent.length} hint="ضمن الحالات النشطة" />
@@ -167,7 +175,7 @@ function SpecialCasesPage() {
         </section>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
           {
             title: "الرصد الأولي",
@@ -216,7 +224,7 @@ function SpecialCasesPage() {
         })}
       </div>
 
-      <Card className="overflow-hidden border-primary/10 shadow-sm">
+      <Card className="overflow-hidden rounded-3xl border-primary/10 shadow-[var(--shadow-card)]">
         <CardHeader className="border-b bg-secondary/35">
           <CardTitle className="text-base">مسار التعامل مع الحالة</CardTitle>
           <p className="text-xs text-muted-foreground">
@@ -243,7 +251,7 @@ function SpecialCasesPage() {
         </CardContent>
       </Card>
 
-      <section className="rounded-2xl border border-[#159b88]/25 bg-[#e8f7f3] p-4 text-sm leading-7 text-[#145b62] sm:p-5">
+      <section className="rounded-3xl border border-primary/15 bg-primary/[0.04] p-4 text-sm leading-7 text-foreground sm:p-5">
         <strong>تنبيه مهني:</strong> هذه الصفحة أداة لتنظيم أعمال التوجيه والتوثيق المدرسي، ولا تُعد
         بديلًا عن التقييم المتخصص أو إجراءات الحماية والإبلاغ المعتمدة. عند وجود خطر مباشر على سلامة
         الطالب، بادر بالإجراء الرسمي فورًا.
@@ -270,7 +278,7 @@ function SpecialCasesPage() {
 
 function FollowupStat({ title, value, hint }: { title: string; value: number; hint: string }) {
   return (
-    <Card className="border-primary/10 shadow-sm">
+    <Card className="rounded-2xl border-primary/10 shadow-[var(--shadow-card)]">
       <CardContent className="p-4">
         <p className="text-xs font-bold text-muted-foreground">{title}</p>
         <p className="mt-2 text-2xl font-black text-primary">{value}</p>
