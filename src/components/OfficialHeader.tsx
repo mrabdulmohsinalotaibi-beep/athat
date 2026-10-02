@@ -96,9 +96,11 @@ export type DocumentSignatureOptions = {
 export function OfficialFooter({
   school,
   signatureOptions,
+  approvedSignatures = [],
 }: {
   school?: SchoolSettings | null | undefined;
   signatureOptions?: DocumentSignatureOptions;
+  approvedSignatures?: ApprovedDocumentSignature[];
 }) {
   const showCounselorName = signatureOptions?.counselorName ?? (school?.show_counselor_on_documents !== false);
   const showCounselorSignature = signatureOptions?.counselorSignature ?? (school?.show_counselor_on_documents !== false);
