@@ -55,9 +55,10 @@ function AlertLink({
 
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-  { to: "/students", label: "السجلات", icon: Users, activeRoutes: ["/students", "/cases", "/interviews", "/referrals", "/attendance", "/behavior", "/plan", "/execution", "/programs", "/evidences"] },
-  { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox", "/school-inbox", "/posts"] },
+  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/programs", "/plan", "/execution", "/evidences"] },
+  { to: "/cases", label: "الحالات", icon: Users, activeRoutes: ["/cases", "/interviews", "/referrals", "/attendance", "/behavior", "/students"] },
   { to: "/reports", label: "التقارير", icon: BarChart3, activeRoutes: ["/reports", "/free-documents"] },
+  { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/messages", "/inbox", "/school-inbox", "/posts", "/committees", "/settings", "/integrations", "/school-team", "/school-tasks"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -448,10 +449,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </main>
 
         <nav
-          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center rounded-t-[1.75rem] border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl xl:hidden"
+          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl xl:hidden"
           aria-label="التنقل الرئيسي"
         >
-          {visibleBottomNavigation.slice(0, 2).map((item) => {
+          {visibleBottomNavigation.slice(0, 5).map((item) => {
             const Icon = item.icon;
             const isActive = item.activeRoutes.some((route) => isPathActive(pathname, route));
             return (
@@ -460,32 +461,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 to={item.to}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex min-h-[4.35rem] min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] font-bold leading-3 transition",
+                  "athat-bottom-item flex min-h-[4.15rem] min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] font-bold leading-3 transition",
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="size-5" aria-hidden="true" />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
-
-          <QuickActionLauncher guidanceAllowed={guidanceNavigationAllowed} mobile />
-
-          {visibleBottomNavigation.slice(2).map((item) => {
-            const Icon = item.icon;
-            const isActive = item.activeRoutes.some((route) => isPathActive(pathname, route));
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] font-semibold leading-3 transition",
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Icon className="size-5" aria-hidden="true" />
+                <span className={cn("grid size-8 place-items-center rounded-xl transition", isActive && "bg-primary/10")}>
+                  <Icon className="size-4.5" aria-hidden="true" />
+                </span>
                 <span className="truncate">{item.label}</span>
               </Link>
             );
