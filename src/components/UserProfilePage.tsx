@@ -547,7 +547,7 @@ export function UserProfilePage() {
         <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full border border-primary/10" />
         <div className="pointer-events-none absolute -left-8 -top-12 size-40 rounded-full border border-primary/10" />
 
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
+        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center">
           <div className="relative self-start">
             <Avatar className="size-24 border-4 border-white bg-primary/10 text-3xl font-black text-primary shadow-lg sm:size-28">
               {avatarUrl && <AvatarImage src={avatarUrl} alt={`صورة ${displayName}`} />}
