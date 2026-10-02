@@ -961,7 +961,7 @@ select:focus-visible {
 }
 
 
-/* Tablet app experience: keep the same compact visual language as the approved mobile concept. */
+/* Tablet app experience: exactly the mobile composition, only larger and centered. */
 @media (min-width: 640px) and (max-width: 1279px) {
   .app-shell {
     background:
@@ -971,50 +971,80 @@ select:focus-visible {
   }
 
   .athat-topbar {
-    background: rgb(255 255 255 / .92);
+    background: rgb(255 255 255 / .94);
     backdrop-filter: blur(18px);
   }
 
   .athat-mobile-nav {
     left: 50%;
-    width: min(44rem, calc(100vw - 2rem));
+    width: min(46rem, calc(100vw - 2rem));
     transform: translateX(-50%);
     bottom: .65rem;
     border: 1px solid var(--border);
-    border-radius: 1.6rem;
-    background: rgb(255 255 255 / .96);
+    border-radius: 1.75rem;
+    background: rgb(255 255 255 / .97);
     box-shadow: var(--shadow-soft);
     overflow: hidden;
   }
 
-  .dashboard-shell {
-    max-width: 58rem;
+  .dashboard-shell,
+  .record-page {
+    width: 100%;
+    max-width: 46rem;
     margin-inline: auto;
   }
 
-  .dashboard-stat-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .dashboard-shell {
+    gap: 1rem;
+  }
+
+  .dashboard-shell > section {
+    border-radius: 1.7rem;
+  }
+
+  .dashboard-stat-grid,
+  .dashboard-quick-actions,
+  .dashboard-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .dashboard-stat-grid > a {
-    min-height: 8rem;
-    border-radius: 1.4rem;
+    min-height: 8.6rem;
+    border-radius: 1.55rem;
+    padding: 1rem;
   }
 
-  .dashboard-quick-actions {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: .7rem;
+  .dashboard-quick-actions > a {
+    min-height: 4.4rem;
+    border-radius: 1.35rem;
+    padding-inline: 1rem;
   }
 
-  .dashboard-shortcuts {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: .7rem;
+  .dashboard-shortcuts > a {
+    min-height: 6rem;
+    border-radius: 1.35rem;
   }
 
-  .record-page {
-    max-width: 62rem;
-    margin-inline: auto;
+  .dashboard-hero {
+    padding: 1.25rem !important;
+  }
+
+  .dashboard-hero h1 {
+    font-size: clamp(1.55rem, 3.2vw, 2rem);
+  }
+
+  .dashboard-progress-ring {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .record-page-header,
+  .dashboard-actions-panel,
+  .dashboard-shortcuts-panel {
+    padding: 1rem;
+  }
+
+  .app-shell main {
+    width: 100%;
   }
 }
