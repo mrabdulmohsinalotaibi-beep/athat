@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { gradeAliases, stageAliases } from "@/lib/saudi-school";
 import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 
@@ -278,7 +279,16 @@ export function RecordPage({
           .eq("user_id", authData.user.id);
 
         Object.entries(serverFilters).forEach(([key, value]) => {
-          if (value) query = query.eq(key, value);
+          if (!value) return;
+          if (config.key === "students" && key === "stage") {
+            query = query.in(key, stageAliases(value));
+            return;
+          }
+          if (config.key === "students" && key === "grade") {
+            query = query.in(key, gradeAliases(value, serverFilters.stage));
+            return;
+          }
+          query = query.eq(key, value);
         });
 
         const safeTerm = search.trim().replace(/[,()%]/g, " ");
