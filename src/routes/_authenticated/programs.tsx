@@ -365,7 +365,7 @@ function Field({ label, value, onChange, options, type = "text" }: FieldProps) {
           ))}
         </select>
       ) : (
-        {type === "date" ? <HijriDatePicker value={value} onChange={onChange} /> : <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} />}
+        type === "date" ? <HijriDatePicker value={value} onChange={onChange} /> : <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
       )}
     </div>
   );
