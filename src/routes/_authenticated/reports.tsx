@@ -560,14 +560,14 @@ function ReportsPage() {
         </section>
       )}
 
-      <section className="rounded-3xl border border-primary/15 bg-primary/[0.03] p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="mb-3">
           <h2 className="font-black">حزم مستندات جاهزة</h2>
           <p className="mt-1 text-xs text-muted-foreground">اختر حزمة ثم عدّل السجلات أو الفترة قبل إنشاء PDF.</p>
         </div>
-        <div className="grid gap-3 xl:grid-cols-3">
+        <div className="grid gap-2 xl:grid-cols-3">
           {documentPresets.map((preset) => (
-            <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-2xl border bg-card p-4 text-right transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-md">
+            <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-2xl border bg-[#FBF8F1] p-4 text-right transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-md">
               <p className="font-black">{preset.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{preset.description}</p>
             </button>
@@ -579,11 +579,11 @@ function ReportsPage() {
         <div className="space-y-5">
           <div>
             <Label>نوع التقرير</Label>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <div className="reference-tabs mt-2 grid grid-cols-2 gap-1 rounded-2xl border bg-muted/25 p-1.5">
               <button
                 type="button"
                 onClick={() => setReportMode("single")}
-                className={`rounded-2xl border p-4 text-right transition ${reportMode === "single" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted"}`}
+                className={`rounded-xl border-0 p-3 text-right transition ${reportMode === "single" ? "bg-primary text-primary-foreground shadow-sm" : "bg-transparent text-muted-foreground hover:bg-background"}`}
               >
                 <div className="flex items-center gap-3">
                   <FileText className={`size-5 ${reportMode === "single" ? "text-primary" : ""}`} />
@@ -598,7 +598,7 @@ function ReportsPage() {
               <button
                 type="button"
                 onClick={() => setReportMode("combined")}
-                className={`rounded-2xl border p-4 text-right transition ${reportMode === "combined" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted"}`}
+                className={`rounded-xl border-0 p-3 text-right transition ${reportMode === "combined" ? "bg-primary text-primary-foreground shadow-sm" : "bg-transparent text-muted-foreground hover:bg-background"}`}
               >
                 <div className="flex items-center gap-3">
                   <CheckSquare
@@ -622,7 +622,7 @@ function ReportsPage() {
                 id="single-report-record"
                 value={selectedSingleKey}
                 onChange={(event) => setSelectedSingleKey(event.target.value)}
-                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
               >
                 {reportableRecords.map((record) => (
                   <option key={record.key} value={record.key}>
@@ -674,7 +674,7 @@ function ReportsPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <Label htmlFor="report-document-no">رقم المستند</Label>
-              <input id="report-document-no" value={documentNo} onChange={(event) => setDocumentNo(event.target.value)} placeholder="اختياري" className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" />
+              <input id="report-document-no" value={documentNo} onChange={(event) => setDocumentNo(event.target.value)} placeholder="اختياري" className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm" />
             </div>
             <div>
               <Label htmlFor="report-period">الفترة</Label>
@@ -683,7 +683,7 @@ function ReportsPage() {
                 value={period}
                 onChange={(event) => setPeriod(event.target.value)}
                 placeholder="مثال: الفصل الدراسي الأول"
-                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
               />
             </div>
             <div>
@@ -692,7 +692,7 @@ function ReportsPage() {
                 id="report-title"
                 value={reportTitle}
                 onChange={(event) => setReportTitle(event.target.value)}
-                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
               />
             </div>
           </div>
@@ -700,11 +700,11 @@ function ReportsPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="report-from">من تاريخ</Label>
-              <input id="report-from" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" />
+              <input id="report-from" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm" />
             </div>
             <div>
               <Label htmlFor="report-to">إلى تاريخ</Label>
-              <input id="report-to" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" />
+              <input id="report-to" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm" />
             </div>
           </div>
 
@@ -716,11 +716,11 @@ function ReportsPage() {
               onChange={(event) => setNarrative(event.target.value)}
               rows={4}
               placeholder="اكتب الملاحظات أو التوصيات التي تريد ظهورها في التقرير الرسمي..."
-              className="mt-2 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm leading-7"
+              className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm leading-7"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
             <ReportStat label="السجلات المختارة" value={selectedRecords.length} />
             <ReportStat label="إجمالي الصفوف" value={totalRows} />
             <ReportStat label="الطلاب" value={filteredSections["students"]?.length ?? 0} />
@@ -758,7 +758,7 @@ function ReportsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 text-primary">
@@ -784,7 +784,7 @@ function ReportsPage() {
                 id="report-recipient"
                 value={recipientMemberId}
                 onChange={(event) => setRecipientMemberId(event.target.value)}
-                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
               >
                 <option value="">اختر المستلم</option>
                 {administrativeRecipients.map((member) => (
@@ -801,7 +801,7 @@ function ReportsPage() {
                 value={handoffNote}
                 onChange={(event) => setHandoffNote(event.target.value)}
                 placeholder="مثال: للاطلاع واعتماد ما تم إنجازه خلال الفترة"
-                className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
               />
             </div>
             <Button
@@ -822,7 +822,7 @@ function ReportsPage() {
 
       <div
         ref={reportRef}
-        className="record-pdf-document reports-preview mx-auto mt-6 rounded-xl border bg-paper p-5 text-paper-foreground shadow-sm sm:p-8"
+        className="record-pdf-document reports-preview mx-auto mt-6 rounded-2xl border bg-paper p-4 text-paper-foreground shadow-[var(--shadow-card)] sm:p-6 xl:p-8"
       >
         <OfficialHeader
           school={school}
