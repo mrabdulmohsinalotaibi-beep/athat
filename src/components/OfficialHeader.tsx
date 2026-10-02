@@ -84,6 +84,8 @@ export function OfficialHeader({
   );
 }
 
+export type ApprovedDocumentSignature = { name: string; role: string; signatureData: string; signedAt?: string | null };
+
 export type DocumentSignatureOptions = {
   counselorName?: boolean;
   counselorSignature?: boolean;
@@ -153,6 +155,22 @@ export function OfficialFooter({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {approvedSignatures.length > 0 && (
+        <div className="px-5 pt-4">
+          <p className="mb-2 text-center text-[11px] font-black text-[#36322e]">الاعتمادات والتواقيع الإلكترونية</p>
+          <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(approvedSignatures.length, 3)}, minmax(0, 1fr))` }}>
+            {approvedSignatures.map((approval, index) => (
+              <div key={`${approval.name}-${index}`} className="flex min-h-28 flex-col items-center rounded-lg border border-[#ddd4c9] p-2 text-center text-[10px] text-[#36322e]">
+                <p className="font-black">{approval.role}</p>
+                <img src={approval.signatureData} alt={`توقيع ${approval.name}`} className="my-1 h-12 w-32 object-contain" />
+                <p className="border-t border-[#cfc7bc] px-4 pt-1 font-bold">{approval.name}</p>
+                {approval.signedAt ? <p className="mt-1 text-[8px] text-[#777]">{formatHijriDate(approval.signedAt)}</p> : null}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
