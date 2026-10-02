@@ -32,7 +32,7 @@ function LinkList({
   items: readonly { title: string; description: string; href: string }[];
 }) {
   return (
-    <section className="rounded-xl border bg-card p-5 shadow-sm">
+    <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
       <div className="flex items-center gap-2">
         <Icon className="size-5 text-primary" />
         <h2 className="font-bold">{title}</h2>
@@ -45,7 +45,7 @@ function LinkList({
               href={item.href}
               target="_blank"
               rel="noreferrer noopener"
-              className="flex h-full flex-col rounded-lg border p-4 transition-colors hover:border-primary/50 hover:bg-muted/40"
+              className="flex h-full flex-col rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.03] hover:shadow-sm"
             >
               <span className="flex items-center justify-between gap-2 font-semibold">
                 {item.title}
@@ -65,12 +65,15 @@ function LinkList({
 function ToolkitPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">أدوات القياس والأرشيف</h1>
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative">
+        <h1 className="text-2xl font-black text-navy">أدوات القياس والأرشيف</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           المقاييس والاختبارات المعتمدة، والأنظمة والتعاميم المرجعية، ونماذج العمل الجاهزة.
         </p>
-      </div>
+        </div>
+      </section>
 
       <LinkList
         title="المقاييس والاختبارات"
