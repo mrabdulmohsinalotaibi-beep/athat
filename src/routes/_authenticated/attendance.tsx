@@ -56,11 +56,95 @@ function parseAttendanceText(text: string): ImportedAttendance[] {
   return out;
 }
 
+type OcrProgress = {
+  message: string;
+  percent: number;
+};
+
+async function extractPdfOcrText(
+  doc: any,
+  onProgress: (progress: OcrProgress) => void,
+) {
+  const MAX_OCR_PAGES = 20;
+  if (doc.numPages > MAX_OCR_PAGES) {
+    throw new Error(`الملف يحتوي ${doc.numPages} صفحة. قسّم الملف إلى أجزاء لا تتجاوز ${MAX_OCR_PAGES} صفحة ثم أعد المحاولة.`);
+  }
+
+  const tesseractUrl =
+    "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.esm.min.js";
+  const tesseract = (await import(/* @vite-ignore */ tesseractUrl)) as {
+    createWorker: (
+      langs?: string,
+      oem?: number,
+      options?: { logger?: (event: { status?: string; progress?: number }) => void },
+    ) => Promise<{
+      recognize: (image: HTMLCanvasElement) => Promise<{ data?: { text?: string } }>;
+      terminate: () => Promise<void>;
+    }>;
+  };
+
+  let currentPage = 1;
+  const worker = await tesseract.createWorker("ara+eng", 1, {
+    logger: (event) => {
+      if (typeof event.progress !== "number") return;
+      const pageBase = (currentPage - 1) / doc.numPages;
+      const pageShare = event.progress / doc.numPages;
+      onProgress({
+        message: `جارٍ قراءة الصفحة ${currentPage} من ${doc.numPages} بالـ OCR...`,
+        percent: Math.min(99, Math.round((pageBase + pageShare) * 100)),
+      });
+    },
+  });
+
+  const texts: string[] = [];
+  try {
+    for (let pageNo = 1; pageNo <= doc.numPages; pageNo++) {
+      currentPage = pageNo;
+      onProgress({
+        message: `جارٍ تجهيز الصفحة ${pageNo} من ${doc.numPages} للقراءة...`,
+        percent: Math.round(((pageNo - 1) / doc.numPages) * 100),
+      });
+
+      const page = await doc.getPage(pageNo);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale = Math.min(
+        2,
+        Math.max(1.35, 1800 / Math.max(1, baseViewport.width)),
+      );
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) throw new Error("تعذر تجهيز صفحة PDF للقراءة الضوئية.");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+
+      await page.render({ canvasContext: context, viewport, canvas }).promise;
+      const result = await worker.recognize(canvas);
+      const text = result.data?.text?.trim();
+      if (text) texts.push(text);
+
+      canvas.width = 1;
+      canvas.height = 1;
+      page.cleanup?.();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  } finally {
+    await worker.terminate().catch(() => undefined);
+  }
+
+  onProgress({
+    message: "اكتملت القراءة الضوئية، جارٍ تحليل البيانات...",
+    percent: 100,
+  });
+  return texts.join("\n");
+}
+
 function AttendancePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pdf, setPdf] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const [rows, setRows] = useState<ImportedAttendance[]>([]);
+  const [rows, setRows] = useState<ImportedAttendance[]>([]);\n  const [importStatus, setImportStatus] = useState<OcrProgress | null>(null);
 
   const pickPdf = (file?: File) => {
     if (!file) return;
@@ -98,15 +182,38 @@ function AttendancePage() {
         const content = await page.getTextContent();
         pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
       }
-      const extractedText = pages.join("\n").trim();
-      let parsed: ImportedAttendance[] = [];
+      let extractedText = pages.join("\n").trim();
+      let usedOcr = false;
 
-      // نستخدم DeepSeek أولًا لفهم تنسيق إتقان وتوزيع الحقول، ثم نرجع
-      // للمحلل المحلي كخطة بديلة إذا تعذرت خدمة الذكاء الاصطناعي.
+      if (extractedText.length <= 20) {
+        usedOcr = true;
+        setImportStatus({
+          message: "الملف مصوّر؛ جارٍ تشغيل القراءة الضوئية OCR...",
+          percent: 0,
+        });
+        try {
+          extractedText = (await extractPdfOcrText(doc, setImportStatus)).trim();
+        } catch (ocrError) {
+          throw new Error(
+            ocrError instanceof Error
+              ? `فشل OCR: ${ocrError.message}`
+              : "فشل OCR في قراءة صفحات الملف المصوّر.",
+          );
+        }
+      }
+
+      let parsed: ImportedAttendance[] = [];
       if (extractedText.length > 20) {
         try {
-          toast.info("جارٍ تحليل كشف إتقان وتوزيع البيانات عبر DeepSeek...");
-          const ai = await parseAttendanceWithDeepSeek({ data: { text: extractedText } });
+          setImportStatus({
+            message: usedOcr
+              ? "تمت قراءة الصور؛ جارٍ توزيع السجلات عبر DeepSeek..."
+              : "جارٍ تحليل كشف إتقان وتوزيع البيانات عبر DeepSeek...",
+            percent: usedOcr ? 100 : 65,
+          });
+          const ai = await parseAttendanceWithDeepSeek({
+            data: { text: extractedText },
+          });
           parsed = (ai.records ?? []).map((row) => ({
             student_no: row.student_no || "",
             student_name: row.student_name || "طالب من كشف إتقان",
@@ -120,23 +227,30 @@ function AttendancePage() {
         } catch (aiError) {
           console.warn("[Attendance] DeepSeek parsing failed; using local parser", aiError);
           parsed = parseAttendanceText(extractedText);
-          if (parsed.length) toast.info("تعذر التحليل الذكي، وتمت القراءة بالطريقة الاحتياطية.");
+          if (parsed.length) {
+            toast.info("تعذر التحليل الذكي، وتمت القراءة بالطريقة الاحتياطية.");
+          }
         }
       }
 
       if (!parsed.length) {
-        toast.error(
+        throw new Error(
           extractedText.length <= 20
-            ? "تم فتح PDF لكنه يبدو كصورة ممسوحة ولا يحتوي نصًا قابلًا للاستخراج. نحتاج إضافة OCR للملفات المصورة."
-            : "تم فتح PDF لكن لم أجد سجلات غياب قابلة للقراءة حتى بعد التحليل الذكي.",
+            ? "لم يتمكن OCR من استخراج نص واضح من الملف. جرّب نسخة أوضح من كشف إتقان."
+            : usedOcr
+              ? "نجح OCR في قراءة الملف، لكن لم يتم العثور على سجلات غياب واضحة بعد التحليل."
+              : "تم فتح PDF لكن لم يتم العثور على سجلات غياب قابلة للقراءة.",
         );
-        return;
       }
+
       setRows(parsed);
-      toast.success(`تمت قراءة ${parsed.length} سجل. راجعها قبل الاعتماد.`);
+      setImportStatus(null);
+      toast.success(
+        `تمت قراءة ${parsed.length} سجل${usedOcr ? " باستخدام OCR والذكاء الاصطناعي" : ""}. راجعها قبل الاعتماد.`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? `تعذر قراءة PDF: ${error.message}` : "تعذر قراءة ملف PDF.");
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setImportStatus(null); }
   };
 
   const saveRows = async () => {
@@ -168,8 +282,22 @@ function AttendancePage() {
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 font-black"><FileText className="size-5 text-primary" />استيراد غياب إتقان PDF</div>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">ارفع كشف الغياب PDF الصادر من إتقان. يحاول النظام القراءة المباشرة أولًا، ثم يستخدم DeepSeek تلقائيًا لفهم التنسيق وتوزيع البيانات، وبعدها تراجع السجلات قبل اعتمادها.</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">ارفع كشف الغياب PDF الصادر من إتقان. يقرأ النظام النص مباشرة، وإذا كان الملف مصورًا يشغّل OCR تلقائيًا، ثم يستخدم DeepSeek لفهم التنسيق وتوزيع البيانات قبل المراجعة والاعتماد.</p>
             {pdf && <p className="mt-2 text-xs font-bold text-primary">الملف المحدد: {pdf.name} — {(pdf.size / 1024 / 1024).toFixed(2)} MB</p>}
+            {importStatus && (
+              <div className="mt-3 max-w-xl rounded-xl border border-primary/15 bg-primary/5 p-3">
+                <div className="flex items-center justify-between gap-3 text-xs font-bold text-primary">
+                  <span>{importStatus.message}</span>
+                  <span>{importStatus.percent}%</span>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-primary/10">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-300"
+                    style={{ width: `${importStatus.percent}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <input ref={inputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => pickPdf(e.target.files?.[0])} />
