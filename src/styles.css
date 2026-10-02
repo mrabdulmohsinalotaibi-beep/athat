@@ -524,47 +524,46 @@ textarea {
 @media (max-width: 1023px) {
   .athat-premium-shell {
     background:
-      radial-gradient(circle at 85% 0%, rgb(42 157 143 / 0.09), transparent 30rem),
+      radial-gradient(circle at 90% 0%, rgb(15 124 122 / 0.07), transparent 28rem),
       var(--background);
   }
   .athat-topbar {
     padding-top: env(safe-area-inset-top);
-    border-color: rgb(255 255 255 / 0.1) !important;
-    background: linear-gradient(135deg, #073b4c 0%, #07566a 58%, #0b6674 100%) !important;
-    color: #fff !important;
-    box-shadow: 0 14px 34px -24px rgb(7 59 76 / 0.85);
+    border-color: var(--border) !important;
+    background: color-mix(in oklab, var(--card) 88%, transparent) !important;
+    color: var(--foreground) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
   .athat-topbar-logo {
-    border-color: rgb(255 255 255 / 0.16) !important;
     background: var(--brand-mark-surface) !important;
   }
   .athat-mobile-nav {
-    border-color: rgb(7 86 106 / 0.12);
-    background: rgb(255 255 255 / 0.96);
-    box-shadow: 0 -12px 34px -24px rgb(7 59 76 / 0.42);
+    border-color: var(--border);
+    background: color-mix(in oklab, var(--card) 96%, transparent);
+    box-shadow: 0 -10px 30px -20px rgb(15 42 61 / 0.3);
   }
   .dark .athat-mobile-nav {
     background: rgb(6 47 61 / 0.96);
   }
   .athat-mobile-nav a[aria-current="page"] {
-    color: #07566a;
+    color: var(--primary);
   }
   .dark .athat-mobile-nav a[aria-current="page"] {
     color: #79d2ca;
   }
   .dashboard-shell > section:first-child {
-    min-height: 9.25rem;
-    border-color: rgb(255 255 255 / 0.1);
+    border-color: transparent;
     background:
-      radial-gradient(circle at 18% 18%, rgb(212 175 124 / 0.28), transparent 11rem),
-      radial-gradient(circle at 90% 110%, rgb(99 199 194 / 0.38), transparent 16rem),
-      linear-gradient(135deg, #073b4c 0%, #07566a 55%, #0b6674 100%);
+      radial-gradient(circle at 12% 15%, rgb(239 230 214 / 0.22), transparent 10rem),
+      radial-gradient(circle at 90% 110%, rgb(95 163 127 / 0.35), transparent 15rem),
+      linear-gradient(140deg, #0f2a3d 0%, #0f5f66 55%, #0f7c7a 100%);
     color: #fff;
-    box-shadow: 0 20px 46px -28px rgb(7 59 76 / 0.75);
+    box-shadow: var(--shadow-soft);
   }
   .dashboard-shell > section:not(:first-child) {
-    border-color: rgb(7 86 106 / 0.1);
-    box-shadow: 0 12px 28px -24px rgb(7 59 76 / 0.32);
+    border-color: var(--border);
+    box-shadow: var(--shadow-card);
   }
 }
 
