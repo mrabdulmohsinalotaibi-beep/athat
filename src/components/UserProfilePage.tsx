@@ -543,7 +543,7 @@ export function UserProfilePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6" dir="rtl">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
+      <section className="relative overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
         <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full border border-primary/10" />
         <div className="pointer-events-none absolute -left-8 -top-12 size-40 rounded-full border border-primary/10" />
 
@@ -551,7 +551,7 @@ export function UserProfilePage() {
           <div className="relative self-start">
             <Avatar className="size-24 border-4 border-white bg-primary/10 text-3xl font-black text-primary shadow-lg sm:size-28">
               {avatarUrl && <AvatarImage src={avatarUrl} alt={`صورة ${displayName}`} />}
-              <AvatarFallback className="bg-primary/10 text-primary">
+              <AvatarFallback className="bg-[#E4ECDF] text-[#264938]">
                 {initials(displayName)}
               </AvatarFallback>
             </Avatar>
@@ -576,7 +576,7 @@ export function UserProfilePage() {
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[11px] font-bold text-primary">
+              <span className="rounded-full border border-primary/15 bg-[#E4ECDF]/70 px-3 py-1 text-[11px] font-bold text-primary">
                 الملف الشخصي
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700">
@@ -612,12 +612,12 @@ export function UserProfilePage() {
           </div>
 
           <div className="grid min-w-[240px] grid-cols-2 gap-2 text-xs">
-            <div className="rounded-2xl border bg-background/80 p-3">
+            <div className="rounded-2xl border bg-[#FBF7F1] p-3">
               <Mail className="mb-2 size-4 text-primary" />
               <p className="text-muted-foreground">البريد</p>
               <p className="mt-1 truncate font-bold" dir="ltr">{user?.email || "—"}</p>
             </div>
-            <div className="rounded-2xl border bg-background/80 p-3">
+            <div className="rounded-2xl border bg-[#FBF7F1] p-3">
               <BriefcaseBusiness className="mb-2 size-4 text-primary" />
               <p className="text-muted-foreground">الدور</p>
               <p className="mt-1 truncate font-bold">{displaySchoolRole || "الموجه الطلابي"}</p>
@@ -657,7 +657,7 @@ export function UserProfilePage() {
                   id="profile-role"
                   name="school_role"
                   defaultValue={displaySchoolRole || "الموجه الطلابي"}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  className="flex h-10 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
                 >
                   {ROLE_OPTIONS.map((role) => <option key={role}>{role}</option>)}
                 </select>
@@ -676,7 +676,7 @@ export function UserProfilePage() {
                   id="profile-qualification"
                   name="qualification"
                   defaultValue={profileValue(profile, user, "qualification")}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  className="flex h-10 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
                 >
                   <option value="">اختر المؤهل</option>
                   {QUALIFICATION_OPTIONS.map((item) => <option key={item}>{item}</option>)}
@@ -773,7 +773,7 @@ export function UserProfilePage() {
         </div>
 
         <aside className="space-y-6">
-          <section className="rounded-3xl border bg-card p-5 shadow-sm">
+          <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-card)]">
             <div className="mb-4 flex items-center gap-2">
               <Sparkles className="size-5 text-primary" />
               <h2 className="font-black">بطاقة الحساب</h2>
@@ -814,7 +814,7 @@ export function UserProfilePage() {
             </div>
           </section>
 
-          <section className="rounded-3xl border bg-card p-5 shadow-sm">
+          <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-card)]">
             <div className="mb-5 flex items-center gap-2">
               <div className="rounded-xl bg-amber-500/10 p-2 text-amber-700">
                 <ShieldCheck className="size-5" />
