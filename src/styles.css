@@ -1784,3 +1784,22 @@ select:focus-visible {
   border-color:var(--border) !important;
 }
 :root[data-theme] .theme-picker { background:linear-gradient(145deg,var(--card),var(--theme-soft)) !important; }
+
+
+/* Theme compatibility layer for legacy ATHAT palette utilities.
+   Keeps every authenticated screen coordinated when the account theme changes. */
+:root[data-theme] .app-shell [class*="bg-[#FFFDF9]"],
+:root[data-theme] .app-shell [class*="bg-[#FBF7F1]"] { background-color:var(--card) !important; }
+:root[data-theme] .app-shell [class*="bg-[#E4ECDF]"] { background-color:var(--secondary) !important; }
+:root[data-theme] .app-shell [class*="bg-[#F4E8D9]"],
+:root[data-theme] .app-shell [class*="bg-[#F4ECE3]"],
+:root[data-theme] .app-shell [class*="bg-[#EFE1D7]"],
+:root[data-theme] .app-shell [class*="bg-[#EEE0E4]"] { background-color:var(--accent) !important; }
+:root[data-theme] .app-shell [class*="text-[#264938]"],
+:root[data-theme] .app-shell [class*="text-navy"] { color:var(--foreground) !important; }
+:root[data-theme] .app-shell [class*="text-[#4A141F]"],
+:root[data-theme] .app-shell [class*="text-[#9A6C78]"] { color:var(--primary) !important; }
+:root[data-theme] .app-shell [class*="border-[#D9C0A3]"],
+:root[data-theme] .app-shell [class*="border-[#264938]"] { border-color:var(--border) !important; }
+:root[data-theme] .app-shell [class*="bg-[#4A141F]"],
+:root[data-theme] .app-shell [class*="bg-[#264938]"] { background-color:var(--primary) !important; color:var(--primary-foreground) !important; }
