@@ -295,7 +295,7 @@ function SchoolInboxPage() {
 
   return (
     <div dir="rtl" className="space-y-5">
-      <section className="rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)]">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-soft)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary">
@@ -334,7 +334,7 @@ function SchoolInboxPage() {
                 key={row.id}
                 type="button"
                 onClick={() => openReport(row)}
-                className={`w-full rounded-xl border p-3 text-right transition hover:border-primary/40 ${selectedId === row.id ? "border-primary bg-primary/5" : "bg-background"}`}
+                className={`w-full rounded-xl border p-3 text-right transition hover:border-[#89AA74] ${selectedId === row.id ? "border-primary bg-[#E4ECDF]/70" : "bg-background"}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="line-clamp-2 text-sm font-black">{row.title}</p>
@@ -363,7 +363,7 @@ function SchoolInboxPage() {
           </div>
         </aside>
 
-        <main className="min-w-0 rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <main className="min-w-0 rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           {!selected ? (
             <div className="flex min-h-80 flex-col items-center justify-center text-center">
               <FileCheck2 className="size-10 text-primary/40" />
@@ -472,7 +472,7 @@ function SchoolInboxPage() {
                 </div>
               )}
 
-              <section className="mb-5 rounded-2xl border bg-card p-4">
+              <section className="mb-5 rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4">
                 <div className="flex items-center gap-2">
                   <Clock3 className="size-4 text-primary" />
                   <h3 className="font-black">سجل مسار التقرير</h3>
