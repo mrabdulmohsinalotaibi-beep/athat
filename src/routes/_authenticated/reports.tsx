@@ -482,7 +482,7 @@ function ReportsPage() {
 
   return (
     <div className="reference-screen min-w-0 space-y-4" dir="rtl">
-      <section className="reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+      <section className="reference-hero relative overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <div className="flex items-center gap-2 text-primary">
@@ -505,28 +505,28 @@ function ReportsPage() {
       </section>
 
       <section className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <p className="text-[10px] font-black text-muted-foreground">إجمالي السجلات</p>
           <div className="mt-2 flex items-end justify-between gap-2">
             <strong className="text-2xl font-black text-navy">{totalRows}</strong>
             <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-700">مباشر</span>
           </div>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <p className="text-[10px] font-black text-muted-foreground">إنجاز الخطة</p>
           <div className="mt-2 flex items-end justify-between gap-2">
             <strong className="text-2xl font-black text-navy">{planProgress}%</strong>
             <span className="text-[9px] font-bold text-primary">{planDone} من {planRows.length}</span>
           </div>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <p className="text-[10px] font-black text-muted-foreground">البرامج المنفذة</p>
           <div className="mt-2 flex items-end justify-between gap-2">
             <strong className="text-2xl font-black text-navy">{programDone}</strong>
             <span className="text-[9px] font-bold text-primary">{programProgress}% إنجاز</span>
           </div>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <p className="text-[10px] font-black text-muted-foreground">الشواهد</p>
           <div className="mt-2 flex items-end justify-between gap-2">
             <strong className="text-2xl font-black text-navy">{evidenceRows.length}</strong>
@@ -542,7 +542,7 @@ function ReportsPage() {
             (workflowReportApproved
               ? "border-emerald-500/25 bg-emerald-500/[0.06]"
               : workflowReadyForApproval
-                ? "border-primary/25 bg-primary/[0.05]"
+                ? "border-[#89AA74]/40 bg-primary/[0.05]"
                 : "border-amber-500/25 bg-amber-500/[0.06]")
           }
         >
@@ -591,14 +591,14 @@ function ReportsPage() {
         </section>
       )}
 
-      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="mb-3">
           <h2 className="font-black">حزم مستندات جاهزة</h2>
           <p className="mt-1 text-xs text-muted-foreground">اختر حزمة ثم عدّل السجلات أو الفترة قبل إنشاء PDF.</p>
         </div>
         <div className="grid gap-2 xl:grid-cols-3">
           {documentPresets.map((preset) => (
-            <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-2xl border bg-[#FBF8F1] p-4 text-right transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-md">
+            <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-2xl border bg-[#FBF7F1] p-4 text-right transition hover:-translate-y-0.5 hover:border-[#89AA74] hover:bg-[#E4ECDF] hover:shadow-md">
               <p className="font-black">{preset.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{preset.description}</p>
             </button>
@@ -606,7 +606,7 @@ function ReportsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="space-y-5">
           <div>
             <Label>نوع التقرير</Label>
@@ -653,7 +653,7 @@ function ReportsPage() {
                 id="single-report-record"
                 value={selectedSingleKey}
                 onChange={(event) => setSelectedSingleKey(event.target.value)}
-                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               >
                 {reportableRecords.map((record) => (
                   <option key={record.key} value={record.key}>
@@ -675,7 +675,7 @@ function ReportsPage() {
                   </Button>
                 </div>
               </div>
-              <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-[#D9C0A3]/35 p-3 sm:grid-cols-2 xl:grid-cols-3">
                 {reportableRecords.map((record) => {
                   const active = selectedKeys.includes(record.key);
                   const count = filteredSections[record.key]?.length ?? 0;
@@ -705,7 +705,7 @@ function ReportsPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <Label htmlFor="report-document-no">رقم المستند</Label>
-              <input id="report-document-no" value={documentNo} onChange={(event) => setDocumentNo(event.target.value)} placeholder="اختياري" className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm" />
+              <input id="report-document-no" value={documentNo} onChange={(event) => setDocumentNo(event.target.value)} placeholder="اختياري" className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm" />
             </div>
             <div>
               <Label htmlFor="report-period">الفترة</Label>
@@ -714,7 +714,7 @@ function ReportsPage() {
                 value={period}
                 onChange={(event) => setPeriod(event.target.value)}
                 placeholder="مثال: الفصل الدراسي الأول"
-                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               />
             </div>
             <div>
@@ -723,7 +723,7 @@ function ReportsPage() {
                 id="report-title"
                 value={reportTitle}
                 onChange={(event) => setReportTitle(event.target.value)}
-                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               />
             </div>
           </div>
@@ -731,11 +731,11 @@ function ReportsPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="report-from">من تاريخ</Label>
-              <input id="report-from" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm" />
+              <input id="report-from" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm" />
             </div>
             <div>
               <Label htmlFor="report-to">إلى تاريخ</Label>
-              <input id="report-to" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm" />
+              <input id="report-to" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm" />
             </div>
           </div>
 
@@ -747,7 +747,7 @@ function ReportsPage() {
               onChange={(event) => setNarrative(event.target.value)}
               rows={4}
               placeholder="اكتب الملاحظات أو التوصيات التي تريد ظهورها في التقرير الرسمي..."
-              className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm leading-7"
+              className="mt-2 w-full resize-y rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 py-2 text-sm leading-7"
             />
           </div>
 
@@ -789,7 +789,7 @@ function ReportsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 text-primary">
@@ -815,7 +815,7 @@ function ReportsPage() {
                 id="report-recipient"
                 value={recipientMemberId}
                 onChange={(event) => setRecipientMemberId(event.target.value)}
-                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               >
                 <option value="">اختر المستلم</option>
                 {administrativeRecipients.map((member) => (
@@ -832,7 +832,7 @@ function ReportsPage() {
                 value={handoffNote}
                 onChange={(event) => setHandoffNote(event.target.value)}
                 placeholder="مثال: للاطلاع واعتماد ما تم إنجازه خلال الفترة"
-                className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                className="mt-2 h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               />
             </div>
             <Button
