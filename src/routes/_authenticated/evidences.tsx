@@ -26,7 +26,9 @@ function EvidencesPage() {
 
   return (
     <div className="space-y-5 pb-10" dir="rtl">
-      <section className="flex flex-col gap-3 rounded-2xl border border-primary/15 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <span className="text-[11px] font-black text-primary">3. الشاهد</span>
           <h1 className="mt-1 text-xl font-black">الشواهد والتوثيق</h1>
@@ -44,9 +46,15 @@ function EvidencesPage() {
         </div>
       </section>
 
-      <RecordPage config={recordByKey("evidences")} hideImport />
+      <section className="rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
+        <div className="mb-3">
+          <h2 className="text-sm font-black">ملفات الشواهد</h2>
+          <p className="mt-1 text-[10px] text-muted-foreground">بحث وتعديل وربط الشاهد من سجل واحد.</p>
+        </div>
+        <RecordPage config={recordByKey("evidences")} hideImport />
+      </section>
 
-      <section className="space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="space-y-3 rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div>
           <h2 className="font-black">معرض الشواهد</h2>
           <p className="mt-1 text-xs text-muted-foreground">معاينة الملفات المحفوظة دون إنشاء سجل آخر.</p>
@@ -55,6 +63,7 @@ function EvidencesPage() {
       </section>
 
       <EvidenceUploadDialog open={open} onOpenChange={setOpen} />
+      </div>
     </div>
   );
 }
