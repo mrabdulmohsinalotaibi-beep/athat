@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/webp", href: "/brand-approved.webp?v=20261002-approved" },
+      { rel: "icon", type: "image/webp", href: "/athat-logo-hq.webp?v=20261002-hq" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261002-ios2" },
     ],
   }),
@@ -80,12 +80,12 @@ function Landing() {
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 top-20 size-72 rounded-full border-[44px] border-[#527E70]/[0.05]" />
         <div aria-hidden="true" className="pointer-events-none absolute -left-20 top-[28rem] size-72 rounded-full border-[46px] border-[#D1A56E]/[0.06]" />
 
-        <main className="relative mx-auto w-full max-w-7xl px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 md:px-8 md:pt-7">
-          <section className="grid items-center gap-6 md:grid-cols-[0.9fr_1.1fr] md:gap-8 lg:gap-12">
-            <div className="order-2 md:order-1">
-              <div className="mx-auto max-w-sm rounded-[2rem] border border-[#2D665B]/10 bg-white/72 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 md:mx-0">
+        <main className="relative mx-auto w-full max-w-3xl xl:max-w-7xl px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 xl:px-8 xl:pt-7">
+          <section className="grid items-center gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:gap-8 lg:gap-12">
+            <div className="order-2 xl:order-1">
+              <div className="mx-auto max-w-sm rounded-[2rem] border border-[#2D665B]/10 bg-white/72 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 xl:mx-0">
                 <img
-                  src="/brand-approved.webp?v=20261002-approved"
+                  src="/athat-logo-hq.webp?v=20261002-hq"
                   alt="شعار ذات المعتمد من التصميم المرجعي"
                   className="mx-auto h-auto w-full max-w-[19rem] rounded-2xl object-contain sm:max-w-[21rem]"
                 />
@@ -94,7 +94,7 @@ function Landing() {
               </div>
             </div>
 
-            <div className="order-1 text-center md:order-2 md:text-right">
+            <div className="order-1 text-center xl:order-2 xl:text-right">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#2D665B]/10 bg-white/70 px-3 py-1.5 text-[11px] font-black text-[#2D665B] shadow-sm">
                 <HeartHandshake className="size-3.5" />
                 منصة يومية للموجه الطلابي
@@ -104,11 +104,11 @@ function Landing() {
                 <br className="hidden sm:block" />
                 نحو مستقبل أكثر إشراقًا
               </h1>
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5F7478] sm:text-base md:mx-0">
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5F7478] sm:text-base xl:mx-0">
                 منصة ذات لإدارة التوجيه الطلابي، تجمع التقنية والخبرة الإنسانية لدعم الطالب ومتابعة رحلته التعليمية والنفسية والسلوكية في تجربة واحدة واضحة.
               </p>
 
-              <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              <div className="mt-5 grid grid-cols-2 gap-2.5 xl:grid-cols-4">
                 {values.map(({ title, subtitle, icon: Icon }, index) => (
                   <div key={title} className="rounded-2xl border border-[#2D665B]/10 bg-white/78 px-2.5 py-3 text-center shadow-sm backdrop-blur">
                     <span
@@ -143,7 +143,7 @@ function Landing() {
             </div>
           </section>
 
-          <section className="mt-8 rounded-[2rem] border border-[#2D665B]/10 bg-white/64 p-3 shadow-[0_20px_50px_-40px_rgba(18,55,72,.45)] backdrop-blur sm:p-4 md:mt-10">
+          <section className="mt-8 rounded-[2rem] border border-[#2D665B]/10 bg-white/64 p-3 shadow-[0_20px_50px_-40px_rgba(18,55,72,.45)] backdrop-blur sm:p-4 xl:mt-10">
             <div className="mb-3 flex items-center justify-between gap-3 px-1">
               <div>
                 <p className="text-[10px] font-black text-[#2D665B]">أهم مساحات العمل</p>
@@ -152,7 +152,7 @@ function Landing() {
               <span className="hidden rounded-full bg-[#EDF4F0] px-3 py-1 text-[10px] font-bold text-[#2D665B] sm:inline-flex">Mobile-first</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
               {workAreas.map(({ title, description, icon: Icon }, index) => (
                 <article key={title} className="rounded-2xl border border-[#2D665B]/10 bg-white p-3.5 shadow-sm">
                   <span
@@ -176,7 +176,7 @@ function Landing() {
             </div>
           </section>
 
-          <section className="mt-4 grid gap-3 md:grid-cols-3">
+          <section className="mt-4 grid gap-3 xl:grid-cols-3">
             {[
               { title: "رحلة مترابطة", text: "من الحالة والمقابلة إلى خطة التدخل والمتابعة والتقرير." },
               { title: "تصميم هادئ وواضح", text: "ألوان وهوية مستوحاة من الإرشاد النفسي والنمو الشخصي." },
