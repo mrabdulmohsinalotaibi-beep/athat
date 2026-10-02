@@ -232,7 +232,7 @@ export function PublicRequestForm({
 
   if (requestNo) {
     return (
-      <div className="rounded-2xl border border-primary/25 bg-primary/5 p-8 text-center">
+      <div className="rounded-2xl border border-primary/25 bg-[#E4ECDF]/70 p-8 text-center">
         <CheckCircle2 className="mx-auto size-10 text-primary" />
         <h2 className="mt-4 text-xl font-black">تم استلام طلبك</h2>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
@@ -285,7 +285,7 @@ export function PublicRequestForm({
       <h2 className="text-xl font-black">{heading}</h2>
       <p className="mt-2 text-sm leading-7 text-muted-foreground">{intro}</p>
 
-      <div className="mt-5 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-6 text-muted-foreground">
+      <div className="mt-5 flex items-start gap-3 rounded-xl border border-primary/20 bg-[#E4ECDF]/70 p-4 text-xs leading-6 text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
         <p>{privacyNote}</p>
       </div>
@@ -354,7 +354,7 @@ export function PublicRequestForm({
             <select
               id="requester_role"
               name="requester_role"
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
               defaultValue={roleOptions[0]}
             >
               {roleOptions.map((option) => (
@@ -373,7 +373,7 @@ export function PublicRequestForm({
           <select
             id="topic"
             name="topic"
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-9 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
             defaultValue={topicOptions[0]}
           >
             {topicOptions.map((option) => (
@@ -414,7 +414,7 @@ export function PublicRequestForm({
           <select
             id="urgency"
             name="urgency"
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-9 w-full rounded-md border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
             defaultValue="عادي"
           >
             {URGENCY_OPTIONS.map((option) => (
