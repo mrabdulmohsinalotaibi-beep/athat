@@ -112,7 +112,7 @@ function CounselorPortalManager() {
       editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [editorOpenSeq, draft]);
+  }, [editorOpenSeq]);
 
   const { data: portalRequests = [] } = useQuery({
     queryKey: ["portal-request-summary"],
@@ -471,7 +471,8 @@ function CounselorPortalManager() {
         icon={Megaphone}
         items={shortPosts}
         onCreate={() => openEditor({ ...EMPTY_POST })}
-        onEdit={(item) =>\n          openEditor({
+        onEdit={(item) =>
+          openEditor({
             id: item.id,
             title: item.title,
             kind: item.kind,
@@ -493,7 +494,8 @@ function CounselorPortalManager() {
         icon={BookOpen}
         items={articles}
         onCreate={() => openEditor({ ...EMPTY_ARTICLE })}
-        onEdit={(item) =>\n          openEditor({
+        onEdit={(item) =>
+          openEditor({
             id: item.id,
             title: item.title,
             kind: item.kind,
