@@ -305,7 +305,7 @@ export function NoorExportCenter() {
 
   return (
     <section className="space-y-5 rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row lg:items-start xl:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-xl font-black">
             <UploadCloud className="size-5 text-primary" /> تجهيز أعمال التوجيه لنظام نور
@@ -339,7 +339,7 @@ export function NoorExportCenter() {
         النظامي في نور، اضغط «توثيق الرفع» وسجّل رقم المرجع إن وجد.
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <MiniStat label="مصادر التوجيه" value={stats.total} />
         <MiniStat label="غير مجهز" value={stats.fresh} />
         <MiniStat label="جاهز لنور" value={stats.ready} />
@@ -423,7 +423,7 @@ export function NoorExportCenter() {
           جارٍ تحميل سجلات التوجيه…
         </div>
       ) : (
-        <div className="grid gap-2 md:grid-cols-2">
+        <div className="grid gap-2 xl:grid-cols-2">
           {visibleRows.slice(0, 100).map((row) => {
             const key = `${row.table}:${row.id}`;
             const job = existing.get(key);
