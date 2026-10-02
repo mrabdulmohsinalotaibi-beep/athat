@@ -68,14 +68,14 @@ jobs:
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
             mkdir -p "$dir"
-            rsvg-convert -w "$size" -h "$size" public/athat-icon-hq.webp -o "$dir/ic_launcher.png"
+            convert public/athat-icon-hq.webp -resize "${size}x${size}" "$dir/ic_launcher.png"
             cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
           done
           for spec in "mdpi:108" "hdpi:162" "xhdpi:216" "xxhdpi:324" "xxxhdpi:432"; do
             density="${spec%%:*}"
             size="${spec##*:}"
             dir="android/app/src/main/res/mipmap-${density}"
-            rsvg-convert -w "$size" -h "$size" public/athat-icon-hq.webp -o "$dir/ic_launcher_foreground.png"
+            convert public/athat-icon-hq.webp -resize "${size}x${size}" "$dir/ic_launcher_foreground.png"
           done
 
       - name: Restore release keystore
