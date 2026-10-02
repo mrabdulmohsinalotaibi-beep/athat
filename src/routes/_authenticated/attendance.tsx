@@ -99,23 +99,29 @@ function AttendancePage() {
         pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
       }
       const extractedText = pages.join("\n").trim();
-      let parsed = parseAttendanceText(extractedText);
+      let parsed: ImportedAttendance[] = [];
 
-      // إذا لم ينجح المحلل التقليدي، نرسل النص المستخرج إلى DeepSeek
-      // لفهم تنسيق إتقان وتوزيع الحقول بطريقة أكثر مرونة.
-      if (!parsed.length && extractedText.length > 20) {
-        toast.info("لم يتعرف القارئ التقليدي على التنسيق، جارٍ التحليل الذكي عبر DeepSeek...");
-        const ai = await parseAttendanceWithDeepSeek({ data: { text: extractedText } });
-        parsed = (ai.records ?? []).map((row) => ({
-          student_no: row.student_no || "",
-          student_name: row.student_name || "طالب من كشف إتقان",
-          adate: row.adate || "",
-          case_type: "غياب" as const,
-          count_days: row.count_days || 1,
-          action: row.action || "متابعة الغياب",
-          selected: true,
-          source: row.source || "",
-        }));
+      // نستخدم DeepSeek أولًا لفهم تنسيق إتقان وتوزيع الحقول، ثم نرجع
+      // للمحلل المحلي كخطة بديلة إذا تعذرت خدمة الذكاء الاصطناعي.
+      if (extractedText.length > 20) {
+        try {
+          toast.info("جارٍ تحليل كشف إتقان وتوزيع البيانات عبر DeepSeek...");
+          const ai = await parseAttendanceWithDeepSeek({ data: { text: extractedText } });
+          parsed = (ai.records ?? []).map((row) => ({
+            student_no: row.student_no || "",
+            student_name: row.student_name || "طالب من كشف إتقان",
+            adate: row.adate || "",
+            case_type: "غياب" as const,
+            count_days: row.count_days || 1,
+            action: row.action || "متابعة الغياب",
+            selected: true,
+            source: row.source || "",
+          }));
+        } catch (aiError) {
+          console.warn("[Attendance] DeepSeek parsing failed; using local parser", aiError);
+          parsed = parseAttendanceText(extractedText);
+          if (parsed.length) toast.info("تعذر التحليل الذكي، وتمت القراءة بالطريقة الاحتياطية.");
+        }
       }
 
       if (!parsed.length) {
