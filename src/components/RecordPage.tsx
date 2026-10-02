@@ -541,7 +541,8 @@ export function RecordPage({
 
 
   return (
-    <div className="space-y-4">
+    <div className="record-page space-y-4">
+      <section className="record-page-header rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">{config.title}</h1>
@@ -617,8 +618,9 @@ export function RecordPage({
           />
         </div>
       </div>
+      </section>
 
-      {filters && <div className="flex flex-wrap items-end gap-3">{filters}</div>}
+      {filters && <div className="rounded-2xl border bg-card p-3 shadow-[var(--shadow-card)]"><div className="flex flex-wrap items-end gap-3">{filters}</div></div>}
       {rowsError && (
         <div
           role="alert"
@@ -639,8 +641,8 @@ export function RecordPage({
       )}
 
 
-      <div className="relative w-full sm:max-w-sm">
-        <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative w-full rounded-2xl border bg-card p-2 shadow-[var(--shadow-card)] sm:max-w-md">
+        <Search className="absolute right-5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(e) => {
@@ -649,7 +651,7 @@ export function RecordPage({
           }}
           placeholder={config.key === "students" ? "ابحث بالاسم أو رقم الطالب أو الهوية أو الصف..." : "بحث في السجل..."}
           aria-label={config.key === "students" ? "البحث بالاسم أو رقم الطالب أو الهوية أو الصف" : "بحث في السجل"}
-          className="pr-9 pl-9"
+          className="h-11 rounded-xl border-0 bg-muted/45 pr-9 pl-9 shadow-none focus-visible:ring-1"
         />
         {search && (
           <button
@@ -664,11 +666,110 @@ export function RecordPage({
         )}
       </div>
 
-      <div ref={recordPdfRef} className="record-pdf-document rounded-xl border bg-card p-4 shadow-sm">
+      <div ref={recordPdfRef} className="record-pdf-document rounded-3xl border bg-card p-3 shadow-[var(--shadow-card)] sm:p-4">
         <div className="mb-4 block">
           <OfficialHeader school={school} title={config.title} />
         </div>
-        <div className="record-table-scroll overflow-x-auto">
+        <div className="grid gap-2.5 md:hidden print:hidden">
+          {isLoading && (
+            <div className="rounded-2xl border bg-muted/30 p-6 text-center text-sm text-muted-foreground">جارٍ التحميل...</div>
+          )}
+          {!isLoading && paged.length === 0 && (
+            <div className="rounded-2xl border bg-muted/30 p-6 text-center text-sm text-muted-foreground">لا توجد سجلات بعد.</div>
+          )}
+          {paged.map((row) => {
+            const primaryField = listFields[0];
+            const secondaryFields = listFields.slice(1, 4);
+            return (
+              <article key={row.id} className="rounded-2xl border bg-background/80 p-3.5 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-primary">{config.singular}</p>
+                    <h3 className="mt-0.5 truncate text-sm font-black text-foreground">
+                      {primaryField ? displayRecordValue(row[primaryField.name]) : config.singular}
+                    </h3>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0 rounded-xl px-2.5"
+                    onClick={() => setDocumentRow(row)}
+                  >
+                    <FileText className="size-4" />
+                    <span className="text-[10px]">المستند</span>
+                  </Button>
+                </div>
+
+                {secondaryFields.length > 0 && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {secondaryFields.map((field) => (
+                      <div key={field.name} className="rounded-xl bg-muted/45 px-2.5 py-2">
+                        <p className="text-[9px] font-bold text-muted-foreground">{field.label}</p>
+                        <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold text-foreground">
+                          {displayRecordValue(row[field.name]) || "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-3 flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                  {rowAction && (
+                    <Button variant="outline" size="sm" className="h-9 shrink-0 rounded-xl" onClick={() => rowAction.onClick(row)}>
+                      {rowAction.icon}
+                      <span className="text-[10px]">{rowAction.title}</span>
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0 rounded-xl"
+                    onClick={() => {
+                      setAuto({});
+                      setEditing(row);
+                    }}
+                  >
+                    <Pencil className="size-4" />
+                    <span className="text-[10px]">تعديل</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-9 shrink-0 rounded-xl" onClick={() => setAttachFor(row)}>
+                    <Paperclip className="size-4" />
+                    <span className="text-[10px]">المرفقات</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0 rounded-xl"
+                    onClick={() => {
+                      const copy: Record<string, string> = {};
+                      config.fields.filter((field) => !field.generated).forEach((field) => {
+                        copy[field.name] = String(row[field.name] ?? "");
+                      });
+                      setAuto(copy);
+                      setEditing({});
+                    }}
+                  >
+                    <Copy className="size-4" />
+                    <span className="text-[10px]">نسخ</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 shrink-0 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => {
+                      if (confirm("هل تريد حذف هذا السجل؟")) remove.mutate(row.id);
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                    <span className="text-[10px]">حذف</span>
+                  </Button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="record-table-scroll hidden overflow-x-auto md:block print:block">
           <table className="w-full text-right text-sm">
             <thead>
               <tr className="border-b bg-muted/60 text-xs">
