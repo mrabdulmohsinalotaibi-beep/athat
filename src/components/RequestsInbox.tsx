@@ -574,7 +574,7 @@ export function RequestsInbox() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard label="إجمالي الطلبات" value={stats.total} hint="الواردة من الاستمارات العامة" />
         <StatCard label="طلبات جديدة" value={stats.fresh} hint="بانتظار المراجعة" tone="amber" />
         <StatCard label="طلبات عاجلة" value={stats.urgent} hint="تحتاج تدخلاً سريعاً" tone="rose" />
@@ -623,7 +623,7 @@ export function RequestsInbox() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <ul className="max-h-[32rem] space-y-2 overflow-y-auto rounded-xl border bg-card p-3 shadow-sm">
           {isLoading && <li className="p-4 text-sm text-muted-foreground">جارٍ التحميل…</li>}
           {!isLoading && filtered.length === 0 && (
