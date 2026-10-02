@@ -116,6 +116,7 @@ function PublicCounselorBlogPage() {
   const { token } = Route.useParams();
   const { school: schoolFromLink, feedback } = Route.useSearch();
   const [audience, setAudience] = useState<Audience>("student");
+  const [section, setSection] = useState<"home" | "posts" | "articles" | "services">("home");
   const [contributionOpen, setContributionOpen] = useState(false);
   const [contributionSent, setContributionSent] = useState(false);
   const [contributionSaving, setContributionSaving] = useState(false);
@@ -297,25 +298,33 @@ function PublicCounselorBlogPage() {
               </div>
               <Megaphone className="size-7 shrink-0 text-[#9A6C78]" />
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-1.5">
-              <a href="#daily-feed" className="rounded-xl bg-[#4A141F] px-2.5 py-2 text-center text-xs font-black text-primary-foreground">المنشورات</a>
-              <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl border border-[#D9C0A3]/55 bg-[#FFFDF9] px-2.5 py-2 text-xs font-black text-primary">اكتب وانشر</button>
-              <a href="#contact" className="rounded-xl border border-[#D9C0A3]/55 bg-[#FFFDF9] px-2.5 py-2 text-center text-xs font-black">تواصل</a>
-            </div>
+            <nav className="mt-3 grid grid-cols-4 gap-1 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9]/90 p-1" aria-label="أقسام المدونة">
+              {([
+                ["home", "الرئيسية"],
+                ["posts", "المنشورات"],
+                ["articles", "المقالات"],
+                ["services", "الخدمات"],
+              ] as const).map(([key, label]) => (
+                <button key={key} type="button" onClick={() => setSection(key)} className={"rounded-lg px-1.5 py-2 text-[11px] font-black transition " + (section === key ? "bg-[#264938] text-white shadow-sm" : "text-[#264938] hover:bg-[#E4ECDF]/65")}>{label}</button>
+              ))}
+            </nav>
           </div>
         </section>
 
+        {section !== "services" && (
         <section id="daily-feed" className="mx-auto max-w-4xl scroll-mt-20 px-3 py-4 sm:px-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-[11px] font-black text-primary">اليوميات</p>
-              <h2 className="text-lg font-black">آخر المنشورات</h2>
+              <h2 className="text-lg font-black">{section === "articles" ? "المقالات" : section === "posts" ? "المنشورات" : "أحدث المحتوى"}</h2>
             </div>
-            <span className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">{dailyPosts.length} منشور</span>
+            <span className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">{(section === "articles" ? articles : section === "posts" ? updates : dailyPosts).length} عنصر</span>
           </div>
-          <PublicContentSection eyebrow="" title="" count={dailyPosts.length} items={dailyPosts} compact />
+          <PublicContentSection eyebrow="" title="" count={(section === "articles" ? articles : section === "posts" ? updates : dailyPosts).length} items={section === "articles" ? articles : section === "posts" ? updates : dailyPosts} compact />
         </section>
+        )}
 
+        {section === "home" && (
         <section className="mx-auto max-w-4xl px-3 pb-4 sm:px-5">
           <div className="rounded-2xl border border-[#D9C0A3]/45 bg-[#FFFDF9] p-4 shadow-sm">
             <div className="flex items-start gap-3">
@@ -362,7 +371,9 @@ function PublicCounselorBlogPage() {
             )}
           </div>
         </section>
+        )}
 
+        {(section === "home" || section === "services") && (
         <section id="contact" className="border-t border-[#D9C0A3]/40 bg-[#F1E5E8]/35">
           <div className="mx-auto max-w-4xl px-3 py-5 sm:px-5">
             <div className="mb-4">
@@ -396,6 +407,7 @@ function PublicCounselorBlogPage() {
             )}
           </div>
         </section>
+        )}
       </main>
 
       <footer className="border-t border-[#D9C0A3]/40 bg-[#FFFDF9] px-4 py-5 text-center text-[11px] text-muted-foreground">
