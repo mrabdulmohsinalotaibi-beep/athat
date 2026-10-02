@@ -418,9 +418,13 @@ function ProgramsPage() {
   } = useQuery({
     queryKey: ["programs"],
     queryFn: async () => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
       const { data, error } = await supabase
         .from("programs")
         .select("*")
+        .eq("user_id", authData.user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as ProgramRow[];
@@ -516,6 +520,7 @@ function ProgramsPage() {
           .from("programs")
           .update(payload as never)
           .eq("id", draft.id)
+          .eq("user_id", userId)
           .select("*")
           .single();
         if (error) throw error;
@@ -726,8 +731,14 @@ function ProgramsPage() {
 
 
   async function importMinistryPrograms() {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      toast.error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.");
+      return;
+    }
     const existing = new Set(programs.map((p) => value(p.name).trim()));
     const payload = MINISTRY_PROGRAMS.filter((p) => !existing.has(p[1])).map((p) => ({
+      user_id: authData.user.id,
       program_no: `الفصل الدراسي الأول - ${p[0]}`,
       name: p[1],
       ptype: p[2],
