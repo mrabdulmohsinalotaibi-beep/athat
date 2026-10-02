@@ -476,13 +476,14 @@ function PublicContentSection({
                       <Link
                         to="/posts/$slug"
                         params={{ slug: post.slug }}
+                        search={{ portal: typeof window !== "undefined" ? window.location.pathname.split("/blog/")[1]?.split("?")[0] : undefined }}
                         className="inline-flex items-center gap-1 text-[11px] font-black text-[#4A141F]"
                       >
                         {compact ? "عرض كامل" : "فتح المنشور"} <ArrowLeft className="size-3.5" />
                       </Link>
                       <a
                         href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                          `${post.title}\n\n${typeof window !== "undefined" ? window.location.origin : "https://athat.app"}/posts/${encodeURIComponent(post.slug)}\n\nمن الذات`,
+                          `${post.title}\n\n${typeof window !== "undefined" ? `${window.location.origin}/posts/${encodeURIComponent(post.slug)}?portal=${encodeURIComponent(window.location.pathname.split("/blog/")[1]?.split("?")[0] || "")}` : "https://athat.app"}\n\nمن الذات`,
                         )}`}
                         target="_blank"
                         rel="noreferrer noopener"
