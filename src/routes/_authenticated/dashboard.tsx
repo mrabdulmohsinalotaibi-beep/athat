@@ -868,7 +868,7 @@ function Dashboard() {
               }}
               aria-label={`${dashboardProgressLabel} ${dashboardProgress}%`}
             >
-              <div className="grid size-full place-items-center rounded-full bg-[#07566A] text-center shadow-inner">
+              <div className="grid size-full place-items-center rounded-full bg-navy text-center shadow-inner">
                 <span>
                   <strong className="block text-lg font-black leading-none">{dashboardProgress}%</strong>
                   <span className="mt-1 block text-[8px] font-bold text-white/70">{dashboardProgressLabel}</span>
@@ -892,7 +892,7 @@ function Dashboard() {
             className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[10px] font-bold"
           >
             <span className="inline-flex min-w-0 items-center gap-1.5">
-              <BellRing className="size-3.5 shrink-0 text-[#E5C27B]" />
+              <BellRing className="size-3.5 shrink-0 text-sand" />
               <span className="truncate">{dashboardDueCount} عنصر مستحق يحتاج متابعتك</span>
             </span>
             <ArrowLeft className="size-3.5 shrink-0" />
