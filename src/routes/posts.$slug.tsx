@@ -87,7 +87,9 @@ function PostPage() {
                 <span>{post.author_name || "الموجه الطلابي"}</span>
                 <button type="button" onClick={sharePost} className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9C0A3]/55 px-2.5 py-1.5 font-black text-[#4A141F]"><Share2 className="size-4" /> مشاركة</button>
               </div>
-              {post.excerpt && <p className="mt-5 rounded-xl bg-[#F4ECE3]/65 p-3 text-sm font-bold leading-7">{post.excerpt}</p>}
+              {post.excerpt?.trim() && post.excerpt.trim().replace(/\\s+/g, " ") !== post.body?.trim().replace(/\\s+/g, " ") && (
+                <p className="mt-5 rounded-xl bg-[#F4ECE3]/65 p-3 text-sm font-bold leading-7">{post.excerpt}</p>
+              )}
               <div className="mt-5 whitespace-pre-line text-sm leading-8 text-[#264938]/90 sm:text-base">{post.body}</div>
             </div>
           </article>
