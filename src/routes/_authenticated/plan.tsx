@@ -53,8 +53,8 @@ function PlanPage() {
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
 
   return (
-    <div dir="rtl" className="space-y-4">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+    <div dir="rtl" className="reference-screen space-y-4">
+      <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
@@ -74,8 +74,8 @@ function PlanPage() {
       </section>
 
       {(data?.failedSources?.length ?? 0) > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
-          <span className="text-amber-800">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#D9C0A3]/55 bg-[#F4ECE3]/80 p-3 text-xs">
+          <span className="text-[#4A141F]">
             تعذّر تحميل جزء من ملخص الخطة ({data?.failedSources.join("، ")}). السجل الأساسي ما زال متاحًا.
           </span>
           <Button type="button" variant="ghost" size="sm" onClick={() => void refetch()}>
@@ -91,21 +91,21 @@ function PlanPage() {
         <Summary title="موثقة" value={String(documented)} hint={`${evidences.length} شاهد محفوظ إجمالًا`} icon={<FolderCheck className="size-4" />} />
       </section>
 
-      <div className="flex items-center gap-2 rounded-xl bg-primary/5 px-3 py-2 text-[11px] text-muted-foreground">
+      <div className="flex items-center gap-2 rounded-xl bg-[#E4ECDF]/70 px-3 py-2 text-[11px] text-muted-foreground">
         <ClipboardCheck className="size-4 shrink-0 text-primary" />
         حالة التنفيذ والتوثيق تُقرأ من سجلاتك الحالية، وربط البرنامج يتم من حقل «مهمة الخطة المرتبطة».
       </div>
 
-      <section className="rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4"><RecordPage config={recordByKey("plan")} hideImport /></section>
+      <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3.5 shadow-[var(--shadow-card)] sm:p-4"><RecordPage config={recordByKey("plan")} hideImport /></section>
     </div>
   );
 }
 
 function Summary({ title, value, hint, icon }: { title: string; value: string; hint: string; icon: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+    <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between">
-        <span className="rounded-xl bg-primary/10 p-2 text-primary">{icon}</span>
+        <span className="rounded-xl bg-[#E4ECDF] p-2 text-primary">{icon}</span>
         <strong className="text-2xl">{value}</strong>
       </div>
       <p className="mt-3 text-sm font-black">{title}</p>
