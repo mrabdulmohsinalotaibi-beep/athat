@@ -115,9 +115,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/athat-logo-final.png?v=20261002-final", type: "image/webp" },
-      { rel: "manifest", href: "/manifest.json?v=20261002-palette" },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=20261002-palette" },
+      { rel: "icon", href: "/athat-logo-final.png?v=20261002-brand", type: "image/png" },
+      { rel: "manifest", href: "/manifest.json?v=20261002-brand" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=20261002-brand" },
     ],
   }),
   shellComponent: RootShell,
