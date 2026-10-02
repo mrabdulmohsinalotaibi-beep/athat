@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "public/athat-icon.svg"
+      - "public/athat-logo-final.png"
       - ".github/workflows/refresh-brand-icons.yml"
 
 permissions:
@@ -30,10 +30,10 @@ jobs:
 
       - name: Generate browser and install icons
         run: |
-          rsvg-convert -w 180 -h 180 public/athat-icon.svg -o public/apple-touch-icon.png
-          rsvg-convert -w 192 -h 192 public/athat-icon.svg -o public/icon-192x192.png
-          rsvg-convert -w 512 -h 512 public/athat-icon.svg -o public/icon-512x512.png
-          rsvg-convert -w 64 -h 64 public/athat-icon.svg -o public/favicon.png
+          rsvg-convert -w 180 -h 180 public/athat-logo-final.png -o public/apple-touch-icon.png
+          rsvg-convert -w 192 -h 192 public/athat-logo-final.png -o public/icon-192x192.png
+          rsvg-convert -w 512 -h 512 public/athat-logo-final.png -o public/icon-512x512.png
+          rsvg-convert -w 64 -h 64 public/athat-logo-final.png -o public/favicon.png
           convert public/favicon.png -define icon:auto-resize=64,48,32,16 public/favicon.ico
 
       - name: Commit generated icons
