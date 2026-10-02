@@ -1,9 +1,10 @@
 import { useEffect, useState, type RefObject } from "react";
-import { Eye, Download, Share2, Loader2, ExternalLink, Save } from "lucide-react";
+import { Eye, Download, Share2, Loader2, ExternalLink, Save, PenLine } from "lucide-react";
 import { toast } from "sonner";
 
 import { createPdfFile, downloadPdfFile, savePdfFile, openNativeDocumentPrint } from "@/lib/share-pdf";
 import { Button } from "@/components/ui/button";
+import { useSchool } from "@/lib/school";
 import {
   Dialog,
   DialogContent,
@@ -29,10 +30,23 @@ export function PdfPreviewButton({
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState("");
+  const { data: school } = useSchool();
+  const [signatureOpen, setSignatureOpen] = useState(false);
+  const [signatureOptions, setSignatureOptions] = useState({ counselorName: true, counselorSignature: true, principalName: true, principalSignature: true });
 
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
 
+  function applySignatureOptions() {
+    const root = elementRef.current;
+    if (!root) return;
+    root.querySelectorAll<HTMLElement>("[data-signature-role]").forEach((node) => {
+      const role = node.dataset["signatureRole"] as keyof typeof signatureOptions | undefined;
+      if (role) node.style.display = signatureOptions[role] ? "" : "none";
+    });
+  }
+
   async function openPreview() {
+    applySignatureOptions();
     if (!elementRef.current || loading) return;
 
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
@@ -65,6 +79,7 @@ export function PdfPreviewButton({
   }
 
   async function downloadDirect() {
+    applySignatureOptions();
     if (!elementRef.current || loading) return;
 
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
@@ -132,6 +147,9 @@ export function PdfPreviewButton({
   return (
     <>
       <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => setSignatureOpen(true)} disabled={disabled || loading}>
+          <PenLine className="size-4" /> التواقيع والأسماء
+        </Button>
         <Button type="button" variant="outline" onClick={() => void openPreview()} disabled={disabled || loading}>
           {loading ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
           {loading ? "جارٍ تجهيز المعاينة..." : "معاينة المستند"}
@@ -141,6 +159,27 @@ export function PdfPreviewButton({
           تنزيل PDF
         </Button>
       </div>
+
+      <Dialog open={signatureOpen} onOpenChange={setSignatureOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader><DialogTitle>خيارات التواقيع والأسماء</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">اختر ما تريد ظهوره في هذا المستند فقط. كل خيار مستقل.</p>
+          <div className="grid gap-2 rounded-xl border p-3">
+            {([
+              ["counselorName", "اسم الموجه الطلابي", school?.counselor_name],
+              ["counselorSignature", "توقيع الموجه الطلابي", school?.counselor_signature ? "محفوظ" : "غير مضاف"],
+              ["principalName", "اسم مدير المدرسة", school?.principal_name],
+              ["principalSignature", "توقيع مدير المدرسة", school?.principal_signature ? "محفوظ" : "غير مضاف"],
+            ] as const).map(([key, label, value]) => (
+              <label key={key} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
+                <span><strong>{label}</strong>{value ? <small className="block text-muted-foreground">{value}</small> : null}</span>
+                <input type="checkbox" checked={signatureOptions[key]} onChange={(e) => setSignatureOptions((old) => ({ ...old, [key]: e.target.checked }))} />
+              </label>
+            ))}
+          </div>
+          <DialogFooter><Button type="button" onClick={() => { applySignatureOptions(); setSignatureOpen(false); }}>اعتماد الخيارات</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent dir="rtl" className="flex h-[94vh] w-[96vw] max-w-6xl flex-col overflow-hidden p-3 sm:p-5">
