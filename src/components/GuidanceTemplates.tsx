@@ -499,6 +499,8 @@ export function GuidanceTemplates() {
           onOpenChange={(open) => !open && setElectronic(null)}
           title={electronic.title}
           description={electronic.description}
+          templateId={electronic.id}
+          category={CATEGORY_LABELS[electronic.category]}
           fields={
             ELECTRONIC_FIELDS[electronic.id] ?? [
               { label: "بيانات النموذج", multiline: true },
