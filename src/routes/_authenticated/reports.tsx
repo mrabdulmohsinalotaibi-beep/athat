@@ -565,7 +565,7 @@ function ReportsPage() {
           <h2 className="font-black">حزم مستندات جاهزة</h2>
           <p className="mt-1 text-xs text-muted-foreground">اختر حزمة ثم عدّل السجلات أو الفترة قبل إنشاء PDF.</p>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 xl:grid-cols-3">
           {documentPresets.map((preset) => (
             <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-2xl border bg-card p-4 text-right transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-md">
               <p className="font-black">{preset.title}</p>
@@ -644,7 +644,7 @@ function ReportsPage() {
                   </Button>
                 </div>
               </div>
-              <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-2 grid max-h-64 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2 xl:grid-cols-3">
                 {reportableRecords.map((record) => {
                   const active = selectedKeys.includes(record.key);
                   const count = filteredSections[record.key]?.length ?? 0;
@@ -777,7 +777,7 @@ function ReportsPage() {
         </div>
 
         {administrativeRecipients.length ? (
-          <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(220px,0.8fr)_minmax(280px,1.4fr)_auto] lg:items-end">
+          <div className="mt-4 grid gap-3 xl:grid-cols-[minmax(220px,0.8fr)_minmax(280px,1.4fr)_auto] lg:items-end">
             <div>
               <Label htmlFor="report-recipient">المستلم الأعلى صلاحية</Label>
               <select
@@ -916,7 +916,7 @@ function ReportsPage() {
               <h2 className="mb-3 border-r-4 border-primary pr-3 text-base font-black">
                 ملخص مؤشرات الأداء
               </h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {kpis.map((kpi) => (
                   <div
                     key={kpi.key}
