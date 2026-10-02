@@ -92,7 +92,40 @@ export function RecordPage({
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
+  const [recordTab, setRecordTab] = useState("all");
   const pageSize = 20;
+
+  const referenceTabs = useMemo(() => {
+    if (config.key === "cases") {
+      return [
+        { key: "all", label: "الكل" },
+        { key: "active", label: "نشطة" },
+        { key: "closed", label: "مغلقة" },
+      ];
+    }
+    if (config.key === "interviews") {
+      return [
+        { key: "all", label: "الكل" },
+        { key: "upcoming", label: "القادمة" },
+        { key: "previous", label: "السابقة" },
+      ];
+    }
+    if (config.key === "referrals") {
+      return [
+        { key: "all", label: "الكل" },
+        { key: "following", label: "قيد المتابعة" },
+        { key: "done", label: "منتهية" },
+      ];
+    }
+    if (config.key === "evidences") {
+      return [
+        { key: "all", label: "الكل" },
+        { key: "images", label: "الصور" },
+        { key: "documents", label: "المستندات" },
+      ];
+    }
+    return [];
+  }, [config.key]);
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
   const [smartFilling, setSmartFilling] = useState(false);
@@ -278,6 +311,35 @@ export function RecordPage({
         config.fields.some((f) => String(row[f.name] ?? "").toLocaleLowerCase("ar").includes(term)),
       );
     }
+    if (recordTab !== "all") {
+      const day = new Date().toISOString().slice(0, 10);
+      out = out.filter((row) => {
+        if (config.key === "cases") {
+          const status = String(row["case_status"] ?? "");
+          return recordTab === "active" ? status !== "مغلقة" : status === "مغلقة";
+        }
+        if (config.key === "interviews") {
+          const followup = String(row["followup_at"] ?? "").slice(0, 10);
+          const date = String(row["idate"] ?? "").slice(0, 10);
+          return recordTab === "upcoming"
+            ? Boolean(followup && followup >= day)
+            : Boolean(date && date < day);
+        }
+        if (config.key === "referrals") {
+          const status = String(row["status"] ?? "");
+          return recordTab === "following"
+            ? ["مرسلة", "قيد المتابعة"].includes(status)
+            : status === "منتهية";
+        }
+        if (config.key === "evidences") {
+          const type = String(row["etype"] ?? "");
+          return recordTab === "images"
+            ? type === "صورة"
+            : ["PDF", "تقرير", "كشف حضور", "محضر"].includes(type);
+        }
+        return true;
+      });
+    }
     if (extraFilter) out = out.filter((row) => extraFilter(row));
     if (sort) {
       const dir = sort.dir === "asc" ? 1 : -1;
@@ -289,7 +351,7 @@ export function RecordPage({
       });
     }
     return out;
-  }, [rows, search, config.fields, extraFilter, sort, serverPagination]);
+  }, [rows, search, config.fields, config.key, extraFilter, sort, serverPagination, recordTab]);
 
   const totalRows = serverPagination ? rowResult?.count ?? 0 : filtered.length;
   const pageCount = Math.max(1, Math.ceil(totalRows / pageSize));
@@ -619,6 +681,24 @@ export function RecordPage({
         </div>
       </div>
       </section>
+
+      {referenceTabs.length > 0 && (
+        <div className="reference-tabs flex gap-1 rounded-2xl border bg-card p-1.5 shadow-[var(--shadow-card)]">
+          {referenceTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                setRecordTab(tab.key);
+                setPage(1);
+              }}
+              className={`flex-1 rounded-xl px-3 py-2 text-[11px] font-black transition ${recordTab === tab.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {filters && <div className="rounded-2xl border bg-card p-3 shadow-[var(--shadow-card)]"><div className="flex flex-wrap items-end gap-3">{filters}</div></div>}
       {rowsError && (
