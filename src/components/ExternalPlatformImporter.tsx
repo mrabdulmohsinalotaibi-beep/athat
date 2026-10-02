@@ -216,7 +216,7 @@ export function ExternalPlatformImporter() {
 
   return (
     <section className="space-y-5 rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-xl font-black">
             <FileSpreadsheet className="size-5 text-primary" /> استيراد الطلاب إلى «الذات»
@@ -255,7 +255,7 @@ export function ExternalPlatformImporter() {
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-bold">1. ارفع ملف Excel أو CSV</label>
           <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground hover:bg-muted/50">
@@ -303,7 +303,7 @@ export function ExternalPlatformImporter() {
 
       {rows.length > 0 && (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Metric icon={Users} label="إجمالي الصفوف" value={rows.length} />
             <Metric
               icon={CheckCircle2}
@@ -327,7 +327,7 @@ export function ExternalPlatformImporter() {
 
           <div className="rounded-2xl border p-4">
             <p className="mb-3 text-sm font-black">مطابقة أعمدة الملف مع «الذات»</p>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {mappedFields.map(([field, label]) => (
                 <div key={field} className="rounded-lg bg-muted/40 p-3 text-xs">
                   <p className="font-bold">{label}</p>
