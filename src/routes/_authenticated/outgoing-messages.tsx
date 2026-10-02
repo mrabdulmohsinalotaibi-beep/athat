@@ -241,7 +241,7 @@ function OutgoingMessagesPage() {
         },
       });
 
-      const drafted = result?.suggestions?.message?.trim();
+      const drafted = result?.suggestions?.["message"]?.trim();
       if (!drafted) {
         toast.info("لم ينتج الذكاء الاصطناعي نصًا. جرّب وصف الموضوع بشكل أوضح.");
         return;
@@ -284,7 +284,7 @@ function OutgoingMessagesPage() {
         },
       });
 
-      const rewritten = result?.suggestions?.message?.trim();
+      const rewritten = result?.suggestions?.["message"]?.trim();
       if (!rewritten) {
         toast.info("لم تتوفر صياغة بديلة.");
         return;
