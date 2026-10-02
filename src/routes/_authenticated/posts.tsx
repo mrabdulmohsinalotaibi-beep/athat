@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -98,6 +98,21 @@ function CounselorPortalManager() {
   const { data: school } = useSchool();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [contentTab, setContentTab] = useState<"all" | "articles" | "services">("all");
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [editorOpenSeq, setEditorOpenSeq] = useState(0);
+
+  function openEditor(next: Draft) {
+    setDraft(next);
+    setEditorOpenSeq((value) => value + 1);
+  }
+
+  useEffect(() => {
+    if (!draft || !editorOpenSeq) return;
+    const frame = window.requestAnimationFrame(() => {
+      editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [editorOpenSeq, draft]);
 
   const { data: portalRequests = [] } = useQuery({
     queryKey: ["portal-request-summary"],
@@ -254,9 +269,9 @@ function CounselorPortalManager() {
               انشر الرسائل التربوية والمقالات والإعلانات، استقبل مشاركات المجتمع المدرسي، وأدر خدمات الطلاب والأسرة من لوحة واحدة واضحة.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button onClick={() => setDraft({ ...EMPTY_POST })}><PenSquare className="size-4" /> كتابة منشور</Button>
-              <Button variant="outline" onClick={() => setDraft({ ...EMPTY_ARTICLE })}><BookOpen className="size-4" /> كتابة مقال</Button>
-              <a href="#portal-links"><Button variant="ghost"><Share2 className="size-4" /> مشاركة المدونة</Button></a>
+              <Button onClick={() => openEditor({ ...EMPTY_POST })}><PenSquare className="size-4" /> كتابة منشور</Button>
+              <Button variant="outline" onClick={() => openEditor({ ...EMPTY_ARTICLE })}><BookOpen className="size-4" /> كتابة مقال</Button>
+              <Button asChild variant="ghost"><a href="#portal-links"><Share2 className="size-4" /> مشاركة المدونة</a></Button>
             </div>
           </div>
           <div className="grid min-w-[260px] grid-cols-2 gap-2 rounded-2xl border bg-[#FBF7F1] p-3 shadow-[var(--shadow-card)] backdrop-blur">
@@ -397,7 +412,7 @@ function CounselorPortalManager() {
           description="إعلانات ونصائح وأخبار قصيرة تظهر في مدونتك العامة."
           count={shortPosts.length}
           action="إضافة منشور"
-          onClick={() => setDraft({ ...EMPTY_POST })}
+          onClick={() => openEditor({ ...EMPTY_POST })}
         />
         <ServiceCard
           icon={BookOpen}
@@ -405,7 +420,7 @@ function CounselorPortalManager() {
           description="مقالات توجيهية أطول للطلاب وأولياء الأمور والمعلمين."
           count={articles.length}
           action="إضافة مقال"
-          onClick={() => setDraft({ ...EMPTY_ARTICLE })}
+          onClick={() => openEditor({ ...EMPTY_ARTICLE })}
         />
         <ServiceCard
           icon={HeartHandshake}
@@ -424,15 +439,17 @@ function CounselorPortalManager() {
       </section>
       )}
 
-      {draft && (
-        <ContentEditor
-          draft={draft}
-          onChange={setDraft}
-          onSave={() => save.mutate(draft)}
-          onCancel={() => setDraft(null)}
-          saving={save.isPending}
-        />
-      )}
+      <div ref={editorRef} className="scroll-mt-24">
+        {draft && (
+          <ContentEditor
+            draft={draft}
+            onChange={setDraft}
+            onSave={() => save.mutate(draft)}
+            onCancel={() => setDraft(null)}
+            saving={save.isPending}
+          />
+        )}
+      </div>
 
       {postsError && (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
@@ -453,9 +470,8 @@ function CounselorPortalManager() {
         subtitle="الإعلانات والنصائح والأخبار القصيرة."
         icon={Megaphone}
         items={shortPosts}
-        onCreate={() => setDraft({ ...EMPTY_POST })}
-        onEdit={(item) =>
-          setDraft({
+        onCreate={() => openEditor({ ...EMPTY_POST })}
+        onEdit={(item) =>\n          openEditor({
             id: item.id,
             title: item.title,
             kind: item.kind,
@@ -476,9 +492,8 @@ function CounselorPortalManager() {
         subtitle="محتوى التوجيه الطلابي المطول الذي يظهر في قسم المقالات في الصفحة العامة."
         icon={BookOpen}
         items={articles}
-        onCreate={() => setDraft({ ...EMPTY_ARTICLE })}
-        onEdit={(item) =>
-          setDraft({
+        onCreate={() => openEditor({ ...EMPTY_ARTICLE })}
+        onEdit={(item) =>\n          openEditor({
             id: item.id,
             title: item.title,
             kind: item.kind,
