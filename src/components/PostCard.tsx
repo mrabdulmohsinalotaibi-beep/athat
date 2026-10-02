@@ -14,7 +14,14 @@ export function PostCard({ post, featured = false }: { post: PublicPost; feature
     <article className={"group overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl " + (featured ? "grid lg:grid-cols-[1.1fr_0.9fr]" : "flex flex-col")}>
       <Link to="/posts/$slug" params={{ slug: post.slug }} className={"flex flex-col " + (featured ? "lg:order-2" : "flex-1")}>
         {post.cover_url ? (
-          <img src={post.cover_url} alt={post.title} loading="lazy" className={"w-full object-cover " + (featured ? "aspect-[16/10] h-full min-h-[260px] lg:aspect-auto" : "aspect-[16/9]")} />
+          <div className={"flex w-full items-center justify-center bg-muted/20 " + (featured ? "min-h-[260px]" : "")}>
+            <img
+              src={post.cover_url}
+              alt={post.title}
+              loading="lazy"
+              className={"block h-auto w-auto max-w-full object-contain " + (featured ? "max-h-[620px]" : "max-h-[420px]")}
+            />
+          </div>
         ) : (
           <div className={"flex w-full items-center justify-center bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10 text-2xl font-black text-primary " + (featured ? "aspect-[16/10] min-h-[260px] lg:aspect-auto" : "aspect-[16/9]")}>
             {kindLabel(post.kind)}
