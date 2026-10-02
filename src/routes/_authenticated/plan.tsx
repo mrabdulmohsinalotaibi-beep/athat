@@ -54,8 +54,9 @@ function PlanPage() {
 
   return (
     <div dir="rtl" className="space-y-4">
-      <section className="rounded-2xl border border-primary/15 bg-card p-4 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <span className="text-[11px] font-black text-primary">1. الخطة التشغيلية</span>
             <h1 className="mt-1 text-xl font-black">من المهمة إلى التقرير</h1>
@@ -83,7 +84,7 @@ function PlanPage() {
         </div>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Summary title="إنجاز الخطة" value={`${progress}%`} hint={`${done} من ${tasks.length} مهمة مكتملة`} icon={<CheckCircle2 className="size-4" />} />
         <Summary title="مهام متأخرة" value={String(late)} hint="تجاوزت تاريخ الاستحقاق" icon={<AlertTriangle className="size-4" />} />
         <Summary title="مرتبطة ببرنامج" value={String(linkedPrograms)} hint="مهمة لها برنامج تنفيذي" icon={<Sparkles className="size-4" />} />
@@ -95,14 +96,14 @@ function PlanPage() {
         حالة التنفيذ والتوثيق تُقرأ من سجلاتك الحالية، وربط البرنامج يتم من حقل «مهمة الخطة المرتبطة».
       </div>
 
-      <RecordPage config={recordByKey("plan")} hideImport />
+      <section className="rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4"><RecordPage config={recordByKey("plan")} hideImport /></section>
     </div>
   );
 }
 
 function Summary({ title, value, hint, icon }: { title: string; value: string; hint: string; icon: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-sm">
+    <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between">
         <span className="rounded-xl bg-primary/10 p-2 text-primary">{icon}</span>
         <strong className="text-2xl">{value}</strong>
