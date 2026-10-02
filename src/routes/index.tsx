@@ -32,8 +32,8 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/webp", href: "/athat-logo-final.png?v=20261002-vector" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261002-ios2" },
+      { rel: "icon", type: "image/png", href: "/athat-logo-final.png?v=20261002-brand" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261002-brand" },
     ],
   }),
   component: Landing,
@@ -80,21 +80,26 @@ function Landing() {
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 top-20 size-72 rounded-full border-[44px] border-[#89AA74]/[0.05]" />
         <div aria-hidden="true" className="pointer-events-none absolute -left-20 top-[28rem] size-72 rounded-full border-[46px] border-[#D9C0A3]/[0.06]" />
 
-        <main className="relative mx-auto w-full max-w-3xl xl:max-w-7xl px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 xl:px-8 xl:pt-7">
-          <section className="grid items-center gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:gap-8 lg:gap-12">
-            <div className="order-2 xl:order-1">
-              <div className="mx-auto max-w-sm rounded-[2rem] border border-[#D9C0A3]/35 bg-white/78 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 xl:mx-0">
-                <img
-                  src="/athat-logo-final.png?v=20261002-vector"
-                  alt="شعار ذات المعتمد من التصميم المرجعي"
-                  className="mx-auto h-auto w-full max-w-[19rem] rounded-2xl object-contain sm:max-w-[21rem]"
-                />
-                <p className="mt-3 text-sm font-black text-[#264938]">منصة التوجيه الطلابي</p>
-                <p className="mt-1 text-[11px] font-bold tracking-wide text-[#766C68]">دعم · توجيه · نمو · لمستقبل أفضل</p>
-              </div>
+        <main className="relative mx-auto w-full max-w-3xl px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 xl:max-w-5xl xl:px-8 xl:pt-7">
+          <header className="mb-5 flex items-center justify-center gap-3 sm:mb-7 xl:justify-start">
+            <div className="grid size-20 shrink-0 place-items-center rounded-[1.4rem] border border-[#D9C0A3]/35 bg-white/90 p-2 shadow-[0_14px_34px_-22px_rgba(18,55,72,.5)] backdrop-blur sm:size-24">
+              <img
+                src="/athat-logo-final.png?v=20261002-brand"
+                alt="شعار الذات"
+                className="size-full object-contain"
+              />
             </div>
+            <div className="text-right">
+              <p className="text-xl font-black leading-none text-[#264938] sm:text-2xl">الذات | ATHAT</p>
+              <p className="mt-1.5 text-[11px] font-bold text-[#766C68] sm:text-xs">منصة التوجيه الطلابي</p>
+              <p className="mt-1 text-[9px] font-semibold tracking-wide text-[#9A6C78] sm:text-[10px]">
+                دعم · توجيه · نمو · لمستقبل أفضل
+              </p>
+            </div>
+          </header>
 
-            <div className="order-1 text-center xl:order-2 xl:text-right">
+          <section className="mx-auto max-w-3xl">
+            <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#D9C0A3]/35 bg-white/80 px-3 py-1.5 text-[11px] font-black text-[#264938] shadow-sm">
                 <HeartHandshake className="size-3.5" />
                 منصة يومية للموجه الطلابي
