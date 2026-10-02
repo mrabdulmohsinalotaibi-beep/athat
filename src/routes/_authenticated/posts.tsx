@@ -371,6 +371,24 @@ function CounselorPortalManager() {
 
       {contentTab !== "articles" && <PortalLinksPanel />}
 
+      {contentTab === "services" && (
+        <Link
+          to="/integrations"
+          className="flex items-center justify-between gap-3 rounded-3xl border border-primary/15 bg-gradient-to-l from-primary/[0.06] to-[#F7E9D5] p-4 shadow-[var(--shadow-card)]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="grid size-11 place-items-center rounded-2xl bg-white text-primary shadow-sm">
+              <School className="size-5" />
+            </span>
+            <div>
+              <p className="text-sm font-black text-navy">تكامل نور ومنصة مدرستي</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">الوصول إلى أدوات الربط والاستيراد والتصدير.</p>
+            </div>
+          </div>
+          <ExternalLink className="size-4 text-primary" />
+        </Link>
+      )}
+
       {contentTab !== "articles" && (
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <ServiceCard
@@ -900,7 +918,7 @@ function ContentEditor({
   }
 
   return (
-    <section className="space-y-4 rounded-3xl border border-primary/20 bg-card p-5 shadow-sm">
+    <section className="space-y-4 rounded-3xl border border-primary/20 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
       <div>
         <p className="text-xs font-black text-primary">{draft.kind === "article" ? "مقال" : "منشور"}</p>
         <h2 className="mt-1 text-xl font-black">{draft.id ? "تعديل المحتوى" : "إضافة محتوى جديد"}</h2>
@@ -918,7 +936,7 @@ function ContentEditor({
             </p>
           </div>
         </div>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <div className="mt-3 flex flex-col gap-2 xl:flex-row">
           <Input
             value={aiBrief}
             onChange={(event) => setAiBrief(event.target.value)}
@@ -937,7 +955,7 @@ function ContentEditor({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <div className="space-y-2">
           <Label>العنوان (اختياري للمنشور المصور)</Label>
           <Input value={draft.title} onChange={(e) => onChange({ ...draft, title: e.target.value })} />
@@ -945,7 +963,7 @@ function ContentEditor({
         <div className="space-y-2">
           <Label>النوع</Label>
           <select
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
             value={draft.kind}
             onChange={(e) => onChange({ ...draft, kind: e.target.value })}
           >
@@ -1081,7 +1099,7 @@ function ContentSection({
   onDelete: (id: string) => void;
 }) {
   return (
-    <section className="rounded-3xl border bg-card p-5 shadow-sm">
+    <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="rounded-xl bg-primary/10 p-2 text-primary"><Icon className="size-5" /></span>
@@ -1100,13 +1118,13 @@ function ContentSection({
           </p>
         )}
         {items.map((item) => (
-          <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-background p-4">
+          <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-[#FBF8F1] p-3.5 transition hover:border-primary/20">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               {item.cover_url && (
                 <img
                   src={item.cover_url}
                   alt={item.title}
-                  className="size-16 shrink-0 rounded-xl border object-cover"
+                  className="h-20 w-24 shrink-0 rounded-xl border object-cover"
                 />
               )}
               <div className="min-w-0">
