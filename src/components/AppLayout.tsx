@@ -60,7 +60,7 @@ const bottomNavigation = [
   { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/programs", "/plan", "/execution", "/evidences"] },
   { to: "/cases", label: "الحالات", icon: Users, activeRoutes: ["/cases", "/interviews", "/referrals", "/attendance", "/behavior", "/students"] },
   { to: "/reports", label: "التقارير", icon: BarChart3, activeRoutes: ["/reports", "/free-documents"] },
-  { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/messages", "/inbox", "/school-inbox", "/posts", "/committees", "/settings", "/integrations", "/school-team", "/school-tasks"] },
+  { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/messages", "/outgoing-messages", "/inbox", "/school-inbox", "/posts", "/committees", "/settings", "/integrations", "/school-team", "/school-tasks"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
