@@ -331,7 +331,7 @@ function DocSection({ title, children }: { title: string; children: ReactNode })
 
 function EvidenceGrid({ attachments }: { attachments: Attachment[] }) {
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-2 xl:grid-cols-2">
       {attachments.map((attachment) => (
         <div key={attachment.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
           {attachment.mime_type?.startsWith("image/") ? (
@@ -1019,7 +1019,7 @@ function ProgramsPage() {
                   وتبقى جميع الحقول قابلة للتعديل اليدوي
                 </span>
               </div>
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-2 flex flex-col gap-2 xl:flex-row">
                 <Textarea
                   rows={2}
                   value={aiPrompt}
@@ -1044,7 +1044,7 @@ function ProgramsPage() {
                 لا تضع أسماء الطلاب أو أرقامهم أو أرقام الجوال في الملخص.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 xl:grid-cols-2 xl:grid-cols-4">
               <Field
                 label="نوع البرنامج"
                 value={value(editing?.ptype)}
