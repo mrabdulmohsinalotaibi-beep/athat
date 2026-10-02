@@ -110,10 +110,8 @@ export function DailyWorkLog() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <label className="text-xs font-bold">
           التاريخ
-          <div className="relative mt-1.5">
-            <CalendarDays className="pointer-events-none absolute right-3 top-2.5 size-4 text-muted-foreground" />
-            <div className="relative">
-              <HijriDatePicker value={date} onChange={setDate} />
+          <div className="mt-1.5">
+            <HijriDatePicker value={date} onChange={setDate} />
           </div>
         </label>
         {[
