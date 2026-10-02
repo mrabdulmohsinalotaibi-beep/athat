@@ -85,9 +85,9 @@ function Landing() {
             <div className="order-2 md:order-1">
               <div className="mx-auto max-w-sm rounded-[2rem] border border-[#2D665B]/10 bg-white/72 p-5 text-center shadow-[0_24px_60px_-42px_rgba(18,55,72,.38)] backdrop-blur sm:p-6 md:mx-0">
                 <img
-                  src="/brand-final.svg?v=20261001-finalbrandbrand"
-                  alt="شعار الذات"
-                  className="mx-auto h-auto w-full max-w-[15rem] object-contain sm:max-w-[17rem]"
+                  src="/brand-reference.webp?v=20261002-concept"
+                  alt="شعار ذات المعتمد من التصميم المرجعي"
+                  className="mx-auto h-auto w-full max-w-[19rem] rounded-2xl object-contain sm:max-w-[21rem]"
                 />
                 <p className="mt-3 text-sm font-black text-[#143A49]">منصة التوجيه الطلابي</p>
                 <p className="mt-1 text-[11px] font-bold tracking-wide text-[#71827E]">دعم · توجيه · نمو · لمستقبل أفضل</p>
