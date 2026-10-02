@@ -97,6 +97,7 @@ function CounselorPortalManager() {
   const qc = useQueryClient();
   const { data: school } = useSchool();
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [contentTab, setContentTab] = useState<"all" | "articles" | "services">("all");
 
   const { data: portalRequests = [] } = useQuery({
     queryKey: ["portal-request-summary"],
@@ -316,7 +317,25 @@ function CounselorPortalManager() {
         </section>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="reference-tabs flex gap-1 rounded-2xl border bg-card p-1.5 shadow-[var(--shadow-card)]">
+        {[
+          ["all", "الكل"],
+          ["articles", "المقالات"],
+          ["services", "الخدمات"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setContentTab(key as "all" | "articles" | "services")}
+            className={`flex-1 rounded-xl px-3 py-2 text-[11px] font-black transition ${contentTab === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {contentTab !== "articles" && (
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-3">
         <Link
           to="/weekly-poster"
           className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 transition hover:border-primary/40"
@@ -348,9 +367,11 @@ function CounselorPortalManager() {
           </p>
         </Link>
       </section>
+      )}
 
-      <PortalLinksPanel />
+      {contentTab !== "articles" && <PortalLinksPanel />}
 
+      {contentTab !== "articles" && (
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <ServiceCard
           icon={Megaphone}
@@ -383,6 +404,7 @@ function CounselorPortalManager() {
           href="#portal-links"
         />
       </section>
+      )}
 
       {draft && (
         <ContentEditor
@@ -407,6 +429,7 @@ function CounselorPortalManager() {
       )}
 
       <div id="content-library" className="scroll-mt-24" />
+      {contentTab !== "services" && (
       <ContentSection
         title="المنشورات"
         subtitle="الإعلانات والنصائح والأخبار القصيرة."
@@ -427,7 +450,9 @@ function CounselorPortalManager() {
         }
         onDelete={(id) => remove.mutate(id)}
       />
+      )}
 
+      {contentTab !== "services" && (
       <ContentSection
         title="المقالات"
         subtitle="محتوى التوجيه الطلابي المطول الذي يظهر في قسم المقالات في الصفحة العامة."
@@ -448,7 +473,9 @@ function CounselorPortalManager() {
         }
         onDelete={(id) => remove.mutate(id)}
       />
+      )}
 
+      {contentTab !== "articles" && (
       <section id="incoming-requests" className="scroll-mt-24 space-y-4">
         <div>
           <p className="text-xs font-black text-primary">خاص بالموجه فقط</p>
@@ -459,6 +486,7 @@ function CounselorPortalManager() {
         </div>
         <RequestsInbox />
       </section>
+      )}
     </div>
   );
 }
