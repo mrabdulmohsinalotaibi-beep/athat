@@ -66,6 +66,7 @@ type BlogPortalRow = {
   published_at: string | null;
   created_at: string | null;
   slug: string | null;
+  is_featured: boolean | null;
 };
 
 type GuidanceProfile = {
@@ -165,7 +166,7 @@ function PublicCounselorBlogPage() {
   const dailyPosts = [...updates, ...articles].sort((a, b) =>
     new Date(b.published_at ?? b.created_at).getTime() - new Date(a.published_at ?? a.created_at).getTime(),
   );
-  const weeklyPost = dailyPosts[0] ?? null;
+  const featuredPost = dailyPosts.find((post) => post.is_featured) ?? null;
   const filteredPosts = useMemo(() => {
     const source = section === "articles" ? articles : section === "posts" ? updates : dailyPosts;
     const q = searchTerm.trim().toLowerCase();
@@ -257,8 +258,8 @@ function PublicCounselorBlogPage() {
   const counselorName = profile?.counselor_name || first.counselor_name || first.author_name || "الموجه الطلابي";
   const weeklyMessage =
     profile?.announcement?.trim() ||
-    weeklyPost?.excerpt?.trim() ||
-    weeklyPost?.title ||
+    featuredPost?.excerpt?.trim() ||
+    featuredPost?.title ||
     "تابع آخر برامج ورسائل التوجيه الطلابي من خلال هذه البوابة.";
 
   return (
@@ -324,11 +325,11 @@ function PublicCounselorBlogPage() {
 
         {section !== "services" && (
         <section id="daily-feed" className="mx-auto max-w-4xl scroll-mt-20 px-3 py-4 sm:px-5">
-          {section === "home" && weeklyPost && (
+          {section === "home" && featuredPost && (
             <div className="mb-4 rounded-2xl border border-[#D9C0A3]/55 bg-gradient-to-l from-[#F4E8D9] to-[#E4ECDF] p-3 shadow-sm">
               <div className="flex items-center gap-2"><Sparkles className="size-4 text-[#4A141F]" /><span className="text-[10px] font-black text-[#4A141F]">محتوى مميز</span></div>
-              <h2 className="mt-1.5 line-clamp-1 text-sm font-black">{weeklyPost.title}</h2>
-              <Link to="/posts/$slug" params={{ slug: weeklyPost.slug }} search={{ portal: token }} className="mt-2 inline-flex items-center gap-1 text-[11px] font-black text-[#264938]">اقرأ الآن <ArrowLeft className="size-3" /></Link>
+              <h2 className="mt-1.5 line-clamp-1 text-sm font-black">{featuredPost.title}</h2>
+              <Link to="/posts/$slug" params={{ slug: featuredPost.slug }} search={{ portal: token }} className="mt-2 inline-flex items-center gap-1 text-[11px] font-black text-[#264938]">اقرأ الآن <ArrowLeft className="size-3" /></Link>
             </div>
           )}
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 py-2">
