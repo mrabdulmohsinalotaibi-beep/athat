@@ -101,8 +101,7 @@ export function StudentsPage() {
     new Set(
       studentOptions
         .filter((student) => {
-          const normalizedStage = normalizeSaudiStage(student.grade) || normalizeSaudiStage((student as any).stage);
-          const actualStage = normalizedStage || normalizeSaudiStage((student as any).stage);
+          const actualStage = normalizeSaudiStage(student.stage) || normalizeSaudiStage(student.grade);
           if (stage && actualStage !== stage) return false;
           if (grade && normalizeSaudiGrade(student.grade, actualStage) !== grade) return false;
           return Boolean(student.classroom?.trim());
