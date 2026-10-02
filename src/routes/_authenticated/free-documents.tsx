@@ -15,7 +15,21 @@ import { useSchool } from "@/lib/school";
 
 export const Route = createFileRoute("/_authenticated/free-documents")({ component: FreeDocumentsPage });
 
-type FreeDoc = { id: string; title: string; document_no: string | null; content: string; status: string; updated_at: string };
+type FreeDoc = {
+  id: string;
+  title: string;
+  document_no: string | null;
+  content: string;
+  status: string;
+  updated_at: string;
+  document_kind?: string | null;
+  template_id?: string | null;
+  student_id?: string | null;
+  student_name?: string | null;
+  student_no?: string | null;
+  grade?: string | null;
+  classroom?: string | null;
+};
 
 function FreeDocumentsPage() {
   const queryClient = useQueryClient();
@@ -26,7 +40,7 @@ function FreeDocumentsPage() {
   const [documentNo, setDocumentNo] = useState("");
   const [content, setContent] = useState("");
   const [instruction, setInstruction] = useState("");
-  const [aiBusy, setAiBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);\n  const [archiveSearch, setArchiveSearch] = useState("");
 
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ["free-documents"],
@@ -81,13 +95,31 @@ function FreeDocumentsPage() {
     load(data as FreeDoc); queryClient.invalidateQueries({ queryKey: ["free-documents"] }); toast.success("تم إنشاء نسخة");
   }
 
+  const filteredDocs = useMemo(() => {
+    const q = archiveSearch.trim().toLocaleLowerCase();
+    if (!q) return docs;
+    return docs.filter((doc) =>
+      [
+        doc.title,
+        doc.document_no,
+        doc.student_name,
+        doc.student_no,
+        doc.grade,
+        doc.classroom,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLocaleLowerCase().includes(q)),
+    );
+  }, [archiveSearch, docs]);
+
+  const selectedDoc = docs.find((doc) => doc.id === selectedId);
   const filename = useMemo(() => (title.trim() || "مستند") + ".pdf", [title]);
 
   return <div dir="rtl" className="mx-auto max-w-7xl space-y-5">
     <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
       <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
       <div className="relative flex flex-wrap items-center justify-between gap-3">
-      <div><h1 className="text-2xl font-black text-navy">المستندات الحرة</h1><p className="mt-1 text-sm text-muted-foreground">ورقة رسمية فارغة تكتب فيها ما تشاء، مع مساعد ذكاء اصطناعي وطباعة A4.</p></div>
+      <div><h1 className="text-2xl font-black text-navy">المستندات المحفوظة</h1><p className="mt-1 text-sm text-muted-foreground">أرشيف مركزي للمستندات الحرة والنماذج الإلكترونية المرتبطة بالطلاب، مع البحث والطباعة بصيغة A4.</p></div>
       <Button onClick={fresh}><FilePlus2 className="size-4"/> مستند جديد</Button>
       </div>
     </section>
@@ -97,9 +129,14 @@ function FreeDocumentsPage() {
         <p className="mb-3 text-sm font-black">مستنداتي</p>
         {isLoading ? <Loader2 className="mx-auto size-5 animate-spin"/> : docs.length ? <div className="space-y-2">
           {docs.map((doc) => <button key={doc.id} onClick={() => load(doc)} className={"w-full rounded-xl border p-3 text-right text-xs transition hover:bg-accent " + (selectedId===doc.id?"border-primary bg-[#E4ECDF]/70":"")}>
-            <b className="block truncate">{doc.title}</b><span className="mt-1 block text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString("ar-SA")}</span>
+            <b className="block truncate">{doc.title}</b>
+            {doc.student_name && <span className="mt-1 block truncate text-[10px] font-bold text-primary">الطالب: {doc.student_name}{doc.student_no ? ` · ${doc.student_no}` : ""}</span>}
+            <span className="mt-1 block text-[10px] text-muted-foreground">
+              {doc.document_kind === "electronic-template" ? "نموذج إلكتروني · " : ""}
+              {new Date(doc.updated_at).toLocaleDateString("ar-SA")}
+            </span>
           </button>)}
-        </div> : <p className="py-8 text-center text-xs text-muted-foreground">لا توجد مستندات بعد.</p>}
+        </div> : <p className="py-8 text-center text-xs text-muted-foreground">لا توجد مستندات مطابقة بعد.</p>}
       </aside>
 
       <section className="reference-screen space-y-4">
@@ -108,6 +145,14 @@ function FreeDocumentsPage() {
             <Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="عنوان المستند"/>
             <Input value={documentNo} onChange={(e)=>setDocumentNo(e.target.value)} placeholder="رقم المستند - اختياري"/>
           </div>
+          {selectedDoc?.student_name && (
+            <div className="mt-3 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs">
+              <b className="text-primary">مرتبط بملف الطالب:</b>{" "}
+              {selectedDoc.student_name}
+              {selectedDoc.student_no ? ` · رقم الطالب: ${selectedDoc.student_no}` : ""}
+              {(selectedDoc.grade || selectedDoc.classroom) ? ` · ${[selectedDoc.grade, selectedDoc.classroom].filter(Boolean).join(" ")}` : ""}
+            </div>
+          )}
           <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/[0.035] p-4">
             <div className="flex items-center gap-2 font-black text-primary"><Sparkles className="size-4"/> مساعد DeepSeek للكتابة</div>
             <Textarea className="mt-3 min-h-20" value={instruction} onChange={(e)=>setInstruction(e.target.value)} placeholder="مثال: اكتب خطابًا لولي أمر عن أهمية الانتظام الدراسي دون ذكر أسماء..."/>
