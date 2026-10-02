@@ -336,7 +336,12 @@ function CounselorPortalManager() {
               <article key={item.id} className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs"><strong>{item.author_name}</strong><span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">{item.author_role}</span></div>
                 <h3 className="mt-2 font-black">{item.title}</h3>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{item.body}</p>
+                {item.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{item.body}</p>}
+                {item.cover_url && (
+                  <div className="mt-3 overflow-hidden rounded-2xl border bg-white">
+                    <img src={item.cover_url} alt={item.title} className="max-h-[520px] w-full object-contain" />
+                  </div>
+                )}
                 <div className="mt-4 flex gap-2 border-t pt-3">
                   <Button size="sm" onClick={() => approveContribution.mutate(item.id)} disabled={approveContribution.isPending}><CheckCircle2 className="size-4" /> اعتماد ونشر</Button>
                   <Button size="sm" variant="outline" onClick={() => rejectContribution.mutate(item.id)} disabled={rejectContribution.isPending}><XCircle className="size-4" /> رفض</Button>
