@@ -1048,3 +1048,144 @@ select:focus-visible {
     width: 100%;
   }
 }
+
+
+/* Approved reference UI: phone-first, tablet = same composition at larger scale */
+@media (max-width: 1279px) {
+  .athat-topbar > div {
+    position: relative;
+    min-height: 4.25rem;
+  }
+
+  .athat-topbar-logo {
+    position: absolute !important;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2.8rem;
+    height: 2.8rem;
+    display: grid !important;
+    place-items: center;
+    border-radius: 1rem !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .athat-topbar-logo + div {
+    display: none;
+  }
+
+  .athat-topbar a[href="/profile"] {
+    width: 2.6rem;
+    padding-inline: 0;
+    justify-content: center;
+    border-radius: .9rem;
+    background: #fff;
+  }
+
+  .athat-topbar a[href="/profile"] span {
+    display: none !important;
+  }
+
+  .athat-mobile-nav {
+    border-radius: 1.4rem 1.4rem 0 0 !important;
+    background: rgba(255,255,255,.985) !important;
+    box-shadow: 0 -10px 26px -20px rgba(15,42,61,.32) !important;
+  }
+
+  .athat-bottom-item {
+    position: relative;
+  }
+
+  .athat-bottom-item[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    bottom: .2rem;
+    width: 1rem;
+    height: .18rem;
+    border-radius: 999px;
+    background: var(--primary);
+  }
+
+  .app-shell main {
+    background:
+      radial-gradient(circle at 8% 0%, rgb(95 163 127 / .055), transparent 15rem),
+      radial-gradient(circle at 95% 8%, rgb(212 175 124 / .065), transparent 16rem),
+      var(--background);
+  }
+
+  .app-shell main > div {
+    max-width: 46rem;
+    margin-inline: auto;
+  }
+
+  .app-shell main section,
+  .app-shell main article,
+  .record-page-header {
+    border-color: rgb(15 124 122 / .09);
+  }
+
+  .record-page-header {
+    background:
+      linear-gradient(145deg, rgba(255,255,255,.99), rgba(249,247,241,.98));
+  }
+
+  .record-page .grid.md\:hidden article,
+  .dashboard-actions-panel,
+  .dashboard-shortcuts-panel,
+  #today-work {
+    border-radius: 1.5rem !important;
+  }
+
+  .record-page button,
+  .record-page a,
+  .dashboard-shell button,
+  .dashboard-shell a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .record-page input,
+  .record-page textarea,
+  .record-page select {
+    border-radius: 1rem;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1279px) {
+  .athat-topbar-logo {
+    width: 3.15rem;
+    height: 3.15rem;
+  }
+
+  .athat-mobile-nav {
+    width: min(46rem, calc(100vw - 2rem));
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: .5rem;
+    border: 1px solid var(--border);
+    border-radius: 1.6rem !important;
+    overflow: hidden;
+  }
+
+  .athat-bottom-item {
+    min-height: 4.7rem !important;
+    font-size: .72rem !important;
+  }
+
+  .athat-bottom-item > span:first-child {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .dashboard-shell,
+  .record-page {
+    max-width: 46rem !important;
+  }
+
+  .dashboard-stat-grid,
+  .dashboard-quick-actions,
+  .dashboard-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
