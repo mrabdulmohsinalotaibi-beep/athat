@@ -18,6 +18,7 @@ import {
   Trash2,
   UserCog
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -727,6 +728,12 @@ export default function MessagesDashboard() {
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <Button asChild>
+              <Link to="/outgoing-messages">
+                <Send className="size-4" />
+                إرسال رسالة
+              </Link>
+            </Button>
             <Button
               variant="outline"
               onClick={copyLink}
