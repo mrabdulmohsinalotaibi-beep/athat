@@ -7,7 +7,7 @@ import { Copyright } from "@/components/Copyright";
 import { PUBLIC_POST_FIELDS, formatPostDate, kindLabel, type PublicPost } from "@/lib/posts";
 
 export const Route = createFileRoute("/posts/$slug")({
-  validateSearch: (search: Record<string, unknown>): { portal?: string } => ({ portal: typeof search["portal"] === "string" ? search["portal"] : undefined }),
+  validateSearch: (search: Record<string, unknown>): { portal?: string } => { const portal = typeof search["portal"] === "string" ? search["portal"] : ""; return portal ? { portal } : {}; },
   head: () => ({
     meta: [
       { title: "منشور | الذات" },
