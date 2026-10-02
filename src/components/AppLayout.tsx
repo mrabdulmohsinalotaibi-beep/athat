@@ -320,7 +320,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* محتوى الصفحة الرئيسي */}
       <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
         <header className="athat-topbar sticky top-0 z-20 border-b bg-card text-foreground">
-          <div className="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3 py-2.5 sm:px-5 lg:px-8">
+          <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:px-5 lg:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
                 variant="ghost"
@@ -415,10 +415,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 p-4 pb-28 sm:p-6 lg:p-8">
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 pb-28 pt-3 sm:p-6 lg:p-8">
           {currentSection && pathname !== "/dashboard" && (
             <nav
-              className="mb-4 -mx-4 -mt-4 border-b bg-card/70 px-4 py-2 lg:hidden"
+              className="sticky top-16 z-10 mb-4 -mx-3 -mt-3 border-b bg-card/90 px-3 py-2 backdrop-blur-xl lg:hidden"
               aria-label={"روابط " + currentSection.title}
             >
               <div className="flex min-w-0 gap-2 overflow-x-auto">
@@ -432,7 +432,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       onClick={() => setOpen(false)}
                       aria-current={isActive ? "page" : undefined}
                       className={cn(
-                        "flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                        "flex min-h-10 shrink-0 items-center gap-1.5 rounded-2xl border px-3.5 py-2 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                         isActive ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:bg-accent",
                       )}
                     >
@@ -448,7 +448,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </main>
 
         <nav
-          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center rounded-t-3xl border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center rounded-t-[1.75rem] border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
           aria-label="التنقل الرئيسي"
         >
           {visibleBottomNavigation.slice(0, 2).map((item) => {
@@ -460,7 +460,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 to={item.to}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] font-semibold leading-3 transition",
+                  "flex min-h-[4.35rem] min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] font-bold leading-3 transition",
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
