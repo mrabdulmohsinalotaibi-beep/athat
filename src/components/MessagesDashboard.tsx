@@ -566,7 +566,7 @@ export default function MessagesDashboard() {
 
 
       <section className="border-b border-border pb-6">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <div className="flex items-center gap-2 text-primary">
               <MessageSquareText className="size-5" />
@@ -684,7 +684,7 @@ export default function MessagesDashboard() {
       </section>
 
       <section className="border-y border-border py-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-3 xl:flex-row lg:items-end xl:justify-between">
           <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div>
               <Label htmlFor="feedback-search"> بحث </Label>
