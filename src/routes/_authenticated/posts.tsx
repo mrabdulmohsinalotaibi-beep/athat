@@ -241,14 +241,14 @@ function CounselorPortalManager() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-bl from-primary/15 via-card to-accent/10 p-5 shadow-sm sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
         <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-1 text-xs font-black text-primary">
               <Newspaper className="size-4" /> مدونة الموجه الطلابي
             </div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">مساحتك الإعلامية والتوجيهية</h1>
+            <h1 className="text-2xl font-black tracking-tight text-navy sm:text-3xl">مدونة الموجه والخدمات</h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">
               انشر الرسائل التربوية والمقالات والإعلانات، استقبل مشاركات المجتمع المدرسي، وأدر خدمات الطلاب والأسرة من لوحة واحدة واضحة.
             </p>
@@ -258,7 +258,7 @@ function CounselorPortalManager() {
               <a href="#portal-links"><Button variant="ghost"><Share2 className="size-4" /> مشاركة المدونة</Button></a>
             </div>
           </div>
-          <div className="grid min-w-[260px] grid-cols-2 gap-2 rounded-2xl border bg-background/70 p-3 backdrop-blur">
+          <div className="grid min-w-[260px] grid-cols-2 gap-2 rounded-2xl border bg-background/80 p-3 shadow-[var(--shadow-card)] backdrop-blur">
             <a href="#content-library" className="rounded-xl p-3 transition hover:bg-muted"><Newspaper className="size-5 text-primary" /><strong className="mt-2 block text-sm">المحتوى</strong><span className="text-xs text-muted-foreground">{posts.length} مادة</span></a>
             <a href="#incoming-requests" className="rounded-xl p-3 transition hover:bg-muted"><Inbox className="size-5 text-primary" /><strong className="mt-2 block text-sm">الوارد</strong><span className="text-xs text-muted-foreground">{newRequests} جديد</span></a>
             <a href="#portal-links" className="rounded-xl p-3 transition hover:bg-muted"><Globe className="size-5 text-primary" /><strong className="mt-2 block text-sm">الصفحة العامة</strong><span className="text-xs text-muted-foreground">روابط المشاركة</span></a>
@@ -267,23 +267,23 @@ function CounselorPortalManager() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <Megaphone className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{publishedCount}</p>
           <p className="text-xs text-muted-foreground">محتوى منشور للعامة</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <Inbox className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{newRequests}</p>
           <p className="text-xs text-muted-foreground">طلبات جديدة تحتاج مراجعة</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <CalendarClock className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{activeRequests}</p>
           <p className="text-xs text-muted-foreground">طلبات قيد المتابعة</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <HeartHandshake className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{portalRequests.length}</p>
           <p className="text-xs text-muted-foreground">إجمالي الطلبات الواردة</p>
@@ -316,7 +316,7 @@ function CounselorPortalManager() {
         </section>
       )}
 
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <Link
           to="/weekly-poster"
           className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 transition hover:border-primary/40"
@@ -351,7 +351,7 @@ function CounselorPortalManager() {
 
       <PortalLinksPanel />
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <ServiceCard
           icon={Megaphone}
           title="المنشورات"
@@ -658,7 +658,7 @@ function ServiceCard({
   href?: string;
 }) {
   return (
-    <article className="rounded-2xl border bg-card p-4 shadow-sm">
+    <article className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-start justify-between gap-3">
         <span className="rounded-xl bg-primary/10 p-2 text-primary">
           <Icon className="size-5" />
