@@ -47,8 +47,8 @@ function ReferralsPage() {
   );
 
   return (
-    <div className="space-y-4" dir="rtl">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+    <div className="reference-screen space-y-4" dir="rtl">
+      <section className="reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
