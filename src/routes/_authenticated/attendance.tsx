@@ -2,15 +2,11 @@ import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, FileText, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 import { RecordPage } from "@/components/RecordPage";
 import { Button } from "@/components/ui/button";
 import { recordByKey } from "@/lib/records";
 import { supabase } from "@/integrations/supabase/client";
-
-GlobalWorkerOptions.workerSrc = pdfWorker;
 
 type ImportedAttendance = {
   student_no: string;
@@ -79,6 +75,20 @@ function AttendancePage() {
     if (!pdf) { inputRef.current?.click(); return; }
     setBusy(true);
     try {
+      // pdfjs-dist touches browser-only globals (for example DOMMatrix) when its
+      // module is evaluated. File routes are imported during SSR too, so keeping
+      // pdfjs at module scope can crash the entire app — even on the public home page.
+      // Load it only after the user explicitly starts a browser-side PDF import.
+      if (typeof window === "undefined") {
+        throw new Error("قراءة PDF متاحة من المتصفح فقط.");
+      }
+
+      const [{ getDocument, GlobalWorkerOptions }, workerModule] = await Promise.all([
+        import("pdfjs-dist"),
+        import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+      ]);
+      GlobalWorkerOptions.workerSrc = workerModule.default;
+
       const bytes = new Uint8Array(await pdf.arrayBuffer());
       const doc = await getDocument({ data: bytes }).promise;
       const pages: string[] = [];
