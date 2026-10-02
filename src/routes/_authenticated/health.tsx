@@ -100,8 +100,9 @@ function SystemHealthPage() {
 
   return (
     <div dir="rtl" className="space-y-5">
-      <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)]">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary">
               <ShieldCheck className="size-5" />
@@ -136,9 +137,9 @@ function SystemHealthPage() {
             </div>
           </section>
 
-          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-3">
             {checks.map((item) => (
-              <article key={item.key} className="rounded-2xl border bg-card p-4 shadow-sm">
+              <article key={item.key} className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-black">{item.title}</p>
