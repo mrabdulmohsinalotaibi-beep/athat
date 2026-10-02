@@ -52,6 +52,9 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  --color-navy: var(--navy);
+  --color-calm-green: var(--calm-green);
+  --color-sand: var(--sand);
   --color-paper: var(--paper);
   --color-paper-foreground: var(--paper-foreground);
   --color-paper-muted: var(--paper-muted);
@@ -90,13 +93,13 @@
   --chart-3: #d4af7c;
   --chart-4: #68b9b4;
   --chart-5: #8aa5a9;
-  --sidebar: #073b4c;
+  --sidebar: #0f2a3d;
   --sidebar-foreground: #f8fbfa;
   --sidebar-primary: #79d2ca;
   --sidebar-primary-foreground: #073b4c;
-  --sidebar-accent: #0b5263;
+  --sidebar-accent: #17405a;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #176678;
+  --sidebar-border: #1d4a63;
   --sidebar-ring: #79d2ca;
   --brand-mark-surface: #f3ebdd;
   --brand-mark-border: #c99a4a;
