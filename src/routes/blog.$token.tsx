@@ -250,22 +250,22 @@ function PublicCounselorBlogPage() {
     "تابع آخر برامج ورسائل التوجيه الطلابي من خلال هذه البوابة.";
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-primary/10 bg-background/95 text-foreground shadow-sm backdrop-blur-xl">
+    <div dir="rtl" className="public-portal min-h-screen bg-[#FBF7F1] text-[#264938]">
+      <header className="sticky top-0 z-40 border-b border-[#D9C0A3]/40 bg-[#FFFDF9]/95 text-foreground shadow-sm backdrop-blur-xl">
         <div className="mx-auto grid max-w-7xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-3 px-4 py-3 sm:px-8">
           <button
             type="button"
             onClick={() => window.history.length > 1 ? window.history.back() : window.location.assign("/")}
             aria-label="رجوع"
             title="رجوع"
-            className="order-3 grid size-10 place-items-center justify-self-start rounded-xl border bg-card text-primary transition hover:border-primary/30 hover:bg-primary/5"
+            className="order-3 grid size-10 place-items-center justify-self-start rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] text-primary transition hover:border-[#89AA74] hover:bg-[#E4ECDF]/70"
           >
             <ArrowLeft className="size-4.5 rotate-180" />
           </button>
 
           <div className="order-2 flex min-w-0 items-center justify-center gap-3 text-center">
             <img
-              src={profile?.logo_url || "/athat-icon.svg?v=20261002-vector"}
+              src={profile?.logo_url || "/athat-icon-hq.webp?v=20261002-palette"}
               alt="شعار بوابة التوجيه الطلابي"
               className="size-10 shrink-0 rounded-xl bg-[var(--brand-mark-surface)] object-contain p-1 shadow-sm"
             />
@@ -279,7 +279,7 @@ function PublicCounselorBlogPage() {
             to="/request-status"
             aria-label="تتبع طلب"
             title="تتبع طلب"
-            className="order-1 grid size-10 place-items-center justify-self-end rounded-xl border bg-card text-primary transition hover:border-primary/30 hover:bg-primary/5"
+            className="order-1 grid size-10 place-items-center justify-self-end rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] text-primary transition hover:border-[#89AA74] hover:bg-[#E4ECDF]/70"
           >
             <Search className="size-4" />
           </Link>
@@ -287,7 +287,7 @@ function PublicCounselorBlogPage() {
       </header>
 
       <main className="pb-8">
-        <section className="border-b border-border/60 bg-gradient-to-bl from-primary/10 via-background to-accent/10">
+        <section className="border-b border-border/60 bg-gradient-to-bl from-[#E4ECDF] via-background to-accent/10">
           <div className="mx-auto max-w-3xl px-4 py-5 sm:px-8 sm:py-8">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
@@ -299,8 +299,8 @@ function PublicCounselorBlogPage() {
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               <a href="#daily-feed" className="rounded-xl bg-primary px-3 py-2.5 text-center text-xs font-black text-primary-foreground">المنشورات</a>
-              <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl border bg-card px-3 py-2.5 text-xs font-black text-primary">اكتب وانشر</button>
-              <a href="#contact" className="rounded-xl border bg-card px-3 py-2.5 text-center text-xs font-black">تواصل</a>
+              <button type="button" onClick={() => setContributionOpen(true)} className="rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] px-3 py-2.5 text-xs font-black text-primary">اكتب وانشر</button>
+              <a href="#contact" className="rounded-xl border border-[#D9C0A3]/35 bg-[#FFFDF9] px-3 py-2.5 text-center text-xs font-black">تواصل</a>
             </div>
           </div>
         </section>
@@ -317,9 +317,9 @@ function PublicCounselorBlogPage() {
         </section>
 
         <section className="mx-auto max-w-3xl px-4 pb-5 sm:px-8">
-          <div className="rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-card)]">
             <div className="flex items-start gap-3">
-              <span className="rounded-2xl bg-primary/10 p-3 text-primary"><FileText className="size-5" /></span>
+              <span className="rounded-2xl bg-[#E4ECDF] p-3 text-primary"><FileText className="size-5" /></span>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-black text-primary">مساحة المجتمع المدرسي</p>
                 <h2 className="mt-1 text-lg font-black">اكتب باسمك وصفتك</h2>
@@ -382,13 +382,13 @@ function PublicCounselorBlogPage() {
             <div className="mt-3 grid grid-cols-2 gap-2">
               {audienceActions.map((action) => {
                 const Icon = action.icon;
-                return <a key={action.title} href={action.href} className="rounded-2xl border bg-card p-4 shadow-sm">
+                return <a key={action.title} href={action.href} className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-sm">
                   <Icon className="size-5 text-primary" /><p className="mt-2 text-sm font-black">{action.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground">{action.description}</p>
                 </a>;
               })}
             </div>
             {(profile?.contact_phone || profile?.contact_email || profile?.office_hours) && (
-              <div className="mt-4 rounded-2xl border bg-card p-4 text-xs leading-6">
+              <div className="mt-4 rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 text-xs leading-6">
                 {profile?.office_hours && <p><strong>أوقات التواصل:</strong> {profile.office_hours}</p>}
                 {profile?.contact_phone && <p><strong>الهاتف:</strong> {profile.contact_phone}</p>}
                 {profile?.contact_email && <p><strong>البريد:</strong> {profile.contact_email}</p>}
@@ -441,7 +441,7 @@ function PublicContentSection({
             {items.map((post) => {
               const imageOnly = Boolean(post.cover_url && !post.body?.trim() && !post.excerpt?.trim());
               return (
-                <article key={`${post.slug}-${post.created_at}`} className={compact ? "overflow-hidden rounded-2xl border bg-card shadow-sm" : "overflow-hidden rounded-3xl border bg-card shadow-sm"}>
+                <article key={`${post.slug}-${post.created_at}`} className={compact ? "overflow-hidden rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm" : "overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm"}>
                   {post.cover_url ? (
                     <div className="bg-muted/15 p-2 sm:p-3">
                       <img
@@ -451,13 +451,13 @@ function PublicContentSection({
                       />
                     </div>
                   ) : (
-                    <div className="flex min-h-44 items-center justify-center bg-primary/5">
+                    <div className="flex min-h-44 items-center justify-center bg-[#E4ECDF]/70">
                       <FileText className="size-10 text-primary/30" />
                     </div>
                   )}
                   <div className="p-5 sm:p-6">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span className="rounded-full bg-primary/10 px-2.5 py-1 font-bold text-primary">
+                      <span className="rounded-full bg-[#E4ECDF] px-2.5 py-1 font-bold text-primary">
                         {POST_KINDS[post.kind as PostKind] ?? "منشور"}
                       </span>
                       <span className="inline-flex items-center gap-1">
@@ -486,7 +486,7 @@ function PublicContentSection({
                         )}`}
                         target="_blank"
                         rel="noreferrer noopener"
-                        className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+                        className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-bold text-primary transition hover:bg-[#E4ECDF]/70"
                         aria-label={`مشاركة ${post.title} عبر واتساب`}
                       >
                         <Share2 className="size-5" />
