@@ -4,6 +4,9 @@ const ORDINALS = ["الأول", "الثاني", "الثالث", "الرابع", 
 
 function compact(value: unknown) {
   return String(value ?? "")
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/_+/g, " ")
     .trim()
     .replace(/\s+/g, " ")
     .replace(/ة$/u, "ه");
@@ -20,7 +23,22 @@ export function normalizeSaudiStage(value: unknown): SaudiStage | "" {
 
 export function gradeOrdinal(value: unknown) {
   const v = compact(value);
-  return ORDINALS.find((ordinal) => v.includes(ordinal)) ?? "";
+  const normalized = v.replace(/[إأآ]/g, "ا");
+
+  const written = ORDINALS.find((ordinal) =>
+    normalized.includes(ordinal.replace(/[إأآ]/g, "ا")),
+  );
+  if (written) return written;
+
+  const aliases: Array<[RegExp, (typeof ORDINALS)[number]]> = [
+    [/(^|\D)1(\D|$)|اول/u, "الأول"],
+    [/(^|\D)2(\D|$)|ثاني/u, "الثاني"],
+    [/(^|\D)3(\D|$)|ثالث/u, "الثالث"],
+    [/(^|\D)4(\D|$)|رابع/u, "الرابع"],
+    [/(^|\D)5(\D|$)|خامس/u, "الخامس"],
+    [/(^|\D)6(\D|$)|سادس/u, "السادس"],
+  ];
+  return aliases.find(([pattern]) => pattern.test(normalized))?.[1] ?? "";
 }
 
 export function normalizeSaudiGrade(value: unknown, stageValue?: unknown) {
