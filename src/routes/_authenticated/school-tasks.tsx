@@ -416,7 +416,7 @@ function SchoolTasksPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-primary/15 bg-primary/[0.025] p-4 shadow-sm">
+      <section className="rounded-3xl border border-primary/15 bg-primary/[0.025] p-4 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary">
@@ -455,7 +455,7 @@ function SchoolTasksPage() {
                 return (
                   <label
                     key={template.key}
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${
+                    className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition ${
                       active ? "border-emerald-500/20 bg-emerald-500/5" : checked ? "border-primary/40 bg-primary/5" : "bg-card hover:border-primary/30"
                     }`}
                   >
@@ -525,7 +525,7 @@ function SchoolTasksPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border bg-card p-4 shadow-sm">
+        <aside className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
           <div className="flex items-center gap-2"><Plus className="size-4 text-primary" /><h2 className="font-black">إسناد مهمة جديدة</h2></div>
           {lowerMembers.length ? (
             <div className="mt-4 space-y-3">
@@ -587,7 +587,7 @@ function SchoolTasksPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="font-black">رفع تقرير إنجاز المهام</h2>
@@ -698,7 +698,7 @@ function TaskGroup({
   reviewTask: { mutate: (variables: { id: string; action: "اعتماد" | "إعادة" | "إلغاء" }) => void };
 }) {
   return (
-    <section className="rounded-2xl border bg-card p-4 shadow-sm">
+    <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-black">{title}</h2><span className="text-xs text-muted-foreground">{tasks.length} مهمة</span></div>
       <div className="space-y-3">
         {tasks.map((task) => {
@@ -708,7 +708,7 @@ function TaskGroup({
           const assignee = memberMap.get(task.assignee_member_id);
           const late = task.status !== "مكتملة" && task.status !== "ملغاة" && task.due_date && task.due_date < today();
           return (
-            <article key={task.id} className="rounded-xl border p-4">
+            <article key={task.id} className="rounded-2xl border p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
