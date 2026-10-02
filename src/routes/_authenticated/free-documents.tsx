@@ -104,7 +104,7 @@ function FreeDocumentsPage() {
 
       <section className="space-y-4">
         <div className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 xl:grid-cols-2">
             <Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="عنوان المستند"/>
             <Input value={documentNo} onChange={(e)=>setDocumentNo(e.target.value)} placeholder="رقم المستند - اختياري"/>
           </div>
