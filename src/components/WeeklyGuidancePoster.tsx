@@ -193,7 +193,7 @@ export function WeeklyGuidancePoster() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(0,360px)_1fr] lg:gap-6" dir="rtl">
+    <div className="mx-auto grid max-w-6xl gap-4 p-3 sm:p-4 xl:grid-cols-[minmax(0,360px)_1fr] lg:gap-6" dir="rtl">
       {/* لوحة التحكم الجانبية */}
       <section className="h-fit rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5 lg:sticky lg:top-24">
         <div className="mb-5 flex items-center gap-2">
