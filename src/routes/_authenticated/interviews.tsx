@@ -47,8 +47,8 @@ function InterviewsPage() {
   const withRecommendations = interviews.filter((row) => String(row.recommendations ?? "").trim()).length;
 
   return (
-    <div className="space-y-4" dir="rtl">
-      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+    <div className="reference-screen space-y-4" dir="rtl">
+      <section className="reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -88,7 +88,7 @@ function InterviewsPage() {
             <h2 className="text-sm font-black">أقرب مواعيد المتابعة</h2>
             <Link to="/calendar" className="text-xs font-bold text-primary">عرض التقويم ←</Link>
           </div>
-          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-2 xl:grid-cols-2 xl:grid-cols-3">
             {upcoming.map((row) => (
               <div key={row.id} className="rounded-2xl border bg-background/80 p-3">
                 <div className="flex items-center justify-between gap-2">
