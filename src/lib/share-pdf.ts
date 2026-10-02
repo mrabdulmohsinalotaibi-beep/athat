@@ -139,16 +139,16 @@ export function openNativeDocumentPrint(element: HTMLElement, title: string) {
     }
     .athat-print-toolbar button {
       appearance: none;
-      border: 1px solid #07566a;
+      border: 1px solid #264938;
       border-radius: 10px;
       padding: 9px 14px;
       font: inherit;
       font-weight: 700;
       background: #fff;
-      color: #07566a;
+      color: #264938;
     }
     .athat-print-toolbar #athat-print-button {
-      background: #07566a;
+      background: #264938;
       color: #fff;
     }
     @media print {
@@ -273,15 +273,15 @@ export async function createPdfFile({
         root.style.setProperty("--foreground", "#2f2f2f");
         root.style.setProperty("--card", "#ffffff");
         root.style.setProperty("--border", "#d8d2c8");
-        root.style.setProperty("--primary", "#07566a");
-        root.style.setProperty("--ring", "#07566a");
+        root.style.setProperty("--primary", "#264938");
+        root.style.setProperty("--ring", "#264938");
         root.style.setProperty("--paper", "#ffffff");
         root.style.setProperty("--paper-foreground", "#2f2f2f");
-        root.style.setProperty("--paper-muted", "#f3efe8");
+        root.style.setProperty("--paper-muted", "#F4ECE3");
         root.style.setProperty("--paper-muted-foreground", "#6a6762");
         root.style.setProperty("--paper-border", "#d8d2c8");
-        root.style.setProperty("--letterhead-primary", "#07566a");
-        root.style.setProperty("--letterhead-secondary", "#c79a5b");
+        root.style.setProperty("--letterhead-primary", "#264938");
+        root.style.setProperty("--letterhead-secondary", "#4A141F");
 
         const target = clonedDocument.querySelector<HTMLElement>(
           '[data-pdf-capture-target="true"]',
