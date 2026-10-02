@@ -304,9 +304,9 @@ type FieldProps = {
 
 function Stat({ title, value }: { title: string; value: number }) {
   return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <p className="text-sm text-muted-foreground">{title}</p>
-      <p className="mt-1 text-2xl font-extrabold">{value}</p>
+    <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+      <p className="text-[11px] font-bold text-muted-foreground">{title}</p>
+      <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
     </div>
   );
 }
@@ -742,7 +742,9 @@ function ProgramsPage() {
 
   return (
     <div dir="rtl" className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5 lg:flex lg:items-center lg:justify-between">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">البرامج والأنشطة</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -761,9 +763,9 @@ function ProgramsPage() {
             <CalendarRange className="size-4" /> الخطة الوزارية 1448هـ
           </Button>
         </div>
-      </div>
+      </section>
 
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat title="إجمالي البرامج" value={programs.length} />
         <Stat title="منفذ" value={programs.filter((p) => ["منفذ", "مكتمل"].includes(String(p.exec_status ?? ""))).length} />
         <Stat
@@ -776,9 +778,108 @@ function ProgramsPage() {
         />
       </div>
 
+      <section className="rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-black">سجل البرامج</h2>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">افتح أي برنامج للتعديل والتوثيق وإضافة الشواهد.</p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">
+            {programs.length} برنامج
+          </span>
+        </div>
+
+        {programsFailed ? (
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
+            تعذّر تحميل البرامج حاليًا.
+          </div>
+        ) : isLoading ? (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className="h-40 animate-pulse rounded-2xl bg-muted" />
+            ))}
+          </div>
+        ) : programs.length === 0 ? (
+          <button
+            type="button"
+            onClick={openNew}
+            className="flex min-h-36 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-primary/25 bg-primary/[0.03] p-5 text-center"
+          >
+            <Plus className="size-6 text-primary" />
+            <strong className="mt-2 text-sm">أضف أول برنامج</strong>
+            <span className="mt-1 text-xs text-muted-foreground">أنشئ البرنامج واربطه بالخطة والشواهد.</span>
+          </button>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {programs.map((program) => {
+              const status = value(program.exec_status) || "لم يبدأ";
+              const statusTone =
+                status === "منفذ" || status === "مكتمل"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : status === "قيد التنفيذ"
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : status === "ملغى"
+                      ? "bg-rose-50 text-rose-700 border-rose-200"
+                      : "bg-slate-50 text-slate-600 border-slate-200";
+              return (
+                <article
+                  key={program.id}
+                  className="group rounded-2xl border bg-background/80 p-4 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <span className={`inline-flex rounded-full border px-2 py-1 text-[9px] font-black ${statusTone}`}>
+                        {status}
+                      </span>
+                      <h3 className="mt-2 line-clamp-2 text-sm font-black leading-6">
+                        {program.name || "برنامج بدون اسم"}
+                      </h3>
+                    </div>
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                      <Sparkles className="size-5" />
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="rounded-xl bg-muted/45 px-2.5 py-2">
+                      <p className="text-[9px] font-bold text-muted-foreground">المجال</p>
+                      <p className="mt-0.5 truncate text-[11px] font-semibold">{program.domain || "—"}</p>
+                    </div>
+                    <div className="rounded-xl bg-muted/45 px-2.5 py-2">
+                      <p className="text-[9px] font-bold text-muted-foreground">المستفيدون</p>
+                      <p className="mt-0.5 text-[11px] font-semibold">{program.beneficiaries ?? "—"}</p>
+                    </div>
+                  </div>
+
+                  <p className="mt-3 line-clamp-2 text-[11px] leading-5 text-muted-foreground">
+                    {program.goal || "لم يضف هدف البرنامج بعد."}
+                  </p>
+
+                  <div className="mt-3 flex gap-2">
+                    <Button className="h-9 flex-1 rounded-xl" size="sm" onClick={() => void openEdit(program)}>
+                      <FileText className="size-4" />
+                      فتح البرنامج
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-9 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      disabled={deleteBusy}
+                      onClick={() => void deleteProgram(program)}
+                      title="حذف البرنامج"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <Dialog open={editorOpen} onOpenChange={(open) => !open && setEditorOpen(false)}>
-        <DialogContent dir="rtl" className="max-h-[96vh] max-w-6xl overflow-y-auto p-0">
+        <DialogContent dir="rtl" className="max-h-[96dvh] max-w-6xl overflow-y-auto rounded-3xl p-0">
           <DialogHeader className="border-b px-6 py-4">
             <DialogTitle>
               {editing?.id ? "تحرير مستند البرنامج" : "إنشاء مستند برنامج جديد"}
