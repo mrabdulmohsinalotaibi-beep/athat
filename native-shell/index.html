@@ -6,31 +6,31 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#073B4C" />
+    <meta name="theme-color" content="#123748" />
     <title>الذات | ATHAT</title>
     <style>
       :root { color-scheme: dark; }
       * { box-sizing: border-box; }
-      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #073b4c; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-      #app-frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #f8f6f1; opacity: 0; transition: opacity .22s ease; }
+      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #123748; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+      #app-frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #F7F2E8; opacity: 0; transition: opacity .22s ease; }
       #app-frame.ready { opacity: 1; }
       #loader { position: fixed; inset: 0; display: grid; place-items: center; padding: 28px; background: #073b4c; color: #ffffff; text-align: center; z-index: 2; }
       .card { width: min(360px, 100%); }
       .logo { width: 118px; height: 118px; object-fit: contain; border-radius: 26px; display: block; margin: 0 auto 18px; }
       h1 { margin: 0; font-size: 28px; font-weight: 900; }
-      p { margin: 10px 0 0; color: #c7e4e1; line-height: 1.8; font-size: 14px; }
-      .spinner { width: 34px; height: 34px; margin: 22px auto 0; border: 3px solid rgba(241,233,221,.25); border-top-color: #79d2ca; border-radius: 50%; animation: spin .8s linear infinite; }
+      p { margin: 10px 0 0; color: #6E817D; line-height: 1.8; font-size: 14px; }
+      .spinner { width: 34px; height: 34px; margin: 22px auto 0; border: 3px solid rgba(241,233,221,.25); border-top-color: #2D665B; border-radius: 50%; animation: spin .8s linear infinite; }
       #error { display: none; margin-top: 22px; }
       #error.show { display: block; }
-      button { width: 100%; border: 1px solid rgba(241,233,221,.25); background: #79d2ca; color: #073b4c; border-radius: 12px; padding: 12px 16px; font-weight: 800; font-size: 14px; }
-      small { display: block; margin-top: 12px; color: #a9c9c7; }
+      button { width: 100%; border: 1px solid rgba(241,233,221,.25); background: #79d2ca; color: #ffffff; border-radius: 12px; padding: 12px 16px; font-weight: 800; font-size: 14px; }
+      small { display: block; margin-top: 12px; color: #7F918D; }
       @keyframes spin { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
     <div id="loader" role="status" aria-live="polite">
       <div class="card">
-        <img class="logo" src="./brand-final.svg" alt="شعار الذات" />
+        <img class="logo" src="./athat-icon-hq.webp" alt="شعار الذات" />
         <h1>الذات | ATHAT</h1>
         <p id="status">جارٍ تحميل التطبيق…</p>
         <div id="spinner" class="spinner" aria-hidden="true"></div>
