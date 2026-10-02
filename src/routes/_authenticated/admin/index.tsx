@@ -148,7 +148,7 @@ function OwnerAdminPage() {
 
   if (!admin?.isAdmin) {
     return (
-      <div dir="rtl" className="mx-auto max-w-2xl rounded-3xl border border-amber-500/25 bg-card p-8 text-center shadow-sm">
+      <div dir="rtl" className="mx-auto max-w-2xl rounded-3xl border border-amber-500/25 bg-card p-8 text-center shadow-[var(--shadow-card)]">
         <ShieldCheck className="mx-auto size-10 text-amber-600" />
         <h1 className="mt-4 text-2xl font-black">لوحة المالك محمية</h1>
         <p className="mt-3 text-sm leading-7 text-muted-foreground">
@@ -167,34 +167,35 @@ function OwnerAdminPage() {
 
   return (
     <div dir="rtl" className="mx-auto max-w-6xl space-y-6">
-      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#073B4C] p-6 text-white shadow-xl sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-14 -top-14 size-44 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
               <ShieldCheck className="size-4" />
               {admin.role === "owner" ? "مالك المنصة" : "مشرف المنصة"}
             </div>
             <h1 className="mt-4 text-2xl font-black sm:text-4xl">إدارة الذات</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-[#D8D0C4]">
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
               أي تغيير في الظهور هنا يُحفظ سحابيًا ويصل إلى جميع المشتركين مباشرة، بدون الحاجة إلى
               إعادة تثبيت التطبيق.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
+            <div className="rounded-2xl border bg-background/80 px-5 py-3 shadow-[var(--shadow-card)]">
               <p className="text-2xl font-black">{enabledCount}</p>
-              <p className="text-[11px] text-[#CFC6B9]">خاصية ظاهرة</p>
+              <p className="text-[11px] text-muted-foreground">خاصية ظاهرة</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
+            <div className="rounded-2xl border bg-background/80 px-5 py-3 shadow-[var(--shadow-card)]">
               <p className="text-2xl font-black">{totalCount - enabledCount}</p>
-              <p className="text-[11px] text-[#CFC6B9]">خاصية مخفية</p>
+              <p className="text-[11px] text-muted-foreground">خاصية مخفية</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="rounded-3xl border bg-card p-5 shadow-sm sm:p-6">
+      <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
             <SlidersHorizontal className="size-5" />
@@ -248,7 +249,7 @@ function OwnerAdminPage() {
       </section>
 
       {FEATURE_GROUPS.map((group) => (
-        <section key={group.title} className="rounded-3xl border bg-card p-5 shadow-sm sm:p-6">
+        <section key={group.title} className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="mb-5">
             <h2 className="font-black">{group.title}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{group.description}</p>
