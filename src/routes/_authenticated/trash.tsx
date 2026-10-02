@@ -137,8 +137,9 @@ function DataProtectionPage() {
 
   return (
     <div dir="rtl" className="space-y-6">
-      <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)]">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary">
               <ShieldCheck className="size-5" />
@@ -157,7 +158,7 @@ function DataProtectionPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="mb-3 flex items-center gap-2">
           <Trash2 className="size-4 text-primary" />
           <h2 className="text-base font-black">سلة المحذوفات</h2>
@@ -200,7 +201,7 @@ function DataProtectionPage() {
         )}
       </section>
 
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="mb-3 flex items-center gap-2">
           <History className="size-4 text-primary" />
           <h2 className="text-base font-black">آخر العمليات</h2>
