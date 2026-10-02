@@ -219,9 +219,9 @@ export function StudentProfileDialog({
         <div ref={printRef} className="record-pdf-document space-y-4 rounded-2xl bg-paper p-3 text-paper-foreground sm:p-4">
           <OfficialHeader school={school} title={`ملف الطالب: ${fullName || "—"}`} reportType="ملف طالب" reportNo={studentNo || undefined} />
           {/* بيانات الطالب الأساسية */}
-          <div className="rounded-3xl border border-primary/10 bg-gradient-to-bl from-[#EDF5F0] via-white to-[#F8EEDC] p-4 shadow-[var(--shadow-card)]">
+          <div className="rounded-3xl border border-primary/10 bg-gradient-to-bl from-[#E4ECDF] via-[#FFFDF9] to-[#EFE1D7] p-4 shadow-[var(--shadow-card)]">
             <div className="mb-4 flex items-center gap-3">
-              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#E4ECDF] text-[#264938]">
                 <UserRound className="size-6" />
               </span>
               <div className="min-w-0">
@@ -275,7 +275,7 @@ export function StudentProfileDialog({
           </div>
 
           {!isLoading && nextStudentAction && (
-            <div data-pdf-exclude="true" className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-3 shadow-sm">
+            <div data-pdf-exclude="true" className="rounded-2xl border border-[#9A6C78]/25 bg-[#F1E5E8]/60 p-3 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10px] font-black text-primary">
@@ -297,7 +297,7 @@ export function StudentProfileDialog({
             </div>
           )}
 
-          <div data-pdf-exclude="true" className="rounded-2xl border border-primary/15 bg-primary/5 p-3">
+          <div data-pdf-exclude="true" className="rounded-2xl border border-[#89AA74]/30 bg-[#E4ECDF]/70 p-3">
             <p className="mb-2 text-xs font-black text-primary">إجراء جديد للطالب</p>
             <div className="grid grid-cols-2 gap-2 xl:flex xl:flex-wrap">
               <Button asChild size="sm" variant="outline"><a href={`/cases?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ClipboardList className="size-4" /> فتح حالة</a></Button>
