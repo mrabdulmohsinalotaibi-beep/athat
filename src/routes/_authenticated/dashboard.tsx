@@ -822,8 +822,9 @@ function Dashboard() {
 
   return (
     <div dir="rtl" className="dashboard-shell space-y-3">
-      <section className="dashboard-hero rounded-3xl border border-primary/15 bg-card px-4 py-4 text-foreground shadow-[var(--shadow-soft)] sm:px-5 sm:py-5">
-        <div className="flex items-start justify-between gap-3">
+      <section className="dashboard-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-bl from-[#EDF5F0] via-card to-[#F7ECDB] px-4 py-4 text-foreground shadow-[var(--shadow-soft)] sm:px-5 sm:py-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-10 -top-14 size-44 rounded-full border-[26px] border-primary/[0.04]" />
+        <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <div className="min-w-0">
@@ -842,17 +843,17 @@ function Dashboard() {
             </div>
 
             <div className="dashboard-today-strip mt-4 grid grid-cols-3 gap-2">
-              <a href="#today-work" className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm">
+              <a href="#today-work" className="rounded-2xl border border-white/80 bg-white/75 px-2.5 py-2 text-center shadow-sm backdrop-blur-sm">
                 <strong className="block text-base font-black">{attentionCount}</strong>
                 <span className="block truncate text-[9px] text-muted-foreground">تحتاج إجراء</span>
               </a>
-              <Link to="/calendar" className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm">
+              <Link to="/calendar" className="rounded-2xl border border-white/80 bg-white/75 px-2.5 py-2 text-center shadow-sm backdrop-blur-sm">
                 <strong className="block text-base font-black">{todayAgenda.length}</strong>
                 <span className="block truncate text-[9px] text-muted-foreground">مواعيد اليوم</span>
               </Link>
               <Link
                 to={isCounselorDashboard ? "/execution" : "/school-tasks"}
-                className="rounded-xl bg-white/10 px-2.5 py-2 text-center backdrop-blur-sm"
+                className="rounded-2xl border border-white/80 bg-white/75 px-2.5 py-2 text-center shadow-sm backdrop-blur-sm"
               >
                 <strong className="block text-base font-black">{dashboardApprovalCount}</strong>
                 <span className="block truncate text-[9px] text-muted-foreground">بانتظار الاعتماد</span>
@@ -864,14 +865,14 @@ function Dashboard() {
             <div
               className="dashboard-progress-ring grid size-[76px] place-items-center rounded-full p-[6px]"
               style={{
-                background: `conic-gradient(var(--letterhead-secondary) ${dashboardProgress}%, rgba(255,255,255,.14) 0)`,
+                background: `conic-gradient(var(--primary) ${dashboardProgress}%, rgba(15,124,122,.12) 0)`,
               }}
               aria-label={`${dashboardProgressLabel} ${dashboardProgress}%`}
             >
-              <div className="grid size-full place-items-center rounded-full bg-navy text-center shadow-inner">
+              <div className="grid size-full place-items-center rounded-full bg-white text-center shadow-inner">
                 <span>
-                  <strong className="block text-lg font-black leading-none">{dashboardProgress}%</strong>
-                  <span className="mt-1 block text-[8px] font-bold text-white/70">{dashboardProgressLabel}</span>
+                  <strong className="block text-lg font-black leading-none text-navy">{dashboardProgress}%</strong>
+                  <span className="mt-1 block text-[8px] font-bold text-muted-foreground">{dashboardProgressLabel}</span>
                 </span>
               </div>
             </div>
@@ -908,14 +909,14 @@ function Dashboard() {
           </div>
           <QuickActionLauncher guidanceAllowed={isCounselorDashboard} />
         </div>
-        <div className="dashboard-quick-actions mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+        <div className="dashboard-quick-actions mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-5">
           {quickActions.map((item) => {
             const Icon = item.icon;
             return (
               <a
                 key={item.label}
                 href={item.to}
-                className="flex items-center gap-2 rounded-xl border bg-background/70 px-3 py-2.5 text-xs font-black transition hover:border-primary/35 hover:bg-primary/[0.04]"
+                className="flex min-h-14 items-center gap-2 rounded-2xl border bg-[#FBF8F1] px-3 py-2.5 text-xs font-black transition hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/[0.04]"
               >
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="size-4" />
@@ -954,7 +955,7 @@ function Dashboard() {
             <Link
               key={card.label}
               to={card.to}
-              className="group rounded-2xl border bg-card p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md"
+              className="group rounded-3xl border bg-card p-3.5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="rounded-xl bg-primary/10 p-2 text-primary">
