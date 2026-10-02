@@ -394,7 +394,7 @@ textarea {
   max-width: calc(100vw - 1rem);
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1279px) {
 .app-shell > aside {
     width: min(88vw, 18rem);
   }
@@ -958,4 +958,63 @@ select:focus-visible {
     radial-gradient(circle at 82% 18%, rgb(242 197 92 / 0.14), transparent 28%),
     radial-gradient(circle at 14% 82%, rgb(0 168 196 / 0.16), transparent 34%),
     linear-gradient(145deg, rgb(5 45 57 / 0.98), rgb(7 59 76 / 0.96));
+}
+
+
+/* Tablet app experience: keep the same compact visual language as the approved mobile concept. */
+@media (min-width: 640px) and (max-width: 1279px) {
+  .app-shell {
+    background:
+      radial-gradient(circle at 8% 2%, rgb(95 163 127 / .09), transparent 18rem),
+      radial-gradient(circle at 92% 4%, rgb(212 175 124 / .10), transparent 17rem),
+      var(--background);
+  }
+
+  .athat-topbar {
+    background: rgb(255 255 255 / .92);
+    backdrop-filter: blur(18px);
+  }
+
+  .athat-mobile-nav {
+    left: 50%;
+    width: min(44rem, calc(100vw - 2rem));
+    transform: translateX(-50%);
+    bottom: .65rem;
+    border: 1px solid var(--border);
+    border-radius: 1.6rem;
+    background: rgb(255 255 255 / .96);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+  }
+
+  .dashboard-shell {
+    max-width: 58rem;
+    margin-inline: auto;
+  }
+
+  .dashboard-stat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dashboard-stat-grid > a {
+    min-height: 8rem;
+    border-radius: 1.4rem;
+  }
+
+  .dashboard-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .7rem;
+  }
+
+  .dashboard-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .7rem;
+  }
+
+  .record-page {
+    max-width: 62rem;
+    margin-inline: auto;
+  }
 }
