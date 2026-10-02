@@ -193,9 +193,9 @@ export function WeeklyGuidancePoster() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-[minmax(0,360px)_1fr]" dir="rtl">
+    <div className="mx-auto grid max-w-6xl gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(0,360px)_1fr] lg:gap-6" dir="rtl">
       {/* لوحة التحكم الجانبية */}
-      <section className="h-fit rounded-3xl border border-primary/12 bg-card p-5 shadow-sm lg:sticky lg:top-24">
+      <section className="h-fit rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5 lg:sticky lg:top-24">
         <div className="mb-5 flex items-center gap-2">
           <div className="rounded-xl bg-primary/10 p-2 text-primary">
             <BookOpenCheck className="size-5" />
@@ -208,7 +208,17 @@ export function WeeklyGuidancePoster() {
           </div>
         </div>
 
-        <div className="mb-5 rounded-2xl border border-primary/15 bg-primary/5 p-4">\n          <div className="flex items-center gap-2 font-black text-primary"><Sparkles className="size-4" /> مساعد الذات الذكي</div>\n          <p className="mt-1 text-xs leading-6 text-muted-foreground">اكتب موضوع الأسبوع أو هدفًا مختصرًا، وسيقترح الذكاء الاصطناعي محتوى الحقول كاملة.</p>\n          <Textarea value={aiBrief} onChange={(e) => setAiBrief(e.target.value)} rows={3} className="mt-3 bg-background" placeholder="مثال: توجيه لطلاب المرحلة المتوسطة عن الانضباط والحضور المبكر..." />\n          <Button type="button" onClick={() => void fillWithAI()} disabled={aiLoading} className="mt-3 w-full">\n            {aiLoading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}\n            {aiLoading ? "جارٍ إعداد المحتوى..." : "تعبئة الحقول بالذكاء الاصطناعي"}\n          </Button>\n        </div>\n\n        <div className="space-y-4">
+        <div className="mb-5 rounded-2xl border border-primary/15 bg-primary/[0.04] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex items-center gap-2 font-black text-primary"><Sparkles className="size-4" /> مساعد الذات الذكي</div>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">اكتب موضوع الأسبوع أو هدفًا مختصرًا، وسيقترح الذكاء الاصطناعي محتوى الحقول كاملة.</p>
+          <Textarea value={aiBrief} onChange={(e) => setAiBrief(e.target.value)} rows={3} className="mt-3 rounded-xl bg-background" placeholder="مثال: توجيه لطلاب المرحلة المتوسطة عن الانضباط والحضور المبكر..." />
+          <Button type="button" onClick={() => void fillWithAI()} disabled={aiLoading} className="mt-3 w-full rounded-xl">
+            {aiLoading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+            {aiLoading ? "جارٍ إعداد المحتوى..." : "تعبئة الحقول بالذكاء الاصطناعي"}
+          </Button>
+        </div>
+
+        <div className="space-y-4">
           <div>
             <Label htmlFor="weekly-topic">قالب الموضوع</Label>
             <select
@@ -278,7 +288,7 @@ export function WeeklyGuidancePoster() {
       </section>
 
       {/* معاينة البوستر الطباعي */}
-      <div className="overflow-auto rounded-3xl border bg-muted/30 p-4 flex justify-center">
+      <div className="flex justify-center overflow-auto rounded-3xl border bg-card p-3 shadow-[var(--shadow-card)] sm:p-4">
         <div
           ref={posterRef}
           dir="rtl"
