@@ -38,7 +38,7 @@ function LinkList({
         <h2 className="font-bold">{title}</h2>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+      <ul className="mt-4 grid gap-3 xl:grid-cols-2">
         {items.map((item) => (
           <li key={item.title}>
             <a
