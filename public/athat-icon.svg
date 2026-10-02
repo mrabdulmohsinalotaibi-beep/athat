@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="شعار ذات">
+  <defs>
+    <linearGradient id="sage" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9DB7A7"/><stop offset="1" stop-color="#4F7E70"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E7C18F"/><stop offset="1" stop-color="#C58A4D"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="#F7F2E8"/>
+  <circle cx="256" cy="256" r="210" fill="#FFFDF8" stroke="#E8E0D2" stroke-width="6"/>
+  <path d="M294 122c-34 18-62 55-68 94-6 37 5 77 28 104 15 18 28 37 27 63-1 12 1 28 11 35 10 7 28 1 33-11 4-9 2-21 3-31 2-24 16-39 31-55 28-29 45-70 43-111-2-36-19-74-50-93-18-11-39-13-58-5z" fill="#123748"/>
+  <path d="M321 153c27 2 48 21 55 46-24 2-46-7-62-24 0 0 6-15 7-22z" fill="#F7F2E8"/>
+  <path d="M229 332c-21-4-39 8-52 22 18 6 39 5 56-5 0 0-2-9-4-17z" fill="#123748"/>
+  <path d="M238 180C188 155 141 113 125 68M243 208C188 210 137 191 99 152M247 246C188 267 141 307 117 358M252 282C214 319 188 364 180 410" fill="none" stroke="#315F55" stroke-width="8" stroke-linecap="round"/>
+  <ellipse cx="132" cy="91" rx="28" ry="49" transform="rotate(-36 132 91)" fill="url(#sage)"/>
+  <ellipse cx="179" cy="145" rx="30" ry="52" transform="rotate(-46 179 145)" fill="#2F6C60"/>
+  <ellipse cx="118" cy="185" rx="29" ry="52" transform="rotate(-63 118 185)" fill="url(#gold)"/>
+  <ellipse cx="177" cy="224" rx="29" ry="51" transform="rotate(-70 177 224)" fill="#79A694"/>
+  <ellipse cx="139" cy="315" rx="29" ry="52" transform="rotate(51 139 315)" fill="url(#sage)"/>
+  <ellipse cx="190" cy="350" rx="27" ry="48" transform="rotate(36 190 350)" fill="url(#gold)"/>
+  <ellipse cx="218" cy="109" rx="26" ry="46" transform="rotate(22 218 109)" fill="#6EA08D"/>
+  <circle cx="207" cy="69" r="10" fill="#2F6C60"/>
+</svg>
