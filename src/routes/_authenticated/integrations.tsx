@@ -110,7 +110,7 @@ function IntegrationsPage() {
       </div>
 
       <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="flex items-center gap-2 text-xl font-black">
               <Chrome className="size-5 text-primary" /> Athat Bridge
@@ -153,7 +153,7 @@ function IntegrationsPage() {
       </section>
 
       <section className="rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="flex items-center gap-2 text-lg font-black">
               <Chrome className="size-5 text-primary" /> Athat Bridge — الاتصال المباشر داخل نور
