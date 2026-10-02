@@ -50,7 +50,7 @@ function ReferralsPage() {
     <div className="reference-screen space-y-4" dir="rtl">
       <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <span className="inline-flex rounded-full border border-[#89AA74]/30 bg-[#E4ECDF]/70 px-2.5 py-1 text-[10px] font-black text-primary">
               الإحالات والمتابعة
@@ -94,7 +94,7 @@ function ReferralsPage() {
             <h2 className="text-sm font-black">إحالات تحتاج متابعة</h2>
             <p className="mt-1 text-[10px] text-muted-foreground">أحدث الإحالات التي لم تنتهِ بعد.</p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-2 xl:grid-cols-2 xl:grid-cols-3">
             {[...following, ...sent].slice(0, 6).map((row) => (
               <article key={row.id} className="rounded-2xl border bg-[#FBF7F1] p-3">
                 <div className="flex items-start justify-between gap-2">
