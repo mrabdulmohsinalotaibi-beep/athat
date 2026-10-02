@@ -242,11 +242,11 @@ function CounselorPortalManager() {
 
   return (
     <div className="reference-screen space-y-4">
-      <section className="reference-hero reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+      <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-1 text-xs font-black text-primary">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#D9C0A3]/40 bg-[#FBF7F1] px-3 py-1 text-xs font-black text-primary">
               <Newspaper className="size-4" /> مدونة الموجه الطلابي
             </div>
             <h1 className="text-2xl font-black tracking-tight text-navy sm:text-3xl">مدونة الموجه والخدمات</h1>
@@ -259,7 +259,7 @@ function CounselorPortalManager() {
               <a href="#portal-links"><Button variant="ghost"><Share2 className="size-4" /> مشاركة المدونة</Button></a>
             </div>
           </div>
-          <div className="grid min-w-[260px] grid-cols-2 gap-2 rounded-2xl border bg-background/80 p-3 shadow-[var(--shadow-card)] backdrop-blur">
+          <div className="grid min-w-[260px] grid-cols-2 gap-2 rounded-2xl border bg-[#FBF7F1] p-3 shadow-[var(--shadow-card)] backdrop-blur">
             <a href="#content-library" className="rounded-xl p-3 transition hover:bg-muted"><Newspaper className="size-5 text-primary" /><strong className="mt-2 block text-sm">المحتوى</strong><span className="text-xs text-muted-foreground">{posts.length} مادة</span></a>
             <a href="#incoming-requests" className="rounded-xl p-3 transition hover:bg-muted"><Inbox className="size-5 text-primary" /><strong className="mt-2 block text-sm">الوارد</strong><span className="text-xs text-muted-foreground">{newRequests} جديد</span></a>
             <a href="#portal-links" className="rounded-xl p-3 transition hover:bg-muted"><Globe className="size-5 text-primary" /><strong className="mt-2 block text-sm">الصفحة العامة</strong><span className="text-xs text-muted-foreground">روابط المشاركة</span></a>
@@ -269,22 +269,22 @@ function CounselorPortalManager() {
       </section>
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <Megaphone className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{publishedCount}</p>
           <p className="text-xs text-muted-foreground">محتوى منشور للعامة</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <Inbox className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{newRequests}</p>
           <p className="text-xs text-muted-foreground">طلبات جديدة تحتاج مراجعة</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <CalendarClock className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{activeRequests}</p>
           <p className="text-xs text-muted-foreground">طلبات قيد المتابعة</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <HeartHandshake className="size-5 text-primary" />
           <p className="mt-3 text-2xl font-black">{portalRequests.length}</p>
           <p className="text-xs text-muted-foreground">إجمالي الطلبات الواردة</p>
@@ -292,18 +292,18 @@ function CounselorPortalManager() {
       </section>
 
       {contributions.filter((item: any) => item.status === "pending").length > 0 && (
-        <section className="rounded-3xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+        <section className="rounded-3xl border border-[#D9C0A3]/60 bg-[#F4ECE3]/75 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black text-amber-700">بانتظار اعتمادك</p>
+              <p className="text-xs font-black text-[#4A141F]">بانتظار اعتمادك</p>
               <h2 className="mt-1 text-lg font-black">مشاركات القراء</h2>
               <p className="mt-1 text-xs text-muted-foreground">راجع الكتابة قبل ظهورها في الصفحة الإعلامية العامة.</p>
             </div>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">{contributions.filter((item: any) => item.status === "pending").length}</span>
+            <span className="rounded-full bg-[#F1E5E8] px-3 py-1 text-xs font-black text-[#4A141F]">{contributions.filter((item: any) => item.status === "pending").length}</span>
           </div>
           <div className="mt-4 grid gap-3">
             {contributions.filter((item: any) => item.status === "pending").map((item: any) => (
-              <article key={item.id} className="rounded-2xl border bg-card p-4">
+              <article key={item.id} className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs"><strong>{item.author_name}</strong><span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">{item.author_role}</span></div>
                 <h3 className="mt-2 font-black">{item.title}</h3>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{item.body}</p>
@@ -338,7 +338,7 @@ function CounselorPortalManager() {
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-3">
         <Link
           to="/weekly-poster"
-          className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 transition hover:border-primary/40"
+          className="rounded-2xl border border-[#89AA74]/35 bg-[#E4ECDF]/65 p-4 transition hover:border-[#89AA74]"
         >
           <Sparkles className="size-5 text-primary" />
           <h2 className="mt-3 font-black">رسالة هذا الأسبوع</h2>
@@ -348,7 +348,7 @@ function CounselorPortalManager() {
         </Link>
         <a
           href="#incoming-requests"
-          className="rounded-2xl border bg-card p-4 transition hover:border-primary/40"
+          className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 transition hover:border-[#89AA74]"
         >
           <Inbox className="size-5 text-primary" />
           <h2 className="mt-3 font-black">صندوق الطلبات</h2>
@@ -358,7 +358,7 @@ function CounselorPortalManager() {
         </a>
         <Link
           to="/request-status"
-          className="rounded-2xl border bg-card p-4 transition hover:border-primary/40"
+          className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 transition hover:border-[#89AA74]"
         >
           <Search className="size-5 text-primary" />
           <h2 className="mt-3 font-black">تجربة تتبع الطلب</h2>
@@ -374,7 +374,7 @@ function CounselorPortalManager() {
       {contentTab === "services" && (
         <Link
           to="/integrations"
-          className="flex items-center justify-between gap-3 rounded-3xl border border-primary/15 bg-gradient-to-l from-primary/[0.06] to-[#F7E9D5] p-4 shadow-[var(--shadow-card)]"
+          className="flex items-center justify-between gap-3 rounded-3xl border border-[#D9C0A3]/40 bg-gradient-to-l from-[#E4ECDF] to-[#EFE1D7] p-4 shadow-[var(--shadow-card)]"
         >
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-white text-primary shadow-sm">
@@ -607,7 +607,7 @@ function PortalLinksPanel() {
   }
 
   return (
-    <section id="portal-links" className="scroll-mt-24 rounded-3xl border bg-card p-5 shadow-sm sm:p-6">
+    <section id="portal-links" className="scroll-mt-24 rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-5 shadow-[var(--shadow-card)] sm:p-6">
       <div className="flex items-start gap-3">
         <span className="rounded-xl bg-primary/10 p-2.5 text-primary">
           <Link2 className="size-5" />
@@ -704,7 +704,7 @@ function ServiceCard({
   href?: string;
 }) {
   return (
-    <article className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+    <article className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-start justify-between gap-3">
         <span className="rounded-xl bg-primary/10 p-2 text-primary">
           <Icon className="size-5" />
@@ -926,7 +926,7 @@ function ContentEditor({
           يمكنك نشر نص مع صورة، أو صورة فقط بدون كتابة محتوى.
         </p>
       </div>
-      <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+      <div className="rounded-2xl border border-[#89AA74]/35 bg-[#E4ECDF]/65 p-4">
         <div className="flex items-center gap-2">
           <Sparkles className="size-5 text-primary" />
           <div>
@@ -963,7 +963,7 @@ function ContentEditor({
         <div className="space-y-2">
           <Label>النوع</Label>
           <select
-            className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+            className="h-11 w-full rounded-xl border border-[#D9C0A3]/45 bg-[#FFFDF9] px-3 text-sm"
             value={draft.kind}
             onChange={(e) => onChange({ ...draft, kind: e.target.value })}
           >
@@ -1099,7 +1099,7 @@ function ContentSection({
   onDelete: (id: string) => void;
 }) {
   return (
-    <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+    <section className="rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)] sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="rounded-xl bg-primary/10 p-2 text-primary"><Icon className="size-5" /></span>
