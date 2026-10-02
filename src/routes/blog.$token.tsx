@@ -486,7 +486,7 @@ function PublicContentSection({
                       <img
                         src={post.cover_url}
                         alt={post.title}
-                        className={"mx-auto w-full rounded-lg object-cover " + (compact ? "aspect-[16/9] max-h-32" : (imageOnly ? "max-h-[520px]" : "max-h-[300px]"))}
+                        className={"mx-auto block h-auto max-w-full rounded-lg object-contain " + (compact ? "max-h-[360px]" : (imageOnly ? "max-h-[760px]" : "max-h-[520px]"))}
                       />
                     </div>
                   ) : (
