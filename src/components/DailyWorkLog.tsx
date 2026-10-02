@@ -91,7 +91,7 @@ export function DailyWorkLog() {
     <section className="dashboard-panel rounded-3xl border border-primary/12 bg-card p-5 shadow-sm sm:p-6">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+          <div className="rounded-2xl bg-[#E4ECDF] p-3 text-primary">
             <ClipboardPenLine className="size-5" />
           </div>
           <div>
@@ -101,7 +101,7 @@ export function DailyWorkLog() {
             </p>
           </div>
         </div>
-        <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
+        <span className="flex items-center gap-1.5 rounded-full bg-[#E4ECDF] px-3 py-1 text-[11px] font-bold text-primary">
           <BookOpenCheck className="size-3.5" /> توثيق سريع
         </span>
       </div>
@@ -172,7 +172,7 @@ export function DailyWorkLog() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {recent.map((item) => (
-              <span key={item.id} className="rounded-xl border bg-background/70 px-3 py-2 text-[11px] font-semibold">
+              <span key={item.id} className="rounded-xl border bg-[#FBF7F1] px-3 py-2 text-[11px] font-semibold">
                 {item.report_date ? formatHijriDate(item.report_date) : "بدون تاريخ"}
               </span>
             ))}
