@@ -543,22 +543,22 @@ export function UserProfilePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6" dir="rtl">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#073B4C] p-6 text-white shadow-xl sm:p-8">
-        <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full border border-white/5" />
-        <div className="pointer-events-none absolute -left-8 -top-12 size-40 rounded-full border border-white/5" />
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 text-foreground shadow-[var(--shadow-soft)] sm:p-6">
+        <div className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full border border-primary/10" />
+        <div className="pointer-events-none absolute -left-8 -top-12 size-40 rounded-full border border-primary/10" />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
           <div className="relative self-start">
-            <Avatar className="size-28 border-4 border-[#F1E9DD]/30 bg-white/10 text-3xl font-black text-white shadow-xl sm:size-32">
+            <Avatar className="size-24 border-4 border-white bg-primary/10 text-3xl font-black text-primary shadow-lg sm:size-28">
               {avatarUrl && <AvatarImage src={avatarUrl} alt={`صورة ${displayName}`} />}
-              <AvatarFallback className="bg-white/10 text-white">
+              <AvatarFallback className="bg-primary/10 text-primary">
                 {initials(displayName)}
               </AvatarFallback>
             </Avatar>
             <Button
               type="button"
               size="icon"
-              className="absolute -bottom-1 -left-1 size-10 rounded-full bg-[#D8F1EE] text-[#073B4C] shadow-lg hover:bg-white"
+              className="absolute -bottom-1 -left-1 size-10 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               title="تغيير الصورة الشخصية"
@@ -576,20 +576,20 @@ export function UserProfilePage() {
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold">
+              <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[11px] font-bold text-primary">
                 الملف الشخصي
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/20 bg-emerald-300/10 px-3 py-1 text-[11px] font-bold text-emerald-100">
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700">
                 <BadgeCheck className="size-3.5" />
                 حساب نشط
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/20 bg-sky-300/10 px-3 py-1 text-[11px] font-bold text-sky-100">
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold text-sky-700">
                 <ShieldCheck className="size-3.5" />
                 محفوظ سحابيًا
               </span>
             </div>
             <h1 className="mt-3 truncate text-2xl font-black sm:text-4xl">{displayName}</h1>
-            <p className="mt-2 text-sm text-[#D8D0C4]">
+            <p className="mt-2 text-sm text-muted-foreground">
               {displayJobTitle || displaySchoolRole || "الموجه الطلابي"}
               {profileValue(profile, user, "school_name") ? ` · ${profileValue(profile, user, "school_name")}` : ""}
             </p>
@@ -599,27 +599,27 @@ export function UserProfilePage() {
                 <span className="font-bold">اكتمال الملف</span>
                 <span>{completion}%</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-[#F1E9DD] transition-all"
+                  className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${completion}%` }}
                 />
               </div>
-              <p className="mt-2 text-[11px] text-[#CFC6B9]">
+              <p className="mt-2 text-[11px] text-muted-foreground">
                 أكمل بياناتك المهنية لتظهر معلومات الحساب بصورة أكثر تنظيمًا داخل المنصة.
               </p>
             </div>
           </div>
 
           <div className="grid min-w-[240px] grid-cols-2 gap-2 text-xs">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              <Mail className="mb-2 size-4 text-[#E4DACC]" />
-              <p className="text-[#BFB6AA]">البريد</p>
+            <div className="rounded-2xl border bg-background/80 p-3">
+              <Mail className="mb-2 size-4 text-primary" />
+              <p className="text-muted-foreground">البريد</p>
               <p className="mt-1 truncate font-bold" dir="ltr">{user?.email || "—"}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              <BriefcaseBusiness className="mb-2 size-4 text-[#E4DACC]" />
-              <p className="text-[#BFB6AA]">الدور</p>
+            <div className="rounded-2xl border bg-background/80 p-3">
+              <BriefcaseBusiness className="mb-2 size-4 text-primary" />
+              <p className="text-muted-foreground">الدور</p>
               <p className="mt-1 truncate font-bold">{displaySchoolRole || "الموجه الطلابي"}</p>
             </div>
           </div>
@@ -628,7 +628,7 @@ export function UserProfilePage() {
 
       <div className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
         <div className="space-y-6">
-          <section className="rounded-3xl border bg-card p-5 shadow-sm sm:p-6">
+          <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
             <div className="mb-6 flex items-center gap-3">
               <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
                 <UserRound className="size-5" />
