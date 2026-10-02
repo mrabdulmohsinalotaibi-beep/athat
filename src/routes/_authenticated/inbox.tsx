@@ -173,7 +173,7 @@ function UnifiedInboxPage() {
             <MessageSquareText className="size-4 text-primary" />
             <h2 className="text-sm font-black">الوارد من المستفيدين</h2>
           </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="mt-3 grid gap-2 xl:grid-cols-2">
             {serviceRequests.slice(0, 4).map((item: any) => (
               <Link key={item.id} to="/posts" className="rounded-2xl border p-3 transition hover:border-[#89AA74] hover:bg-primary/[0.02]">
                 <p className="text-[10px] font-black text-primary">{item.kind || "طلب خدمة"}</p>
