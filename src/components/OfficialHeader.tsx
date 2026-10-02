@@ -118,6 +118,7 @@ export function OfficialFooter({
               <p className="font-black">الموجه الطلابي</p>
               {showCounselorSignature && school?.counselor_signature ? (
                 <img
+                  data-signature-role="counselorSignature"
                   src={school.counselor_signature}
                   alt="توقيع الموجه الطلابي"
                   className="my-1 h-12 w-36 object-contain"
@@ -137,6 +138,7 @@ export function OfficialFooter({
               <p className="font-black">مدير المدرسة</p>
               {showPrincipalSignature && school?.principal_signature ? (
                 <img
+                  data-signature-role="principalSignature"
                   src={school.principal_signature}
                   alt="توقيع مدير المدرسة"
                   className="my-1 h-12 w-36 object-contain"
