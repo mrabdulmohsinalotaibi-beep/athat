@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
+import { HijriDatePicker } from "@/components/HijriDatePicker";
 
 
 export const Route = createFileRoute("/_authenticated/programs")({
@@ -364,7 +365,7 @@ function Field({ label, value, onChange, options, type = "text" }: FieldProps) {
           ))}
         </select>
       ) : (
-        <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+        {type === "date" ? <HijriDatePicker value={value} onChange={onChange} /> : <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} />}
       )}
     </div>
   );
