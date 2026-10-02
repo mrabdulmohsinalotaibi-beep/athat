@@ -482,14 +482,14 @@ function ReportsPage() {
 
   return (
     <div className="min-w-0 space-y-6" dir="rtl">
-      <section className="border-b border-border pb-6">
+      <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <div className="flex items-center gap-2 text-primary">
               <FileText className="size-5" />
               <span className="text-xs font-bold">معاينة رسمية</span>
             </div>
-            <h1 className="mt-2 text-2xl font-black sm:text-3xl">التقارير</h1>
+            <h1 className="mt-2 text-2xl font-black text-navy sm:text-3xl">التقارير والإحصاءات</h1>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
               اطبع تقرير برنامج أو اجمع الخطة والبرامج والشواهد في تقرير تنفيذ واحد، مع كليشة المدرسة الرسمية والتوقيعات.
             </p>
@@ -560,14 +560,14 @@ function ReportsPage() {
         </section>
       )}
 
-      <section className="rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 shadow-sm">
+      <section className="rounded-3xl border border-primary/15 bg-primary/[0.03] p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="mb-3">
           <h2 className="font-black">حزم مستندات جاهزة</h2>
           <p className="mt-1 text-xs text-muted-foreground">اختر حزمة ثم عدّل السجلات أو الفترة قبل إنشاء PDF.</p>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {documentPresets.map((preset) => (
-            <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-xl border bg-card p-4 text-right transition hover:border-primary hover:bg-primary/5">
+            <button key={preset.title} type="button" onClick={() => applyPreset(preset.keys, preset.title)} className="rounded-2xl border bg-card p-4 text-right transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-md">
               <p className="font-black">{preset.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{preset.description}</p>
             </button>
@@ -575,7 +575,7 @@ function ReportsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <section className="rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="space-y-5">
           <div>
             <Label>نوع التقرير</Label>
@@ -583,7 +583,7 @@ function ReportsPage() {
               <button
                 type="button"
                 onClick={() => setReportMode("single")}
-                className={`rounded-xl border p-4 text-right transition ${reportMode === "single" ? "border-primary bg-primary/5" : "border-border hover:bg-muted"}`}
+                className={`rounded-2xl border p-4 text-right transition ${reportMode === "single" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted"}`}
               >
                 <div className="flex items-center gap-3">
                   <FileText className={`size-5 ${reportMode === "single" ? "text-primary" : ""}`} />
@@ -598,7 +598,7 @@ function ReportsPage() {
               <button
                 type="button"
                 onClick={() => setReportMode("combined")}
-                className={`rounded-xl border p-4 text-right transition ${reportMode === "combined" ? "border-primary bg-primary/5" : "border-border hover:bg-muted"}`}
+                className={`rounded-2xl border p-4 text-right transition ${reportMode === "combined" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted"}`}
               >
                 <div className="flex items-center gap-3">
                   <CheckSquare
