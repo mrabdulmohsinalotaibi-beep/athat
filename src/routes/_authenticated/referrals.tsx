@@ -48,11 +48,11 @@ function ReferralsPage() {
 
   return (
     <div className="reference-screen space-y-4" dir="rtl">
-      <section className="reference-hero relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
+      <section className="reference-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-12 size-40 rounded-full bg-primary/8 blur-2xl" />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <span className="inline-flex rounded-full border border-primary/15 bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary">
+            <span className="inline-flex rounded-full border border-[#89AA74]/30 bg-[#E4ECDF]/70 px-2.5 py-1 text-[10px] font-black text-primary">
               الإحالات والمتابعة
             </span>
             <h1 className="mt-2 text-2xl font-black text-navy">الإحالات الطلابية</h1>
@@ -89,14 +89,14 @@ function ReferralsPage() {
       </section>
 
       {(sent.length > 0 || following.length > 0) && (
-        <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
+        <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
           <div className="mb-3">
             <h2 className="text-sm font-black">إحالات تحتاج متابعة</h2>
             <p className="mt-1 text-[10px] text-muted-foreground">أحدث الإحالات التي لم تنتهِ بعد.</p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {[...following, ...sent].slice(0, 6).map((row) => (
-              <article key={row.id} className="rounded-2xl border bg-background/80 p-3">
+              <article key={row.id} className="rounded-2xl border bg-[#FBF7F1] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-black">{row.student_name || "طالب غير محدد"}</p>
@@ -123,9 +123,9 @@ function ReferralsPage() {
 
 function ReferralStat({ title, value, icon }: { title: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+    <div className="rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between gap-2">
-        <span className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">{icon}</span>
+        <span className="grid size-9 place-items-center rounded-xl bg-[#E4ECDF] text-[#264938]">{icon}</span>
         <strong className="text-2xl font-black">{value}</strong>
       </div>
       <p className="mt-3 text-[11px] font-black">{title}</p>
