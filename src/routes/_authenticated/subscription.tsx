@@ -55,7 +55,7 @@ function SubscriptionPage() {
               تتمتع الآن بصلاحيات مطلقة وكاملة على جميع أدوات الذات للتوجيه الطلابي دون الحاجة لأي دفع أو ترقية حالية.
             </p>
 
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2 text-sm">
+            <ul className="mt-6 grid gap-3 xl:grid-cols-2 text-sm">
               {allUnlockedFeatures.map((f) => (
                 <li key={f} className="flex items-center gap-2 font-medium">
                   <Check className="size-4 text-emerald-600 shrink-0" />
