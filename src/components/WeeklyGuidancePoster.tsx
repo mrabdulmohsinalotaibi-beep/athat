@@ -11,6 +11,7 @@ import { formatHijriDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
+import { ApprovedSignatures } from "@/components/ApprovedSignatures";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -384,6 +385,8 @@ export function WeeklyGuidancePoster() {
                 </div>
               )}
             </div>
+
+            <ApprovedSignatures recordTable="weekly_guidance_posters" recordId={signatureDocumentId || null} />
 
             {/* تذييل البوستر */}
             <div className="relative mt-8 flex items-center justify-between border-t border-[#c99a45]/40 pt-3 text-xs font-medium text-[#55717a]">
