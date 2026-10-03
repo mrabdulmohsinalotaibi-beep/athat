@@ -62,7 +62,7 @@ type Workspace = {
 function InitiativeMemberWorkPage() {
   const { initiative = "" } = Route.useSearch();
   const qc = useQueryClient();
-  const [studentId, setStudentId] = useState("");
+  const [studentIds, setStudentIds] = useState<string[]>([]);
   const [weekStart, setWeekStart] = useState(new Date().toISOString().slice(0, 10));
   const [attendanceStatus, setAttendanceStatus] = useState("منتظم");
   const [punctualityStatus, setPunctualityStatus] = useState("ملتزم");
@@ -93,10 +93,10 @@ function InitiativeMemberWorkPage() {
 
   const saveFollowup = useMutation({
     mutationFn: async () => {
-      if (!studentId) throw new Error("اختر الطالب.");
-      const { error } = await (supabase as any).rpc("save_initiative_student_followup", {
+      if (studentIds.length === 0) throw new Error("اختر طالبًا واحدًا على الأقل.");
+      const results = await Promise.all(studentIds.map((selectedStudentId) => (supabase as any).rpc("save_initiative_student_followup", {
         p_initiative_id: initiative,
-        p_student_id: studentId,
+        p_student_id: selectedStudentId,
         p_week_start: weekStart,
         p_attendance_status: attendanceStatus,
         p_punctuality_status: punctualityStatus,
@@ -110,18 +110,19 @@ function InitiativeMemberWorkPage() {
         p_advice: advice || null,
         p_next_action: nextAction || null,
         p_notes: notes || null,
-      });
-      if (error) throw error;
+      })));
+      const failed = results.find((result:any) => result.error);
+      if (failed?.error) throw failed.error;
     },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["my-initiative-workspace", initiative] });
-      toast.success("تم حفظ متابعة الطالب.");
+      toast.success(studentIds.length > 1 ? `تم حفظ المتابعة لـ ${studentIds.length} طلاب.` : "تم حفظ متابعة الطالب.");
     },
     onError: (e) => toast.error((e as Error).message),
   });
 
   const loadFollowup = (f: Followup) => {
-    setStudentId(f.student_id); setWeekStart(f.week_start); setAttendanceStatus(f.attendance_status||"منتظم");
+    setStudentIds([f.student_id]); setWeekStart(f.week_start); setAttendanceStatus(f.attendance_status||"منتظم");
     setPunctualityStatus(f.punctuality_status||"ملتزم"); setBehaviorStatus(f.behavior_status||"إيجابي");
     setHomeworkStatus(f.homework_status||"ملتزم"); setAcademicStatus(f.academic_status||"مستقر");
     setMeetingHeld(Boolean(f.meeting_held)); setFamilyContacted(Boolean(f.family_contacted)); setStrengths(f.strengths||"");
@@ -195,7 +196,7 @@ function InitiativeMemberWorkPage() {
             <p className="mt-2 text-xs text-muted-foreground">هذه المجموعة خاصة بك ولا تظهر لبقية معلمي المبادرة.</p>
             <div className="mt-3 space-y-2">
               {data.students.length === 0 ? <p className="rounded-xl border border-dashed p-4 text-center text-xs text-muted-foreground">لم يتم إسناد طلاب لك بعد.</p> :
-              data.students.map((s) => <button key={s.id} type="button" onClick={() => setStudentId(s.id)} className={`w-full rounded-xl border p-3 text-right ${studentId === s.id ? "border-primary bg-primary/5" : ""}`}><p className="font-black">{s.full_name}</p><p className="mt-1 text-[10px] text-muted-foreground">{[s.stage,s.grade,s.classroom].filter(Boolean).join(" · ")}</p></button>)}
+              data.students.map((s) => <button key={s.id} type="button" onClick={() => setStudentIds((current)=>current.includes(s.id)?current.filter((id)=>id!==s.id):[...current,s.id])} className={`w-full rounded-xl border p-3 text-right ${studentIds.includes(s.id) ? "border-primary bg-primary/5" : ""}`}><p className="font-black">{s.full_name}</p><p className="mt-1 text-[10px] text-muted-foreground">{[s.stage,s.grade,s.classroom].filter(Boolean).join(" · ")}</p></button>)}
             </div>
           </section>
         </div>
@@ -204,7 +205,7 @@ function InitiativeMemberWorkPage() {
           <section className="rounded-3xl border bg-card p-5">
             <div className="flex items-center gap-2"><CalendarCheck className="size-5 text-primary" /><h2 className="font-black">المتابعة الأسبوعية</h2></div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <div><Label>الطالب</Label><select className="mt-2 h-11 w-full rounded-xl border bg-background px-3 text-sm" value={studentId} onChange={(e)=>setStudentId(e.target.value)}><option value="">اختر الطالب</option>{data.students.map((s)=><option key={s.id} value={s.id}>{s.full_name}</option>)}</select></div>
+              <div className="sm:col-span-2 lg:col-span-2"><div className="flex items-center justify-between gap-2"><Label>الطلاب</Label><div className="flex gap-2"><Button type="button" size="sm" variant="outline" onClick={()=>setStudentIds(data.students.map(s=>s.id))}>تحديد الكل</Button>{studentIds.length>0&&<Button type="button" size="sm" variant="ghost" onClick={()=>setStudentIds([])}>إلغاء التحديد</Button>}</div></div><div className="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-xl border bg-background p-2">{data.students.map((s)=><label key={s.id} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-muted/50"><input type="checkbox" checked={studentIds.includes(s.id)} onChange={()=>setStudentIds(current=>current.includes(s.id)?current.filter(id=>id!==s.id):[...current,s.id])}/><span className="font-bold">{s.full_name}</span></label>)}</div>{studentIds.length>0&&<p className="mt-2 text-xs font-bold text-primary">تم اختيار {studentIds.length} طالب</p>}</div>
               <div><Label>بداية الأسبوع</Label><Input className="mt-2" type="date" value={weekStart} onChange={(e)=>setWeekStart(e.target.value)} /></div>
               <SimpleSelect label="الحضور" value={attendanceStatus} onChange={setAttendanceStatus} options={["منتظم","غياب متكرر","يحتاج متابعة"]} />
               <SimpleSelect label="الالتزام بالوقت" value={punctualityStatus} onChange={setPunctualityStatus} options={["ملتزم","تأخر محدود","تأخر متكرر"]} />
@@ -223,7 +224,7 @@ function InitiativeMemberWorkPage() {
               <div><Label>الإجراء القادم</Label><Textarea className="mt-2" value={nextAction} onChange={(e)=>setNextAction(e.target.value)} /></div>
               <div className="sm:col-span-2"><Label>ملاحظات</Label><Textarea className="mt-2" value={notes} onChange={(e)=>setNotes(e.target.value)} /></div>
             </div>
-            <Button className="mt-4" disabled={!studentId || saveFollowup.isPending} onClick={()=>saveFollowup.mutate()}><Save className="size-4" /> حفظ المتابعة</Button>
+            <Button className="mt-4" disabled={studentIds.length === 0 || saveFollowup.isPending} onClick={()=>saveFollowup.mutate()}><Save className="size-4" /> {studentIds.length > 1 ? `حفظ المتابعة لـ ${studentIds.length} طلاب` : "حفظ المتابعة"}</Button>
           </section>
 
           <section className="rounded-3xl border bg-card p-5">
