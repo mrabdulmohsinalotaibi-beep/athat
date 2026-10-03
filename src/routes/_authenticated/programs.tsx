@@ -567,7 +567,7 @@ function ProgramsPage() {
   async function loadAttachments(recordId: string, recordTitle = "") {
     const { data, error } = await supabase
       .from("evidences")
-      .select("id,name,file_name,file_path,mime_type")
+      .select("id,name,file_name,file_path,mime_type,doc_status")
       .eq("linked_type", "برنامج")
       .or(`linked_ref.eq.${recordId}${recordTitle ? `,linked_ref.eq.${recordTitle.replace(/,/g, " ")}` : ""}`)
       .order("created_at", { ascending: true });
@@ -582,6 +582,18 @@ function ProgramsPage() {
       ...item,
       signed_url: signed.data?.[index]?.signedUrl ?? "",
     })));
+  }
+
+  async function renameEvidence(item: Attachment) {
+    const name=window.prompt("اسم الشاهد",item.name||item.file_name||""); if(!name?.trim())return;
+    const {error}=await supabase.from("evidences").update({name:name.trim()} as never).eq("id",item.id); if(error)return toast.error(error.message);
+    if(editing?.id)await loadAttachments(editing.id,value(editing.name)); toast.success("تم تعديل اسم الشاهد.");
+  }
+  async function deleteEvidence(item: Attachment) {
+    if(!window.confirm("حذف هذا الشاهد من البرنامج؟"))return;
+    if(item.file_path)await supabase.storage.from("evidences").remove([item.file_path]);
+    const {error}=await supabase.from("evidences").delete().eq("id",item.id); if(error)return toast.error(error.message);
+    if(editing?.id)await loadAttachments(editing.id,value(editing.name)); toast.success("تم حذف الشاهد.");
   }
 
   async function uploadFiles(recordId: string, recordTitle: string) {
@@ -1057,6 +1069,7 @@ function ProgramsPage() {
             </div>
           </div>
 
+          <div className="px-5 pt-4">{editing?.id&&<div className={`rounded-2xl border p-3 text-xs ${editing.exec_status==="منفذ"&&uploadedAttachments.length===0?"border-amber-300 bg-amber-50 text-amber-900":"border-[#89AA74]/30 bg-[#E4ECDF]/50"}`}><b>جاهزية الاعتماد:</b> {editing.exec_status==="معتمد"?"تم اعتماد تنفيذ البرنامج.":editing.exec_status==="جاهز لاعتماد التنفيذ"?"البرنامج مرفوع وينتظر الاعتماد.":editing.exec_status!=="منفذ"?"أكمل تنفيذ البرنامج أولاً.":uploadedAttachments.length===0?"أضف شاهدًا واحدًا على الأقل قبل رفع البرنامج للاعتماد.":"مكتمل التنفيذ ويوجد شاهد؛ البرنامج جاهز للرفع للاعتماد."}</div>}</div>
           <div className="space-y-4 border-t bg-background p-5">
             <div className="rounded-xl border border-[#89AA74]/30 bg-[#E4ECDF]/70 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
