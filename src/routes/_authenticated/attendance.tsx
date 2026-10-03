@@ -185,7 +185,7 @@ function AttendancePage() {
   const pickPdf = (file?: File) => {
     if (!file) return;
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      toast.error("يرجى اختيار ملف PDF صادر من إتقان.");
+      toast.error("يرجى اختيار ملف PDF يحتوي بيانات الغياب.");
       return;
     }
     setPdf(file); setRows([]);
@@ -293,18 +293,26 @@ function AttendancePage() {
           `${String(item.student_no ?? "").trim()}|${String(item.adate ?? "").slice(0, 10)}`,
         ),
       );
+      const seenImportKeys = new Set<string>();
       const classified = parsed.map((row) => {
         const reasons: string[] = [];
         if (!row.student_no) reasons.push("رقم الطالب غير مقروء");
         if (!row.adate) reasons.push("التاريخ غير مقروء");
         if (!row.student_name || row.student_name === "طالب من كشف إتقان") reasons.push("اسم الطالب يحتاج مراجعة");
         const key = `${row.student_no.trim()}|${row.adate.slice(0, 10)}`;
-        const duplicate = Boolean(row.student_no && row.adate && existingKeys.has(key));
+        const duplicateInFile = Boolean(row.student_no && row.adate && seenImportKeys.has(key));
+        const duplicateSaved = Boolean(row.student_no && row.adate && existingKeys.has(key));
+        const duplicate = duplicateInFile || duplicateSaved;
+        if (row.student_no && row.adate) seenImportKeys.add(key);
         return {
           ...row,
           selected: !duplicate && reasons.length === 0,
           reviewStatus: duplicate ? "مكرر" as const : reasons.length ? "يحتاج مراجعة" as const : "جديد" as const,
-          reviewReason: duplicate ? "السجل محفوظ مسبقًا لنفس الطالب والتاريخ" : reasons.join("، "),
+          reviewReason: duplicate
+            ? duplicateInFile
+              ? "مكرر داخل الملف لنفس الطالب ونفس يوم الغياب"
+              : "محفوظ مسبقًا لنفس الطالب ونفس يوم الغياب"
+            : reasons.join("، "),
         };
       });
 
@@ -377,8 +385,8 @@ function AttendancePage() {
       <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="flex items-center gap-2 font-black"><FileText className="size-5 text-primary" />استيراد غياب إتقان PDF</div>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">ارفع كشف الغياب PDF الصادر من إتقان. يقرأ النظام النص مباشرة، وإذا كان الملف مصورًا يشغّل OCR تلقائيًا، ثم يستخدم DeepSeek لفهم التنسيق وتوزيع البيانات قبل المراجعة والاعتماد.</p>
+            <div className="flex items-center gap-2 font-black"><FileText className="size-5 text-primary" />استيراد الغياب الذكي من PDF</div>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">ارفع أي ملف PDF يحتوي بيانات غياب الطلاب، سواء من إتقان أو نور أو أي كشف آخر. يتعرف النظام على تنسيق الملف تلقائيًا، ويقرأ الملفات النصية أو المصورة، ثم يستخرج الطلاب وأيام الغياب ويستبعد تكرار نفس الطالب في نفس اليوم قبل المراجعة والاعتماد.</p>
             {pdf && <p className="mt-2 text-xs font-bold text-primary">الملف المحدد: {pdf.name} — {(pdf.size / 1024 / 1024).toFixed(2)} MB</p>}
             {importStatus && (
               <div className="mt-3 max-w-xl rounded-xl border border-primary/15 bg-primary/5 p-3">
@@ -398,7 +406,7 @@ function AttendancePage() {
           <div className="flex flex-wrap gap-2">
             <input ref={inputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => pickPdf(e.target.files?.[0])} />
             <Button variant="outline" onClick={() => inputRef.current?.click()}><Upload className="size-4" />اختيار PDF</Button>
-            <Button onClick={startImport} disabled={busy}>{busy ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}{pdf ? "قراءة كشف إتقان" : "استيراد غياب إتقان"}</Button>
+            <Button onClick={startImport} disabled={busy}>{busy ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}{pdf ? "تحليل ملف الغياب" : "استيراد PDF"}</Button>
           </div>
         </div>
       </section>
