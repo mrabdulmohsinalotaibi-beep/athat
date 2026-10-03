@@ -65,6 +65,20 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     const next = location.pathname + location.searchStr + location.hash;
 
+    // Legacy team-invite links used the protected /school-team route. Redirect
+    // them to the public invite landing page before any auth check so the
+    // recipient never gets forced to sign in just to open the invitation.
+    if (location.pathname === "/school-team") {
+      const params = new URLSearchParams(location.searchStr || "");
+      const invite = params.get("invite")?.trim();
+      if (invite) {
+        throw redirect({
+          to: "/school-invite",
+          search: { invite },
+        });
+      }
+    }
+
     let sessionUser = null;
     let invalidSession = false;
 
