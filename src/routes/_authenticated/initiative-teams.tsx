@@ -141,6 +141,7 @@ function InitiativeTeamsPage() {
   const [nextAction, setNextAction] = useState("");
   const [followNotes, setFollowNotes] = useState("");
   const [publicLinks, setPublicLinks] = useState<Record<string,string>>({});
+  const [publicViewUrl, setPublicViewUrl] = useState("");
 
   const query = useQuery({
     queryKey: ["initiative-teams"],
@@ -302,6 +303,34 @@ function InitiativeTeamsPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const createPublicView = useMutation({
+    mutationFn: async () => {
+      if (!selected) throw new Error("اختر المبادرة أولًا");
+      const { data, error } = await (supabase as any).rpc("create_public_initiative_view_link", { p_initiative_id: selected.id });
+      if (error) throw error;
+      return String(data ?? "");
+    },
+    onSuccess: (token) => {
+      const url = `${window.location.origin}/initiative-public?view=${encodeURIComponent(token)}`;
+      setPublicViewUrl(url);
+      toast.success("تم إنشاء رابط العرض العام للمبادرة.");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const revokePublicView = useMutation({
+    mutationFn: async () => {
+      if (!selected) throw new Error("اختر المبادرة أولًا");
+      const { error } = await (supabase as any).rpc("revoke_public_initiative_view_link", { p_initiative_id: selected.id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setPublicViewUrl("");
+      toast.success("تم إيقاف رابط العرض العام.");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const createPublicLink = useMutation({
     mutationFn: async (memberId: string) => {
       const { data, error } = await (supabase as any).rpc("create_initiative_public_link", { p_initiative_member_id: memberId, p_expires_days: 30 });
@@ -428,8 +457,19 @@ function InitiativeTeamsPage() {
                       <h2 className="mt-1 text-2xl font-black">{selected.title}</h2>
                       {selected.slogan && <p className="mt-2 font-bold text-primary">{selected.slogan}</p>}
                     </div>
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{selected.latest_progress || 0}% إنجاز</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{selected.latest_progress || 0}% إنجاز</span>
+                      {selected.is_manager && <Button size="sm" variant="outline" onClick={() => createPublicView.mutate()}>رابط عرض عام</Button>}
+                      {selected.is_manager && publicViewUrl && <Button size="sm" variant="ghost" onClick={() => revokePublicView.mutate()}>إيقاف الرابط</Button>}
+                    </div>
                   </div>
+                  {selected.is_manager && publicViewUrl && (
+                    <div className="mt-3 rounded-2xl border bg-muted/10 p-3">
+                      <p className="text-[10px] font-black text-muted-foreground">رابط العرض العام للمبادرة — بدون تسجيل دخول</p>
+                      <p className="mt-1 break-all text-[11px]">{publicViewUrl}</p>
+                      <Button className="mt-2" size="sm" variant="outline" onClick={async()=>{await navigator.clipboard.writeText(publicViewUrl);toast.success("تم نسخ رابط العرض العام");}}><Copy className="size-3" /> نسخ الرابط</Button>
+                    </div>
+                  )}
                   {selected.idea && <p className="mt-4 text-sm leading-7 text-muted-foreground">{selected.idea}</p>}
                   {selected.general_goal && <div className="mt-4 rounded-2xl bg-muted/20 p-4"><p className="text-xs font-black">الهدف العام</p><p className="mt-2 text-sm leading-7">{selected.general_goal}</p></div>}
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
