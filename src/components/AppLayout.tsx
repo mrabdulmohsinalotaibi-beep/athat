@@ -57,9 +57,9 @@ function AlertLink({
 
 
 const bottomNavigation = [
-  { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-  { to: "/students", label: "السجلات", icon: Users, activeRoutes: ["/students", "/cases", "/interviews", "/referrals", "/attendance", "/behavior"] },
-  { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/outgoing-messages", "/inbox", "/school-inbox"] },
+  { to: "/dashboard" as const, label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+  { to: "/students" as const, label: "السجلات", icon: Users, activeRoutes: ["/students", "/cases", "/interviews", "/referrals", "/attendance", "/behavior"] },
+  { to: "/messages" as const, label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/outgoing-messages", "/inbox", "/school-inbox"] },
   { to: "/reports", label: "التقارير", icon: BarChart3, activeRoutes: ["/reports", "/free-documents"] },
 ] as const;
 
@@ -132,35 +132,35 @@ export function AppLayout({ children }: { children: ReactNode }) {
     return section;
   });
   const restrictedBottomNavigation = [
-    { to: "/dashboard", label: "اليوم", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-    { to: "/school-tasks", label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
+    { to: "/dashboard" as const, label: "اليوم", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+    { to: "/school-tasks" as const, label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
     { to: "/inbox", label: "الوارد", icon: FileText, activeRoutes: ["/inbox", "/school-inbox"] },
-    { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/school-team", "/settings", "/health"] },
+    { to: "/profile" as const, label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/school-team", "/settings", "/health"] },
   ] as const;
   const roleBottomNavigation =
     accessRole === "student"
       ? [
-          { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-          { to: "/students", label: "ملفي", icon: UserRound, activeRoutes: ["/students"] },
-          { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox"] },
-          { to: "/free-documents", label: "مستنداتي", icon: FileText, activeRoutes: ["/free-documents"] },
-          { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
+          { to: "/dashboard" as const, label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+          { to: "/students" as const, label: "ملفي", icon: UserRound, activeRoutes: ["/students"] },
+          { to: "/messages" as const, label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox"] },
+          { to: "/free-documents" as const, label: "مستنداتي", icon: FileText, activeRoutes: ["/free-documents"] },
+          { to: "/profile" as const, label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
         ]
       : accessRole === "parent"
         ? [
-            { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-            { to: "/students", label: "أبنائي", icon: Users, activeRoutes: ["/students"] },
-            { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox"] },
-            { to: "/free-documents", label: "المستندات", icon: FileText, activeRoutes: ["/free-documents"] },
-            { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
+            { to: "/dashboard" as const, label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+            { to: "/students" as const, label: "أبنائي", icon: Users, activeRoutes: ["/students"] },
+            { to: "/messages" as const, label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox"] },
+            { to: "/free-documents" as const, label: "المستندات", icon: FileText, activeRoutes: ["/free-documents"] },
+            { to: "/profile" as const, label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
           ]
         : accessRole === "teacher"
           ? [
-              { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-              { to: "/students", label: "طلابي", icon: Users, activeRoutes: ["/students"] },
-              { to: "/referrals", label: "الإحالات", icon: ClipboardList, activeRoutes: ["/referrals"] },
-              { to: "/school-tasks", label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
-              { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
+              { to: "/dashboard" as const, label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+              { to: "/students" as const, label: "طلابي", icon: Users, activeRoutes: ["/students"] },
+              { to: "/referrals" as const, label: "الإحالات", icon: ClipboardList, activeRoutes: ["/referrals"] },
+              { to: "/school-tasks" as const, label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
+              { to: "/profile" as const, label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
             ]
           : null;
 
