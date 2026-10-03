@@ -101,6 +101,9 @@ function SchoolTasksPage() {
   const [reportNote, setReportNote] = useState("");
   const [templateTargetId, setTemplateTargetId] = useState("");
   const [selectedTemplateKeys, setSelectedTemplateKeys] = useState<string[]>([]);
+  const [groupTemplateGroupId, setGroupTemplateGroupId] = useState("");
+  const [groupTemplateRole, setGroupTemplateRole] = useState("");
+  const [groupTemplateKeys, setGroupTemplateKeys] = useState<string[]>([]);
 
   const groupsQuery = useQuery({
     queryKey: ["school-permission-groups"],
@@ -230,6 +233,59 @@ function SchoolTasksPage() {
     onError: (error) => toast.error((error as Error).message),
   });
 
+  const activateGroupTemplates = useMutation({
+    mutationFn: async ({
+      groupId,
+      role,
+      templateKeys,
+    }: {
+      groupId: string;
+      role: string;
+      templateKeys: string[];
+    }) => {
+      if (!groupId) throw new Error("اختر المجموعة.");
+      if (!role) throw new Error("اختر الدور داخل المجموعة.");
+      const templates = templatesForRole(role).filter((template) => templateKeys.includes(template.key));
+      if (!templates.length) throw new Error("حدد قالب مهمة واحدًا على الأقل.");
+
+      const results = await Promise.all(
+        templates.map(async (template) => {
+          const { data, error } = await (supabase as any).rpc("activate_school_task_template_for_group", {
+            p_group_id: groupId,
+            p_target_role: role,
+            p_template_key: template.key,
+            p_title: template.title,
+            p_description: template.description,
+            p_category: template.category,
+            p_priority: template.priority,
+            p_cadence: template.cadence,
+            p_due_date: initialDueDateForCadence(template.cadence),
+          });
+          if (error) throw error;
+          return data as { created?: number; existing?: number; skipped?: number; group_name?: string };
+        }),
+      );
+
+      return results.reduce(
+        (acc, row) => ({
+          created: acc.created + Number(row?.created ?? 0),
+          existing: acc.existing + Number(row?.existing ?? 0),
+          skipped: acc.skipped + Number(row?.skipped ?? 0),
+          groupName: row?.group_name || acc.groupName,
+        }),
+        { created: 0, existing: 0, skipped: 0, groupName: "" },
+      );
+    },
+    onSuccess: async (result) => {
+      setGroupTemplateKeys([]);
+      await refresh();
+      toast.success(
+        `تم تفعيل القوالب لـ ${result.created} مهمة جديدة${result.existing ? `، و${result.existing} كانت مفعلة مسبقًا` : ""}${result.skipped ? `، وتم تجاوز ${result.skipped} عضو غير مؤهل` : ""}.`,
+      );
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
   const updateMyTask = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: "قيد التنفيذ" | "مكتملة" }) => {
       const { error } = await (supabase as any).rpc("update_my_school_task", {
@@ -343,6 +399,25 @@ function SchoolTasksPage() {
   const members = context?.members ?? [];
   const tasks = query.data?.tasks ?? [];
   const permissionGroups = groupsQuery.data ?? [];
+  const selectedTemplateGroup = permissionGroups.find((group) => group.id === groupTemplateGroupId) ?? null;
+  const selectedTemplateGroupMembers = selectedTemplateGroup
+    ? members.filter((member) => selectedTemplateGroup.member_ids?.includes(member.id) && member.member_status === "active")
+    : [];
+  const selectedTemplateGroupRoles = Array.from(new Set(selectedTemplateGroupMembers.map((member) => member.role)))
+    .filter((role) => templatesForRole(role).length > 0);
+  const groupRoleTemplates = templatesForRole(groupTemplateRole);
+  const groupRoleMemberCount = selectedTemplateGroupMembers.filter((member) => member.role === groupTemplateRole).length;
+  const groupActiveTemplateCounts = new Map(
+    groupRoleTemplates.map((template) => [
+      template.key,
+      tasks.filter(
+        (task) =>
+          task.template_key === template.key &&
+          !["معتمدة", "ملغاة"].includes(task.status) &&
+          selectedTemplateGroupMembers.some((member) => member.id === task.assignee_member_id),
+      ).length,
+    ]),
+  );
   const memberId = membership?.id ?? "";
   const memberMap = useMemo(() => new Map(members.map((member) => [member.id, member])), [members]);
 
@@ -586,6 +661,155 @@ function SchoolTasksPage() {
           هذه قوالب تشغيلية استرشادية قابلة للتعديل وليست بديلًا عن التكليف أو التعميم الرسمي الخاص بالمدرسة.
         </p>
       </section>
+
+      {permissionGroups.length > 0 && (
+        <section className="rounded-3xl border border-primary/15 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-primary">
+                <Sparkles className="size-4" />
+                <h2 className="font-black">تفعيل قوالب المهام للمجموعة</h2>
+              </div>
+              <p className="mt-1 max-w-3xl text-xs leading-6 text-muted-foreground">
+                اختر المجموعة ثم الدور داخلها، وفعّل مهامًا دورية لجميع أعضاء هذا الدور دفعة واحدة. يتابع كل عضو مهمته ويثبت إنجازه بشكل مستقل.
+              </p>
+            </div>
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black text-primary">
+              {groupRoleMemberCount} عضو مستهدف
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>المجموعة</Label>
+              <select
+                value={groupTemplateGroupId}
+                onChange={(e) => {
+                  setGroupTemplateGroupId(e.target.value);
+                  setGroupTemplateRole("");
+                  setGroupTemplateKeys([]);
+                }}
+                className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="">اختر المجموعة</option>
+                {permissionGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name} · {group.member_ids?.length ?? 0} عضو
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>الدور داخل المجموعة</Label>
+              <select
+                value={groupTemplateRole}
+                disabled={!groupTemplateGroupId}
+                onChange={(e) => {
+                  setGroupTemplateRole(e.target.value);
+                  setGroupTemplateKeys([]);
+                }}
+                className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="">اختر الدور</option>
+                {selectedTemplateGroupRoles.map((role) => (
+                  <option key={role} value={role}>
+                    {roleLabel(role)} · {selectedTemplateGroupMembers.filter((member) => member.role === role).length} عضو
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {groupTemplateRole ? (
+            groupRoleTemplates.length ? (
+              <>
+                <div className="mt-4 grid gap-2 xl:grid-cols-2 xl:grid-cols-3">
+                  {groupRoleTemplates.map((template) => {
+                    const checked = groupTemplateKeys.includes(template.key);
+                    const activeCount = groupActiveTemplateCounts.get(template.key) ?? 0;
+                    return (
+                      <label
+                        key={template.key}
+                        className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition ${
+                          checked ? "border-primary/40 bg-[#E4ECDF]/70" : "bg-card hover:border-primary/30"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-1 size-4"
+                          checked={checked}
+                          onChange={() =>
+                            setGroupTemplateKeys((current) =>
+                              checked ? current.filter((key) => key !== template.key) : [...current, template.key],
+                            )
+                          }
+                        />
+                        <span className="min-w-0">
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-black">{template.title}</span>
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-black">{template.cadence}</span>
+                            {activeCount > 0 && (
+                              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black text-emerald-700">
+                                مفعلة لدى {activeCount}
+                              </span>
+                            )}
+                          </span>
+                          <span className="mt-1 block text-[11px] leading-5 text-muted-foreground">{template.description}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setGroupTemplateKeys(groupRoleTemplates.map((template) => template.key))}
+                  >
+                    <ClipboardList className="size-4" /> تحديد الكل
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={!groupTemplateKeys.length}
+                    onClick={() => setGroupTemplateKeys([])}
+                  >
+                    إلغاء التحديد
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={!groupTemplateKeys.length || activateGroupTemplates.isPending}
+                    onClick={() =>
+                      activateGroupTemplates.mutate({
+                        groupId: groupTemplateGroupId,
+                        role: groupTemplateRole,
+                        templateKeys: groupTemplateKeys,
+                      })
+                    }
+                  >
+                    <Sparkles className="size-4" />
+                    {activateGroupTemplates.isPending
+                      ? "جارٍ التفعيل..."
+                      : `تفعيل المحدد للمجموعة (${groupTemplateKeys.length})`}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="mt-4 rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
+                لا توجد قوالب دورية لهذا الدور.
+              </div>
+            )
+          ) : groupTemplateGroupId ? (
+            <div className="mt-4 rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
+              اختر الدور داخل المجموعة لعرض قوالب المهام المناسبة له.
+            </div>
+          ) : null}
+
+          <p className="mt-3 text-[10px] leading-5 text-muted-foreground">
+            لن يكرر النظام قالبًا نشطًا لنفس العضو. وبعد اعتماد كل استحقاق متكرر ينشأ الاستحقاق التالي تلقائيًا لذلك العضو وحده.
+          </p>
+        </section>
+      )}
 
       <section className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
         <aside className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
