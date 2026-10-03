@@ -1418,10 +1418,22 @@ export function RecordPage({
                     ) : f.type === "select" ? (
                       <div className="flex gap-2">
                         <select
-                          key={current}
+                          key={`${f.name}-${current}-${String(auto["stage"] ?? editing?.["stage"] ?? "")}`}
                           id={f.name}
                           name={f.name}
-                          defaultValue={current}
+                          value={current}
+                          onChange={(event) =>
+                            setAuto((values) => {
+                              const next = { ...values, [f.name]: event.target.value };
+                              if (config.key === "students" && f.name === "stage") {
+                                next.grade = "";
+                                next.classroom = "";
+                              } else if (config.key === "students" && f.name === "grade") {
+                                next.classroom = "";
+                              }
+                              return next;
+                            })
+                          }
                           className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
                         >
                           <option value="">—</option>
