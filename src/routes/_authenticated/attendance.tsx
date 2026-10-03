@@ -524,6 +524,27 @@ function AttendancePage() {
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">رقم الطالب: {row.student_no || "غير مقروء"} · التاريخ: {row.adate || "غير مقروء"} · غياب</p>
                   <p className={`mt-1 text-[10px] font-bold ${row.matchedStudentId ? "text-emerald-700" : "text-amber-700"}`}>{row.matchedStudentId ? "✓ تمت المطابقة مع ملف الطالب في الذات" : "تحتاج مطابقة مع ملف طالب"}</p>
+                  {!row.matchedStudentId && (
+                    <div className="mt-2 rounded-xl border bg-muted/20 p-2">
+                      <input value={studentSearch[index] ?? ""} onChange={(e) => setStudentSearch((old) => ({ ...old, [index]: e.target.value }))} placeholder="ابحث باسم الطالب أو رقم الهوية/الطالب..." className="h-9 w-full rounded-lg border bg-background px-3 text-xs" />
+                      {(studentSearch[index] ?? "").trim().length >= 2 && (
+                        <div className="mt-2 max-h-44 space-y-1 overflow-y-auto">
+                          {schoolStudents.filter((student: any) => {
+                            const raw = studentSearch[index] ?? "";
+                            const q = normalizeStudentName(raw);
+                            const digits = normalizeDigits(raw).trim();
+                            return normalizeStudentName(String(student.full_name ?? "")).includes(q) ||
+                              (digits.length > 0 && [student.student_no, student.national_id].some((value) => normalizeDigits(String(value ?? "")).includes(digits)));
+                          }).slice(0, 8).map((student: any) => (
+                            <button type="button" key={student.id} onClick={() => matchStudentManually(index, student)} className="flex w-full items-center justify-between gap-2 rounded-lg border bg-background p-2 text-right">
+                              <span><strong className="block text-xs">{student.full_name}</strong><span className="text-[9px] text-muted-foreground">{[student.stage, student.grade, student.classroom].filter(Boolean).join(" · ")}</span></span>
+                              <span className="text-[9px] font-bold text-primary">اختيار</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {row.reviewReason && <p className="mt-1 text-[10px] font-semibold text-amber-700">{row.reviewReason}</p>}
                   <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{row.source}</p>
                 </div>
