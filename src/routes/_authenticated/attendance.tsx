@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, FileText, Loader2, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, Loader2, MessageSquare, Send, Upload } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { RecordPage } from "@/components/RecordPage";
@@ -148,6 +149,33 @@ function AttendancePage() {
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<ImportedAttendance[]>([]);
   const [importStatus, setImportStatus] = useState<OcrProgress | null>(null);
+
+  const { data: attendanceRows = [] } = useQuery({
+    queryKey: ["attendance-followup-summary"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("id,student_id,student_no,student_name,case_type,count_days,adate,action");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
+
+  const repeatedAbsence = useMemo(() => {
+    const grouped = new Map<string, { student_id?: string | null; student_no: string; student_name: string; count: number; lastDate: string }>();
+    attendanceRows.forEach((row: any) => {
+      if (!["غياب", "تأخر", "هروب"].includes(String(row.case_type ?? ""))) return;
+      const key = String(row.student_id || row.student_no || row.student_name || "").trim();
+      if (!key) return;
+      const current = grouped.get(key) ?? { student_id: row.student_id, student_no: String(row.student_no ?? ""), student_name: String(row.student_name ?? "طالب غير محدد"), count: 0, lastDate: "" };
+      current.count += Math.max(1, Number(row.count_days) || 1);
+      const date = String(row.adate ?? "").slice(0, 10);
+      if (date > current.lastDate) current.lastDate = date;
+      grouped.set(key, current);
+    });
+    return Array.from(grouped.values()).filter((item) => item.count >= 3).sort((a, b) => b.count - a.count);
+  }, [attendanceRows]);
 
   const pickPdf = (file?: File) => {
     if (!file) return;
@@ -355,6 +383,37 @@ function AttendancePage() {
                   <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{row.source}</p>
                 </div>
               </label>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {repeatedAbsence.length > 0 && (
+        <section className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4">
+          <div className="mb-3 flex items-center gap-2 text-amber-950">
+            <AlertTriangle className="size-4" />
+            <div>
+              <h2 className="text-sm font-black">مواظبة تحتاج متابعة</h2>
+              <p className="text-xs text-amber-800">طلاب لديهم 3 حالات غياب/تأخر/هروب أو أكثر في السجل الحالي.</p>
+            </div>
+          </div>
+          <div className="grid gap-2 xl:grid-cols-2">
+            {repeatedAbsence.slice(0, 8).map((item) => (
+              <div key={item.student_id || item.student_no || item.student_name} className="rounded-xl border border-amber-200 bg-white p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="text-sm">{item.student_name}</strong>
+                  <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black text-amber-900">{item.count} حالات</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">آخر رصد: {item.lastDate || "—"}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a href={`/interviews?new=student&studentId=${encodeURIComponent(String(item.student_id ?? ""))}&studentNo=${encodeURIComponent(item.student_no)}&studentName=${encodeURIComponent(item.student_name)}`} className="rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-black text-primary-foreground">
+                    <MessageSquare className="ml-1 inline size-3" /> تسجيل متابعة
+                  </a>
+                  <a href={`/referrals?new=student&studentId=${encodeURIComponent(String(item.student_id ?? ""))}&studentNo=${encodeURIComponent(item.student_no)}&studentName=${encodeURIComponent(item.student_name)}`} className="rounded-lg border px-2.5 py-1.5 text-[11px] font-black text-primary">
+                    <Send className="ml-1 inline size-3" /> إنشاء إحالة
+                  </a>
+                </div>
+              </div>
             ))}
           </div>
         </section>
