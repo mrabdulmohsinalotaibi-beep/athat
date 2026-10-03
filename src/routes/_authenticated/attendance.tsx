@@ -394,9 +394,11 @@ function AttendancePage() {
 
       const studentByNumber = new Map<string, string>();
       const studentByName = new Map<string, string>();
+      const studentById = new Map<string, any>();
       const ambiguousNames = new Set<string>();
       (importStudents ?? []).forEach((student: any) => {
         const id = String(student.id ?? "");
+        if (id) studentById.set(id, student);
         [student.student_no, student.national_id].forEach((value) => {
           const key = normalizeDigits(String(value ?? "")).trim();
           if (key && id) studentByNumber.set(key, id);
@@ -431,7 +433,12 @@ function AttendancePage() {
         if (!row.adate) reasons.push("التاريخ غير مقروء");
         if (!row.student_name || row.student_name === "طالب من كشف إتقان") reasons.push("اسم الطالب يحتاج مراجعة");
         const matchedStudentId = resolveStudentId(row);
-        const fallbackStudentKey = normalizeStudentName(row.student_name) || normalizeDigits(row.student_no).trim();
+        const matchedStudent = matchedStudentId ? studentById.get(matchedStudentId) : null;
+        const canonicalName = matchedStudent?.full_name ? String(matchedStudent.full_name) : row.student_name;
+        const canonicalNumber = matchedStudent?.student_no || matchedStudent?.national_id
+          ? String(matchedStudent.student_no || matchedStudent.national_id)
+          : row.student_no;
+        const fallbackStudentKey = normalizeStudentName(canonicalName) || normalizeDigits(canonicalNumber).trim();
         const studentKey = matchedStudentId || fallbackStudentKey;
         if (!matchedStudentId) reasons.push("لم تتم مطابقة الطالب تلقائيًا مع سجل الطلاب");
         const key = `${studentKey}|${row.adate.slice(0, 10)}`;
@@ -441,7 +448,9 @@ function AttendancePage() {
         if (studentKey && row.adate) seenImportKeys.add(key);
         return {
           ...row,
-          selected: !duplicate && reasons.length === 0,
+          student_name: canonicalName,
+          student_no: canonicalNumber,
+          selected: Boolean(matchedStudentId) && !duplicate && reasons.length === 0,
           reviewStatus: duplicate ? "مكرر" as const : reasons.length ? "يحتاج مراجعة" as const : "جديد" as const,
           matchedStudentId,
           reviewReason: duplicate
@@ -586,7 +595,7 @@ function AttendancePage() {
                     </div>
                   )}
                   {row.reviewReason && <p className="mt-1 text-[10px] font-semibold text-amber-700">{row.reviewReason}</p>}
-                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{row.source}</p>
+                  {!row.matchedStudentId && <p className="mt-1 text-[10px] text-muted-foreground">لن يتم اعتماد هذا السجل حتى تتم مطابقته مع طالب من قاعدة بيانات الذات.</p>}
                 </div>
               </label>
             ))}
