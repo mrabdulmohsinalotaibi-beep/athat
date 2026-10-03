@@ -227,11 +227,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
         ? (context?.members ?? []).filter((member: any) => member.member_status === "pending").length
         : 0;
 
-      const [cases, tasks, schoolTasks, handoffs] = await Promise.all([
+      const guidanceAlertsAllowed = !context?.membership || isGuidanceWorkspaceMember(context.membership);
+      const [cases, tasks, schoolTasks, handoffs, publicRequests, feedback] = await Promise.all([
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
         (supabase as any).from("school_tasks").select("id,status,due_date,creator_member_id,assignee_member_id"),
         (supabase as any).from("school_report_handoffs").select("id,status,recipient_member_id,sender_member_id"),
+        guidanceAlertsAllowed
+          ? supabase.from("public_requests").select("id,status,kind")
+          : Promise.resolve({ data: [], error: null }),
+        guidanceAlertsAllowed
+          ? supabase.from("feedback_messages").select("id,status,category").in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"])
+          : Promise.resolve({ data: [], error: null }),
       ]);
 
       // Alerts are supplementary UI. A missing/temporarily unavailable table
@@ -240,6 +247,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       if (tasks.error) console.warn("[alerts] plan_tasks:", tasks.error.message);
       if (schoolTasks.error) console.warn("[alerts] school_tasks:", schoolTasks.error.message);
       if (handoffs.error) console.warn("[alerts] school_report_handoffs:", handoffs.error.message);
+      if (publicRequests.error) console.warn("[alerts] public_requests:", publicRequests.error.message);
+      if (feedback.error) console.warn("[alerts] feedback_messages:", feedback.error.message);
 
       const dueCases = (cases.error ? [] : cases.data ?? []).filter(
         (item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day,
@@ -268,8 +277,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
           (item.sender_member_id === memberId && item.status === "returned"),
       ).length;
 
-      const total = dueCases + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers;
-      return { total, dueCases, attentionPlan, dueSchoolTasks, approvals, unreadReports, pendingMembers };
+      const inboundRequests = (publicRequests.error ? [] : publicRequests.data ?? []).filter(
+        (item: any) => !["مغلق"].includes(String(item.status ?? "")),
+      ).length;
+      const inboundFeedback = (feedback.error ? [] : feedback.data ?? []).filter(
+        (item: any) => !["تم الرد", "محفوظ"].includes(String(item.status ?? "")),
+      ).length;
+      const guidanceInbox = inboundRequests + inboundFeedback;
+
+      const total = dueCases + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers + guidanceInbox;
+      return { total, dueCases, attentionPlan, dueSchoolTasks, approvals, unreadReports, pendingMembers, guidanceInbox };
     },
     staleTime: 30_000,
     refetchInterval: 60_000,
@@ -555,6 +572,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         {(alertSummary?.attentionPlan ?? 0) > 0 && <AlertLink to="/plan" label="مهام خطة تحتاج إجراء" count={alertSummary?.attentionPlan ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.dueSchoolTasks ?? 0) > 0 && <AlertLink to="/school-tasks" label="مهام مدرسية مسندة لك" count={alertSummary?.dueSchoolTasks ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.approvals ?? 0) > 0 && <AlertLink to="/school-tasks" label="إنجازات تنتظر اعتمادك" count={alertSummary?.approvals ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.guidanceInbox ?? 0) > 0 && <AlertLink to="/inbox" label="وارد جديد للتوجيه الطلابي" count={alertSummary?.guidanceInbox ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.unreadReports ?? 0) > 0 && <AlertLink to="/school-inbox" label="تقارير إدارية غير مقروءة" count={alertSummary?.unreadReports ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.pendingMembers ?? 0) > 0 && <AlertLink to="/school-team" label="طلبات انضمام للفريق" count={alertSummary?.pendingMembers ?? 0} close={() => setAlertsOpen(false)} />}
                       </div>
