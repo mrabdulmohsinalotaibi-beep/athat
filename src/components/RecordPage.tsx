@@ -129,7 +129,7 @@ export function RecordPage({
       ];
     }
     return [];
-  }, [config.key]);
+  }, [config.key, readOnly]);
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [auto, setAuto] = useState<Record<string, string>>({});
   const [smartFilling, setSmartFilling] = useState(false);
@@ -278,8 +278,7 @@ export function RecordPage({
 
       if (serverPagination) {
         let query = (supabase.from(config.table as never) as any)
-          .select("*", { count: "exact" })
-          .eq("user_id", authData.user.id);
+          .select("*", { count: "exact" });
 
         Object.entries(serverFilters).forEach(([key, value]) => {
           if (!value) return;
@@ -321,7 +320,6 @@ export function RecordPage({
       const { data, error } = await supabase
         .from(config.table as never)
         .select("*")
-        .eq("user_id", authData.user.id)
         .order("created_at", { ascending: false })
         .limit(1000);
 
@@ -683,8 +681,7 @@ export function RecordPage({
                 if (!authData.user) throw new Error("انتهت جلسة الدخول.");
 
                 let query = (supabase.from(config.table as never) as any)
-                  .select("*")
-                  .eq("user_id", authData.user.id);
+                  .select("*");
                 Object.entries(serverFilters).forEach(([key, value]) => {
                   if (value) query = query.eq(key, value);
                 });
