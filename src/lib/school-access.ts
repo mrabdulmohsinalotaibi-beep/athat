@@ -32,7 +32,7 @@ export function isRestrictedSchoolRole(membership: SchoolMembershipAccess) {
 
 const PATH_PERMISSIONS: Array<{ routes: string[]; permission: PermissionKey }> = [
   { routes: ["/school-team"], permission: "team.view" },
-  { routes: ["/school-tasks"], permission: "tasks.view" },
+  { routes: ["/school-tasks", "/initiative-teams", "/initiative-member-work", "/initiative-member-review", "/initiative-dashboard"], permission: "tasks.view" },
   { routes: ["/reports"], permission: "reports.view" },
   { routes: ["/free-documents"], permission: "documents.view" },
   { routes: ["/messages", "/outgoing-messages", "/inbox", "/school-inbox"], permission: "messages.view" },
