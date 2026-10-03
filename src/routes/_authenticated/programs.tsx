@@ -76,6 +76,7 @@ type Attachment = {
   file_name?: string | null;
   file_path: string;
   mime_type?: string | null;
+  signed_url?: string;
 };
 
 const PROGRAM_TYPES = [
@@ -335,12 +336,20 @@ function EvidenceGrid({ attachments }: { attachments: Attachment[] }) {
     <div className="grid gap-2 xl:grid-cols-2">
       {attachments.map((attachment) => (
         <div key={attachment.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
-          {attachment.mime_type?.startsWith("image/") ? (
+          {attachment.mime_type?.startsWith("image/") && attachment.signed_url ? (
+            <img
+              src={attachment.signed_url}
+              alt={attachment.name || attachment.file_name || "شاهد"}
+              className="max-h-[90mm] w-full object-contain"
+            />
+          ) : attachment.mime_type?.startsWith("image/") ? (
             <ImageIcon className="size-4 shrink-0" />
           ) : (
             <FileText className="size-4 shrink-0" />
           )}
-          <span className="truncate">{attachment.name || attachment.file_name || "مرفق"}</span>
+          <span className={attachment.mime_type?.startsWith("image/") ? "sr-only" : "truncate"}>
+            {attachment.name || attachment.file_name || "مرفق"}
+          </span>
         </div>
       ))}
     </div>
@@ -551,7 +560,16 @@ function ProgramsPage() {
       .or(`linked_ref.eq.${recordId}${recordTitle ? `,linked_ref.eq.${recordTitle.replace(/,/g, " ")}` : ""}`)
       .order("created_at", { ascending: true });
     if (error) throw error;
-    setUploadedAttachments((data ?? []) as Attachment[]);
+    const rows = (data ?? []) as Attachment[];
+    const paths = rows.map((item) => item.file_path).filter(Boolean);
+    const signed = paths.length
+      ? await supabase.storage.from("evidences").createSignedUrls(paths, 3600)
+      : { data: [], error: null };
+    if (signed.error) throw signed.error;
+    setUploadedAttachments(rows.map((item, index) => ({
+      ...item,
+      signed_url: signed.data?.[index]?.signedUrl ?? "",
+    })));
   }
 
   async function uploadFiles(recordId: string, recordTitle: string) {
