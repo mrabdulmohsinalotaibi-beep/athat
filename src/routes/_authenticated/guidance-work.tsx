@@ -8,10 +8,10 @@ export const Route=createFileRoute("/_authenticated/guidance-work")({component:G
 
 const moduleInfo:Record<string,[string,string]>={
  plan:["الخطة والبرامج","/plan"],programs:["البرامج التوجيهية","/programs"],cases:["الحالات الطلابية","/cases"],interviews:["المقابلات","/interviews"],
- consultations:["الاستشارات","/school-inbox"],attendance:["المواظبة والغياب","/attendance"],behavior:["السلوك","/behavior"],referrals:["إحالات الطلاب","/referrals"],
+ consultations:["الاستشارات","/school-inbox"],attendance:["المواظبة والغياب","/attendance"],behavior:["السلوك","/behavior"],referrals:["إحالات الطلاب","/guidance-requests"],
  family:["التواصل مع الأسرة","/outgoing-messages"],initiatives:["المبادرات","/initiative-teams"],evidence:["الشواهد","/evidences"],reports:["التقارير","/reports"],
  approvals:["الاعتمادات","/guidance-work"],oversight:["الإشراف على التوجيه","/reports"],academic:["المتابعة التحصيلية","/reports"],remedial:["الخطط العلاجية","/reports"],
- teacher_referrals:["إحالات المعلمين","/referrals"],observations:["ملاحظات الطلاب","/referrals"],consultation_request:["طلب استشارة","/school-inbox"],assigned_tasks:["المهام المسندة","/school-tasks"],
+ teacher_referrals:["إحالات المعلمين","/guidance-requests"],observations:["ملاحظات الطلاب","/guidance-requests"],consultation_request:["طلب استشارة","/guidance-requests"],assigned_tasks:["المهام المسندة","/school-tasks"],
  activities:["الأنشطة","/programs"],participants:["المشاركون","/initiative-teams"],health_referrals:["الإحالات الصحية","/health"],prevention:["البرامج الوقائية","/health"],
  health_programs:["التوجيه الصحي","/health"],students:["بيانات الطلاب","/students"],operational_records:["السجلات التشغيلية","/school-tasks"]
 };
