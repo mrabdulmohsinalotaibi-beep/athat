@@ -8,6 +8,7 @@ import {
   Loader2,
   Plus,
   Sparkles,
+  Send,
   Trash2
 } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
+import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
 import { HijriDatePicker } from "@/components/HijriDatePicker";
 
 
@@ -396,6 +398,7 @@ function ProgramsPage() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [programFilter, setProgramFilter] = useState<"all" | "program" | "activity">("all");
   const programPrintRef = useRef<HTMLDivElement>(null);
+  const [signatureProgram, setSignatureProgram] = useState<ProgramDraft | null>(null);
 
 
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -982,12 +985,17 @@ function ProgramsPage() {
             <div className="mx-auto w-full max-w-[210mm] space-y-3">
               {editing && (
                 <>
-                  <div className="flex justify-end" data-pdf-exclude="true">
+                  <div className="flex flex-wrap justify-end gap-2" data-pdf-exclude="true">
                     <PdfPreviewButton
                       elementRef={programPrintRef}
                       filename={`برنامج-${value(editing.name) || "إرشادي"}`}
                       title={value(editing.name) || "تقرير برنامج إرشادي"}
                     />
+                    {editing.id && (
+                      <Button type="button" variant="outline" onClick={() => setSignatureProgram(editing)}>
+                        <Send className="size-4" /> إرسال للاعتماد والتوقيع
+                      </Button>
+                    )}
                   </div>
                   <div ref={programPrintRef} className="record-pdf-document rounded-xl border bg-paper p-5 text-paper-foreground shadow-sm">
                     <OfficialHeader
@@ -1153,6 +1161,33 @@ function ProgramsPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {signatureProgram?.id && (
+        <SendForSignatureDialog
+          open={Boolean(signatureProgram?.id)}
+          onOpenChange={(open) => !open && setSignatureProgram(null)}
+          recordTable="programs"
+          recordId={signatureProgram.id}
+          recordType="برنامج توجيهي"
+          title={value(signatureProgram.name) || "برنامج توجيهي"}
+          snapshot={{
+            "رقم البرنامج": signatureProgram.program_no ?? null,
+            "اسم البرنامج": signatureProgram.name ?? null,
+            "النوع": signatureProgram.ptype ?? null,
+            "المجال": signatureProgram.domain ?? null,
+            "الفئة المستهدفة": signatureProgram.target_group ?? null,
+            "الفصل الدراسي": signatureProgram.term ?? null,
+            "الهدف": signatureProgram.goal ?? null,
+            "المؤشر": signatureProgram.indicator ?? null,
+            "تاريخ البداية": signatureProgram.start_date ?? null,
+            "تاريخ النهاية": signatureProgram.end_date ?? null,
+            "حالة التنفيذ": signatureProgram.exec_status ?? null,
+            "عدد المستفيدين": signatureProgram.beneficiaries ?? null,
+            "الشواهد المطلوبة": signatureProgram.required_evidence ?? null,
+            "ملاحظات": signatureProgram.notes ?? null,
+            "الشواهد المرفوعة": uploadedAttachments.map((item) => item.name || item.file_name || "مرفق"),
+          }}
+        />
+      )}
     </div>
   );
 }
