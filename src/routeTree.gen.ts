@@ -32,6 +32,7 @@ import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedInterviewsRouteImport } from './routes/_authenticated/interviews'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
+import { Route as AuthenticatedOutgoingMessagesRouteImport } from './routes/_authenticated/outgoing-messages'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPostsRouteImport } from './routes/_authenticated/posts'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -178,6 +179,12 @@ const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_authenticated/messages.lazy').then((d) => d.Route),
 )
+const AuthenticatedOutgoingMessagesRoute =
+  AuthenticatedOutgoingMessagesRouteImport.update({
+    id: '/outgoing-messages',
+    path: '/outgoing-messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -342,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
+  '/outgoing-messages': typeof AuthenticatedOutgoingMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/posts': typeof AuthenticatedPostsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -393,6 +401,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof AuthenticatedIntegrationsRoute
   '/interviews': typeof AuthenticatedInterviewsRoute
   '/messages': typeof AuthenticatedMessagesRoute
+  '/outgoing-messages': typeof AuthenticatedOutgoingMessagesRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/posts': typeof AuthenticatedPostsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -446,6 +455,7 @@ export interface FileRoutesById {
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRoute
   '/_authenticated/interviews': typeof AuthenticatedInterviewsRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
+  '/_authenticated/outgoing-messages': typeof AuthenticatedOutgoingMessagesRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/posts': typeof AuthenticatedPostsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/interviews'
     | '/messages'
+    | '/outgoing-messages'
     | '/plan'
     | '/posts'
     | '/profile'
@@ -550,6 +561,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/interviews'
     | '/messages'
+    | '/outgoing-messages'
     | '/plan'
     | '/posts'
     | '/profile'
@@ -602,6 +614,7 @@ export interface FileRouteTypes {
     | '/_authenticated/integrations'
     | '/_authenticated/interviews'
     | '/_authenticated/messages'
+    | '/_authenticated/outgoing-messages'
     | '/_authenticated/plan'
     | '/_authenticated/posts'
     | '/_authenticated/profile'
@@ -815,6 +828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMessagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/outgoing-messages': {
+      id: '/_authenticated/outgoing-messages'
+      path: '/outgoing-messages'
+      fullPath: '/outgoing-messages'
+      preLoaderRoute: typeof AuthenticatedOutgoingMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/plan': {
       id: '/_authenticated/plan'
       path: '/plan'
@@ -1022,6 +1042,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRoute
   AuthenticatedInterviewsRoute: typeof AuthenticatedInterviewsRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
+  AuthenticatedOutgoingMessagesRoute: typeof AuthenticatedOutgoingMessagesRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPostsRoute: typeof AuthenticatedPostsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -1057,6 +1078,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRoute,
   AuthenticatedInterviewsRoute: AuthenticatedInterviewsRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
+  AuthenticatedOutgoingMessagesRoute: AuthenticatedOutgoingMessagesRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPostsRoute: AuthenticatedPostsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
