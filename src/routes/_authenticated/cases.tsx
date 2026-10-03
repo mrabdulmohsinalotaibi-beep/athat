@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecordPage } from "@/components/RecordPage";
 import { recordByKey } from "@/lib/records";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +63,7 @@ const workflow = [
 ];
 
 function SpecialCasesPage() {
+  const queryClient = useQueryClient();
   const {
     data: cases = [],
     isError: followupError,
@@ -82,6 +84,32 @@ function SpecialCasesPage() {
   const overdue = active.filter((row) => row.followup_at && String(row.followup_at).slice(0, 10) <= today);
   const urgent = active.filter((row) => ["عالية", "عاجلة", "عاجل", "مرتفعة"].includes(String(row.priority ?? "")));
   const withNextAction = active.filter((row) => String(row.next_action ?? "").trim());
+
+  async function closeCase(row: (typeof cases)[number]) {
+    const studentName = String(row.student_name ?? "الطالب");
+    if (typeof window !== "undefined" && !window.confirm(`هل تريد إغلاق حالة ${studentName}؟ سيُسجل تاريخ الإغلاق اليوم ويمكن إعادة فتحها لاحقًا من السجل.`)) return;
+    const { error } = await supabase
+      .from("counseling_cases")
+      .update({
+        case_status: "مغلقة",
+        closed_at: today,
+        last_followup: today,
+        followup_at: null,
+        next_action: null,
+      })
+      .eq("id", row.id);
+    if (error) {
+      toast.error(`تعذر إغلاق الحالة: ${error.message}`);
+      return;
+    }
+    await Promise.all([
+      refetchFollowup(),
+      queryClient.invalidateQueries({ queryKey: ["case-center"] }),
+      queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
+      queryClient.invalidateQueries({ queryKey: ["counseling_cases"] }),
+    ]);
+    toast.success("تم إغلاق الحالة وتوثيق تاريخ الإغلاق.");
+  }
 
   return (
     <div className="reference-screen space-y-4">
@@ -163,6 +191,13 @@ function SpecialCasesPage() {
                   >
                     إنشاء إحالة
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => void closeCase(row)}
+                    className="rounded-lg border border-emerald-600/30 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-black text-emerald-800"
+                  >
+                    إغلاق الحالة
+                  </button>
                 </div>
               </div>
             ))}
