@@ -507,6 +507,8 @@ function InitiativeTeamsPage() {
         </section>
       )}
 
+      {!hasManagedInitiative && !query.isLoading && (query.data ?? []).length > 0 && <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{(query.data ?? []).map((item) => <article key={item.id} className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><h2 className="truncate text-lg font-black">{item.title}</h2>{item.slogan && <p className="mt-1 text-xs font-bold text-primary">{item.slogan}</p>}</div><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">{item.latest_progress || 0}%</span></div><p className="mt-3 line-clamp-2 text-xs leading-6 text-muted-foreground">{item.idea || "مبادرة مدرسية"}</p><Button className="mt-4 w-full" onClick={() => { window.location.href = `/initiative-detail?initiative=${encodeURIComponent(item.id)}`; }}>فتح صفحة المبادرة</Button></article>)}</section>}
+
       {query.isLoading ? (
         <div className="rounded-3xl border p-8 text-center text-sm text-muted-foreground">جارٍ تحميل المبادرات...</div>
       ) : (query.data ?? []).length === 0 ? (
@@ -516,7 +518,7 @@ function InitiativeTeamsPage() {
           <section className="rounded-3xl border bg-card p-4">
             <div className="flex flex-wrap gap-2">
               {(query.data ?? []).map((item) => (
-                <Button key={item.id} variant={selected?.id === item.id ? "default" : "outline"} size="sm" onClick={() => setSelectedId(item.id)}>
+                <Button key={item.id} variant="outline" size="sm" onClick={() => { window.location.href = `/initiative-detail?initiative=${encodeURIComponent(item.id)}`; }}>
                   {item.title}
                 </Button>
               ))}
