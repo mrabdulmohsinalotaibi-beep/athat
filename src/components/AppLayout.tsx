@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   MessageSquareText,
+  Plus,
   Palette,
   BarChart3,
   Users,
@@ -57,10 +58,9 @@ function AlertLink({
 
 const bottomNavigation = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
-  { to: "/programs", label: "البرامج", icon: ClipboardList, activeRoutes: ["/programs", "/plan", "/execution", "/evidences"] },
-  { to: "/cases", label: "الحالات", icon: Users, activeRoutes: ["/cases", "/interviews", "/referrals", "/attendance", "/behavior", "/students"] },
+  { to: "/students", label: "السجلات", icon: Users, activeRoutes: ["/students", "/cases", "/interviews", "/referrals", "/attendance", "/behavior"] },
+  { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/outgoing-messages", "/inbox", "/school-inbox"] },
   { to: "/reports", label: "التقارير", icon: BarChart3, activeRoutes: ["/reports", "/free-documents"] },
-  { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/messages", "/outgoing-messages", "/inbox", "/school-inbox", "/posts", "/committees", "/settings", "/integrations", "/school-team", "/school-tasks"] },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -239,7 +239,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       >
         <div className="border-b border-sidebar-border/70 px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#D9C0A3]/35 bg-[#FFFDF9] shadow-sm">
+            <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
               <BrandLogo className="size-full" />
             </div>
             <div>
@@ -392,7 +392,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Menu className="size-5" />
               </Button>
 
-              <Link to="/dashboard" aria-label="الرئيسية" className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-2xl border border-[#D9C0A3]/30 bg-[#FFFDF9] xl:hidden">
+              <Link to="/dashboard" aria-label="الرئيسية" className="athat-topbar-logo relative shrink-0 overflow-hidden rounded-xl border border-border bg-background xl:hidden">
                 <BrandLogo className="size-10" />
               </Link>
 
@@ -493,7 +493,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       aria-current={isActive ? "page" : undefined}
                       className={cn(
                         "flex min-h-10 shrink-0 items-center gap-1.5 rounded-2xl border px-3.5 py-2 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                        isActive ? "border-[#89AA74]/40 bg-[#E4ECDF] text-[#264938]" : "border-[#D9C0A3]/45 bg-[#FFFDF9] text-muted-foreground hover:bg-[#F2E9DF]",
+                        isActive ? "border-primary/30 bg-secondary text-primary" : "border-border bg-card text-muted-foreground hover:bg-muted",
                       )}
                     >
                       <ItemIcon className="size-3.5" aria-hidden="true" />
@@ -508,13 +508,24 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </main>
 
         <nav
-          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center border border-[#D9C0A3]/35 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl xl:hidden"
+          className="athat-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl xl:hidden"
           aria-label="التنقل الرئيسي"
         >
-          {visibleBottomNavigation.slice(0, 5).map((item) => {
+          {visibleBottomNavigation.slice(0, 5).map((item, index) => {
             const Icon = item.icon;
             const isActive = item.activeRoutes.some((route) => isPathActive(pathname, route));
-            return (
+            return [
+              index === 2 && (
+                <div key="new" className="flex min-w-0 items-center justify-center">
+                  {guidanceNavigationAllowed ? (
+                    <QuickActionLauncher guidanceAllowed mobile className="w-full" />
+                  ) : (
+                    <Button asChild variant="ghost" className="flex h-auto min-h-[4.15rem] w-full flex-col gap-1 p-0 text-[10px] text-primary">
+                      <Link to="/school-tasks"><Plus className="size-5" />جديد</Link>
+                    </Button>
+                  )}
+                </div>
+              ),
               <Link
                 key={item.to}
                 to={item.to}
@@ -524,12 +535,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <span className={cn("grid size-8 place-items-center rounded-xl transition", isActive && "bg-[#E4ECDF] text-[#264938]")}>
+                <span className={cn("grid size-8 place-items-center rounded-xl transition", isActive && "bg-secondary text-primary")}>
                   <Icon className="size-4.5" aria-hidden="true" />
                 </span>
                 <span className="truncate">{item.label}</span>
               </Link>
-            );
+            ];
           })}
         </nav>
 
