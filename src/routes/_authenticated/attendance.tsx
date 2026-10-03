@@ -475,8 +475,8 @@ function AttendancePage() {
   };
 
   const saveRows = async () => {
-    const selected = rows.filter((r) => r.selected);
-    if (!selected.length) { toast.error("حدد سجلًا واحدًا على الأقل."); return; }
+    const selected = rows.filter((r) => r.selected && r.matchedStudentId && r.reviewStatus === "جديد");
+    if (!selected.length) { toast.error("لا توجد سجلات جديدة ومطابقة جاهزة للاعتماد."); return; }
     setBusy(true);
     try {
       const { data: auth, error: authError } = await supabase.auth.getUser();
@@ -559,11 +559,11 @@ function AttendancePage() {
 
       {rows.length > 0 && (
         <section className="rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)]">
-          <div className="mb-3 flex items-center justify-between gap-3"><div><h2 className="font-black">معاينة السجلات المستخرجة</h2><p className="text-xs text-muted-foreground">ألغِ تحديد أي سجل غير صحيح قبل الحفظ.</p></div><Button onClick={saveRows} disabled={busy}><CheckCircle2 className="size-4" />اعتماد المحدد ({rows.filter((r) => r.selected).length})</Button></div>
+          <div className="mb-3 flex items-center justify-between gap-3"><div><h2 className="font-black">معاينة السجلات المستخرجة</h2><p className="text-xs text-muted-foreground">ألغِ تحديد أي سجل غير صحيح قبل الحفظ.</p></div><Button onClick={saveRows} disabled={busy}><CheckCircle2 className="size-4" />اعتماد المحدد ({rows.filter((r) => r.selected && r.matchedStudentId && r.reviewStatus === "جديد").length})</Button></div>
           <div className="grid gap-2">
             {rows.map((row, index) => (
               <label key={index} className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border p-3 text-sm">
-                <input type="checkbox" checked={row.selected} onChange={(e) => setRows((old) => old.map((r, i) => i === index ? { ...r, selected: e.target.checked } : r))} />
+                <input type="checkbox" checked={row.selected} disabled={!row.matchedStudentId || row.reviewStatus !== "جديد"} onChange={(e) => setRows((old) => old.map((r, i) => i === index ? { ...r, selected: e.target.checked } : r))} />
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-black">{row.student_name}</p>
