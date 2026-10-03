@@ -18,6 +18,8 @@ type ImportedAttendance = {
   action: string;
   selected: boolean;
   source: string;
+  reviewStatus?: "جديد" | "مكرر" | "يحتاج مراجعة";
+  reviewReason?: string;
 };
 
 export const Route = createFileRoute("/_authenticated/attendance")({
@@ -244,10 +246,36 @@ function AttendancePage() {
         );
       }
 
-      setRows(parsed);
+      const { data: existingAttendance } = await supabase
+        .from("attendance")
+        .select("student_no,student_name,adate");
+      const existingKeys = new Set(
+        (existingAttendance ?? []).map((item: any) =>
+          `${String(item.student_no ?? "").trim()}|${String(item.adate ?? "").slice(0, 10)}`,
+        ),
+      );
+      const classified = parsed.map((row) => {
+        const reasons: string[] = [];
+        if (!row.student_no) reasons.push("رقم الطالب غير مقروء");
+        if (!row.adate) reasons.push("التاريخ غير مقروء");
+        if (!row.student_name || row.student_name === "طالب من كشف إتقان") reasons.push("اسم الطالب يحتاج مراجعة");
+        const key = `${row.student_no.trim()}|${row.adate.slice(0, 10)}`;
+        const duplicate = Boolean(row.student_no && row.adate && existingKeys.has(key));
+        return {
+          ...row,
+          selected: !duplicate && reasons.length === 0,
+          reviewStatus: duplicate ? "مكرر" as const : reasons.length ? "يحتاج مراجعة" as const : "جديد" as const,
+          reviewReason: duplicate ? "السجل محفوظ مسبقًا لنفس الطالب والتاريخ" : reasons.join("، "),
+        };
+      });
+
+      setRows(classified);
       setImportStatus(null);
+      const freshCount = classified.filter((row) => row.reviewStatus === "جديد").length;
+      const duplicateCount = classified.filter((row) => row.reviewStatus === "مكرر").length;
+      const reviewCount = classified.filter((row) => row.reviewStatus === "يحتاج مراجعة").length;
       toast.success(
-        `تمت قراءة ${parsed.length} سجل${usedOcr ? " باستخدام OCR والذكاء الاصطناعي" : ""}. راجعها قبل الاعتماد.`,
+        `تمت قراءة ${classified.length} سجل: ${freshCount} جديد، ${duplicateCount} مكرر، ${reviewCount} يحتاج مراجعة.`,
       );
     } catch (error) {
       toast.error(error instanceof Error ? `تعذر قراءة PDF: ${error.message}` : "تعذر قراءة ملف PDF.");
@@ -315,7 +343,17 @@ function AttendancePage() {
             {rows.map((row, index) => (
               <label key={index} className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border p-3 text-sm">
                 <input type="checkbox" checked={row.selected} onChange={(e) => setRows((old) => old.map((r, i) => i === index ? { ...r, selected: e.target.checked } : r))} />
-                <div><p className="font-black">{row.student_name}</p><p className="mt-1 text-xs text-muted-foreground">رقم الطالب: {row.student_no || "غير مقروء"} · التاريخ: {row.adate || "غير مقروء"} · غياب</p><p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{row.source}</p></div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-black">{row.student_name}</p>
+                    {row.reviewStatus && (
+                      <span className="rounded-full border px-2 py-0.5 text-[10px] font-bold">{row.reviewStatus}</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">رقم الطالب: {row.student_no || "غير مقروء"} · التاريخ: {row.adate || "غير مقروء"} · غياب</p>
+                  {row.reviewReason && <p className="mt-1 text-[10px] font-semibold text-amber-700">{row.reviewReason}</p>}
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{row.source}</p>
+                </div>
               </label>
             ))}
           </div>
