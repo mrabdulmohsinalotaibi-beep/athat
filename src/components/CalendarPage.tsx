@@ -15,7 +15,7 @@ type CalendarEvent = {
   title: string | null;
   etype: string | null;
   status: string | null;
-  source?: "calendar" | "interview" | "case";
+  source?: "calendar" | "interview" | "case" | "program" | "plan" | "schoolTask";
   sourceId?: string;
 };
 
@@ -51,14 +51,20 @@ export function CalendarPage() {
   const { data: events = [], isLoading, isError } = useQuery({
     queryKey: ["calendar_events", rangeStart, rangeEnd],
     queryFn: async (): Promise<CalendarEvent[]> => {
-      const [calendarResult, interviewResult, caseResult] = await Promise.all([
+      const [calendarResult, interviewResult, caseResult, programResult, planResult, schoolTaskResult] = await Promise.all([
         supabase.from("calendar_events").select("id, edate, etime, title, etype, status").gte("edate", rangeStart).lte("edate", rangeEnd),
         supabase.from("interviews").select("id, followup_at, student_name, topic").gte("followup_at", rangeStart).lte("followup_at", rangeEnd),
         supabase.from("counseling_cases").select("id, followup_at, student_name, summary, case_status").gte("followup_at", rangeStart).lte("followup_at", rangeEnd),
+        supabase.from("programs").select("id,name,start_date,end_date,exec_status").or(`and(start_date.gte.${rangeStart},start_date.lte.${rangeEnd}),and(end_date.gte.${rangeStart},end_date.lte.${rangeEnd})`),
+        supabase.from("plan_tasks").select("id,task,due_date,exec_status").gte("due_date", rangeStart).lte("due_date", rangeEnd),
+        (supabase as any).from("school_tasks").select("id,title,due_date,status").gte("due_date", rangeStart).lte("due_date", rangeEnd),
       ]);
       if (calendarResult.error) throw calendarResult.error;
       if (interviewResult.error) throw interviewResult.error;
       if (caseResult.error) throw caseResult.error;
+      if (programResult.error) throw programResult.error;
+      if (planResult.error) throw planResult.error;
+      if (schoolTaskResult.error) throw schoolTaskResult.error;
       const manual = (calendarResult.data ?? []).map((item: any) => ({ ...item, source: "calendar" as const, sourceId: String(item.id) }));
       const interviews = (interviewResult.data ?? []).map((item: any) => ({
         id: `interview-${item.id}`, edate: item.followup_at, etime: null,
@@ -70,7 +76,35 @@ export function CalendarPage() {
         title: item.student_name ? `حالة: ${item.student_name}` : "متابعة حالة",
         etype: item.summary || "حالة طلابية", status: item.case_status || "متابعة", source: "case" as const, sourceId: String(item.id),
       }));
-      return [...manual, ...interviews, ...cases].sort((a, b) => String(a.edate ?? "").localeCompare(String(b.edate ?? "")));
+      const programs = (programResult.data ?? []).flatMap((item: any) => {
+        const base = {
+          etime: null,
+          title: item.name || "برنامج توجيهي",
+          etype: "برنامج",
+          status: item.exec_status || "مجدول",
+          source: "program" as const,
+          sourceId: String(item.id),
+        };
+        const entries: CalendarEvent[] = [];
+        if (item.start_date && item.start_date >= rangeStart && item.start_date <= rangeEnd) {
+          entries.push({ ...base, id: `program-start-${item.id}`, edate: item.start_date, title: `بداية: ${base.title}` });
+        }
+        if (item.end_date && item.end_date >= rangeStart && item.end_date <= rangeEnd && item.end_date !== item.start_date) {
+          entries.push({ ...base, id: `program-end-${item.id}`, edate: item.end_date, title: `نهاية: ${base.title}` });
+        }
+        return entries;
+      });
+      const planTasks = (planResult.data ?? []).map((item: any) => ({
+        id: `plan-${item.id}`, edate: item.due_date, etime: null,
+        title: item.task || "مهمة خطة", etype: "مهمة خطة", status: item.exec_status || "مستحقة",
+        source: "plan" as const, sourceId: String(item.id),
+      }));
+      const schoolTasks = (schoolTaskResult.data ?? []).map((item: any) => ({
+        id: `school-task-${item.id}`, edate: item.due_date, etime: null,
+        title: item.title || "مهمة مدرسية", etype: "مهمة مدرسية", status: item.status || "مستحقة",
+        source: "schoolTask" as const, sourceId: String(item.id),
+      }));
+      return [...manual, ...interviews, ...cases, ...programs, ...planTasks, ...schoolTasks].sort((a, b) => String(a.edate ?? "").localeCompare(String(b.edate ?? "")));
     },
   });
   const eventsByDay = useMemo(() => {
@@ -218,6 +252,9 @@ export function CalendarPage() {
                     </span>
                     {event.source === "interview" && <Button asChild size="sm" variant="outline"><Link to="/interviews">فتح الجلسات</Link></Button>}
                     {event.source === "case" && <Button asChild size="sm" variant="outline"><Link to="/cases">فتح الحالات</Link></Button>}
+                    {event.source === "program" && <Button asChild size="sm" variant="outline"><Link to="/programs">فتح البرنامج</Link></Button>}
+                    {event.source === "plan" && <Button asChild size="sm" variant="outline"><Link to="/plan">فتح الخطة</Link></Button>}
+                    {event.source === "schoolTask" && <Button asChild size="sm" variant="outline"><Link to="/school-tasks">فتح المهمة</Link></Button>}
                   </div>
                 </div>
               ))}
