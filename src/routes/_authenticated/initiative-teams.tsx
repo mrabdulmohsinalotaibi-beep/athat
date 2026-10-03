@@ -26,6 +26,8 @@ type InitiativeMember = {
   role_title: string;
   assigned_tasks: string[];
   status: "pending" | "active" | "rejected" | "suspended";
+  public_access_active?: boolean;
+  public_access_expires_at?: string | null;
 };
 
 type InitiativeUpdate = {
@@ -60,6 +62,7 @@ type Initiative = {
   status: string;
   latest_progress: number;
   is_manager: boolean;
+  can_view_dashboard?: boolean;
   members: InitiativeMember[];
   updates: InitiativeUpdate[];
   my_membership?: { id: string; role_title: string; assigned_tasks: string[]; status: string } | null;
@@ -137,6 +140,7 @@ function InitiativeTeamsPage() {
   const [advice, setAdvice] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [followNotes, setFollowNotes] = useState("");
+  const [publicLinks, setPublicLinks] = useState<Record<string,string>>({});
 
   const query = useQuery({
     queryKey: ["initiative-teams"],
@@ -172,6 +176,23 @@ function InitiativeTeamsPage() {
     },
     enabled: Boolean(selectedId || (query.data ?? [])[0]?.id),
     staleTime: 15_000,
+  });
+
+  const dashboardQuery = useQuery({
+    queryKey: ["initiative-dashboard", selectedId || (query.data ?? [])[0]?.id],
+    queryFn: async () => {
+      const initiativeId = selectedId || (query.data ?? [])[0]?.id;
+      if (!initiativeId) return null;
+      const { data, error } = await (supabase as any).rpc("get_initiative_dashboard", { p_initiative_id: initiativeId });
+      if (error) throw error;
+      return data as {
+        members_total: number; students_total: number; followups_total: number; public_entries_total: number; files_total: number; avg_progress: number;
+        members: Array<{id:string;display_name:string;role_title:string;student_count:number;entry_count:number;file_count:number;last_activity?:string|null;public_link_active:boolean;public_link_expires_at?:string|null}>;
+        recent_entries: Array<{id:string;member_name:string;role_title:string;entry_type:string;title:string;details?:string|null;progress_percent?:number|null;student_name?:string|null;created_at:string;updated_at:string;files_count:number}>;
+      } | null;
+    },
+    enabled: Boolean((selectedId || (query.data ?? [])[0]?.id) && ((query.data ?? []).find((x) => x.id === (selectedId || (query.data ?? [])[0]?.id))?.can_view_dashboard)),
+    staleTime: 10_000,
   });
 
   const selected = useMemo(
@@ -278,6 +299,36 @@ function InitiativeTeamsPage() {
       if (error) throw error;
     },
     onSuccess: async () => { setFollowStudent(null); await refresh(); toast.success("تم حفظ المتابعة الأسبوعية للطالب."); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const createPublicLink = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { data, error } = await (supabase as any).rpc("create_initiative_public_link", { p_initiative_member_id: memberId, p_expires_days: 30 });
+      if (error) throw error;
+      return { memberId, token: String(data ?? "") };
+    },
+    onSuccess: async ({ memberId, token }) => {
+      const url = `${window.location.origin}/initiative-space?access=${encodeURIComponent(token)}`;
+      setPublicLinks((current) => ({ ...current, [memberId]: url }));
+      await refresh();
+      await qc.invalidateQueries({ queryKey: ["initiative-dashboard"] });
+      toast.success("تم إنشاء رابط مساحة العمل العامة.");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const revokePublicLink = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await (supabase as any).rpc("revoke_initiative_public_link", { p_initiative_member_id: memberId });
+      if (error) throw error;
+    },
+    onSuccess: async (_data, memberId) => {
+      setPublicLinks((current) => { const next={...current}; delete next[memberId]; return next; });
+      await refresh();
+      await qc.invalidateQueries({ queryKey: ["initiative-dashboard"] });
+      toast.success("تم إلغاء رابط مساحة العمل.");
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -406,11 +457,30 @@ function InitiativeTeamsPage() {
                             <span className="text-[11px] text-muted-foreground">{member.status === "active" ? "فعال" : member.status === "pending" ? "بانتظار الاعتماد" : member.status}</span>
                             {selected.is_manager && member.status === "pending" && <Button size="sm" onClick={() => setMember.mutate({ id: member.id, status: "active" })}><UserCheck className="size-4" /> اعتماد</Button>}
                             {selected.is_manager && member.status === "active" && <Button size="sm" variant="outline" onClick={() => setMember.mutate({ id: member.id, status: "suspended" })}>تعليق</Button>}
+                            {selected.is_manager && member.status === "active" && (
+                              <>
+                                <Button size="sm" variant="outline" onClick={() => createPublicLink.mutate(member.id)}>رابط عمل عام</Button>
+                                {member.public_access_active && <Button size="sm" variant="ghost" onClick={() => revokePublicLink.mutate(member.id)}>إلغاء الرابط</Button>}
+                              </>
+                            )}
                           </div>
                         </div>
                       </article>
                     ))}
                   </div>
+                  {selected.is_manager && Object.keys(publicLinks).length > 0 && (
+                    <div className="mt-4 space-y-2 rounded-2xl border bg-muted/10 p-3">
+                      <p className="text-xs font-black">روابط العمل العامة المنشأة الآن</p>
+                      {Object.entries(publicLinks).map(([memberId,url]) => {
+                        const m=selected.members.find((x)=>x.id===memberId);
+                        return <div key={memberId} className="rounded-xl border bg-background p-2">
+                          <p className="text-[11px] font-black">{m?.display_name || "عضو المبادرة"}</p>
+                          <p className="mt-1 break-all text-[10px] text-muted-foreground">{url}</p>
+                          <Button className="mt-2" size="sm" variant="outline" onClick={async()=>{await navigator.clipboard.writeText(url);toast.success("تم نسخ الرابط");}}><Copy className="size-3" /> نسخ الرابط</Button>
+                        </div>;
+                      })}
+                    </div>
+                  )}
                 </section>
 
                 {selected.is_manager && (
@@ -485,6 +555,42 @@ function InitiativeTeamsPage() {
                   </div>
                 </section>
               </div>
+
+              {selected.can_view_dashboard && dashboardQuery.data && (
+                <section className="rounded-3xl border bg-card p-5 xl:col-span-2 shadow-[var(--shadow-card)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div><p className="text-xs font-black text-primary">لوحة متابعة المبادرة</p><h2 className="mt-1 text-xl font-black">الداش بورد التنفيذي</h2></div>
+                    <Button variant="outline" size="sm" onClick={() => void dashboardQuery.refetch()}><RefreshCw className="size-4" /> تحديث</Button>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                    {[
+                      ["الأعضاء",dashboardQuery.data.members_total],["الطلاب",dashboardQuery.data.students_total],["المتابعات",dashboardQuery.data.followups_total],
+                      ["السجلات العامة",dashboardQuery.data.public_entries_total],["الشواهد",dashboardQuery.data.files_total],["متوسط الإنجاز",`${dashboardQuery.data.avg_progress}%`]
+                    ].map(([label,value])=><div key={String(label)} className="rounded-2xl border bg-muted/10 p-3 text-center"><p className="text-2xl font-black text-primary">{value as any}</p><p className="mt-1 text-[10px] font-bold text-muted-foreground">{label}</p></div>)}
+                  </div>
+                  <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                    <div>
+                      <h3 className="text-sm font-black">أداء أعضاء المبادرة</h3>
+                      <div className="mt-2 space-y-2">
+                        {(dashboardQuery.data.members ?? []).map((m)=><article key={m.id} className="rounded-2xl border p-3">
+                          <div className="flex items-center justify-between gap-2"><div><p className="text-sm font-black">{m.display_name}</p><p className="text-[10px] text-muted-foreground">{m.role_title}</p></div><span className="text-[10px] text-muted-foreground">{m.public_link_active ? "الرابط العام فعال" : "لا يوجد رابط عام"}</span></div>
+                          <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[10px]"><div className="rounded-lg bg-muted/20 p-2">طلاب<br/><strong>{m.student_count}</strong></div><div className="rounded-lg bg-muted/20 p-2">سجلات<br/><strong>{m.entry_count}</strong></div><div className="rounded-lg bg-muted/20 p-2">شواهد<br/><strong>{m.file_count}</strong></div></div>
+                        </article>)}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black">آخر النشاطات</h3>
+                      <div className="mt-2 max-h-[460px] space-y-2 overflow-y-auto">
+                        {(dashboardQuery.data.recent_entries ?? []).map((e)=><article key={e.id} className="rounded-2xl border p-3">
+                          <div className="flex justify-between gap-2"><div><p className="text-sm font-black">{e.title}</p><p className="text-[10px] text-muted-foreground">{e.member_name} · {e.role_title}{e.student_name ? ` · ${e.student_name}` : ""}</p></div>{typeof e.progress_percent==="number" && <span className="text-xs font-black text-primary">{e.progress_percent}%</span>}</div>
+                          {e.details && <p className="mt-2 text-xs leading-6 text-muted-foreground">{e.details}</p>}
+                          <p className="mt-2 text-[10px] text-muted-foreground">{new Date(e.updated_at).toLocaleString("ar-SA")} · {e.files_count} شاهد</p>
+                        </article>)}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               <aside className="space-y-5">
                 {selected.is_manager && (
