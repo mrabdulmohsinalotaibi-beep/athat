@@ -477,6 +477,7 @@ function AttendancePage() {
                     )}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">رقم الطالب: {row.student_no || "غير مقروء"} · التاريخ: {row.adate || "غير مقروء"} · غياب</p>
+                  <p className={`mt-1 text-[10px] font-bold ${row.matchedStudentId ? "text-emerald-700" : "text-amber-700"}`}>{row.matchedStudentId ? "✓ تمت المطابقة مع ملف الطالب في الذات" : "تحتاج مطابقة مع ملف طالب"}</p>
                   {row.reviewReason && <p className="mt-1 text-[10px] font-semibold text-amber-700">{row.reviewReason}</p>}
                   <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{row.source}</p>
                 </div>
