@@ -1307,7 +1307,6 @@ function Dashboard() {
               <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">لا توجد مهام تحتاج متابعة الآن.</p>
             )}
           </div>
-        </section>
       </section>
 
       <div className="grid gap-3 xl:grid-cols-2">
