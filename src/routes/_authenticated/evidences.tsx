@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, FileText, Upload, FileCheck2 } from "lucide-react";
 
@@ -25,7 +26,9 @@ export const Route = createFileRoute("/_authenticated/evidences")({
 
 function EvidencesPage() {
   const [open, setOpen] = useState(false);
-  const submitApproval=async()=>{const title=window.prompt("عنوان الشاهد أو مجموعة الشواهد المراد اعتمادها","شواهد أعمال التوجيه الطلابي");if(!title)return;const notes=window.prompt("ملاحظة للمراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"evidence_bundle",p_item_id:null,p_title:title,p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع الشواهد للاعتماد.");};
+  const qc=useQueryClient();
+  const approvalQuery=useQuery({queryKey:["evidence-approvals"],queryFn:async()=>{const {data,error}=await (supabase as any).from("guidance_approvals").select("id,title,status,review_notes,submitted_at").eq("item_type","evidence_bundle").order("submitted_at",{ascending:false}).limit(5);if(error)throw error;return data??[]}});
+  const submitApproval=async()=>{const title=window.prompt("عنوان الشاهد أو مجموعة الشواهد المراد اعتمادها","شواهد أعمال التوجيه الطلابي");if(!title)return;const notes=window.prompt("ملاحظة للمراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"evidence_bundle",p_item_id:null,p_title:title,p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع الشواهد للاعتماد.");await qc.invalidateQueries({queryKey:["evidence-approvals"]});};
 
   return (
     <div className="reference-screen space-y-4 pb-10" dir="rtl">
@@ -50,6 +53,7 @@ function EvidencesPage() {
         </div>
       </section>
 
+      {(approvalQuery.data||[]).length>0&&<section className="rounded-[1.75rem] border bg-card p-4"><h2 className="text-sm font-black">حالة اعتماد الشواهد</h2><div className="mt-3 space-y-2">{(approvalQuery.data||[]).map((a:any)=><div key={a.id} className="rounded-xl border p-3 text-xs"><div className="flex justify-between gap-2"><b>{a.title}</b><span className="text-primary">{a.status==="approved"?"معتمد":a.status==="rejected"?"معاد بملاحظة":a.status==="reviewed"?"تمت المراجعة":"بانتظار المراجعة"}</span></div>{a.review_notes&&<p className="mt-2 text-muted-foreground">{a.review_notes}</p>}</div>)}</div></section>}
       <section className="rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3.5 shadow-[var(--shadow-card)] sm:p-4">
         <div className="mb-3">
           <h2 className="text-sm font-black">ملفات الشواهد</h2>
