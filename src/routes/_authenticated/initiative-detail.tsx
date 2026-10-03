@@ -26,6 +26,9 @@ function InitiativeDetailPage() {
   const [editGoal, setEditGoal] = useState("");
   const [editIndicators, setEditIndicators] = useState("");
   const [editStatus, setEditStatus] = useState("active");
+  const [editObjectives, setEditObjectives] = useState<string[]>([]);
+  const [editMechanism, setEditMechanism] = useState<string[]>([]);
+  const [editResults, setEditResults] = useState<string[]>([]);
   const qc = useQueryClient();
   const query = useQuery({
     queryKey: ["initiative-detail", initiativeId],
@@ -97,14 +100,15 @@ function InitiativeDetailPage() {
   });
   const beginEdit = () => {
     setEditTitle(item?.title ?? ""); setEditSlogan(item?.slogan ?? ""); setEditIdea(item?.idea ?? "");
-    setEditGoal(item?.general_goal ?? ""); setEditIndicators(item?.success_indicators ?? ""); setEditStatus(item?.status ?? "active"); setEditing(true);
+    setEditGoal(item?.general_goal ?? ""); setEditIndicators(item?.success_indicators ?? ""); setEditStatus(item?.status ?? "active");
+    setEditObjectives([...(item?.objectives ?? [])]); setEditMechanism([...(item?.mechanism ?? [])]); setEditResults([...(item?.expected_results ?? [])]); setEditing(true);
   };
   const saveInitiative = useMutation({
     mutationFn: async () => {
       const { error } = await (supabase as any).rpc("update_initiative", {
         p_initiative_id: initiativeId, p_title: editTitle, p_slogan: editSlogan || null, p_idea: editIdea || null,
-        p_general_goal: editGoal || null, p_objectives: item?.objectives ?? [], p_mechanism: item?.mechanism ?? [],
-        p_expected_results: item?.expected_results ?? [], p_success_indicators: editIndicators || null,
+        p_general_goal: editGoal || null, p_objectives: editObjectives, p_mechanism: editMechanism,
+        p_expected_results: editResults, p_success_indicators: editIndicators || null,
         p_status: editStatus, p_starts_at: item?.starts_at || null, p_ends_at: item?.ends_at || null,
       });
       if (error) throw error;
@@ -158,7 +162,7 @@ function InitiativeDetailPage() {
       {item.idea && <p className="mt-4 text-sm leading-7 text-muted-foreground">{item.idea}</p>}
     </section>
 
-    {editing&&<section className="rounded-3xl border bg-card p-5"><h2 className="font-black">تعديل المبادرة</h2><div className="mt-4 grid gap-3 md:grid-cols-2"><input className="h-11 rounded-xl border bg-background px-3 text-sm" value={editTitle} onChange={e=>setEditTitle(e.target.value)} placeholder="اسم المبادرة"/><input className="h-11 rounded-xl border bg-background px-3 text-sm" value={editSlogan} onChange={e=>setEditSlogan(e.target.value)} placeholder="الشعار"/><textarea className="min-h-24 rounded-xl border bg-background p-3 text-sm md:col-span-2" value={editIdea} onChange={e=>setEditIdea(e.target.value)} placeholder="فكرة المبادرة"/><textarea className="min-h-24 rounded-xl border bg-background p-3 text-sm" value={editGoal} onChange={e=>setEditGoal(e.target.value)} placeholder="الهدف العام"/><textarea className="min-h-24 rounded-xl border bg-background p-3 text-sm" value={editIndicators} onChange={e=>setEditIndicators(e.target.value)} placeholder="مؤشرات النجاح"/><select className="h-11 rounded-xl border bg-background px-3 text-sm" value={editStatus} onChange={e=>setEditStatus(e.target.value)}><option value="draft">مسودة</option><option value="active">نشطة</option><option value="completed">مكتملة</option><option value="archived">مؤرشفة</option></select></div><div className="mt-4 flex gap-2"><Button disabled={!editTitle.trim()||saveInitiative.isPending} onClick={()=>saveInitiative.mutate()}><Save className="size-4"/> حفظ التعديلات</Button><Button variant="outline" onClick={()=>setEditing(false)}>إلغاء</Button></div></section>}
+    {editing&&<section className="rounded-3xl border bg-card p-5"><h2 className="font-black">تعديل المبادرة</h2><div className="mt-4 grid gap-3 md:grid-cols-2"><input className="h-11 rounded-xl border bg-background px-3 text-sm" value={editTitle} onChange={e=>setEditTitle(e.target.value)} placeholder="اسم المبادرة"/><input className="h-11 rounded-xl border bg-background px-3 text-sm" value={editSlogan} onChange={e=>setEditSlogan(e.target.value)} placeholder="الشعار"/><textarea className="min-h-24 rounded-xl border bg-background p-3 text-sm md:col-span-2" value={editIdea} onChange={e=>setEditIdea(e.target.value)} placeholder="فكرة المبادرة"/><textarea className="min-h-24 rounded-xl border bg-background p-3 text-sm" value={editGoal} onChange={e=>setEditGoal(e.target.value)} placeholder="الهدف العام"/><textarea className="min-h-24 rounded-xl border bg-background p-3 text-sm" value={editIndicators} onChange={e=>setEditIndicators(e.target.value)} placeholder="مؤشرات النجاح"/><select className="h-11 rounded-xl border bg-background px-3 text-sm" value={editStatus} onChange={e=>setEditStatus(e.target.value)}><option value="draft">مسودة</option><option value="active">نشطة</option><option value="completed">مكتملة</option><option value="archived">مؤرشفة</option></select><EditableList title="الأهداف" items={editObjectives} setItems={setEditObjectives}/><EditableList title="آلية التنفيذ" items={editMechanism} setItems={setEditMechanism}/><EditableList title="النتائج المرجوة" items={editResults} setItems={setEditResults}/></div><div className="mt-4 flex gap-2"><Button disabled={!editTitle.trim()||saveInitiative.isPending} onClick={()=>saveInitiative.mutate()}><Save className="size-4"/> حفظ التعديلات</Button><Button variant="outline" onClick={()=>setEditing(false)}>إلغاء</Button></div></section>}
 
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Stat icon={UsersRound} label="أعضاء الفريق" value={memberCount}/>
@@ -202,3 +206,8 @@ function InitiativeDetailPage() {
 function Stat({icon:Icon,label,value}:{icon:any;label:string;value:any}){return <div className="rounded-2xl border bg-card p-4"><Icon className="size-4 text-primary"/><strong className="mt-2 block text-xl">{value}</strong><span className="text-[10px] text-muted-foreground">{label}</span></div>}
 function Info({title,text}:{title:string;text?:string|null}){return <section className="rounded-2xl border bg-card p-4"><h2 className="font-black">{title}</h2><p className="mt-2 text-xs leading-6 text-muted-foreground">{text||"لم يضف بعد."}</p></section>}
 function ListInfo({title,items}:{title:string;items?:string[]}){return <section className="rounded-2xl border bg-card p-4"><h2 className="font-black">{title}</h2><ul className="mt-2 space-y-1 text-xs leading-6 text-muted-foreground">{(items??[]).length?(items??[]).map((x,i)=><li key={i}>• {x}</li>):<li>لم يضف بعد.</li>}</ul></section>}
+
+function EditableList({title,items,setItems}:{title:string;items:string[];setItems:(v:string[])=>void}) {
+  const [value,setValue]=useState("");
+  return <div className="rounded-2xl border p-3 md:col-span-2"><div className="flex items-center justify-between gap-2"><h3 className="text-xs font-black">{title}</h3><span className="text-[10px] text-muted-foreground">{items.length} عنصر</span></div><div className="mt-2 space-y-2">{items.map((x,i)=><div key={i} className="flex gap-2"><input className="h-9 flex-1 rounded-xl border bg-background px-3 text-xs" value={x} onChange={e=>setItems(items.map((v,n)=>n===i?e.target.value:v))}/><Button type="button" size="sm" variant="destructive" onClick={()=>setItems(items.filter((_,n)=>n!==i))}><Trash2 className="size-4"/> حذف</Button></div>)}</div><div className="mt-2 flex gap-2"><input className="h-9 flex-1 rounded-xl border bg-background px-3 text-xs" value={value} onChange={e=>setValue(e.target.value)} placeholder={"إضافة عنصر إلى "+title}/><Button type="button" size="sm" variant="outline" onClick={()=>{const v=value.trim();if(!v)return;setItems([...items,v]);setValue("");}}>إضافة</Button></div></div>;
+}
