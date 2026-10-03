@@ -145,8 +145,8 @@ export const ROLE_PERMISSION_PRESETS: Record<SchoolRole, Record<string, boolean>
   },
   guard: { "dashboard.view": true, "tasks.view": true, "messages.view": true },
   observer: { "dashboard.view": true, "team.view": true, "tasks.view": true, "reports.view": true },
-  student: { "dashboard.view": true, "messages.view": true, "documents.view": true },
-  parent: { "dashboard.view": true, "messages.view": true, "documents.view": true },
+  student: { "dashboard.view": true, "students.view": true, "messages.view": true, "documents.view": true },
+  parent: { "dashboard.view": true, "students.view": true, "messages.view": true, "documents.view": true },
   custom: {},
 };
 
