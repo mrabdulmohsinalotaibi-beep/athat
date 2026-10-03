@@ -39,6 +39,7 @@ type SchoolContext = {
     is_admin: boolean;
     permissions?: Record<string, boolean> | null;
     data_scope?: DataScope | null;
+    linked_student_ids?: string[];
   };
   school: null | {
     id: string;
@@ -55,6 +56,7 @@ type SchoolContext = {
     is_admin: boolean;
     permissions?: Record<string, boolean> | null;
     data_scope?: DataScope | null;
+    linked_student_ids?: string[];
     joined_at?: string | null;
     created_at: string;
   }>;
@@ -76,11 +78,13 @@ function SchoolTeamPage() {
   const [invitePermissions, setInvitePermissions] = useState<Record<string, boolean>>(permissionsForRole("teacher"));
   const [inviteScope, setInviteScope] = useState<DataScope>({ type: "assigned" });
   const [inviteUrl, setInviteUrl] = useState("");
+  const [inviteStudentIds, setInviteStudentIds] = useState<string[]>([]);
   const [editingMemberId, setEditingMemberId] = useState("");
   const [editRole, setEditRole] = useState<Role>("teacher");
   const [editPermissions, setEditPermissions] = useState<Record<string, boolean>>({});
   const [editScope, setEditScope] = useState<DataScope>({ type: "school" });
   const [editAdmin, setEditAdmin] = useState(false);
+  const [editStudentIds, setEditStudentIds] = useState<string[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -112,6 +116,25 @@ function SchoolTeamPage() {
     }
     window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
   }
+
+  const permissionStudentsQuery = useQuery({
+    queryKey: ["school-permission-students"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_school_permission_students");
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        full_name: string | null;
+        student_no: string | null;
+        stage: string | null;
+        grade: string | null;
+        classroom: string | null;
+        guardian_name: string | null;
+      }>;
+    },
+    enabled: false,
+    staleTime: 60_000,
+  });
 
   const contextQuery = useQuery({
     queryKey: ["school-team-context"],
@@ -183,6 +206,7 @@ function SchoolTeamPage() {
         p_data_scope: inviteScope,
         p_expires_days: 7,
         p_max_uses: 1,
+        p_student_ids: inviteStudentIds,
       });
       if (error) throw error;
       return String(data ?? "");
@@ -205,6 +229,17 @@ function SchoolTeamPage() {
         p_is_admin: editAdmin,
       });
       if (error) throw error;
+
+      const relation =
+        editScope.type === "self" ? "self" :
+        editScope.type === "children" ? "child" : "assigned";
+
+      const { error: linksError } = await (supabase as any).rpc("set_school_member_student_links", {
+        p_member_id: id,
+        p_student_ids: ["assigned", "self", "children"].includes(editScope.type) ? editStudentIds : [],
+        p_relation: relation,
+      });
+      if (linksError) throw linksError;
     },
     onSuccess: async () => {
       setEditingMemberId("");
@@ -392,7 +427,12 @@ function SchoolTeamPage() {
               <p className="mt-2 text-[11px] text-muted-foreground">أرسل الرمز للموظف فقط، ثم اعتمد طلبه وحدد دوره من هنا.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => { setInviteBuilderOpen((value) => !value); setInviteUrl(""); }}>
+              <Button onClick={() => {
+                setInviteBuilderOpen((value) => !value);
+                setInviteUrl("");
+                setInviteStudentIds([]);
+                void permissionStudentsQuery.refetch();
+              }}>
                 <Share2 className="size-4" /> دعوة عضو بصلاحيات
               </Button>
               <Button variant="outline" onClick={() => void copyInvite(context.join_code || "")}>
@@ -427,6 +467,7 @@ function SchoolTeamPage() {
                     const role = event.target.value as Role;
                     setInviteRole(role);
                     setInvitePermissions(permissionsForRole(role));
+                    setInviteStudentIds([]);
                     setInviteScope({ type: role === "student" ? "self" : role === "parent" ? "children" : role === "teacher" ? "assigned" : "school" });
                   }}
                   className="mt-2 h-11 w-full rounded-xl border bg-background px-3 text-sm"
@@ -434,7 +475,16 @@ function SchoolTeamPage() {
                   {SCHOOL_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
                 </select>
               </div>
-              <ScopeEditor value={inviteScope} onChange={setInviteScope} />
+              <ScopeEditor
+                value={inviteScope}
+                onChange={(scope) => {
+                  setInviteScope(scope);
+                  if (!["assigned", "self", "children"].includes(scope.type)) setInviteStudentIds([]);
+                }}
+                students={permissionStudentsQuery.data ?? []}
+                selectedStudentIds={inviteStudentIds}
+                onSelectedStudentIdsChange={setInviteStudentIds}
+              />
               <Button className="w-full" disabled={createInvite.isPending} onClick={() => createInvite.mutate()}>
                 <KeyRound className="size-4" /> إنشاء رابط الدعوة
               </Button>
@@ -523,7 +573,9 @@ function SchoolTeamPage() {
                         setEditRole(member.role);
                         setEditPermissions({ ...permissionsForRole(member.role), ...(member.permissions ?? {}) });
                         setEditScope(member.data_scope ?? { type: member.role === "teacher" ? "assigned" : member.role === "student" ? "self" : member.role === "parent" ? "children" : "school" });
+                        setEditStudentIds(member.linked_student_ids ?? []);
                         setEditAdmin(member.is_admin);
+                        void permissionStudentsQuery.refetch();
                       }}
                     >
                       <Settings2 className="size-4" /> إدارة الصلاحيات
@@ -547,7 +599,17 @@ function SchoolTeamPage() {
                             {SCHOOL_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
                           </select>
                         </div>
-                        <ScopeEditor value={editScope} onChange={setEditScope} compact />
+                        <ScopeEditor
+                          value={editScope}
+                          onChange={(scope) => {
+                            setEditScope(scope);
+                            if (!["assigned", "self", "children"].includes(scope.type)) setEditStudentIds([]);
+                          }}
+                          students={permissionStudentsQuery.data ?? []}
+                          selectedStudentIds={editStudentIds}
+                          onSelectedStudentIdsChange={setEditStudentIds}
+                          compact
+                        />
                       </div>
                       <label className="flex items-center gap-2 rounded-xl border p-3 text-xs font-bold">
                         <input type="checkbox" checked={editAdmin} onChange={(event) => setEditAdmin(event.target.checked)} />
@@ -618,38 +680,182 @@ function SchoolTeamPage() {
 function ScopeEditor({
   value,
   onChange,
+  students,
+  selectedStudentIds,
+  onSelectedStudentIdsChange,
   compact = false,
 }: {
   value: DataScope;
   onChange: (scope: DataScope) => void;
+  students: Array<{
+    id: string;
+    full_name: string | null;
+    student_no: string | null;
+    stage: string | null;
+    grade: string | null;
+    classroom: string | null;
+    guardian_name: string | null;
+  }>;
+  selectedStudentIds: string[];
+  onSelectedStudentIdsChange: (ids: string[]) => void;
   compact?: boolean;
 }) {
+  const [studentSearch, setStudentSearch] = useState("");
+  const stages = Array.from(new Set(students.map((s) => s.stage).filter(Boolean) as string[])).sort();
+  const grades = Array.from(new Set(
+    students
+      .filter((s) => !value.stage || s.stage === value.stage)
+      .map((s) => s.grade)
+      .filter(Boolean) as string[],
+  )).sort();
+  const classrooms = Array.from(new Set(
+    students
+      .filter((s) => (!value.stage || s.stage === value.stage) && (!value.grade || s.grade === value.grade))
+      .map((s) => s.classroom)
+      .filter(Boolean) as string[],
+  )).sort();
+
+  const search = studentSearch.trim().toLowerCase();
+  const visibleStudents = students.filter((student) => {
+    if (!search) return true;
+    return [student.full_name, student.student_no, student.stage, student.grade, student.classroom, student.guardian_name]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(search);
+  });
+
+  function toggleStudent(id: string) {
+    if (value.type === "self") {
+      onSelectedStudentIdsChange(selectedStudentIds.includes(id) ? [] : [id]);
+      return;
+    }
+    onSelectedStudentIdsChange(
+      selectedStudentIds.includes(id)
+        ? selectedStudentIds.filter((item) => item !== id)
+        : [...selectedStudentIds, id],
+    );
+  }
+
   return (
-    <div>
+    <div className="space-y-2">
       <Label>نطاق البيانات</Label>
       <select
         value={value.type}
         onChange={(event) => onChange({ type: event.target.value as DataScope["type"] })}
-        className={"mt-2 w-full rounded-xl border bg-background px-3 text-sm " + (compact ? "h-10" : "h-11")}
+        className={"w-full rounded-xl border bg-background px-3 text-sm " + (compact ? "h-10" : "h-11")}
       >
         <option value="school">كل المدرسة</option>
         <option value="stage">مرحلة محددة</option>
         <option value="grade">صف محدد</option>
         <option value="classroom">فصل محدد</option>
-        <option value="assigned">المسند إليه فقط</option>
-        <option value="self">بياناته فقط</option>
-        <option value="children">أبناؤه فقط</option>
+        <option value="assigned">طلاب محددون / المسندون إليه</option>
+        <option value="self">ملف الطالب نفسه فقط</option>
+        <option value="children">أبناء ولي الأمر فقط</option>
       </select>
-      {["stage", "grade", "classroom"].includes(value.type) && (
-        <Input
-          className="mt-2"
-          value={value.type === "stage" ? value.stage ?? "" : value.type === "grade" ? value.grade ?? "" : value.classroom ?? ""}
-          placeholder={value.type === "stage" ? "مثال: متوسط" : value.type === "grade" ? "مثال: الثالث" : "مثال: 3/1"}
-          onChange={(event) => {
-            const text = event.target.value;
-            onChange(value.type === "stage" ? { type: "stage", stage: text } : value.type === "grade" ? { type: "grade", grade: text } : { type: "classroom", classroom: text });
-          }}
-        />
+
+      {value.type === "stage" && (
+        <select
+          value={value.stage ?? ""}
+          onChange={(event) => onChange({ type: "stage", stage: event.target.value })}
+          className="h-10 w-full rounded-xl border bg-background px-3 text-xs"
+        >
+          <option value="">اختر المرحلة</option>
+          {stages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+        </select>
+      )}
+
+      {value.type === "grade" && (
+        <div className="grid gap-2 sm:grid-cols-2">
+          <select
+            value={value.stage ?? ""}
+            onChange={(event) => onChange({ type: "grade", stage: event.target.value, grade: "" })}
+            className="h-10 w-full rounded-xl border bg-background px-3 text-xs"
+          >
+            <option value="">كل المراحل</option>
+            {stages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+          </select>
+          <select
+            value={value.grade ?? ""}
+            onChange={(event) => onChange({ ...value, type: "grade", grade: event.target.value })}
+            className="h-10 w-full rounded-xl border bg-background px-3 text-xs"
+          >
+            <option value="">اختر الصف</option>
+            {grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
+          </select>
+        </div>
+      )}
+
+      {value.type === "classroom" && (
+        <div className="grid gap-2 sm:grid-cols-3">
+          <select
+            value={value.stage ?? ""}
+            onChange={(event) => onChange({ type: "classroom", stage: event.target.value, grade: "", classroom: "" })}
+            className="h-10 w-full rounded-xl border bg-background px-3 text-xs"
+          >
+            <option value="">المرحلة</option>
+            {stages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+          </select>
+          <select
+            value={value.grade ?? ""}
+            onChange={(event) => onChange({ ...value, type: "classroom", grade: event.target.value, classroom: "" })}
+            className="h-10 w-full rounded-xl border bg-background px-3 text-xs"
+          >
+            <option value="">الصف</option>
+            {grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
+          </select>
+          <select
+            value={value.classroom ?? ""}
+            onChange={(event) => onChange({ ...value, type: "classroom", classroom: event.target.value })}
+            className="h-10 w-full rounded-xl border bg-background px-3 text-xs"
+          >
+            <option value="">الفصل</option>
+            {classrooms.map((classroom) => <option key={classroom} value={classroom}>{classroom}</option>)}
+          </select>
+        </div>
+      )}
+
+      {["assigned", "self", "children"].includes(value.type) && (
+        <div className="rounded-2xl border bg-muted/15 p-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] font-black">
+              {value.type === "self" ? "اختر ملف الطالب" : value.type === "children" ? "اختر أبناء ولي الأمر" : "اختر الطلاب"}
+            </p>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">
+              {selectedStudentIds.length} محدد
+            </span>
+          </div>
+          <Input
+            className="mt-2 h-9 text-xs"
+            value={studentSearch}
+            onChange={(event) => setStudentSearch(event.target.value)}
+            placeholder="ابحث بالاسم أو الرقم أو الصف أو الفصل"
+          />
+          <div className="mt-2 max-h-52 space-y-1 overflow-y-auto">
+            {visibleStudents.length === 0 ? (
+              <p className="p-3 text-center text-[11px] text-muted-foreground">لا توجد نتائج.</p>
+            ) : visibleStudents.slice(0, 120).map((student) => {
+              const checked = selectedStudentIds.includes(student.id);
+              return (
+                <label key={student.id} className="flex cursor-pointer items-center gap-2 rounded-xl border bg-background px-2.5 py-2 text-[11px]">
+                  <input
+                    type={value.type === "self" ? "radio" : "checkbox"}
+                    name={value.type === "self" ? "single-student-scope" : undefined}
+                    checked={checked}
+                    onChange={() => toggleStudent(student.id)}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <strong className="block truncate">{student.full_name || "طالب"}</strong>
+                    <span className="text-[10px] text-muted-foreground">
+                      {[student.stage, student.grade, student.classroom].filter(Boolean).join(" · ")}
+                      {student.student_no ? ` · ${student.student_no}` : ""}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );
