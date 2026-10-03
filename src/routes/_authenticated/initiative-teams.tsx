@@ -570,6 +570,11 @@ function InitiativeTeamsPage() {
                             <span className="text-[11px] text-muted-foreground">{member.status === "active" ? "فعال" : member.status === "pending" ? "بانتظار الاعتماد" : member.status}</span>
                             {selected.is_manager && member.status === "pending" && <Button size="sm" onClick={() => setMember.mutate({ id: member.id, status: "active" })}><UserCheck className="size-4" /> اعتماد</Button>}
                             {selected.is_manager && member.status === "active" && <Button size="sm" variant="outline" onClick={() => setMember.mutate({ id: member.id, status: "suspended" })}>تعليق</Button>}
+                            {selected.can_view_dashboard && member.status === "active" && (
+                              <Button size="sm" variant="outline" onClick={() => { window.location.href = `/initiative-member-review?member=${encodeURIComponent(member.id)}`; }}>
+                                عرض أعمال المعلم
+                              </Button>
+                            )}
                             {selected.is_manager && member.status === "active" && (
                               <>
                                 <Button size="sm" variant="outline" onClick={() => createPublicLink.mutate(member.id)}>إنشاء رابط صفحة المعلم</Button>
