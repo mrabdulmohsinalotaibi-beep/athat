@@ -353,6 +353,45 @@ export type Database = {
           },
         ]
       }
+      counselor_contributions: {
+        Row: {
+          author_name: string
+          author_role: string
+          body: string
+          cover_url: string | null
+          created_at: string
+          id: string
+          owner_user_id: string
+          reviewed_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          author_name: string
+          author_role: string
+          body: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          owner_user_id: string
+          reviewed_at?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          author_name?: string
+          author_role?: string
+          body?: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          owner_user_id?: string
+          reviewed_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       deleted_records: {
         Row: {
           deleted_at: string
@@ -380,6 +419,75 @@ export type Database = {
           record_id?: string | null
           table_name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      document_signature_requests: {
+        Row: {
+          created_at: string
+          declined_at: string | null
+          document_snapshot: Json
+          document_title: string
+          id: string
+          owner_user_id: string
+          record_id: string
+          record_table: string
+          record_type: string
+          school_id: string | null
+          signature_data: string | null
+          signed_at: string | null
+          signer_name: string
+          signer_note: string | null
+          signer_phone: string | null
+          signer_role: string
+          signer_user_id: string | null
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          declined_at?: string | null
+          document_snapshot?: Json
+          document_title: string
+          id?: string
+          owner_user_id: string
+          record_id: string
+          record_table: string
+          record_type: string
+          school_id?: string | null
+          signature_data?: string | null
+          signed_at?: string | null
+          signer_name: string
+          signer_note?: string | null
+          signer_phone?: string | null
+          signer_role: string
+          signer_user_id?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          declined_at?: string | null
+          document_snapshot?: Json
+          document_title?: string
+          id?: string
+          owner_user_id?: string
+          record_id?: string
+          record_table?: string
+          record_type?: string
+          school_id?: string | null
+          signature_data?: string | null
+          signed_at?: string | null
+          signer_name?: string
+          signer_note?: string | null
+          signer_phone?: string | null
+          signer_role?: string
+          signer_user_id?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -446,6 +554,41 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_actions: {
+        Row: {
+          action: string
+          created_at: string
+          feedback_id: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          feedback_id: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_actions_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_messages: {
         Row: {
           assigned_channel: string | null
@@ -502,6 +645,71 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      free_documents: {
+        Row: {
+          classroom: string | null
+          content: string
+          created_at: string
+          document_kind: string
+          document_no: string | null
+          form_values: Json
+          grade: string | null
+          id: string
+          status: string
+          student_id: string | null
+          student_name: string | null
+          student_no: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          classroom?: string | null
+          content?: string
+          created_at?: string
+          document_kind?: string
+          document_no?: string | null
+          form_values?: Json
+          grade?: string | null
+          id?: string
+          status?: string
+          student_id?: string | null
+          student_name?: string | null
+          student_no?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          classroom?: string | null
+          content?: string
+          created_at?: string
+          document_kind?: string
+          document_no?: string | null
+          form_values?: Json
+          grade?: string | null
+          id?: string
+          status?: string
+          student_id?: string | null
+          student_name?: string | null
+          student_no?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "free_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       interviews: {
         Row: {
@@ -662,6 +870,71 @@ export type Database = {
         }
         Relationships: []
       }
+      outgoing_messages: {
+        Row: {
+          ai_assisted: boolean
+          batch_id: string
+          channel: string
+          created_at: string
+          id: string
+          message: string
+          opened_at: string | null
+          phone: string
+          recipient_name: string | null
+          recipient_source: string
+          sent_at: string | null
+          status: string
+          student_id: string | null
+          student_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_assisted?: boolean
+          batch_id: string
+          channel?: string
+          created_at?: string
+          id?: string
+          message: string
+          opened_at?: string | null
+          phone: string
+          recipient_name?: string | null
+          recipient_source?: string
+          sent_at?: string | null
+          status?: string
+          student_id?: string | null
+          student_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          ai_assisted?: boolean
+          batch_id?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          message?: string
+          opened_at?: string | null
+          phone?: string
+          recipient_name?: string | null
+          recipient_source?: string
+          sent_at?: string | null
+          status?: string
+          student_id?: string | null
+          student_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outgoing_messages_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_tasks: {
         Row: {
           created_at: string
@@ -719,6 +992,35 @@ export type Database = {
         }
         Relationships: []
       }
+      post_likes: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_name: string | null
@@ -727,6 +1029,7 @@ export type Database = {
           created_at: string
           excerpt: string | null
           id: string
+          is_featured: boolean
           is_public: boolean
           kind: string
           published_at: string | null
@@ -742,6 +1045,7 @@ export type Database = {
           created_at?: string
           excerpt?: string | null
           id?: string
+          is_featured?: boolean
           is_public?: boolean
           kind?: string
           published_at?: string | null
@@ -757,6 +1061,7 @@ export type Database = {
           created_at?: string
           excerpt?: string | null
           id?: string
+          is_featured?: boolean
           is_public?: boolean
           kind?: string
           published_at?: string | null
@@ -1051,6 +1356,66 @@ export type Database = {
         }
         Relationships: []
       }
+      school_invites: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by_member_id: string
+          data_scope: Json
+          expires_at: string
+          id: string
+          max_uses: number
+          permissions: Json
+          role: string
+          school_id: string
+          token: string
+          used_count: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by_member_id: string
+          data_scope?: Json
+          expires_at?: string
+          id?: string
+          max_uses?: number
+          permissions?: Json
+          role: string
+          school_id: string
+          token: string
+          used_count?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by_member_id?: string
+          data_scope?: Json
+          expires_at?: string
+          id?: string
+          max_uses?: number
+          permissions?: Json
+          role?: string
+          school_id?: string
+          token?: string
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_invites_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_invites_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_join_codes: {
         Row: {
           join_code: string
@@ -1077,9 +1442,59 @@ export type Database = {
           },
         ]
       }
+      school_member_student_links: {
+        Row: {
+          created_at: string
+          id: string
+          member_id: string
+          relation: string
+          school_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_id: string
+          relation: string
+          school_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_id?: string
+          relation?: string
+          school_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_member_student_links_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "school_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_member_student_links_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_member_student_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_members: {
         Row: {
           created_at: string
+          data_scope: Json
           display_name: string | null
           id: string
           is_admin: boolean
@@ -1093,6 +1508,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          data_scope?: Json
           display_name?: string | null
           id?: string
           is_admin?: boolean
@@ -1106,6 +1522,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          data_scope?: Json
           display_name?: string | null
           id?: string
           is_admin?: boolean
@@ -1694,6 +2111,10 @@ export type Database = {
         }
         Returns: string
       }
+      approve_counselor_contribution: {
+        Args: { p_id: string }
+        Returns: string
+      }
       approve_school_member: {
         Args: { p_is_admin?: boolean; p_member_id: string; p_role: string }
         Returns: undefined
@@ -1708,6 +2129,29 @@ export type Database = {
         Returns: boolean
       }
       can_use_guidance_workspace: { Args: never; Returns: boolean }
+      create_document_signature_request: {
+        Args: {
+          p_document_snapshot: Json
+          p_document_title: string
+          p_record_id: string
+          p_record_table: string
+          p_record_type: string
+          p_signer_name: string
+          p_signer_phone: string
+          p_signer_role: string
+        }
+        Returns: string
+      }
+      create_school_invite: {
+        Args: {
+          p_data_scope?: Json
+          p_expires_days?: number
+          p_max_uses?: number
+          p_permissions?: Json
+          p_role: string
+        }
+        Returns: string
+      }
       create_school_report_handoff: {
         Args: {
           p_note: string
@@ -1738,6 +2182,19 @@ export type Database = {
         }
         Returns: string
       }
+      default_school_permissions: { Args: { p_role: string }; Returns: Json }
+      get_document_signature_request: {
+        Args: { p_token: string }
+        Returns: {
+          document_snapshot: Json
+          document_title: string
+          record_type: string
+          signed_at: string
+          signer_name: string
+          signer_role: string
+          status: string
+        }[]
+      }
       get_guidance_profile: {
         Args: { p_slug: string }
         Returns: {
@@ -1755,6 +2212,13 @@ export type Database = {
         }[]
       }
       get_my_school_context: { Args: never; Returns: Json }
+      get_post_like_state: {
+        Args: { p_client_id?: string; p_slug: string }
+        Returns: {
+          like_count: number
+          liked: boolean
+        }[]
+      }
       get_private_counselor_blog: {
         Args: { p_token: string }
         Returns: {
@@ -1780,7 +2244,9 @@ export type Database = {
           cover_url: string
           created_at: string
           excerpt: string
+          is_featured: boolean
           kind: string
+          like_count: number
           public_slug: string
           published_at: string
           school_name: string
@@ -1813,12 +2279,25 @@ export type Database = {
         Args: { p_school_id: string }
         Returns: boolean
       }
+      is_same_school_record_owner: {
+        Args: { p_record_owner: string }
+        Returns: boolean
+      }
       is_school_admin: { Args: { p_school_id: string }; Returns: boolean }
       mark_school_report_handoff_read: {
         Args: { p_handoff_id: string }
         Returns: undefined
       }
+      member_has_permission: {
+        Args: { p_permission: string }
+        Returns: boolean
+      }
+      member_scope_allows_student: {
+        Args: { p_record_owner: string; p_student_id: string }
+        Returns: boolean
+      }
       request_join_school: { Args: { p_join_code: string }; Returns: string }
+      request_join_school_invite: { Args: { p_token: string }; Returns: string }
       restore_deleted_record: {
         Args: { p_deleted_id: string }
         Returns: string
@@ -1841,10 +2320,37 @@ export type Database = {
         Returns: string
       }
       school_role_rank: { Args: { p_role: string }; Returns: number }
+      set_featured_post: { Args: { p_post_id?: string }; Returns: undefined }
       set_school_member_status: {
         Args: { p_member_id: string; p_status: string }
         Returns: undefined
       }
+      sign_document_request: {
+        Args: { p_note?: string; p_signature_data: string; p_token: string }
+        Returns: boolean
+      }
+      submit_counselor_contribution:
+        | {
+            Args: {
+              p_author_name: string
+              p_author_role: string
+              p_body: string
+              p_title: string
+              p_token: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_author_name: string
+              p_author_role: string
+              p_body: string
+              p_cover_url?: string
+              p_title: string
+              p_token: string
+            }
+            Returns: string
+          }
       submit_public_feedback: {
         Args: {
           p_category: string
@@ -1913,11 +2419,28 @@ export type Database = {
         }
         Returns: Json
       }
+      toggle_post_like: {
+        Args: { p_client_id: string; p_slug: string }
+        Returns: {
+          like_count: number
+          liked: boolean
+        }[]
+      }
       update_my_school_task: {
         Args: {
           p_completion_note?: string
           p_status: string
           p_task_id: string
+        }
+        Returns: undefined
+      }
+      update_school_member_access: {
+        Args: {
+          p_data_scope: Json
+          p_is_admin?: boolean
+          p_member_id: string
+          p_permissions: Json
+          p_role: string
         }
         Returns: undefined
       }
