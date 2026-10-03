@@ -808,9 +808,27 @@ textarea {
     orphans: 3;
     widows: 3;
   }
-  .report-signatures {
+  .report-signatures,
+  .official-signature-block,
+  .record-pdf-document img,
+  .record-pdf-document figure {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+  .record-pdf-document img {
+    height: auto !important;
+    object-fit: contain !important;
+  }
+  .record-pdf-document [data-pdf-block="true"] {
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .record-pdf-document button,
+  .record-pdf-document [role="button"],
+  .record-pdf-document .record-toolbar,
+  .record-pdf-document .print-hidden {
+    display: none !important;
   }
 }
 
