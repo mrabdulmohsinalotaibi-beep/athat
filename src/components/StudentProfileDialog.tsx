@@ -488,9 +488,12 @@ export function StudentProfileDialog({
                       {canEditSection(section.key) && (
                         <div data-pdf-exclude="true" className="mb-3 flex justify-end">
                           <Button asChild size="sm" variant="outline">
-                            <Link to={`/${section.key}` as never} onClick={() => onOpenChange(false)}>
+                            <a
+                              href={`/${section.key}?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`}
+                              onClick={() => onOpenChange(false)}
+                            >
                               <GraduationCap className="size-4" /> إضافة سجل جديد
-                            </Link>
+                            </a>
                           </Button>
                         </div>
                       )}
