@@ -110,7 +110,7 @@ function ReportsPage() {
   const [workflowProgramId, setWorkflowProgramId] = useState("");
   const [workflowDraftInitialized, setWorkflowDraftInitialized] = useState(false);
   const [signatureReportOpen, setSignatureReportOpen] = useState(false);
-  const [signatureReportId, setSignatureReportId] = useState("");
+  const [signatureReportId, setSignatureReportId] = useState("");\n  const submitReportApproval=async()=>{const notes=window.prompt("ملاحظة للمراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"report",p_item_id:null,p_title:reportTitle||"تقرير التوجيه الطلابي",p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع التقرير للاعتماد.");};
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -546,7 +546,7 @@ function ReportsPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <PdfPreviewButton elementRef={reportRef} filename={`تقرير-${reportTitle || "الذات"}`} title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"} disabled={isLoading} />
+            <PdfPreviewButton elementRef={reportRef} filename={`تقرير-${reportTitle || "الذات"}`} title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"} disabled={isLoading} />\n              <Button type="button" variant="outline" onClick={submitReportApproval}><ShieldCheck className="size-4"/> رفع التقرير للاعتماد</Button>
             <Button
               type="button"
               variant="outline"
