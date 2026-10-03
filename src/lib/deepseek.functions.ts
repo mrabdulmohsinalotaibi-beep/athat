@@ -439,7 +439,7 @@ export const suggestStudentImportMapping = createServerFn({ method: "POST" })
         : {};
 
     const validHeaders = new Set(data.headers);
-    const validFields = new Set(STUDENT_IMPORT_AI_FIELDS.map(([name]) => name));
+    const validFields = new Set<string>(STUDENT_IMPORT_AI_FIELDS.map(([name]) => name));
     const usedHeaders = new Set<string>();
     const mapping: Record<string, string> = {};
 
