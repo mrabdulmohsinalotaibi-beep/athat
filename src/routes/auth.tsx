@@ -155,7 +155,15 @@ function AuthPage() {
         return;
       }
 
-      toast.success("تم إنشاء الحساب. افتح رسالة التأكيد في بريدك ثم سجّل الدخول.");
+      // Keep the invitation destination in the URL while the user confirms
+      // their email. This ensures a one-device school invite returns to the
+      // same browser-bound invitation after confirmation/sign-in.
+      toast.success("تم إنشاء الحساب. افتح رسالة التأكيد في بريدك ثم عد إلى هذا الجهاز لإكمال ربط الدعوة.");
+      navigate({
+        to: "/auth",
+        search: { next: next || "/dashboard", mode: "signin" },
+        replace: true,
+      });
       setMode("signin");
     } catch (err) {
       toast.error(arabicAuthError(err));
