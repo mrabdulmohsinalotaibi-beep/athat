@@ -112,6 +112,27 @@ function ExecutionFlowPage() {
     },
   });
 
+  const approveProgram = useMutation({
+    mutationFn: async ({ programId }: { programId: string }) => {
+      const { error } = await supabase
+        .from("programs")
+        .update({ exec_status: "منفذ" })
+        .eq("id", programId);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["execution-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["programs"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] }),
+      ]);
+      toast.success("تم اعتماد تنفيذ البرنامج يدويًا.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "تعذر اعتماد تنفيذ البرنامج.");
+    },
+  });
+
   const approveTask = useMutation({
     mutationFn: async ({ taskId, currentDocStatus }: { taskId: string; currentDocStatus?: string | null }) => {
       const patch: { exec_status: string; doc_status?: string } = { exec_status: "مكتمل" };
@@ -540,6 +561,8 @@ function ExecutionFlowPage() {
                     <div className="grid gap-2 xl:grid-cols-2">
                       {taskPrograms.map((program) => {
                         const programEvidences = evidenceForProgram(program);
+                        const programDoneNow = doneStatus(program.exec_status);
+                        const programReadyForApproval = !programDoneNow && programEvidences.length > 0;
                         const programUrl = "/programs?programId=" + encodeURIComponent(program.id);
                         return (
                           <div key={program.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-background/60 p-3">
@@ -554,11 +577,31 @@ function ExecutionFlowPage() {
                                 <MiniProgress label="التوثيق" value={programEvidences.length ? 100 : 0} />
                               </div>
                             </div>
-                            <div className="flex gap-1">
+                            <div className="flex flex-wrap gap-1">
                               <Button asChild size="sm" variant="outline"><Link to={programUrl as never}>فتح</Link></Button>
                               <Button type="button" size="sm" variant="outline" onClick={() => setEvidenceTarget({ type: "برنامج", ref: program.id, label: program.name || "برنامج" })}>
                                 <FolderCheck className="size-3.5" /> شاهد
                               </Button>
+                              {programReadyForApproval && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={approveProgram.isPending}
+                                  onClick={() => {
+                                    const approved = window.confirm(
+                                      "يوجد شاهد محفوظ لهذا البرنامج. هل تعتمد تنفيذه الآن؟ لن تتغير الحالة تلقائيًا دون موافقتك.",
+                                    );
+                                    if (approved) approveProgram.mutate({ programId: program.id });
+                                  }}
+                                >
+                                  {approveProgram.isPending && approveProgram.variables?.programId === program.id ? (
+                                    <Loader2 className="size-3.5 animate-spin" />
+                                  ) : (
+                                    <CheckCircle2 className="size-3.5" />
+                                  )}
+                                  جاهز لاعتماد التنفيذ
+                                </Button>
+                              )}
                             </div>
                           </div>
                         );
