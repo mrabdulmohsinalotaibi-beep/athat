@@ -11,6 +11,7 @@ import {
   PlayCircle,
   Plus,
   RotateCcw,
+  Send,
   Sparkles,
   UserRoundCheck,
 } from "lucide-react";
@@ -311,7 +312,7 @@ function SchoolTasksPage() {
         }),
       );
 
-      return results.reduce(
+      return results.reduce<{ created: number; existing: number; skipped: number; groupName: string }>(
         (acc, row) => ({
           created: acc.created + Number(row?.created ?? 0),
           existing: acc.existing + Number(row?.existing ?? 0),
