@@ -7,6 +7,7 @@ import {
   Inbox,
   MessageSquareText,
   ShieldAlert,
+  Send,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -138,6 +139,29 @@ function UnifiedInboxPage() {
           </div>
         </div>
       </section>
+
+      {data?.guidanceAllowed && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link to="/posts" className="rounded-2xl border bg-card p-3 transition hover:border-primary/35 hover:bg-primary/[0.03]">
+            <div className="flex items-center justify-between gap-2">
+              <HeartHandshake className="size-4 text-primary" />
+              <strong className="text-lg">{isLoading ? "—" : guidanceCount}</strong>
+            </div>
+            <p className="mt-2 text-xs font-black">الطلبات والخدمات</p>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">استشارات، إحالات، بلاغات ومشاركات المدونة.</p>
+          </Link>
+          <Link to="/messages" className="rounded-2xl border bg-card p-3 transition hover:border-primary/35 hover:bg-primary/[0.03]">
+            <div className="flex items-center gap-2 text-primary"><MessageSquareText className="size-4" /></div>
+            <p className="mt-2 text-xs font-black">الآراء والرسائل الواردة</p>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">قراءة الرسائل والرد عليها وأرشفتها كمستندات رسمية.</p>
+          </Link>
+          <Link to="/outgoing-messages" className="rounded-2xl border bg-card p-3 transition hover:border-primary/35 hover:bg-primary/[0.03]">
+            <div className="flex items-center gap-2 text-primary"><Send className="size-4" /></div>
+            <p className="mt-2 text-xs font-black">إنشاء رسالة صادرة</p>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">طالب أو مجموعة أو رقم يدوي مع صياغة ذكية وسجل إرسال.</p>
+          </Link>
+        </div>
+      )}
 
       <div className="grid gap-3 xl:grid-cols-2">
         {data?.guidanceAllowed && (
