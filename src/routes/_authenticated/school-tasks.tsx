@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  BarChart3,
   CalendarClock,
   CheckCircle2,
   ClipboardCheck,
@@ -104,6 +105,8 @@ function SchoolTasksPage() {
   const [groupTemplateGroupId, setGroupTemplateGroupId] = useState("");
   const [groupTemplateRole, setGroupTemplateRole] = useState("");
   const [groupTemplateKeys, setGroupTemplateKeys] = useState<string[]>([]);
+  const [performanceGroupId, setPerformanceGroupId] = useState("");
+  const [performanceDays, setPerformanceDays] = useState(30);
 
   const groupsQuery = useQuery({
     queryKey: ["school-permission-groups"],
@@ -118,6 +121,46 @@ function SchoolTasksPage() {
       }>;
     },
     staleTime: 30_000,
+  });
+
+  const groupPerformanceQuery = useQuery({
+    queryKey: ["school-group-task-performance", performanceGroupId, performanceDays],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_school_group_task_performance", {
+        p_group_id: performanceGroupId,
+        p_days: performanceDays,
+      });
+      if (error) throw error;
+      return data as {
+        group_id: string;
+        group_name: string;
+        days: number;
+        generated_at: string;
+        summary: {
+          members: number;
+          total_tasks: number;
+          completed_tasks: number;
+          approved_tasks: number;
+          open_tasks: number;
+          overdue_tasks: number;
+          completion_rate: number;
+        };
+        members: Array<{
+          member_id: string;
+          display_name: string;
+          role: string;
+          total_tasks: number;
+          completed_tasks: number;
+          approved_tasks: number;
+          open_tasks: number;
+          overdue_tasks: number;
+          completion_rate: number;
+          last_completed_at: string | null;
+        }>;
+      };
+    },
+    enabled: Boolean(performanceGroupId),
+    staleTime: 20_000,
   });
 
   const query = useQuery({
@@ -661,6 +704,150 @@ function SchoolTasksPage() {
           هذه قوالب تشغيلية استرشادية قابلة للتعديل وليست بديلًا عن التكليف أو التعميم الرسمي الخاص بالمدرسة.
         </p>
       </section>
+
+      {permissionGroups.length > 0 && (
+        <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-primary">
+                <BarChart3 className="size-4" />
+                <h2 className="font-black">أداء المجموعة</h2>
+              </div>
+              <p className="mt-1 max-w-3xl text-xs leading-6 text-muted-foreground">
+                تابع إنجاز أعضاء المجموعة والمتأخرات والمهام المفتوحة. الأرقام للمتابعة التشغيلية ولا تمثل تقييمًا وظيفيًا نهائيًا.
+              </p>
+            </div>
+            <div className="grid min-w-[280px] grid-cols-2 gap-2">
+              <select
+                value={performanceGroupId}
+                onChange={(e) => setPerformanceGroupId(e.target.value)}
+                className="h-10 rounded-md border bg-background px-3 text-xs"
+              >
+                <option value="">اختر المجموعة</option>
+                {permissionGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={performanceDays}
+                onChange={(e) => setPerformanceDays(Number(e.target.value))}
+                className="h-10 rounded-md border bg-background px-3 text-xs"
+              >
+                <option value={7}>آخر 7 أيام</option>
+                <option value={30}>آخر 30 يومًا</option>
+                <option value={90}>آخر 90 يومًا</option>
+                <option value={180}>آخر 180 يومًا</option>
+                <option value={365}>آخر سنة</option>
+              </select>
+            </div>
+          </div>
+
+          {!performanceGroupId ? (
+            <div className="mt-4 rounded-xl border border-dashed p-5 text-center text-xs text-muted-foreground">
+              اختر مجموعة لعرض مؤشرات المتابعة.
+            </div>
+          ) : groupPerformanceQuery.isLoading ? (
+            <div className="mt-4 rounded-xl border p-5 text-center text-xs text-muted-foreground">
+              جارٍ حساب مؤشرات المجموعة...
+            </div>
+          ) : groupPerformanceQuery.isError ? (
+            <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs text-destructive">
+              تعذّر تحميل أداء المجموعة.
+              <Button className="mr-2" size="sm" variant="outline" onClick={() => void groupPerformanceQuery.refetch()}>
+                إعادة المحاولة
+              </Button>
+            </div>
+          ) : groupPerformanceQuery.data ? (
+            <>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+                <Stat label="الأعضاء" value={groupPerformanceQuery.data.summary.members} />
+                <Stat label="كل المهام" value={groupPerformanceQuery.data.summary.total_tasks} />
+                <Stat label="مكتملة" value={groupPerformanceQuery.data.summary.completed_tasks} />
+                <Stat label="معتمدة" value={groupPerformanceQuery.data.summary.approved_tasks} />
+                <Stat label="مفتوحة" value={groupPerformanceQuery.data.summary.open_tasks} />
+                <Stat label="متأخرة" value={groupPerformanceQuery.data.summary.overdue_tasks} />
+              </div>
+
+              <div className="mt-4 rounded-2xl border bg-muted/10 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black">نسبة إكمال المهام</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      المهام المكتملة أو المعتمدة من إجمالي المهام خلال الفترة المحددة.
+                    </p>
+                  </div>
+                  <strong className="text-xl font-black text-primary">
+                    {Number(groupPerformanceQuery.data.summary.completion_rate ?? 0).toLocaleString("ar-SA")}%
+                  </strong>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${Math.max(0, Math.min(100, Number(groupPerformanceQuery.data.summary.completion_rate ?? 0)))}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-2 xl:grid-cols-2">
+                {groupPerformanceQuery.data.members.map((member) => (
+                  <article
+                    key={member.member_id}
+                    className={`rounded-2xl border p-3 ${member.overdue_tasks > 0 ? "border-amber-500/30 bg-amber-500/[0.035]" : "bg-card"}`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black">{member.display_name}</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">{roleLabel(member.role)}</p>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-lg font-black text-primary">{Number(member.completion_rate ?? 0).toLocaleString("ar-SA")}%</p>
+                        <p className="text-[9px] text-muted-foreground">إكمال</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
+                      <div className="rounded-xl bg-muted/60 px-2 py-2">
+                        <strong className="block text-sm">{member.total_tasks}</strong>
+                        <span className="text-[9px] text-muted-foreground">الكل</span>
+                      </div>
+                      <div className="rounded-xl bg-muted/60 px-2 py-2">
+                        <strong className="block text-sm">{member.completed_tasks}</strong>
+                        <span className="text-[9px] text-muted-foreground">مكتملة</span>
+                      </div>
+                      <div className="rounded-xl bg-muted/60 px-2 py-2">
+                        <strong className="block text-sm">{member.open_tasks}</strong>
+                        <span className="text-[9px] text-muted-foreground">مفتوحة</span>
+                      </div>
+                      <div className={`rounded-xl px-2 py-2 ${member.overdue_tasks > 0 ? "bg-amber-500/10 text-amber-800" : "bg-muted/60"}`}>
+                        <strong className="block text-sm">{member.overdue_tasks}</strong>
+                        <span className="text-[9px]">متأخرة</span>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${Math.max(0, Math.min(100, Number(member.completion_rate ?? 0)))}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-[9px] text-muted-foreground">
+                      {member.last_completed_at
+                        ? `آخر إنجاز: ${new Date(member.last_completed_at).toLocaleDateString("ar-SA")}`
+                        : "لا يوجد إنجاز مسجل خلال الفترة."}
+                    </p>
+                  </article>
+                ))}
+              </div>
+
+              {!groupPerformanceQuery.data.members.length && (
+                <div className="mt-4 rounded-xl border border-dashed p-5 text-center text-xs text-muted-foreground">
+                  لا يوجد أعضاء نشطون في هذه المجموعة.
+                </div>
+              )}
+            </>
+          ) : null}
+        </section>
+      )}
 
       {permissionGroups.length > 0 && (
         <section className="rounded-3xl border border-primary/15 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
