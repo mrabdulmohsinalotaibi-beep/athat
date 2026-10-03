@@ -1,28 +1,13 @@
-export type SchoolRole =
-  | "principal"
-  | "vice_principal"
-  | "counselor"
-  | "teacher"
-  | "admin_staff"
-  | "guard"
-  | "observer";
+import { hasPermission, type PermissionKey, type SchoolRole } from "@/lib/team-permissions";
 
 export type SchoolMembershipAccess = {
   id?: string | null;
   role?: SchoolRole | string | null;
   member_status?: string | null;
   is_admin?: boolean | null;
+  permissions?: Record<string, boolean> | null;
+  data_scope?: Record<string, unknown> | null;
 } | null | undefined;
-
-const COLLABORATION_PATHS = [
-  "/dashboard",
-  "/school-team",
-  "/school-tasks",
-  "/school-inbox",
-  "/inbox",
-  "/profile",
-  "/subscription",
-] as const;
 
 const ADMIN_BYPASS_PATHS = ["/admin"] as const;
 
@@ -31,18 +16,35 @@ function matchesPath(pathname: string, route: string) {
 }
 
 export function isGuidanceWorkspaceMember(membership: SchoolMembershipAccess) {
-  return membership?.member_status === "active" && membership?.role === "counselor";
+  return membership?.member_status === "active" && (
+    membership?.role === "counselor" ||
+    hasPermission(membership, "guidance.full")
+  );
 }
 
 export function isRestrictedSchoolRole(membership: SchoolMembershipAccess) {
   return Boolean(membership && !isGuidanceWorkspaceMember(membership));
 }
 
-export function canOpenWorkspacePath(pathname: string, membership: SchoolMembershipAccess) {
-  // Legacy standalone accounts that have not joined a school workspace retain
-  // their existing counselor workspace until they choose a school role.
-  if (!membership) return true;
+const PATH_PERMISSIONS: Array<{ routes: string[]; permission: PermissionKey }> = [
+  { routes: ["/school-team"], permission: "team.view" },
+  { routes: ["/school-tasks"], permission: "tasks.view" },
+  { routes: ["/reports"], permission: "reports.view" },
+  { routes: ["/free-documents"], permission: "documents.view" },
+  { routes: ["/messages", "/outgoing-messages", "/inbox", "/school-inbox"], permission: "messages.view" },
+  { routes: ["/students"], permission: "students.view" },
+  { routes: ["/programs", "/plan", "/execution", "/evidences"], permission: "programs.view" },
+  { routes: ["/cases"], permission: "cases.view" },
+  { routes: ["/interviews"], permission: "interviews.view" },
+  { routes: ["/attendance", "/behavior"], permission: "attendance.view" },
+  { routes: ["/referrals"], permission: "referrals.view" },
+  { routes: ["/posts"], permission: "posts.view" },
+  { routes: ["/settings", "/health"], permission: "settings.view" },
+];
 
+export function canOpenWorkspacePath(pathname: string, membership: SchoolMembershipAccess) {
+  // Legacy standalone accounts retain their current workspace until linked to a school.
+  if (!membership) return true;
   if (ADMIN_BYPASS_PATHS.some((route) => matchesPath(pathname, route))) return true;
 
   if (membership.member_status !== "active") {
@@ -51,23 +53,23 @@ export function canOpenWorkspacePath(pathname: string, membership: SchoolMembers
     );
   }
 
-  if (membership.role === "counselor") return true;
-
-  if (
-    membership.is_admin &&
-    (matchesPath(pathname, "/settings") || matchesPath(pathname, "/health"))
-  ) {
-    return true;
+  if (matchesPath(pathname, "/dashboard") || matchesPath(pathname, "/profile") || matchesPath(pathname, "/subscription")) {
+    return hasPermission(membership, "dashboard.view");
   }
 
-  return COLLABORATION_PATHS.some((route) => matchesPath(pathname, route));
+  const match = PATH_PERMISSIONS.find((entry) =>
+    entry.routes.some((route) => matchesPath(pathname, route)),
+  );
+  if (match) return hasPermission(membership, match.permission);
+
+  return isGuidanceWorkspaceMember(membership);
 }
 
 export function filterWorkspaceSections<T extends { items: Array<{ to: string }> }>(
   sections: T[],
   membership: SchoolMembershipAccess,
 ): T[] {
-  if (!membership || isGuidanceWorkspaceMember(membership)) return sections;
+  if (!membership) return sections;
 
   return sections
     .map((section) => ({
