@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
+import { ApprovedSignatures } from "@/components/ApprovedSignatures";
 import { HijriDatePicker } from "@/components/HijriDatePicker";
 
 
@@ -1040,6 +1041,7 @@ function ProgramsPage() {
                       <strong className="text-[var(--letterhead-primary)]">ملخص التوثيق:</strong>{" "}
                       حالة التنفيذ: {value(editing.exec_status) || "—"} · عدد المستفيدين: {value(editing.beneficiaries) || "—"} · الشواهد المرفوعة: {uploadedAttachments.length}
                     </div>
+                    <ApprovedSignatures recordTable="programs" recordId={editing.id ?? null} />
                     <OfficialFooter school={school} />
                   </div>
                 </>
