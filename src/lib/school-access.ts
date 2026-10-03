@@ -14,6 +14,7 @@ export type SchoolMembershipAccess = {
 } | null | undefined;
 
 const ADMIN_BYPASS_PATHS = ["/admin"] as const;
+const GUIDANCE_HUB_PATH = "/guidance-work";
 
 function matchesPath(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -32,6 +33,7 @@ export function isRestrictedSchoolRole(membership: SchoolMembershipAccess) {
 
 const PATH_PERMISSIONS: Array<{ routes: string[]; permission: PermissionKey }> = [
   { routes: ["/school-team"], permission: "team.view" },
+  { routes: [GUIDANCE_HUB_PATH], permission: "dashboard.view" },
   { routes: ["/school-tasks", "/initiative-teams", "/initiative-member-work", "/initiative-member-review", "/initiative-dashboard"], permission: "tasks.view" },
   { routes: ["/reports"], permission: "reports.view" },
   { routes: ["/free-documents"], permission: "documents.view" },
@@ -43,7 +45,8 @@ const PATH_PERMISSIONS: Array<{ routes: string[]; permission: PermissionKey }> =
   { routes: ["/attendance", "/behavior"], permission: "attendance.view" },
   { routes: ["/referrals"], permission: "referrals.view" },
   { routes: ["/posts"], permission: "posts.view" },
-  { routes: ["/settings", "/health"], permission: "settings.view" },
+  { routes: ["/settings"], permission: "settings.view" },
+  { routes: ["/health"], permission: "referrals.view" },
 ];
 
 export function canOpenWorkspacePath(pathname: string, membership: SchoolMembershipAccess) {
