@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, FilePlus2, Loader2, Save, Sparkles, Trash2 } from "lucide-react";
+import { Copy, FilePlus2, Loader2, Save, Send, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
+import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +43,7 @@ function FreeDocumentsPage() {
   const [instruction, setInstruction] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [archiveSearch, setArchiveSearch] = useState("");
+  const [signatureOpen, setSignatureOpen] = useState(false);
 
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ["free-documents"],
@@ -170,6 +172,11 @@ function FreeDocumentsPage() {
             {selectedId && <Button variant="outline" onClick={()=>void duplicate()}><Copy className="size-4"/> إنشاء نسخة</Button>}
             {selectedId && <Button variant="destructive" onClick={()=>void remove()}><Trash2 className="size-4"/> حذف</Button>}
             <PdfPreviewButton elementRef={paperRef} filename={filename} title={title || "مستند"} />
+            {selectedId && (
+              <Button type="button" variant="outline" onClick={() => setSignatureOpen(true)}>
+                <Send className="size-4" /> إرسال للاعتماد والتوقيع
+              </Button>
+            )}
           </div>
         </div>
 
@@ -184,6 +191,21 @@ function FreeDocumentsPage() {
           </div>
         </div>
       </section>
+      {selectedId && (
+        <SendForSignatureDialog
+          open={signatureOpen}
+          onOpenChange={setSignatureOpen}
+          recordTable="free_documents"
+          recordId={selectedId}
+          recordType="مستند حر"
+          title={title || "مستند"}
+          snapshot={{
+            "العنوان": title || "مستند",
+            "رقم المستند": documentNo || null,
+            "المحتوى": content,
+          }}
+        />
+      )}
     </div>
   </div>;
 }
