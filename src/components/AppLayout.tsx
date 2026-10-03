@@ -84,23 +84,99 @@ export function AppLayout({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: true,
   });
   const accessMembership = accessContext?.membership ?? null;
+  const accessRole = String(accessMembership?.role ?? "");
   const guidanceNavigationAllowed = !accessMembership || isGuidanceWorkspaceMember(accessMembership);
-  const visibleSections = filterWorkspaceSections(WORKSPACE_SECTIONS, accessMembership);
+  const baseVisibleSections = filterWorkspaceSections(WORKSPACE_SECTIONS, accessMembership);
+  const visibleSections = baseVisibleSections.map((section) => {
+    if (section.id === "students") {
+      const title = accessRole === "student" ? "ملفي" : accessRole === "parent" ? "أبنائي" : accessRole === "teacher" ? "طلابي" : section.title;
+      const description =
+        accessRole === "student"
+          ? "بياناتك الطلابية والمستندات المرتبطة بملفك فقط."
+          : accessRole === "parent"
+            ? "ملفات الأبناء المرتبطين بحساب ولي الأمر فقط."
+            : accessRole === "teacher"
+              ? "الطلاب المسندون لك حسب نطاق الصلاحية."
+              : section.description;
+      return {
+        ...section,
+        title,
+        description,
+        items: section.items.map((item) =>
+          item.to === "/students"
+            ? {
+                ...item,
+                label:
+                  accessRole === "student"
+                    ? "ملفي الطلابي"
+                    : accessRole === "parent"
+                      ? "ملفات أبنائي"
+                      : accessRole === "teacher"
+                        ? "طلابي"
+                        : item.label,
+              }
+            : item,
+        ),
+      };
+    }
+    if (section.id === "guidance" && accessRole === "teacher") {
+      return {
+        ...section,
+        title: "الإحالات والمتابعة",
+        description: "الإحالات التي يسمح لك دورك بإنشائها أو متابعتها.",
+        items: section.items.map((item) =>
+          item.to === "/referrals" ? { ...item, label: "إحالات طلابي" } : item,
+        ),
+      };
+    }
+    return section;
+  });
   const restrictedBottomNavigation = [
     { to: "/dashboard", label: "اليوم", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
     { to: "/school-tasks", label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
     { to: "/inbox", label: "الوارد", icon: FileText, activeRoutes: ["/inbox", "/school-inbox"] },
     { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/school-team", "/settings", "/health"] },
   ] as const;
-  const visibleBottomNavigation = guidanceNavigationAllowed
-    ? bottomNavigation
-    : bottomNavigation.filter((item) =>
+  const roleBottomNavigation =
+    accessRole === "student"
+      ? [
+          { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+          { to: "/students", label: "ملفي", icon: UserRound, activeRoutes: ["/students"] },
+          { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox"] },
+          { to: "/free-documents", label: "مستنداتي", icon: FileText, activeRoutes: ["/free-documents"] },
+          { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
+        ]
+      : accessRole === "parent"
+        ? [
+            { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+            { to: "/students", label: "أبنائي", icon: Users, activeRoutes: ["/students"] },
+            { to: "/messages", label: "الرسائل", icon: MessageSquareText, activeRoutes: ["/messages", "/inbox"] },
+            { to: "/free-documents", label: "المستندات", icon: FileText, activeRoutes: ["/free-documents"] },
+            { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
+          ]
+        : accessRole === "teacher"
+          ? [
+              { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
+              { to: "/students", label: "طلابي", icon: Users, activeRoutes: ["/students"] },
+              { to: "/referrals", label: "الإحالات", icon: ClipboardList, activeRoutes: ["/referrals"] },
+              { to: "/school-tasks", label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
+              { to: "/profile", label: "حسابي", icon: UserRound, activeRoutes: ["/profile"] },
+            ]
+          : null;
+
+  const visibleBottomNavigation = roleBottomNavigation
+    ? roleBottomNavigation.filter((item) =>
         item.activeRoutes.some((route) => canOpenWorkspacePath(route, accessMembership)),
-      ).length >= 3
-      ? bottomNavigation.filter((item) =>
+      )
+    : guidanceNavigationAllowed
+      ? bottomNavigation
+      : bottomNavigation.filter((item) =>
           item.activeRoutes.some((route) => canOpenWorkspacePath(route, accessMembership)),
-        )
-      : restrictedBottomNavigation;
+        ).length >= 3
+        ? bottomNavigation.filter((item) =>
+            item.activeRoutes.some((route) => canOpenWorkspacePath(route, accessMembership)),
+          )
+        : restrictedBottomNavigation;
   const workspaceSchool = accessContext?.school ?? null;
   const currentWorkspaceMember = (accessContext?.members ?? []).find(
     (member: any) => member.id === accessMembership?.id,
