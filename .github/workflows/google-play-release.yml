@@ -37,6 +37,24 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Verify Google Play release secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          missing=0
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD GOOGLE_PLAY_SERVICE_ACCOUNT_JSON; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required secret: $name"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
+
       - name: Install project dependencies
         run: npm ci
 
@@ -51,6 +69,30 @@ jobs:
           rm -rf android
           npx cap add android
           npx cap sync android
+
+      - name: Set unique Play Store version
+        env:
+          ATHAT_VERSION_CODE: ${{ github.run_number }}
+          ATHAT_VERSION_NAME: "1.0.${{ github.run_number }}"
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+          code = os.environ["ATHAT_VERSION_CODE"]
+          name = os.environ["ATHAT_VERSION_NAME"]
+
+          s, code_count = re.subn(r'versionCode\s+\d+', f'versionCode {code}', s, count=1)
+          s, name_count = re.subn(r'versionName\s+"[^"]+"', f'versionName "{name}"', s, count=1)
+          if code_count != 1 or name_count != 1:
+              raise SystemExit("Unable to set Android versionCode/versionName in generated build.gradle")
+
+          p.write_text(s)
+          print(f"Configured versionCode={code}, versionName={name}")
+          PY
 
       - name: Apply ATHAT launcher icon
         run: |
@@ -82,8 +124,8 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          test -n "$ANDROID_KEYSTORE_BASE64" || (echo "Missing ANDROID_KEYSTORE_BASE64" && exit 1)
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/athat-release.jks
+          test -s android/app/athat-release.jks || (echo "::error::Decoded keystore is empty" && exit 1)
 
       - name: Configure release signing
         env:
