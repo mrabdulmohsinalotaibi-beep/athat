@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
+import { ApprovedSignatures } from "@/components/ApprovedSignatures";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -187,6 +188,7 @@ function FreeDocumentsPage() {
               <h2 className="mb-8 text-center text-xl font-black">{title || "مستند"}</h2>
               <div className="whitespace-pre-wrap text-[14px] leading-[2.15]">{content || <span className="text-gray-300">محتوى المستند</span>}</div>
             </article>
+            <ApprovedSignatures recordTable="free_documents" recordId={selectedId || null} />
             <OfficialFooter school={school}/>
           </div>
         </div>
