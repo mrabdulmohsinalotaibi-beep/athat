@@ -6,6 +6,8 @@ export type SchoolMembershipAccess = {
   member_status?: string | null;
   is_admin?: boolean | null;
   permissions?: Record<string, boolean> | null;
+  group_permissions?: Record<string, boolean> | null;
+  group_ids?: string[] | null;
   data_scope?: Record<string, unknown> | null;
   access_expires_at?: string | null;
   access_expired?: boolean | null;
