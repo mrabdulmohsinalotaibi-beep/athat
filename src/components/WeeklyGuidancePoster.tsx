@@ -185,7 +185,18 @@ export function WeeklyGuidancePoster() {
         await navigator.share({ title: `التوجيه الطلابي الأسبوعي — ${title}`, text, files: [file] });
       } else {
         await downloadPoster();
-        toast.info("تم حفظ التصميم كصورة؛ يمكنك مشاركته من جهازك.");
+        const whatsappText = [
+          `التوجيه الطلابي الأسبوعي — ${title || "الأسبوعية"}`,
+          school?.school_name || "",
+          "",
+          "تم حفظ التصميم كصورة على الجهاز؛ أرفق الصورة مع هذه الرسالة في واتساب.",
+        ].filter(Boolean).join("\n");
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(whatsappText)}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
+        toast.info("تم حفظ الصورة وفتح واتساب؛ أرفق الصورة المحفوظة مع الرسالة.");
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
@@ -286,7 +297,20 @@ export function WeeklyGuidancePoster() {
           <Button onClick={() => applyTemplate(topic)} variant="secondary" className="w-full">
             <BookOpenCheck className="size-4 ml-2" /> إعادة تطبيق القالب
           </Button>
-          <div className="grid grid-cols-2 gap-2">\n            <Button type="button" variant="outline" onClick={() => void downloadPoster()}><ImageDown className="size-4" /> حفظ صورة</Button>\n            <Button type="button" onClick={() => void sharePoster()} disabled={sharing}>{sharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />} مشاركة التصميم</Button>\n          </div>\n          <PdfPreviewButton elementRef={posterRef} filename={`لوحة-التوجيه-الطلابي-${title}`} title={`لوحة التوجيه الطلابي - ${title}`} />
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={() => void downloadPoster()}>
+              <ImageDown className="size-4" /> حفظ صورة
+            </Button>
+            <Button type="button" onClick={() => void sharePoster()} disabled={sharing}>
+              {sharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
+              مشاركة التصميم
+            </Button>
+          </div>
+          <PdfPreviewButton
+            elementRef={posterRef}
+            filename={`لوحة-التوجيه-الطلابي-${title}`}
+            title={`لوحة التوجيه الطلابي - ${title}`}
+          />
           <Button
             type="button"
             variant="outline"
