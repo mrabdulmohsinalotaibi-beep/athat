@@ -32,6 +32,11 @@ type Dashboard = {
   public_entries_total: number;
   files_total: number;
   avg_progress: number;
+  students_with_followup: number;
+  students_without_followup: number;
+  followups_this_month: number;
+  family_contacts_this_month: number;
+  meetings_this_month: number;
   members: Array<{
     id: string;
     display_name: string;
@@ -39,9 +44,35 @@ type Dashboard = {
     student_count: number;
     entry_count: number;
     file_count: number;
+    followup_count: number;
+    followed_students: number;
+    meeting_count: number;
+    family_contact_count: number;
+    last_followup?: string | null;
     last_activity?: string | null;
     public_link_active: boolean;
     public_link_expires_at?: string | null;
+  }>;
+  recent_followups: Array<{
+    id: string;
+    week_start: string;
+    student_id: string;
+    student_name: string;
+    member_name: string;
+    role_title: string;
+    attendance_status?: string | null;
+    punctuality_status?: string | null;
+    behavior_status?: string | null;
+    homework_status?: string | null;
+    academic_status?: string | null;
+    meeting_held: boolean;
+    family_contacted: boolean;
+    strengths?: string | null;
+    concerns?: string | null;
+    advice?: string | null;
+    next_action?: string | null;
+    notes?: string | null;
+    updated_at: string;
   }>;
   recent_entries: Array<{
     id: string;
@@ -124,6 +155,14 @@ function InitiativeDashboardPage() {
         <Metric icon={BarChart3} label="متوسط الإنجاز" value={`${d.avg_progress}%`} />
       </section>
 
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <Metric icon={UsersRound} label="طلاب تمت متابعتهم" value={d.students_with_followup} />
+        <Metric icon={UsersRound} label="طلاب بلا متابعة" value={d.students_without_followup} />
+        <Metric icon={ClipboardList} label="متابعات هذا الشهر" value={d.followups_this_month} />
+        <Metric icon={ClipboardList} label="لقاءات هذا الشهر" value={d.meetings_this_month} />
+        <Metric icon={ClipboardList} label="تواصل أسري هذا الشهر" value={d.family_contacts_this_month} />
+      </section>
+
       <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]">
         <section className="rounded-3xl border bg-card p-5">
           <h2 className="font-black">أداء أعضاء المبادرة</h2>
@@ -136,10 +175,16 @@ function InitiativeDashboardPage() {
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px]">
                   <div className="rounded-xl bg-muted/20 p-2">الطلاب<br/><strong className="text-base">{m.student_count}</strong></div>
+                  <div className="rounded-xl bg-muted/20 p-2">المتابعات<br/><strong className="text-base">{m.followup_count}</strong></div>
+                  <div className="rounded-xl bg-muted/20 p-2">طلاب تمت متابعتهم<br/><strong className="text-base">{m.followed_students}</strong></div>
                   <div className="rounded-xl bg-muted/20 p-2">السجلات<br/><strong className="text-base">{m.entry_count}</strong></div>
                   <div className="rounded-xl bg-muted/20 p-2">الشواهد<br/><strong className="text-base">{m.file_count}</strong></div>
+                  <div className="rounded-xl bg-muted/20 p-2">تواصل أسري<br/><strong className="text-base">{m.family_contact_count}</strong></div>
                 </div>
-                <p className="mt-3 text-[10px] text-muted-foreground">آخر نشاط: {m.last_activity ? new Date(m.last_activity).toLocaleString("ar-SA") : "لا يوجد"}</p>
+                <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+                  <span>آخر متابعة: {m.last_followup ? new Date(m.last_followup).toLocaleDateString("ar-SA") : "لا يوجد"}</span>
+                  <span>آخر نشاط: {m.last_activity ? new Date(m.last_activity).toLocaleString("ar-SA") : "لا يوجد"}</span>
+                </div>
               </article>
             ))}
           </div>
@@ -165,8 +210,55 @@ function InitiativeDashboardPage() {
           </div>
         </section>
       </div>
+
+      <section className="rounded-3xl border bg-card p-5">
+        <h2 className="font-black">آخر المتابعات الأسبوعية للطلاب</h2>
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          {(d.recent_followups ?? []).length === 0 ? (
+            <p className="rounded-2xl border border-dashed p-5 text-center text-xs text-muted-foreground lg:col-span-2">
+              لا توجد متابعات أسبوعية مسجلة حتى الآن.
+            </p>
+          ) : (
+            (d.recent_followups ?? []).map((f) => (
+              <article key={f.id} className="rounded-2xl border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-black">{f.student_name}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{f.member_name} · {f.role_title}</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">
+                    {new Date(f.week_start).toLocaleDateString("ar-SA")}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-5">
+                  <Status label="الحضور" value={f.attendance_status} />
+                  <Status label="الالتزام" value={f.punctuality_status} />
+                  <Status label="السلوك" value={f.behavior_status} />
+                  <Status label="الواجبات" value={f.homework_status} />
+                  <Status label="الدراسة" value={f.academic_status} />
+                </div>
+                {(f.strengths || f.concerns || f.next_action) && (
+                  <div className="mt-3 space-y-1 text-xs leading-6 text-muted-foreground">
+                    {f.strengths && <p><strong className="text-foreground">نقاط القوة:</strong> {f.strengths}</p>}
+                    {f.concerns && <p><strong className="text-foreground">يحتاج متابعة:</strong> {f.concerns}</p>}
+                    {f.next_action && <p><strong className="text-foreground">الإجراء القادم:</strong> {f.next_action}</p>}
+                  </div>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2 text-[10px]">
+                  {f.meeting_held && <span className="rounded-full bg-muted px-2 py-1">تم لقاء الطالب</span>}
+                  {f.family_contacted && <span className="rounded-full bg-muted px-2 py-1">تم التواصل مع الأسرة</span>}
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   );
+}
+
+function Status({ label, value }: { label: string; value?: string | null }) {
+  return <div className="rounded-xl bg-muted/20 p-2 text-center"><p className="text-[9px] text-muted-foreground">{label}</p><p className="mt-1 font-black">{value || "—"}</p></div>;
 }
 
 function Metric({ icon: Icon, label, value }: { icon: typeof UsersRound; label: string; value: string | number }) {
