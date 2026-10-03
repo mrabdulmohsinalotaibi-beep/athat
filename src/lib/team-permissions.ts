@@ -162,7 +162,7 @@ export function hasPermission(
   membership: { role?: string | null; is_admin?: boolean | null; permissions?: Record<string, boolean> | null } | null | undefined,
   permission: PermissionKey,
 ) {
-  if (!membership || membership.is_admin) return true;
+  if (!membership) return true;
   const role = membership.role as SchoolRole;
   const explicit = membership.permissions?.[permission];
   if (typeof explicit === "boolean") return explicit;
