@@ -290,10 +290,17 @@ function Dashboard() {
       admin_staff: "الموظف الإداري",
       guard: "حارس المدرسة",
       observer: "اطلاع فقط",
+      student: "طالب",
+      parent: "ولي أمر",
+      custom: "دور مخصص",
     } as Record<string, string>)[schoolRole] ?? "عضو المدرسة";
   const isCounselorDashboard = schoolRole === "counselor";
   const isPrincipalDashboard = schoolRole === "principal";
   const isManagementDashboard = schoolRole === "principal" || schoolRole === "vice_principal";
+  const isTeacherDashboard = schoolRole === "teacher";
+  const isStudentDashboard = schoolRole === "student";
+  const isParentDashboard = schoolRole === "parent";
+  const isPersonalDashboard = isStudentDashboard || isParentDashboard;
   const activeSchoolMembers = (data?.schoolContext?.members ?? []).filter(
     (member: any) => member.member_status === "active",
   );
@@ -482,11 +489,77 @@ function Dashboard() {
     },
   ];
 
+  const teacherStats = [
+    {
+      label: "طلابي",
+      value: data?.studentsCount ?? 0,
+      note: "حسب الصفوف والطلاب المسندين لك",
+      to: "/students" as const,
+      icon: Users,
+    },
+    {
+      label: "مهامي المفتوحة",
+      value: openSchoolTasks.length,
+      note: dueSchoolTasks.length ? `${dueSchoolTasks.length} مستحقة الآن` : "لا توجد مهام مستحقة",
+      to: "/school-tasks" as const,
+      icon: ClipboardCheck,
+    },
+    {
+      label: "الإحالات",
+      value: "فتح",
+      note: "إحالة طالب أو متابعة إحالة",
+      to: "/referrals" as const,
+      icon: HeartHandshake,
+    },
+    {
+      label: "المراسلات",
+      value: unreadAdministrativeReports.length,
+      note: "تقارير ورسائل مرتبطة بدورك",
+      to: "/school-inbox" as const,
+      icon: Inbox,
+    },
+  ];
+
+  const personalStats = [
+    {
+      label: isStudentDashboard ? "ملفي الطلابي" : "أبنائي",
+      value: data?.studentsCount ?? 0,
+      note: isStudentDashboard ? "الملف المرتبط بحسابك فقط" : "الملفات المرتبطة بحساب ولي الأمر",
+      to: "/students" as const,
+      icon: Users,
+    },
+    {
+      label: "الرسائل",
+      value: "متاح",
+      note: "التواصل والخدمات المسموح بها",
+      to: "/messages" as const,
+      icon: MessageSquareText,
+    },
+    {
+      label: "المستندات",
+      value: "متاح",
+      note: isStudentDashboard ? "مستنداتك المرتبطة بملفك" : "المستندات المرتبطة بالأبناء",
+      to: "/free-documents" as const,
+      icon: FileCheck2,
+    },
+    {
+      label: "الحساب",
+      value: "آمن",
+      note: "لا تظهر لك إلا البيانات المسموح بها",
+      to: "/profile" as const,
+      icon: CheckCircle2,
+    },
+  ];
+
   const stats = isManagementDashboard
     ? managementStats
     : isCounselorDashboard
       ? counselorStats
-      : staffStats;
+      : isTeacherDashboard
+        ? teacherStats
+        : isPersonalDashboard
+          ? personalStats
+          : staffStats;
 
   const counselorShortcuts = [
     {
@@ -618,11 +691,70 @@ function Dashboard() {
     },
   ];
 
+  const teacherShortcuts = [
+    {
+      label: "طلابي",
+      value: data?.studentsCount ?? 0,
+      meta: "ضمن نطاق الصلاحية",
+      to: "/students" as const,
+      icon: Users,
+    },
+    {
+      label: "إحالات الطلاب",
+      value: "فتح",
+      meta: "إنشاء أو متابعة إحالة",
+      to: "/referrals" as const,
+      icon: HeartHandshake,
+    },
+    {
+      label: "مهام المدرسة",
+      value: openSchoolTasks.length,
+      meta: dueSchoolTasks.length ? `${dueSchoolTasks.length} مستحقة` : "لا توجد مهام مستحقة",
+      to: "/school-tasks" as const,
+      icon: ClipboardCheck,
+    },
+    {
+      label: "الرسائل",
+      value: "فتح",
+      meta: "التواصل المرتبط بدورك",
+      to: "/messages" as const,
+      icon: MessageSquareText,
+    },
+  ];
+
+  const personalShortcuts = [
+    {
+      label: isStudentDashboard ? "فتح ملفي" : "عرض الأبناء",
+      value: data?.studentsCount ?? 0,
+      meta: isStudentDashboard ? "بياناتك فقط" : "الأبناء المرتبطون بالحساب",
+      to: "/students" as const,
+      icon: Users,
+    },
+    {
+      label: "الرسائل والخدمات",
+      value: "فتح",
+      meta: "تواصل ضمن الصلاحيات",
+      to: "/messages" as const,
+      icon: MessageSquareText,
+    },
+    {
+      label: "المستندات",
+      value: "فتح",
+      meta: isStudentDashboard ? "مستنداتي" : "مستندات الأبناء",
+      to: "/free-documents" as const,
+      icon: FileCheck2,
+    },
+  ];
+
   const shortcuts = isManagementDashboard
     ? managementShortcuts
     : isCounselorDashboard
       ? counselorShortcuts
-      : staffShortcuts;
+      : isTeacherDashboard
+        ? teacherShortcuts
+        : isPersonalDashboard
+          ? personalShortcuts
+          : staffShortcuts;
 
   const counselorQuickActions = [
     { label: "إضافة حالة", to: "/cases?new=1", icon: HeartHandshake },
@@ -645,11 +777,26 @@ function Dashboard() {
     { label: "رفع تقرير إنجاز", to: "/school-tasks", icon: FileCheck2 },
     { label: "المراسلات الإدارية", to: "/school-inbox", icon: Inbox },
   ];
+  const teacherQuickActions = [
+    { label: "فتح طلابي", to: "/students", icon: Users },
+    { label: "إحالة طالب", to: "/referrals?new=1", icon: HeartHandshake },
+    { label: "مهامي اليوم", to: "/school-tasks", icon: ClipboardCheck },
+    { label: "الرسائل", to: "/messages", icon: MessageSquareText },
+  ];
+  const personalQuickActions = [
+    { label: isStudentDashboard ? "فتح ملفي" : "عرض الأبناء", to: "/students", icon: Users },
+    { label: "الرسائل والخدمات", to: "/messages", icon: MessageSquareText },
+    { label: "المستندات", to: "/free-documents", icon: FileCheck2 },
+  ];
   const quickActions = isManagementDashboard
     ? managementQuickActions
     : isCounselorDashboard
       ? counselorQuickActions
-      : staffQuickActions;
+      : isTeacherDashboard
+        ? teacherQuickActions
+        : isPersonalDashboard
+          ? personalQuickActions
+          : staffQuickActions;
 
   const counselorActions = [
     ...pendingEvidenceReviews.slice(0, 2).map((item) => ({
@@ -755,7 +902,7 @@ function Dashboard() {
     })),
   ];
 
-  const actions = (isCounselorDashboard ? counselorActions : schoolActions).slice(0, 6);
+  const actions = (isPersonalDashboard ? [] : isCounselorDashboard ? counselorActions : schoolActions).slice(0, 6);
 
   const roleTaskPool = (isManagementDashboard ? visibleManagementTasks : mySchoolTasks).filter(
     (item) => String(item.status ?? "") !== "ملغاة",
@@ -766,28 +913,52 @@ function Dashboard() {
   const roleTaskPercent = roleTaskPool.length
     ? Math.round((roleTaskCompleted / roleTaskPool.length) * 100)
     : 0;
-  const dashboardProgress = isCounselorDashboard ? planPercent : roleTaskPercent;
-  const dashboardProgressLabel = isCounselorDashboard ? "إنجاز الخطة" : "إنجاز المهام";
-  const dashboardDueCount = isCounselorDashboard
-    ? overdueCases.length + latePlan.length + dueSchoolTasks.length
-    : roleDueSchoolTasks.length;
-  const dashboardApprovalCount = isCounselorDashboard
-    ? approvalReadyPlanTasks.length +
-      pendingEvidenceReviews.length +
-      reportApprovalReadyPlanTasks.length +
-      pendingTaskApprovals.length
-    : pendingTaskApprovals.length + pendingTeamMembers.length;
+  const dashboardProgress = isPersonalDashboard
+    ? (data?.studentsCount ?? 0) > 0 ? 100 : 0
+    : isCounselorDashboard
+      ? planPercent
+      : roleTaskPercent;
+  const dashboardProgressLabel = isPersonalDashboard
+    ? "اكتمال الربط"
+    : isCounselorDashboard
+      ? "إنجاز الخطة"
+      : "إنجاز المهام";
+  const dashboardDueCount = isPersonalDashboard
+    ? 0
+    : isCounselorDashboard
+      ? overdueCases.length + latePlan.length + dueSchoolTasks.length
+      : roleDueSchoolTasks.length;
+  const dashboardApprovalCount = isPersonalDashboard
+    ? 0
+    : isCounselorDashboard
+      ? approvalReadyPlanTasks.length +
+        pendingEvidenceReviews.length +
+        reportApprovalReadyPlanTasks.length +
+        pendingTaskApprovals.length
+      : pendingTaskApprovals.length + pendingTeamMembers.length;
 
   const dashboardTitle = isManagementDashboard
     ? `لوحة ${schoolRoleLabel}`
     : isCounselorDashboard
       ? "لوحة الموجه الطلابي"
-      : `مساحة عمل ${schoolRoleLabel}`;
+      : isStudentDashboard
+        ? "مساحتي الطلابية"
+        : isParentDashboard
+          ? "بوابة ولي الأمر"
+          : isTeacherDashboard
+            ? "مساحة المعلم"
+            : `مساحة عمل ${schoolRoleLabel}`;
   const dashboardSubtitle = isManagementDashboard
     ? "متابعة الفريق والمهام والاعتمادات والمراسلات من مكان واحد."
     : isCounselorDashboard
       ? "الحالات والمتابعات والخطة والبرامج وما يحتاج إجراء اليوم."
-      : "مهامك الحالية والاستحقاقات والتقارير المرتبطة بدورك فقط.";
+      : isStudentDashboard
+        ? "ملفك وخدماتك ومستنداتك فقط، دون الوصول إلى بيانات أي طالب آخر."
+        : isParentDashboard
+          ? "الأبناء المرتبطون بحسابك والخدمات والمستندات المسموح بها فقط."
+          : isTeacherDashboard
+            ? "طلابك وإحالاتك ومهامك ضمن النطاق الذي حددته إدارة المدرسة."
+            : "مهامك الحالية والاستحقاقات والتقارير المرتبطة بدورك فقط.";
 
   if (isError) {
     return (
@@ -837,16 +1008,16 @@ function Dashboard() {
                 <strong className="block text-base font-black">{attentionCount}</strong>
                 <span className="block truncate text-[9px] text-muted-foreground">تحتاج إجراء</span>
               </a>
-              <Link to="/calendar" className="rounded-xl border border-border bg-card px-2.5 py-2 text-center shadow-[var(--shadow-card)]">
-                <strong className="block text-base font-black">{todayAgenda.length}</strong>
-                <span className="block truncate text-[9px] text-muted-foreground">مواعيد اليوم</span>
+              <Link to={isPersonalDashboard ? "/messages" : "/calendar"} className="rounded-xl border border-border bg-card px-2.5 py-2 text-center shadow-[var(--shadow-card)]">
+                <strong className="block text-base font-black">{isPersonalDashboard ? "فتح" : todayAgenda.length}</strong>
+                <span className="block truncate text-[9px] text-muted-foreground">{isPersonalDashboard ? "الرسائل والخدمات" : "مواعيد اليوم"}</span>
               </Link>
               <Link
-                to={isCounselorDashboard ? "/execution" : "/school-tasks"}
+                to={isPersonalDashboard ? "/free-documents" : isCounselorDashboard ? "/execution" : "/school-tasks"}
                 className="rounded-xl border border-border bg-card px-2.5 py-2 text-center shadow-[var(--shadow-card)]"
               >
                 <strong className="block text-base font-black">{dashboardApprovalCount}</strong>
-                <span className="block truncate text-[9px] text-muted-foreground">بانتظار الاعتماد</span>
+                <span className="block truncate text-[9px] text-muted-foreground">{isPersonalDashboard ? "المستندات" : "بانتظار الاعتماد"}</span>
               </Link>
             </div>
           </div>
