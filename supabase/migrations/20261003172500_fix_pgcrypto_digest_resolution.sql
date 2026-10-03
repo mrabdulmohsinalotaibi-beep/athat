@@ -26,8 +26,7 @@ begin
   values(im.initiative_id,im.id,p_entry_id,trim(p_file_name),trim(p_mime_type),p_data_url,coalesce(p_size_bytes,0))
   returning id into fid;
   return fid;
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.bind_claimed_school_invite(p_token text, p_device_secret text)
  RETURNS uuid
@@ -76,8 +75,7 @@ begin
 
   update public.school_invites set claimed_user_id=auth.uid(),account_bound_at=coalesce(account_bound_at,now()),used_count=1,max_uses=1 where id=i.id;
   return mid;
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.claim_school_invite_device(p_token text, p_device_secret text)
  RETURNS jsonb
@@ -109,8 +107,7 @@ begin
     'expires_at',i.expires_at,'initiative_id',i.initiative_id,'initiative_title',ititle,'initiative_slogan',islogan,
     'initiative_role',i.initiative_role,'initiative_tasks',i.initiative_tasks
   );
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.create_initiative_public_link(p_initiative_member_id uuid, p_expires_days integer DEFAULT 30)
  RETURNS text
@@ -141,8 +138,7 @@ begin
   where id=p_initiative_member_id;
 
   return tok;
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.create_public_initiative_view_link(p_initiative_id uuid)
  RETURNS text
@@ -165,8 +161,7 @@ begin
   set public_view_token_hash=h,public_view_active=true,public_view_created_at=now()
   where id=p_initiative_id;
   return tok;
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.delete_public_initiative_entry(p_token text, p_entry_id uuid)
  RETURNS void
@@ -183,8 +178,7 @@ begin
   limit 1;
   if mid is null then raise exception 'رابط العمل غير صالح أو منتهي'; end if;
   delete from public.initiative_public_entries where id=p_entry_id and initiative_member_id=mid;
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.get_public_initiative_view(p_token text)
  RETURNS jsonb
@@ -223,8 +217,7 @@ begin
       'avg_progress',coalesce((select round(avg(progress_percent)::numeric,1) from public.initiative_public_entries where initiative_id=i.id and progress_percent is not null),0)
     )
   );
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.get_public_initiative_workspace(p_token text)
  RETURNS jsonb
@@ -279,8 +272,7 @@ begin
       from public.initiative_public_entries e where e.initiative_member_id=im.id
     ),'[]'::jsonb)
   );
-end $function$
-
+end $function$;
 
 CREATE OR REPLACE FUNCTION public.save_public_initiative_entry(p_token text, p_entry_id uuid DEFAULT NULL::uuid, p_entry_type text DEFAULT 'note'::text, p_title text DEFAULT ''::text, p_details text DEFAULT NULL::text, p_progress_percent integer DEFAULT NULL::integer, p_student_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb)
  RETURNS uuid
@@ -317,5 +309,4 @@ begin
 
   update public.initiative_members set public_access_last_used_at=now() where id=im.id;
   return eid;
-end $function$
-
+end $function$;
