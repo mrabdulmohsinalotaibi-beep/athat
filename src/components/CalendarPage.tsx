@@ -15,6 +15,8 @@ type CalendarEvent = {
   title: string | null;
   etype: string | null;
   status: string | null;
+  source?: "calendar" | "interview" | "case";
+  sourceId?: string;
 };
 
 function dateKey(date: Date) {
@@ -49,15 +51,26 @@ export function CalendarPage() {
   const { data: events = [], isLoading, isError } = useQuery({
     queryKey: ["calendar_events", rangeStart, rangeEnd],
     queryFn: async (): Promise<CalendarEvent[]> => {
-      const { data, error } = await supabase
-        .from("calendar_events")
-        .select("id, edate, etime, title, etype, status")
-        .gte("edate", rangeStart)
-        .lte("edate", rangeEnd)
-        .order("edate", { ascending: true })
-        .order("etime", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as unknown as CalendarEvent[];
+      const [calendarResult, interviewResult, caseResult] = await Promise.all([
+        supabase.from("calendar_events").select("id, edate, etime, title, etype, status").gte("edate", rangeStart).lte("edate", rangeEnd),
+        supabase.from("interviews").select("id, followup_at, student_name, topic").gte("followup_at", rangeStart).lte("followup_at", rangeEnd),
+        supabase.from("counseling_cases").select("id, followup_at, student_name, summary, case_status").gte("followup_at", rangeStart).lte("followup_at", rangeEnd),
+      ]);
+      if (calendarResult.error) throw calendarResult.error;
+      if (interviewResult.error) throw interviewResult.error;
+      if (caseResult.error) throw caseResult.error;
+      const manual = (calendarResult.data ?? []).map((item: any) => ({ ...item, source: "calendar" as const, sourceId: String(item.id) }));
+      const interviews = (interviewResult.data ?? []).map((item: any) => ({
+        id: `interview-${item.id}`, edate: item.followup_at, etime: null,
+        title: item.student_name ? `متابعة: ${item.student_name}` : "متابعة مقابلة",
+        etype: item.topic || "مقابلة", status: "متابعة", source: "interview" as const, sourceId: String(item.id),
+      }));
+      const cases = (caseResult.data ?? []).filter((item: any) => !["مغلقة", "مغلق"].includes(String(item.case_status ?? ""))).map((item: any) => ({
+        id: `case-${item.id}`, edate: item.followup_at, etime: null,
+        title: item.student_name ? `حالة: ${item.student_name}` : "متابعة حالة",
+        etype: item.summary || "حالة طلابية", status: item.case_status || "متابعة", source: "case" as const, sourceId: String(item.id),
+      }));
+      return [...manual, ...interviews, ...cases].sort((a, b) => String(a.edate ?? "").localeCompare(String(b.edate ?? "")));
     },
   });
   const eventsByDay = useMemo(() => {
@@ -193,12 +206,19 @@ export function CalendarPage() {
             <div className="space-y-2">
               {selectedEvents.map((event) => (
                 <div key={event.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card px-3 py-2 text-xs">
-                  <span className="font-bold">{event.title || event.etype || "موعد إرشادي"}</span>
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Clock className="size-3.5" aria-hidden="true" />
-                    {event.etime || "وقت غير محدد"}
-                    {event.status ? " · " + event.status : ""}
-                  </span>
+                  <div>
+                    <span className="font-bold">{event.title || event.etype || "موعد إرشادي"}</span>
+                    <span className="mr-2 text-[10px] text-muted-foreground">{event.etype || ""}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Clock className="size-3.5" aria-hidden="true" />
+                      {event.etime || "وقت غير محدد"}
+                      {event.status ? " · " + event.status : ""}
+                    </span>
+                    {event.source === "interview" && <Button asChild size="sm" variant="outline"><Link to="/interviews">فتح الجلسات</Link></Button>}
+                    {event.source === "case" && <Button asChild size="sm" variant="outline"><Link to="/cases">فتح الحالات</Link></Button>}
+                  </div>
                 </div>
               ))}
             </div>
