@@ -169,6 +169,7 @@ function AttendancePage() {
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<ImportedAttendance[]>([]);
   const [importStatus, setImportStatus] = useState<OcrProgress | null>(null);
+  const [studentSearch, setStudentSearch] = useState<Record<number, string>>({});
 
   const { data: attendanceRows = [] } = useQuery({
     queryKey: ["attendance-followup-summary"],
@@ -180,6 +181,19 @@ function AttendancePage() {
       return data ?? [];
     },
     staleTime: 30_000,
+  });
+
+  const { data: schoolStudents = [] } = useQuery({
+    queryKey: ["attendance-import-students"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id,student_no,national_id,full_name,stage,grade,classroom")
+        .order("full_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
   });
 
   const repeatedAbsence = useMemo(() => {
