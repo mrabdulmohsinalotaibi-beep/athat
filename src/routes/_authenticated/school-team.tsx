@@ -38,6 +38,8 @@ type SchoolContext = {
     member_status: MemberStatus;
     is_admin: boolean;
     permissions?: Record<string, boolean> | null;
+    group_permissions?: Record<string, boolean> | null;
+    group_ids?: string[];
     data_scope?: DataScope | null;
     linked_student_ids?: string[];
     access_expires_at?: string | null;
@@ -57,6 +59,8 @@ type SchoolContext = {
     member_status: MemberStatus;
     is_admin: boolean;
     permissions?: Record<string, boolean> | null;
+    group_permissions?: Record<string, boolean> | null;
+    group_ids?: string[];
     data_scope?: DataScope | null;
     linked_student_ids?: string[];
     access_expires_at?: string | null;
@@ -832,6 +836,18 @@ function SchoolTeamPage() {
                         <p className="mt-1 text-[10px] leading-5 text-muted-foreground">مفيد للتكليف المؤقت أو اللجان الموسمية. اتركه فارغًا للوصول الدائم.</p>
                       </div>
 
+                      {(member.group_ids?.length ?? 0) > 0 && (
+                        <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-[10px] leading-5">
+                          <strong className="block text-primary">صلاحيات موروثة من المجموعات</strong>
+                          <span className="text-muted-foreground">
+                            {(groupsQuery.data ?? [])
+                              .filter((group) => member.group_ids?.includes(group.id))
+                              .map((group) => group.name)
+                              .join(" · ")}
+                          </span>
+                          <p className="mt-1 text-muted-foreground">هذه الصلاحيات تضاف تلقائيًا ولا تُلغى من إعداد العضو الفردي؛ عدّل المجموعة نفسها إذا أردت تغييرها للجميع.</p>
+                        </div>
+                      )}
                       <PermissionEditor permissions={editPermissions} onChange={setEditPermissions} compact />
 
                       <div className="flex flex-wrap gap-2">
@@ -879,6 +895,18 @@ function SchoolTeamPage() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-black">{member.display_name || "عضو المدرسة"}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{roleLabel(member.role)}</p>
+                  {(member.group_ids?.length ?? 0) > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(groupsQuery.data ?? [])
+                        .filter((group) => member.group_ids?.includes(group.id))
+                        .slice(0, 4)
+                        .map((group) => (
+                          <span key={group.id} className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary">
+                            {group.name}
+                          </span>
+                        ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-1">
                   {member.access_expired && <span className="rounded-full bg-destructive/10 px-2 py-1 text-[10px] font-black text-destructive">منتهي</span>}
