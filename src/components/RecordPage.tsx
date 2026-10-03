@@ -1157,6 +1157,21 @@ export function RecordPage({
                   );
                 })}
               </div>
+              {approvedSignatures.length > 0 && (
+                <div data-pdf-block="true" className="my-6 border-t border-[var(--paper-border)] pt-4">
+                  <p className="mb-3 text-xs font-bold text-[var(--paper-muted-foreground)]">الاعتمادات والتواقيع الإلكترونية</p>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {approvedSignatures.map((signature, index) => (
+                      <div key={`${signature.name}-${index}`} className="official-signature-block rounded-lg border border-[var(--paper-border)] p-3">
+                        <p className="text-xs font-bold">{signature.name}</p>
+                        <p className="text-[10px] text-[var(--paper-muted-foreground)]">{signature.role}</p>
+                        <img src={signature.signatureData} alt={`توقيع ${signature.name}`} className="mt-2 h-16 max-w-[180px] object-contain" />
+                        {signature.signedAt && <p className="mt-1 text-[9px] text-[var(--paper-muted-foreground)]">تم التوقيع: {new Date(signature.signedAt).toLocaleString("ar-SA")}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <OfficialFooter school={school} />
             </div>
           )}
