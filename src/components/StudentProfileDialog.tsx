@@ -33,6 +33,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { useSchool } from "@/lib/school";
+import { hasPermission, type PermissionKey } from "@/lib/team-permissions";
 
 type Row = Record<string, unknown> & { id: string };
 
@@ -56,18 +57,42 @@ export function StudentProfileDialog({
 }) {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
+  const { data: accessContext } = useQuery({
+    queryKey: ["school-access-context"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_my_school_context");
+      if (error) throw error;
+      return data ?? { membership: null };
+    },
+    staleTime: 30_000,
+  });
+  const membership = accessContext?.membership ?? null;
   const printRef = useRef<HTMLDivElement>(null);
   const fullName = String(student?.["full_name"] ?? "");
   const studentNo = String(student?.["student_no"] ?? "");
   const studentId = String(student?.id ?? "");
 
-  // نجلب كل السجلات المرتبطة بهذا الطالب من كل الجداول المرتبطة باسمه دفعة واحدة
+  const sectionPermissions: Record<string, { view: PermissionKey; edit: PermissionKey }> = {
+    cases: { view: "cases.view", edit: "cases.edit" },
+    interviews: { view: "interviews.view", edit: "interviews.edit" },
+    attendance: { view: "attendance.view", edit: "attendance.edit" },
+    behavior: { view: "attendance.view", edit: "attendance.edit" },
+    referrals: { view: "referrals.view", edit: "referrals.edit" },
+  };
+  const visibleLinkedSections = LINKED_SECTIONS.filter((section) =>
+    hasPermission(membership, sectionPermissions[section.key].view),
+  );
+  const canEditSection = (sectionKey: string) =>
+    hasPermission(membership, sectionPermissions[sectionKey]?.edit ?? "students.edit");
+  const hasGuidanceDetails = visibleLinkedSections.length > 0;
+
+  // نجلب فقط السجلات التي يسمح بها دور المستخدم ونطاقه
   const { data: sections = {}, isLoading } = useQuery({
     queryKey: ["student-profile", studentId, fullName, studentNo],
     enabled: open && Boolean(studentId || studentNo || fullName),
     queryFn: async () => {
       const entries = await Promise.all(
-        LINKED_SECTIONS.map(async (section) => {
+        visibleLinkedSections.map(async (section) => {
           const config = recordByKey(section.key);
 
           // New records use student_id, while historical records still match by
@@ -141,11 +166,11 @@ export function StudentProfileDialog({
 
   const stats = useMemo(
     () =>
-      LINKED_SECTIONS.map((section) => ({
+      visibleLinkedSections.map((section) => ({
         key: section.key,
         count: sections[section.key]?.length ?? 0,
       })),
-    [sections],
+    [sections, visibleLinkedSections],
   );
 
   const phone = normalizeSaudiPhone(student?.["guardian_phone"]);
@@ -160,7 +185,7 @@ export function StudentProfileDialog({
   });
   const timeline = useMemo(
     () =>
-      LINKED_SECTIONS.flatMap((section) =>
+      visibleLinkedSections.flatMap((section) =>
         (sections[section.key] ?? []).map((row) => ({
           id: `${section.key}-${row.id}`,
           date: String(row[section.dateField] ?? row["created_at"] ?? ""),
@@ -178,7 +203,7 @@ export function StudentProfileDialog({
       )
         .sort((a, b) => b.date.localeCompare(a.date, "ar"))
         .slice(0, 12),
-    [sections],
+    [sections, visibleLinkedSections],
   );
   const latestActivity = timeline[0];
   const priorityCase = overdueFollowups[0] ?? activeCases[0] ?? null;
@@ -297,7 +322,7 @@ export function StudentProfileDialog({
             </div>
           </div>
 
-          {!isLoading && nextStudentAction && (
+          {!isLoading && hasPermission(membership, "cases.view") && nextStudentAction && (
             <div data-pdf-exclude="true" className="rounded-2xl border border-[#9A6C78]/25 bg-[#F1E5E8]/60 p-3 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
@@ -320,16 +345,18 @@ export function StudentProfileDialog({
             </div>
           )}
 
-          <div data-pdf-exclude="true" className="rounded-2xl border border-[#89AA74]/30 bg-[#E4ECDF]/70 p-3">
-            <p className="mb-2 text-xs font-black text-primary">إجراء جديد للطالب</p>
-            <div className="grid grid-cols-2 gap-2 xl:flex xl:flex-wrap">
-              <Button asChild size="sm" variant="outline"><a href={`/cases?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ClipboardList className="size-4" /> فتح حالة</a></Button>
-              <Button asChild size="sm" variant="outline"><a href={`/interviews?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><MessageSquare className="size-4" /> إضافة جلسة</a></Button>
-              <Button asChild size="sm" variant="outline"><a href={`/referrals?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ExternalLink className="size-4" /> إنشاء إحالة</a></Button>
-              <Button asChild size="sm" variant="outline"><a href={`/attendance?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><CalendarClock className="size-4" /> تسجيل مواظبة</a></Button>
-              <Button asChild size="sm" variant="outline"><a href={`/behavior?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ShieldAlert className="size-4" /> تسجيل سلوك</a></Button>
+          {visibleLinkedSections.some((section) => canEditSection(section.key)) && (
+            <div data-pdf-exclude="true" className="rounded-2xl border border-[#89AA74]/30 bg-[#E4ECDF]/70 p-3">
+              <p className="mb-2 text-xs font-black text-primary">إجراء جديد للطالب</p>
+              <div className="grid grid-cols-2 gap-2 xl:flex xl:flex-wrap">
+                {canEditSection("cases") && <Button asChild size="sm" variant="outline"><a href={`/cases?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ClipboardList className="size-4" /> فتح حالة</a></Button>}
+                {canEditSection("interviews") && <Button asChild size="sm" variant="outline"><a href={`/interviews?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><MessageSquare className="size-4" /> إضافة جلسة</a></Button>}
+                {canEditSection("referrals") && <Button asChild size="sm" variant="outline"><a href={`/referrals?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ExternalLink className="size-4" /> إنشاء إحالة</a></Button>}
+                {canEditSection("attendance") && <Button asChild size="sm" variant="outline"><a href={`/attendance?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><CalendarClock className="size-4" /> تسجيل مواظبة</a></Button>}
+                {canEditSection("behavior") && <Button asChild size="sm" variant="outline"><a href={`/behavior?new=student&studentId=${encodeURIComponent(studentId)}&studentNo=${encodeURIComponent(studentNo)}&studentName=${encodeURIComponent(fullName)}`} onClick={() => onOpenChange(false)}><ShieldAlert className="size-4" /> تسجيل سلوك</a></Button>}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ملخص عدد السجلات المرتبطة */}
           <div className="flex flex-wrap gap-2">
@@ -346,7 +373,7 @@ export function StudentProfileDialog({
             })}
           </div>
 
-          {!isLoading && (
+          {!isLoading && hasGuidanceDetails && (
             <section className="break-inside-avoid rounded-2xl border border-paper-border bg-paper-muted p-4">
               <div className="mb-3 flex items-center gap-2">
                 <ClipboardList className="size-4 text-primary" />
@@ -440,9 +467,9 @@ export function StudentProfileDialog({
           )}
 
           {/* الأقسام المرتبطة باسم الطالب */}
-          {!isLoading && (
-            <Accordion type="multiple" defaultValue={LINKED_SECTIONS.map((section) => section.key)} className="w-full">
-              {LINKED_SECTIONS.map((section) => {
+          {!isLoading && hasGuidanceDetails && (
+            <Accordion type="multiple" defaultValue={visibleLinkedSections.map((section) => section.key)} className="w-full">
+              {visibleLinkedSections.map((section) => {
                 const config = recordByKey(section.key)!;
                 const Icon = section.icon;
                 const rows = sections[section.key] ?? [];
@@ -458,13 +485,15 @@ export function StudentProfileDialog({
                       </span>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div data-pdf-exclude="true" className="mb-3 flex justify-end">
-                        <Button asChild size="sm" variant="outline">
-                          <Link to={`/${section.key}` as never} onClick={() => onOpenChange(false)}>
-                            <GraduationCap className="size-4" /> إضافة سجل جديد
-                          </Link>
-                        </Button>
-                      </div>
+                      {canEditSection(section.key) && (
+                        <div data-pdf-exclude="true" className="mb-3 flex justify-end">
+                          <Button asChild size="sm" variant="outline">
+                            <Link to={`/${section.key}` as never} onClick={() => onOpenChange(false)}>
+                              <GraduationCap className="size-4" /> إضافة سجل جديد
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
 
                       {rows.length === 0 ? (
                         <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
@@ -485,15 +514,17 @@ export function StudentProfileDialog({
                                   {displayRecordValue(row[section.titleField]) || "—"}
                                 </p>
                               </div>
-                              <Button
-                                data-pdf-exclude="true"
-                                variant="ghost"
-                                size="icon"
-                                title="حذف السجل"
-                                onClick={() => deleteRow(section.key, config.table, row.id)}
-                              >
-                                <Trash2 className="size-4 text-destructive" />
-                              </Button>
+                              {canEditSection(section.key) && (
+                                <Button
+                                  data-pdf-exclude="true"
+                                  variant="ghost"
+                                  size="icon"
+                                  title="حذف السجل"
+                                  onClick={() => deleteRow(section.key, config.table, row.id)}
+                                >
+                                  <Trash2 className="size-4 text-destructive" />
+                                </Button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -507,9 +538,9 @@ export function StudentProfileDialog({
 
           <p data-pdf-exclude="true" className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <BookOpenText className="size-3.5" />
-            هذا الملف يجمع تلقائياً كل سجل مرتبط بالطالب في الحالات والمقابلات والمواظبة والسلوك
-            والإحالات. تُربط السجلات الجديدة بمعرّف الطالب مباشرةً، وتظل السجلات السابقة ظاهرة برقم
-            الطالب أو الاسم.
+            {hasGuidanceDetails
+              ? "يعرض هذا الملف السجلات المرتبطة بالطالب التي تسمح بها صلاحيات حسابك فقط."
+              : "يعرض هذا الملف البيانات الأساسية والمستندات المسموح بها لحسابك، دون إظهار سجلات التوجيه الحساسة."}
           </p>
           <OfficialFooter school={school} />
         </div>
