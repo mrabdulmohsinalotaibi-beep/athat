@@ -26,7 +26,7 @@ import { Copyright } from "@/components/Copyright";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { QuickActionLauncher } from "@/components/QuickActionLauncher";
 import { BrandLogo } from "@/components/BrandLogo";
-import { filterWorkspaceSections, isGuidanceWorkspaceMember } from "@/lib/school-access";
+import { canOpenWorkspacePath, filterWorkspaceSections, isGuidanceWorkspaceMember } from "@/lib/school-access";
 
 function isPathActive(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(route + "/");
@@ -92,7 +92,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
     { to: "/inbox", label: "الوارد", icon: FileText, activeRoutes: ["/inbox", "/school-inbox"] },
     { to: "/profile", label: "المزيد", icon: UserRound, activeRoutes: ["/profile", "/school-team", "/settings", "/health"] },
   ] as const;
-  const visibleBottomNavigation = guidanceNavigationAllowed ? bottomNavigation : restrictedBottomNavigation;
+  const visibleBottomNavigation = guidanceNavigationAllowed
+    ? bottomNavigation
+    : bottomNavigation.filter((item) =>
+        item.activeRoutes.some((route) => canOpenWorkspacePath(route, accessMembership)),
+      ).length >= 3
+      ? bottomNavigation.filter((item) =>
+          item.activeRoutes.some((route) => canOpenWorkspacePath(route, accessMembership)),
+        )
+      : restrictedBottomNavigation;
   const workspaceSchool = accessContext?.school ?? null;
   const currentWorkspaceMember = (accessContext?.members ?? []).find(
     (member: any) => member.id === accessMembership?.id,
@@ -106,6 +114,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       admin_staff: "الموظف الإداري",
       guard: "حارس المدرسة",
       observer: "اطلاع فقط",
+      student: "طالب",
+      parent: "ولي أمر",
+      custom: "دور مخصص",
     } as Record<string, string>)[String(accessMembership?.role ?? "")] ?? "عضو المدرسة";
 
   const { data: alertSummary } = useQuery({
