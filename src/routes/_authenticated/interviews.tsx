@@ -27,7 +27,7 @@ function InterviewsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("interviews")
-        .select("id,idate,itype,student_name,topic,followup_at,recommendations");
+        .select("id,idate,itype,student_id,student_no,student_name,case_id,topic,followup_at,recommendations");
       if (error) throw error;
       return data ?? [];
     },
@@ -96,6 +96,19 @@ function InterviewsPage() {
                   <span className="text-[11px] font-bold text-primary">{String(row.followup_at)}</span>
                 </div>
                 <p className="mt-1 truncate text-xs text-muted-foreground">{row.topic || row.itype || "مقابلة طلابية"}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={`/interviews?new=student&studentId=${encodeURIComponent(String(row.student_id ?? ""))}&studentNo=${encodeURIComponent(String(row.student_no ?? ""))}&studentName=${encodeURIComponent(String(row.student_name ?? ""))}&caseId=${encodeURIComponent(String(row.case_id ?? ""))}`}
+                    className="rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-black text-primary-foreground"
+                  >
+                    تسجيل متابعة جديدة
+                  </a>
+                  {row.case_id && (
+                    <Link to="/cases" className="rounded-lg border px-2.5 py-1.5 text-[11px] font-black text-primary">
+                      الحالة المرتبطة
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
           </div>
