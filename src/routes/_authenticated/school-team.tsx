@@ -230,28 +230,7 @@ function SchoolTeamPage() {
     }
   }, []);
 
-  function buildInviteUrl(code: string) {
-    return `${window.location.origin}/school-team?join=${encodeURIComponent(code)}`;
-  }
-
-  async function copyInvite(code: string) {
-    await navigator.clipboard.writeText(buildInviteUrl(code));
-    toast.success("تم نسخ رابط دعوة فريق المدرسة.");
-  }
-
-  async function shareInvite(code: string, name: string) {
-    const url = buildInviteUrl(code);
-    const text = `دعوة للانضمام إلى فريق ${name} في الذات | ATHAT. افتح الرابط وسجّل الدخول ثم أرسل طلب الانضمام:\n${url}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "دعوة فريق المدرسة", text, url });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-      }
-    }
-    window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  }
+  // دعوة الأشخاص تتم من منشئ الدعوة المخصصة: رابط واحد، استخدام واحد، وجهاز واحد.
 
   const permissionStudentsQuery = useQuery({
     queryKey: ["school-permission-students"],
@@ -360,7 +339,6 @@ function SchoolTeamPage() {
       setGroupMemberIds([]);
       await queryClient.invalidateQueries({ queryKey: ["school-permission-groups"] });
       await queryClient.invalidateQueries({ queryKey: ["school-access-audit"] });
-    await queryClient.invalidateQueries({ queryKey: ["school-permission-groups"] });
       toast.success("تم حفظ مجموعة الصلاحيات.");
     },
     onError: (error) => toast.error((error as Error).message),
