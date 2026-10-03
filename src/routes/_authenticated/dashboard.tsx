@@ -81,7 +81,9 @@ function useDashboard() {
         ["programs", supabase.from("programs").select("id,name,exec_status,plan_task_id")],
         ["calendar", supabase.from("calendar_events").select("id,edate,etime,title,etype,status")],
         ["planTasks", supabase.from("plan_tasks").select("id,task,exec_status,due_date,doc_status")],
-        ["interviews", supabase.from("interviews").select("id,student_name,topic,followup_at")],
+        ["interviews", supabase.from("interviews").select("id,student_id,student_no,student_name,topic,followup_at")],
+        ["attendance", supabase.from("attendance").select("id,student_id,student_no,student_name,case_type,count_days,adate")],
+        ["behavior", supabase.from("behavior").select("id,student_id,student_no,student_name,result,followup_at,observation")],
         ["evidences", supabase.from("evidences").select("id,name,linked_ref,linked_type,doc_status")],
         ["publicRequests", supabase.from("public_requests").select("id,status,kind,created_at")],
         ["feedback", supabase
@@ -130,6 +132,8 @@ function useDashboard() {
       const calendar = pick("calendar");
       const planTasks = pick("planTasks");
       const interviews = pick("interviews");
+      const attendance = pick("attendance");
+      const behavior = pick("behavior");
       const evidences = pick("evidences");
       const publicRequests = pick("publicRequests");
       const feedback = pick("feedback");
@@ -145,6 +149,8 @@ function useDashboard() {
         calendar,
         planTasks,
         interviews,
+        attendance,
+        behavior,
         evidences,
         publicRequests,
         feedback,
@@ -168,6 +174,8 @@ function useDashboard() {
         calendar: calendar.error ? [] : calendar.data ?? [],
         planTasks: planTasks.error ? [] : planTasks.data ?? [],
         interviews: interviews.error ? [] : interviews.data ?? [],
+        attendance: attendance.error ? [] : attendance.data ?? [],
+        behavior: behavior.error ? [] : behavior.data ?? [],
         evidences: evidences.error ? [] : evidences.data ?? [],
         publicRequests: publicRequests.error ? [] : publicRequests.data ?? [],
         feedback: feedback.error ? [] : feedback.data ?? [],
@@ -392,6 +400,31 @@ function Dashboard() {
     .sort((a, b) => String(a.followup_at ?? "").localeCompare(String(b.followup_at ?? "")))
     .slice(0, 4);
 
+  const dueInterviewFollowups = (data?.interviews ?? []).filter(
+    (item) => item.followup_at && String(item.followup_at).slice(0, 10) <= day,
+  );
+  const dueBehaviorFollowups = (data?.behavior ?? []).filter(
+    (item) =>
+      ["تحتاج متابعة", "تحسن جزئي"].includes(String(item.result ?? "")) &&
+      item.followup_at &&
+      String(item.followup_at).slice(0, 10) <= day,
+  );
+  const attendanceGrouped = new Map<string, { student_id?: string; student_no?: string; student_name?: string; count: number }>();
+  (data?.attendance ?? []).forEach((item: any) => {
+    if (!["غياب", "تأخر", "هروب"].includes(String(item.case_type ?? ""))) return;
+    const key = String(item.student_id || item.student_no || item.student_name || "").trim();
+    if (!key) return;
+    const current = attendanceGrouped.get(key) ?? {
+      student_id: item.student_id,
+      student_no: item.student_no,
+      student_name: item.student_name,
+      count: 0,
+    };
+    current.count += Math.max(1, Number(item.count_days) || 1);
+    attendanceGrouped.set(key, current);
+  });
+  const repeatedAttendance = Array.from(attendanceGrouped.values()).filter((item) => item.count >= 3);
+
   const roleSchoolAttentionCount =
     roleDueSchoolTasks.length +
     pendingTaskApprovals.length +
@@ -399,6 +432,9 @@ function Dashboard() {
     pendingTeamMembers.length;
   const counselorAttentionCount =
     overdueCases.length +
+    dueInterviewFollowups.length +
+    dueBehaviorFollowups.length +
+    repeatedAttendance.length +
     approvalReadyPlanTasks.length +
     pendingEvidenceReviews.length +
     reportApprovalReadyPlanTasks.length +
@@ -1198,6 +1234,46 @@ function Dashboard() {
               </Link>
             )}
 
+            {isCounselorDashboard && overdueCases.length > 0 && (
+              <Link to="/cases" className="flex items-center justify-between gap-3 rounded-xl border border-amber-300/60 bg-amber-50 p-2.5">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-amber-800">متابعة الحالات</p>
+                  <p className="truncate text-xs font-black">{overdueCases.length} حالة مستحقة المتابعة</p>
+                </div>
+                <ArrowLeft className="size-4 shrink-0 text-amber-800" />
+              </Link>
+            )}
+
+            {isCounselorDashboard && dueInterviewFollowups.length > 0 && (
+              <Link to="/interviews" className="flex items-center justify-between gap-3 rounded-xl border p-2.5">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-primary">متابعة الجلسات</p>
+                  <p className="truncate text-xs font-black">{dueInterviewFollowups.length} مقابلة تحتاج متابعة</p>
+                </div>
+                <ArrowLeft className="size-4 shrink-0 text-primary" />
+              </Link>
+            )}
+
+            {isCounselorDashboard && dueBehaviorFollowups.length > 0 && (
+              <Link to="/behavior" className="flex items-center justify-between gap-3 rounded-xl border p-2.5">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-primary">المتابعة السلوكية</p>
+                  <p className="truncate text-xs font-black">{dueBehaviorFollowups.length} سجل سلوكي مستحق</p>
+                </div>
+                <ArrowLeft className="size-4 shrink-0 text-primary" />
+              </Link>
+            )}
+
+            {isCounselorDashboard && repeatedAttendance.length > 0 && (
+              <Link to="/attendance" className="flex items-center justify-between gap-3 rounded-xl border p-2.5">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-primary">المواظبة المتكررة</p>
+                  <p className="truncate text-xs font-black">{repeatedAttendance.length} طالب يحتاج متابعة مواظبة</p>
+                </div>
+                <ArrowLeft className="size-4 shrink-0 text-primary" />
+              </Link>
+            )}
+
             {isCounselorDashboard && missingDocumentation.length > 0 && (
               <Link
                 to="/evidences"
@@ -1227,7 +1303,7 @@ function Dashboard() {
                 <ArrowLeft className="size-4 shrink-0 text-primary" />
               </Link>
             ))}
-            {actions.length === 0 && openRequests === 0 && missingDocumentation.length === 0 && (
+            {actions.length === 0 && openRequests === 0 && missingDocumentation.length === 0 && overdueCases.length === 0 && dueInterviewFollowups.length === 0 && dueBehaviorFollowups.length === 0 && repeatedAttendance.length === 0 && (
               <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">لا توجد مهام تحتاج متابعة الآن.</p>
             )}
           </div>
