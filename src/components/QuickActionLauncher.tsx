@@ -52,6 +52,17 @@ export function QuickActionLauncher({
   const [selectedStudent, setSelectedStudent] = useState<StudentResult | null>(null);
   const normalized = studentTerm.trim();
 
+  const { data: schoolContext } = useQuery({
+    queryKey: ["school-access-context"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_my_school_context");
+      if (error) throw error;
+      return data ?? { membership: null };
+    },
+    staleTime: 30_000,
+  });
+  const role = String(schoolContext?.membership?.role ?? "");
+
   const { data: students = [], isFetching } = useQuery({
     queryKey: ["quick-action-student-search", normalized],
     enabled: open && guidanceAllowed && normalized.length >= 2,
@@ -109,7 +120,34 @@ export function QuickActionLauncher({
     { label: "فريق المدرسة", detail: "الأعضاء والصلاحيات", to: "/school-team", icon: Users },
   ];
 
-  const actions = guidanceAllowed ? counselorActions : staffActions;
+  const teacherActions = [
+    { label: "طلابي", detail: "عرض الطلاب ضمن نطاقك", to: "/students", icon: Users },
+    { label: "إحالة طالب", detail: "إنشاء أو متابعة إحالة", to: "/referrals?new=1", icon: Send },
+    { label: "مهامي", detail: "فتح المهام المسندة لك", to: "/school-tasks", icon: ClipboardList },
+    { label: "الرسائل", detail: "التواصل والخدمات", to: "/messages", icon: MessageSquareText },
+  ];
+  const studentActions = [
+    { label: "ملفي", detail: "فتح ملفك الطلابي", to: "/students", icon: Users },
+    { label: "الرسائل", detail: "التواصل والخدمات المتاحة", to: "/messages", icon: MessageSquareText },
+    { label: "مستنداتي", detail: "المستندات المرتبطة بك", to: "/free-documents", icon: FileCheck2 },
+    { label: "حسابي", detail: "بيانات الحساب", to: "/profile", icon: Users },
+  ];
+  const parentActions = [
+    { label: "أبنائي", detail: "ملفات الأبناء المرتبطين بحسابك", to: "/students", icon: Users },
+    { label: "الرسائل", detail: "التواصل والخدمات المتاحة", to: "/messages", icon: MessageSquareText },
+    { label: "المستندات", detail: "المستندات المرتبطة بالأبناء", to: "/free-documents", icon: FileCheck2 },
+    { label: "حسابي", detail: "بيانات الحساب", to: "/profile", icon: Users },
+  ];
+
+  const actions = guidanceAllowed
+    ? counselorActions
+    : role === "teacher"
+      ? teacherActions
+      : role === "student"
+        ? studentActions
+        : role === "parent"
+          ? parentActions
+          : staffActions;
 
   return (
     <>
