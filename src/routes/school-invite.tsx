@@ -35,9 +35,8 @@ type InviteInfo = {
 };
 
 export const Route = createFileRoute("/school-invite")({
-  validateSearch: (search: Record<string, unknown>): { invite?: string } => ({
-    invite: typeof search["invite"] === "string" ? search["invite"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { invite?: string } =>
+    typeof search["invite"] === "string" ? { invite: search["invite"] } : {},
   head: () => ({
     meta: [
       { title: "دعوة للانضمام إلى فريق المدرسة | الذات" },
