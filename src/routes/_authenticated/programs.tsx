@@ -104,7 +104,7 @@ const DOMAINS = [
   "التحصيلي",
   "الختامي",
 ];
-const EXEC_STATUS = ["لم يبدأ", "قيد التنفيذ", "منفذ", "مؤجل", "ملغى"];
+const EXEC_STATUS = ["لم يبدأ", "قيد التنفيذ", "منفذ", "جاهز لاعتماد التنفيذ", "معتمد", "مؤجل", "ملغى"];
 
 const MINISTRY_PROGRAMS = [
   [
@@ -556,6 +556,14 @@ function ProgramsPage() {
     onError: (error: Error) => toast.error(`تعذّر حفظ البرنامج: ${error.message}`),
   });
 
+  async function submitProgramApproval(program: ProgramRow) {
+    const { error } = await (supabase as any).rpc("submit_program_for_approval", { p_program_id: program.id });
+    if (error) { toast.error(error.message); return; }
+    await queryClient.invalidateQueries({ queryKey: ["programs"] });
+    setEditing((current) => current?.id === program.id ? { ...current, exec_status: "جاهز لاعتماد التنفيذ", approval_status: "submitted" } : current);
+    toast.success("تم رفع البرنامج وشواهده لاعتماد التنفيذ.");
+  }
+
   async function loadAttachments(recordId: string, recordTitle = "") {
     const { data, error } = await supabase
       .from("evidences")
@@ -991,7 +999,7 @@ function ProgramsPage() {
                       elementRef={programPrintRef}
                       filename={`برنامج-${value(editing.name) || "إرشادي"}`}
                       title={value(editing.name) || "تقرير برنامج إرشادي"}
-                    />
+                    />\n              {editing?.id && ["منفذ","جاهز لاعتماد التنفيذ"].includes(String(editing.exec_status||"")) && <Button type="button" variant="outline" onClick={() => void submitProgramApproval(editing as ProgramRow)}><Send className="size-4"/> {editing.exec_status==="جاهز لاعتماد التنفيذ"?"مرفوع للاعتماد":"رفع لاعتماد التنفيذ"}</Button>}
                     {editing.id && (
                       <Button type="button" variant="outline" onClick={() => setSignatureProgram(editing)}>
                         <Send className="size-4" /> إرسال للاعتماد والتوقيع
