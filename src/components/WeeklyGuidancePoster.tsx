@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { BookOpenCheck, ImageDown, Loader2, Share2, Sparkles } from "lucide-react";
+import { BookOpenCheck, ImageDown, Loader2, Send, Share2, Sparkles } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ import { generateSmartFill } from "@/lib/deepseek.functions";
 import { formatHijriDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
+import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,6 +95,8 @@ export function WeeklyGuidancePoster() {
   const [aiBrief, setAiBrief] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [signatureOpen, setSignatureOpen] = useState(false);
+  const [signatureDocumentId, setSignatureDocumentId] = useState("");
 
   const watermarkStyle = useMemo(
     () => ({
@@ -284,6 +287,16 @@ export function WeeklyGuidancePoster() {
             <BookOpenCheck className="size-4 ml-2" /> إعادة تطبيق القالب
           </Button>
           <div className="grid grid-cols-2 gap-2">\n            <Button type="button" variant="outline" onClick={() => void downloadPoster()}><ImageDown className="size-4" /> حفظ صورة</Button>\n            <Button type="button" onClick={() => void sharePoster()} disabled={sharing}>{sharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />} مشاركة التصميم</Button>\n          </div>\n          <PdfPreviewButton elementRef={posterRef} filename={`لوحة-التوجيه-الطلابي-${title}`} title={`لوحة التوجيه الطلابي - ${title}`} />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (!signatureDocumentId) setSignatureDocumentId(crypto.randomUUID());
+              setSignatureOpen(true);
+            }}
+          >
+            <Send className="size-4" /> إرسال للاعتماد والتوقيع
+          </Button>
         </div>
       </section>
 
@@ -356,6 +369,26 @@ export function WeeklyGuidancePoster() {
           </div>
         </div>
       </div>
+      {signatureDocumentId && (
+        <SendForSignatureDialog
+          open={signatureOpen}
+          onOpenChange={setSignatureOpen}
+          recordTable="weekly_guidance_posters"
+          recordId={signatureDocumentId}
+          recordType="لوحة التوجيه الطلابي الأسبوعية"
+          title={`لوحة التوجيه الطلابي - ${title || "الأسبوعية"}`}
+          snapshot={{
+            "العنوان": title || null,
+            "القالب": topic,
+            "التمهيد": intro || null,
+            "الرسالة الإرشادية": body || null,
+            "التذكير": reminder || null,
+            "المدرسة": school?.school_name || null,
+            "العام الدراسي": school?.academic_year || null,
+            "الفصل الدراسي": school?.semester || null,
+          }}
+        />
+      )}
     </div>
   );
 }
