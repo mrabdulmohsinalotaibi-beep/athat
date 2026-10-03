@@ -90,7 +90,7 @@ function PostPage() {
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-3 py-2 sm:px-5">
           <a href={blogHref} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-black text-[#264938] hover:bg-[#E4ECDF]"><ArrowRight className="size-4" /> المدونة</a>
           <div className="flex items-center gap-2">
-            <img src="/athat-logo-final.png?v=20261002-final" alt="الذات" className="size-8 rounded-lg object-contain" />
+            <img src="/athat-logo-final.png?v=20261003-brand" alt="الذات" className="size-8 rounded-lg object-contain" />
             <span className="text-xs font-black">مدونة الموجه الطلابي</span>
           </div>
         </div>
