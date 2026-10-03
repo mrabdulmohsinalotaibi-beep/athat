@@ -308,7 +308,7 @@ function ReportsPage() {
           ].filter(Boolean).join("\n"),
           schoolName: school?.school_name ?? "",
           fields: [{ name: "narrative", label: "التحليل والملاحظات والتوصيات", type: "textarea" as const }],
-          values: narrative.trim() ? { narrative } : {},
+          values: {},
         },
       });
       const suggestion = String(result?.suggestions?.narrative ?? "").trim();
