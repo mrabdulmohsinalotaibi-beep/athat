@@ -355,7 +355,7 @@ function InitiativeTeamsPage() {
       setPublicLinks((current) => ({ ...current, [memberId]: url }));
       await refresh();
       await qc.invalidateQueries({ queryKey: ["initiative-dashboard"] });
-      toast.success("تم إنشاء رابط مساحة العمل العامة.");
+      toast.success("تم إنشاء رابط صفحة المعلم.");
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -369,7 +369,7 @@ function InitiativeTeamsPage() {
       setPublicLinks((current) => { const next={...current}; delete next[memberId]; return next; });
       await refresh();
       await qc.invalidateQueries({ queryKey: ["initiative-dashboard"] });
-      toast.success("تم إلغاء رابط مساحة العمل.");
+      toast.success("تم إيقاف رابط صفحة المعلم.");
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -559,6 +559,9 @@ function InitiativeTeamsPage() {
                           <div>
                             <p className="font-black">{member.display_name}</p>
                             <p className="mt-1 text-xs text-primary">{member.role_title}</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              {(managerStudentsQuery.data ?? []).filter((s) => s.assigned_member_id === member.id).length} طالب مسند
+                            </p>
                             <div className="mt-2 flex flex-wrap gap-1">
                               {(member.assigned_tasks ?? []).map((task) => <span key={task} className="rounded-full bg-muted px-2 py-1 text-[10px]">{task}</span>)}
                             </div>
@@ -569,8 +572,8 @@ function InitiativeTeamsPage() {
                             {selected.is_manager && member.status === "active" && <Button size="sm" variant="outline" onClick={() => setMember.mutate({ id: member.id, status: "suspended" })}>تعليق</Button>}
                             {selected.is_manager && member.status === "active" && (
                               <>
-                                <Button size="sm" variant="outline" onClick={() => createPublicLink.mutate(member.id)}>رابط عمل عام</Button>
-                                {member.public_access_active && <Button size="sm" variant="ghost" onClick={() => revokePublicLink.mutate(member.id)}>إلغاء الرابط</Button>}
+                                <Button size="sm" variant="outline" onClick={() => createPublicLink.mutate(member.id)}>إنشاء رابط صفحة المعلم</Button>
+                                {member.public_access_active && <Button size="sm" variant="ghost" onClick={() => revokePublicLink.mutate(member.id)}>إيقاف صفحة المعلم</Button>}
                               </>
                             )}
                           </div>
@@ -580,7 +583,7 @@ function InitiativeTeamsPage() {
                   </div>
                   {selected.is_manager && Object.keys(publicLinks).length > 0 && (
                     <div className="mt-4 space-y-2 rounded-2xl border bg-muted/10 p-3">
-                      <p className="text-xs font-black">روابط العمل العامة المنشأة الآن</p>
+                      <p className="text-xs font-black">روابط صفحات المعلمين المنشأة الآن</p>
                       {Object.entries(publicLinks).map(([memberId,url]) => {
                         const m=selected.members.find((x)=>x.id===memberId);
                         return <div key={memberId} className="rounded-xl border bg-background p-2">
@@ -706,7 +709,7 @@ function InitiativeTeamsPage() {
                 {selected.is_manager && (
                   <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
                     <div className="flex items-center gap-2"><Send className="size-5 text-primary" /><h2 className="font-black">دعوة عضو للمبادرة</h2></div>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">الرابط يعمل مرة واحدة وعلى جهاز واحد، ويعرض للعضو دوره وأعماله قبل الانضمام.</p>
+                    <p className="mt-2 text-xs leading-6 text-muted-foreground">يمكن دعوة معلم واحد أو عدة معلمين للمبادرة نفسها. أنشئ رابطًا مستقلًا لكل معلم؛ كل رابط يعمل مرة واحدة وعلى جهاز واحد، وبعد الاعتماد يصبح للمعلم طلابه وصفحة أعماله الخاصة.</p>
                     <div className="mt-4 space-y-3">
                       <div><Label>دور العضو داخل المبادرة</Label><Input className="mt-2" value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} /></div>
                       <div><Label>الأعمال المحددة — عمل في كل سطر</Label><Textarea className="mt-2 min-h-40" value={inviteTasks} onChange={(e) => setInviteTasks(e.target.value)} /></div>
@@ -722,8 +725,17 @@ function InitiativeTeamsPage() {
                 )}
                 {selected.my_membership && (
                   <section className="rounded-3xl border bg-card p-5">
-                    <p className="text-xs font-black text-primary">دوري في المبادرة</p>
-                    <p className="mt-2 text-lg font-black">{selected.my_membership.role_title}</p>
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-black text-primary">دوري في المبادرة</p>
+                        <p className="mt-2 text-lg font-black">{selected.my_membership.role_title}</p>
+                      </div>
+                      {selected.my_membership.status === "active" && (
+                        <Button size="sm" onClick={() => { window.location.href = `/initiative-member-work?initiative=${encodeURIComponent(selected.id)}`; }}>
+                          صفحة أعمالي
+                        </Button>
+                      )}
+                    </div>
                     <div className="mt-3 space-y-2">
                       {(selected.my_membership.assigned_tasks ?? []).map((task) => <div key={task} className="rounded-xl border px-3 py-2 text-xs">{task}</div>)}
                     </div>
