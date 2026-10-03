@@ -83,6 +83,8 @@ const today = () => new Date().toISOString().slice(0, 10);
 function SchoolTasksPage() {
   const queryClient = useQueryClient();
   const [assigneeId, setAssigneeId] = useState("");
+  const [assignmentMode, setAssignmentMode] = useState<"member" | "group">("member");
+  const [assigneeGroupId, setAssigneeGroupId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("عام");
@@ -94,9 +96,26 @@ function SchoolTasksPage() {
   const [taskView, setTaskView] = useState<"all" | "attention" | "closed">("attention");
   const [selectedReportTaskIds, setSelectedReportTaskIds] = useState<string[]>([]);
   const [reportRecipientId, setReportRecipientId] = useState("");
+  const [reportRecipientMode, setReportRecipientMode] = useState<"member" | "group">("member");
+  const [reportRecipientGroupId, setReportRecipientGroupId] = useState("");
   const [reportNote, setReportNote] = useState("");
   const [templateTargetId, setTemplateTargetId] = useState("");
   const [selectedTemplateKeys, setSelectedTemplateKeys] = useState<string[]>([]);
+
+  const groupsQuery = useQuery({
+    queryKey: ["school-permission-groups"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_school_permission_groups");
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        member_ids: string[];
+      }>;
+    },
+    staleTime: 30_000,
+  });
 
   const query = useQuery({
     queryKey: ["school-tasks"],
@@ -126,8 +145,24 @@ function SchoolTasksPage() {
 
   const createTask = useMutation({
     mutationFn: async () => {
-      if (!assigneeId) throw new Error("اختر الموظف الذي ستسند إليه المهمة.");
       if (!title.trim()) throw new Error("اكتب عنوان المهمة.");
+
+      if (assignmentMode === "group") {
+        if (!assigneeGroupId) throw new Error("اختر مجموعة لإسناد المهمة إليها.");
+        const { data, error } = await (supabase as any).rpc("create_school_task_for_group", {
+          p_group_id: assigneeGroupId,
+          p_title: title.trim(),
+          p_description: description.trim() || null,
+          p_category: category.trim() || "عام",
+          p_priority: priority,
+          p_cadence: cadence,
+          p_due_date: dueDate || null,
+        });
+        if (error) throw error;
+        return { mode: "group" as const, data };
+      }
+
+      if (!assigneeId) throw new Error("اختر الموظف الذي ستسند إليه المهمة.");
       const { error } = await (supabase as any).rpc("create_school_task", {
         p_assignee_member_id: assigneeId,
         p_title: title.trim(),
@@ -138,13 +173,20 @@ function SchoolTasksPage() {
         p_due_date: dueDate || null,
       });
       if (error) throw error;
+      return { mode: "member" as const, data: null };
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       setTitle("");
       setDescription("");
       setDueDate("");
       await refresh();
-      toast.success("تم إسناد المهمة للموظف.");
+      if (result.mode === "group") {
+        const created = Number((result.data as any)?.created ?? 0);
+        const skipped = Number((result.data as any)?.skipped ?? 0);
+        toast.success(`تم إسناد المهمة إلى ${created} عضو${skipped ? `، وتم تجاوز ${skipped} عضو غير مؤهل حسب التسلسل الإداري` : ""}.`);
+      } else {
+        toast.success("تم إسناد المهمة للموظف.");
+      }
     },
     onError: (error) => toast.error((error as Error).message),
   });
@@ -221,9 +263,10 @@ function SchoolTasksPage() {
   });
 
   const sendTaskReport = useMutation({
-    mutationFn: async ({ rows, recipientId }: { rows: SchoolTask[]; recipientId: string }) => {
-      if (!recipientId) throw new Error("اختر المستلم الإداري.");
+    mutationFn: async ({ rows, recipientId }: { rows: SchoolTask[]; recipientId?: string }) => {
       if (!rows.length) throw new Error("حدد مهمة واحدة على الأقل.");
+      if (reportRecipientMode === "member" && !recipientId) throw new Error("اختر المستلم الإداري.");
+      if (reportRecipientMode === "group" && !reportRecipientGroupId) throw new Error("اختر مجموعة إدارية.");
 
       const snapshot = {
         version: 1,
@@ -259,6 +302,17 @@ function SchoolTasksPage() {
         ],
       };
 
+      if (reportRecipientMode === "group") {
+        const { data, error } = await (supabase as any).rpc("create_school_report_handoff_for_group", {
+          p_group_id: reportRecipientGroupId,
+          p_title: "تقرير إنجاز المهام المدرسية",
+          p_note: reportNote.trim() || null,
+          p_snapshot: snapshot,
+        });
+        if (error) throw error;
+        return { mode: "group" as const, data };
+      }
+
       const { error } = await (supabase as any).rpc("create_school_report_handoff", {
         p_recipient_member_id: recipientId,
         p_title: "تقرير إنجاز المهام المدرسية",
@@ -266,13 +320,20 @@ function SchoolTasksPage() {
         p_snapshot: snapshot,
       });
       if (error) throw error;
+      return { mode: "member" as const, data: null };
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       setSelectedReportTaskIds([]);
       setReportNote("");
       await queryClient.invalidateQueries({ queryKey: ["school-report-handoffs"] });
       await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
-      toast.success("تم رفع تقرير إنجاز المهام للإدارة.");
+      if (result.mode === "group") {
+        const created = Number((result.data as any)?.created ?? 0);
+        const skipped = Number((result.data as any)?.skipped ?? 0);
+        toast.success(`تم رفع التقرير إلى ${created} عضو مؤهل في المجموعة${skipped ? `، وتم تجاوز ${skipped} عضو لا يطابق مسار الرفع الإداري` : ""}.`);
+      } else {
+        toast.success("تم رفع تقرير إنجاز المهام للإدارة.");
+      }
     },
     onError: (error) => toast.error((error as Error).message),
   });
@@ -281,6 +342,7 @@ function SchoolTasksPage() {
   const membership = context?.membership;
   const members = context?.members ?? [];
   const tasks = query.data?.tasks ?? [];
+  const permissionGroups = groupsQuery.data ?? [];
   const memberId = membership?.id ?? "";
   const memberMap = useMemo(() => new Map(members.map((member) => [member.id, member])), [members]);
 
@@ -531,11 +593,26 @@ function SchoolTasksPage() {
           {lowerMembers.length ? (
             <div className="mt-4 space-y-3">
               <div>
-                <Label>الموظف</Label>
-                <select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm">
-                  <option value="">اختر الموظف</option>
-                  {lowerMembers.map((member) => <option key={member.id} value={member.id}>{member.display_name || "عضو المدرسة"} · {roleLabel(member.role)}</option>)}
-                </select>
+                <Label>الإسناد إلى</Label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <Button type="button" size="sm" variant={assignmentMode === "member" ? "default" : "outline"} onClick={() => setAssignmentMode("member")}>
+                    موظف
+                  </Button>
+                  <Button type="button" size="sm" variant={assignmentMode === "group" ? "default" : "outline"} onClick={() => setAssignmentMode("group")} disabled={!permissionGroups.length}>
+                    مجموعة
+                  </Button>
+                </div>
+                {assignmentMode === "member" ? (
+                  <select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="">اختر الموظف</option>
+                    {lowerMembers.map((member) => <option key={member.id} value={member.id}>{member.display_name || "عضو المدرسة"} · {roleLabel(member.role)}</option>)}
+                  </select>
+                ) : (
+                  <select value={assigneeGroupId} onChange={(e) => setAssigneeGroupId(e.target.value)} className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="">اختر المجموعة</option>
+                    {permissionGroups.map((group) => <option key={group.id} value={group.id}>{group.name} · {group.member_ids?.length ?? 0} عضو</option>)}
+                  </select>
+                )}
               </div>
               <div><Label>عنوان المهمة</Label><Input className="mt-2" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: إعداد تقرير الغياب الأسبوعي" /></div>
               <div><Label>التفاصيل</Label><textarea className="mt-2 min-h-24 w-full rounded-md border bg-background px-3 py-2 text-sm" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
@@ -547,8 +624,13 @@ function SchoolTasksPage() {
                 <div><Label>التكرار</Label><select className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={cadence} onChange={(e) => setCadence(e.target.value as SchoolTask["cadence"])}><option>مرة واحدة</option><option>يومية</option><option>أسبوعية</option><option>شهرية</option><option>سنوية</option></select><p className="mt-1 text-[10px] text-muted-foreground">المهمة المتكررة تُنشئ الاستحقاق التالي تلقائيًا بعد اعتماد إنجازها من المسؤول.</p></div>
                 <div><Label>الاستحقاق</Label><HijriDatePicker className="mt-2" value={dueDate} onChange={setDueDate} /></div>
               </div>
-              <Button className="w-full" disabled={!assigneeId || !title.trim() || createTask.isPending} onClick={() => createTask.mutate()}>
-                <UserRoundCheck className="size-4" /> {createTask.isPending ? "جارٍ الإسناد..." : "إسناد المهمة"}
+              <Button
+                className="w-full"
+                disabled={(assignmentMode === "member" ? !assigneeId : !assigneeGroupId) || !title.trim() || createTask.isPending}
+                onClick={() => createTask.mutate()}
+              >
+                <UserRoundCheck className="size-4" />
+                {createTask.isPending ? "جارٍ الإسناد..." : assignmentMode === "group" ? "إسناد المهمة للمجموعة" : "إسناد المهمة"}
               </Button>
             </div>
           ) : (
@@ -630,18 +712,46 @@ function SchoolTasksPage() {
             <div className="space-y-3 rounded-xl border bg-muted/20 p-3">
               <div>
                 <Label>رفع التقرير إلى</Label>
-                <select
-                  value={reportRecipientId}
-                  onChange={(e) => setReportRecipientId(e.target.value)}
-                  className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
-                >
-                  <option value="">اختر المسؤول الأعلى</option>
-                  {higherMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.display_name || "عضو المدرسة"} · {roleLabel(member.role)}
-                    </option>
-                  ))}
-                </select>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <Button type="button" size="sm" variant={reportRecipientMode === "member" ? "default" : "outline"} onClick={() => setReportRecipientMode("member")}>
+                    مسؤول
+                  </Button>
+                  <Button type="button" size="sm" variant={reportRecipientMode === "group" ? "default" : "outline"} onClick={() => setReportRecipientMode("group")} disabled={!permissionGroups.length}>
+                    مجموعة
+                  </Button>
+                </div>
+                {reportRecipientMode === "member" ? (
+                  <select
+                    value={reportRecipientId}
+                    onChange={(e) => setReportRecipientId(e.target.value)}
+                    className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  >
+                    <option value="">اختر المسؤول الأعلى</option>
+                    {higherMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.display_name || "عضو المدرسة"} · {roleLabel(member.role)}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    value={reportRecipientGroupId}
+                    onChange={(e) => setReportRecipientGroupId(e.target.value)}
+                    className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  >
+                    <option value="">اختر المجموعة الإدارية</option>
+                    {permissionGroups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name} · {group.member_ids?.length ?? 0} عضو
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {reportRecipientMode === "group" && (
+                  <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                    سيرسل النظام التقرير فقط للأعضاء المؤهلين حسب التسلسل الإداري، ويتجاوز بقية أعضاء المجموعة تلقائيًا.
+                  </p>
+                )}
               </div>
               <div>
                 <Label>ملاحظة مرافقة</Label>
@@ -654,7 +764,11 @@ function SchoolTasksPage() {
               </div>
               <Button
                 className="w-full"
-                disabled={!selectedReportTasks.length || !reportRecipientId || sendTaskReport.isPending}
+                disabled={
+                  !selectedReportTasks.length ||
+                  (reportRecipientMode === "member" ? !reportRecipientId : !reportRecipientGroupId) ||
+                  sendTaskReport.isPending
+                }
                 onClick={() => sendTaskReport.mutate({ rows: selectedReportTasks, recipientId: reportRecipientId })}
               >
                 <ClipboardCheck className="size-4" /> {sendTaskReport.isPending ? "جارٍ الرفع..." : "تحويل المحدد إلى تقرير ورفعه"}
