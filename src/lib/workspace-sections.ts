@@ -44,6 +44,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
     description: "ابدأ من الطالب ثم افتح ملفه ومسار متابعته الكامل.",
     icon: Users,
     items: [
+      { to: "/guidance-work", label: "أعمالي مع التوجيه الطلابي", icon: ClipboardList },
       { to: "/students", label: "الطلاب وملف 360°", icon: Users },
     ],
   },
