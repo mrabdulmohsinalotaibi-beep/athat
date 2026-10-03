@@ -70,6 +70,14 @@ export const Route = createFileRoute("/auth")({
     }
   },
   component: AuthPage,
+  head: () => ({ meta: [
+    { title: "تسجيل الدخول | الذات" },
+    { name: "description", content: "الدخول إلى مساحة التوجيه الطلابي الخاصة بمنصة الذات." },
+    { property: "og:title", content: "تسجيل الدخول | الذات" },
+    { property: "og:description", content: "الدخول إلى مساحة التوجيه الطلابي الخاصة بمنصة الذات." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 function AuthPage() {
@@ -205,15 +213,12 @@ function AuthPage() {
       dir="rtl"
       className="athat-premium-shell relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]"
     >
-      <div aria-hidden="true" className="pointer-events-none absolute -right-24 top-10 size-64 rounded-full bg-[#E4ECDF] blur-2xl" />
-      <div aria-hidden="true" className="pointer-events-none absolute -left-24 bottom-10 size-64 rounded-full bg-[#D9C0A3]/25 blur-2xl" />
       <div className="relative w-full max-w-md space-y-5">
         <div className="flex flex-col items-center text-center">
-          <div className="grid size-24 place-items-center overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/40 bg-[#FFFDF9] shadow-[var(--shadow-soft)]">
+          <div className="grid size-24 place-items-center overflow-hidden rounded-2xl border border-border bg-background shadow-[var(--shadow-soft)]">
             <BrandLogo className="size-full" />
           </div>
-          <span className="mt-3 rounded-full border border-[#89AA74]/35 bg-[#E4ECDF]/70 px-3 py-1 text-[11px] font-black text-primary">نظام التوجيه الطلابي</span>
-          <p className="mt-2 max-w-xs text-xs leading-5 text-muted-foreground">إدارة أعمال التوجيه والمتابعة اليومية في مكان واحد، بتجربة مصممة للجوال أولاً.</p>
+          <span className="mt-3 text-sm font-black text-navy">الذات · التوجيه الطلابي</span>
         </div>
 
         <form
@@ -226,7 +231,7 @@ function AuthPage() {
                   ? handleRecover
                   : handleReset
           }
-          className="space-y-4 rounded-[2rem] border border-[#D9C0A3]/45 bg-[#FFFDF9]/95 p-6 shadow-[var(--shadow-soft)] backdrop-blur-xl sm:p-7"
+          className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-7"
         >
           <div className="space-y-1 pb-1 text-center">
             <h1 className="text-2xl font-black text-navy">
@@ -305,7 +310,7 @@ function AuthPage() {
             </div>
           )}
 
-          <Button type="submit" className="h-12 w-full rounded-xl bg-[#4A141F] text-base font-bold text-white hover:bg-[#264938]" disabled={isLoading}>
+          <Button type="submit" className="h-12 w-full rounded-xl text-base font-bold" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="ml-2 h-4 w-4 animate-spin" />
@@ -326,39 +331,39 @@ function AuthPage() {
         <div className="space-y-2 text-center text-sm">
           {mode === "signin" && (
             <>
-              <button
+              <Button variant="link"
                 type="button"
                 onClick={() => setMode("recover")}
                 className="block w-full text-primary hover:underline"
               >
                 نسيت كلمة المرور؟
-              </button>
-              <button
+              </Button>
+              <Button variant="link"
                 type="button"
                 onClick={() => setMode("signup")}
                 className="block w-full text-muted-foreground hover:text-primary hover:underline"
               >
                 ليس لديك حساب؟ أنشئ حساباً جديداً
-              </button>
+              </Button>
             </>
           )}
           {mode === "signup" && (
-            <button
+            <Button variant="link"
               type="button"
               onClick={() => setMode("signin")}
               className="text-muted-foreground hover:text-primary hover:underline"
             >
               لديك حساب بالفعل؟ سجّل الدخول
-            </button>
+            </Button>
           )}
           {(mode === "recover" || mode === "reset") && (
-            <button
+            <Button variant="link"
               type="button"
               onClick={() => setMode("signin")}
               className="text-muted-foreground hover:text-primary hover:underline"
             >
               العودة لتسجيل الدخول
-            </button>
+            </Button>
           )}
         </div>
 

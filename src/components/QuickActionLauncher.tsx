@@ -114,17 +114,18 @@ export function QuickActionLauncher({
   return (
     <>
       {mobile ? (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setOpen(true)}
-          className={cn("flex min-h-16 flex-col items-center justify-center gap-1 text-[10px] font-black text-primary", className)}
+          className={cn("flex h-auto min-h-[4.15rem] flex-col items-center justify-center gap-1 p-0 text-[10px] font-black text-primary", className)}
           aria-label="إجراء جديد"
         >
-          <span className="-mt-5 flex size-12 items-center justify-center rounded-full border-4 border-card bg-primary text-primary-foreground shadow-lg">
+          <span className="-mt-5 flex size-12 items-center justify-center rounded-full border-4 border-card bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">
             <Plus className="size-6" />
           </span>
           <span>جديد</span>
-        </button>
+        </Button>
       ) : (
         <Button
           type="button"
