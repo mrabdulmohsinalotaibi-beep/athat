@@ -333,12 +333,12 @@ function OutgoingMessagesPage() {
       if (!authData.user) throw new Error("انتهت جلسة الدخول.");
 
       const batchId = crypto.randomUUID();
-      const duplicateCount =
+      const rawRecipientCount =
         selectedStudentIds.filter((id) => {
           const student = students.find((item) => item.id === id);
-          const phone = normalizeSaudiPhone(student?.guardian_phone);
-          return Boolean(phone) && recipients.filter((recipient) => recipient.phone === phone).length === 1;
-        }).length - recipients.filter((recipient) => recipient.source === "student").length;
+          return Boolean(normalizeSaudiPhone(student?.guardian_phone));
+        }).length + (normalizeSaudiPhone(manualPhone) ? 1 : 0);
+      const duplicateCount = Math.max(0, rawRecipientCount - recipients.length);
       if (duplicateCount > 0) {
         toast.info(`تم دمج ${duplicateCount} مستلم مكرر له نفس رقم الجوال لتجنب إرسال الرسالة مرتين.`);
       }
