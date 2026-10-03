@@ -323,7 +323,35 @@ function AttendancePage() {
       const keys = new Set((existing ?? []).map((r: any) => `${r.student_no ?? ""}|${r.adate ?? ""}`));
       const fresh = selected.filter((r) => !keys.has(`${r.student_no}|${r.adate}`));
       if (!fresh.length) { toast.info("كل السجلات المحددة موجودة مسبقًا."); return; }
-      const payload = fresh.map(({ selected: _selected, source: _source, ...r }) => ({ ...r, user_id: auth.user!.id }));
+
+      const { data: studentRows, error: studentsError } = await supabase
+        .from("students")
+        .select("id,student_no,national_id,full_name");
+      if (studentsError) throw studentsError;
+      const byNumber = new Map<string, string>();
+      const byName = new Map<string, string>();
+      const duplicateNames = new Set<string>();
+      (studentRows ?? []).forEach((student: any) => {
+        const id = String(student.id ?? "");
+        [student.student_no, student.national_id].forEach((value) => {
+          const key = String(value ?? "").trim();
+          if (key && id) byNumber.set(key, id);
+        });
+        const name = String(student.full_name ?? "").trim();
+        if (!name || !id) return;
+        if (byName.has(name)) duplicateNames.add(name);
+        else byName.set(name, id);
+      });
+      duplicateNames.forEach((name) => byName.delete(name));
+
+      const payload = fresh.map(({ selected: _selected, source: _source, reviewStatus: _reviewStatus, reviewReason: _reviewReason, ...r }) => ({
+        ...r,
+        student_id:
+          byNumber.get(String(r.student_no ?? "").trim()) ||
+          byName.get(String(r.student_name ?? "").trim()) ||
+          null,
+        user_id: auth.user!.id,
+      }));
       const { error } = await supabase.from("attendance").insert(payload as never);
       if (error) throw error;
       setRows([]);
