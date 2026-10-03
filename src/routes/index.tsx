@@ -32,8 +32,8 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://athat.app/" },
-      { rel: "icon", type: "image/png", href: "/athat-logo-final.png?v=20261002-brand" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261002-brand" },
+      { rel: "icon", type: "image/png", href: "/athat-logo-final.png?v=20261003-brand" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=20261003-brand" },
     ],
   }),
   component: Landing,
@@ -84,7 +84,7 @@ function Landing() {
           <header className="mb-5 flex items-center justify-center gap-3 sm:mb-7 xl:absolute xl:right-8 xl:top-7 xl:z-20 xl:mb-0 xl:justify-start">
             <div className="grid size-20 shrink-0 place-items-center rounded-[1.4rem] border border-[#D9C0A3]/35 bg-white/90 p-2 shadow-[0_14px_34px_-22px_rgba(18,55,72,.5)] backdrop-blur sm:size-24 xl:size-20">
               <img
-                src="/athat-logo-final.png?v=20261002-brand"
+                src="/athat-logo-final.png?v=20261003-brand"
                 alt="شعار الذات"
                 className="size-full object-contain"
               />
