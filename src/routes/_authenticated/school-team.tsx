@@ -679,7 +679,7 @@ function SchoolTeamPage() {
               }}>
                 <Share2 className="size-4" /> دعوة عضو بصلاحيات
               </Button>
-              <Button variant="outline" onClick={() => void copyInvite(context.join_code || "")}>
+              <Button variant="outline" onClick={async () => { const url = `${window.location.origin}/school-team?join=${encodeURIComponent(context.join_code || "")}`; await navigator.clipboard.writeText(url); toast.success("تم نسخ رابط الدعوة."); }}>
                 <Send className="size-4" /> نسخ رابط الدعوة
               </Button>
               <Button variant="outline" disabled={rotateCode.isPending} onClick={() => rotateCode.mutate(school.id)}>
