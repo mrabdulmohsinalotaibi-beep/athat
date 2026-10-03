@@ -107,6 +107,8 @@ function SchoolTasksPage() {
   const [groupTemplateKeys, setGroupTemplateKeys] = useState<string[]>([]);
   const [performanceGroupId, setPerformanceGroupId] = useState("");
   const [performanceDays, setPerformanceDays] = useState(30);
+  const [performanceReportRecipientId, setPerformanceReportRecipientId] = useState("");
+  const [performanceReportNote, setPerformanceReportNote] = useState("");
 
   const groupsQuery = useQuery({
     queryKey: ["school-permission-groups"],
@@ -325,6 +327,29 @@ function SchoolTasksPage() {
       toast.success(
         `تم تفعيل القوالب لـ ${result.created} مهمة جديدة${result.existing ? `، و${result.existing} كانت مفعلة مسبقًا` : ""}${result.skipped ? `، وتم تجاوز ${result.skipped} عضو غير مؤهل` : ""}.`,
       );
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
+  const createPerformanceReport = useMutation({
+    mutationFn: async () => {
+      if (!performanceGroupId) throw new Error("اختر المجموعة أولًا.");
+      if (!performanceReportRecipientId) throw new Error("اختر المسؤول الذي سيستلم التقرير.");
+
+      const { data, error } = await (supabase as any).rpc("create_school_group_performance_report", {
+        p_group_id: performanceGroupId,
+        p_days: performanceDays,
+        p_recipient_member_id: performanceReportRecipientId,
+        p_note: performanceReportNote.trim() || null,
+      });
+      if (error) throw error;
+      return String(data ?? "");
+    },
+    onSuccess: async () => {
+      setPerformanceReportNote("");
+      await queryClient.invalidateQueries({ queryKey: ["school-report-handoffs"] });
+      await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+      toast.success("تم إنشاء تقرير أداء المجموعة ورفعه للمسؤول.");
     },
     onError: (error) => toast.error((error as Error).message),
   });
@@ -720,7 +745,11 @@ function SchoolTasksPage() {
             <div className="grid min-w-[280px] grid-cols-2 gap-2">
               <select
                 value={performanceGroupId}
-                onChange={(e) => setPerformanceGroupId(e.target.value)}
+                onChange={(e) => {
+                  setPerformanceGroupId(e.target.value);
+                  setPerformanceReportRecipientId("");
+                  setPerformanceReportNote("");
+                }}
                 className="h-10 rounded-md border bg-background px-3 text-xs"
               >
                 <option value="">اختر المجموعة</option>
@@ -788,6 +817,63 @@ function SchoolTasksPage() {
                     style={{ width: `${Math.max(0, Math.min(100, Number(groupPerformanceQuery.data.summary.completion_rate ?? 0)))}%` }}
                   />
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/[0.025] p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-black">إنشاء تقرير أداء المجموعة</p>
+                    <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                      يحول المؤشرات الحالية إلى نسخة ثابتة رسمية داخل المراسلات الإدارية، ثم تدخل في مسار الاطلاع والاعتماد المعتاد.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">
+                    آخر {performanceDays} يومًا
+                  </span>
+                </div>
+
+                {higherMembers.length ? (
+                  <div className="mt-3 grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)_auto]">
+                    <div>
+                      <Label>رفع التقرير إلى</Label>
+                      <select
+                        value={performanceReportRecipientId}
+                        onChange={(e) => setPerformanceReportRecipientId(e.target.value)}
+                        className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-xs"
+                      >
+                        <option value="">اختر المسؤول الأعلى</option>
+                        {higherMembers.map((member) => (
+                          <option key={member.id} value={member.id}>
+                            {member.display_name || "عضو المدرسة"} · {roleLabel(member.role)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>ملاحظة مرافقة</Label>
+                      <Input
+                        className="mt-2"
+                        value={performanceReportNote}
+                        onChange={(e) => setPerformanceReportNote(e.target.value)}
+                        placeholder="مثال: تقرير متابعة أداء المجموعة للفترة الحالية."
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        className="w-full xl:w-auto"
+                        disabled={!performanceReportRecipientId || createPerformanceReport.isPending}
+                        onClick={() => createPerformanceReport.mutate()}
+                      >
+                        <Send className="size-4" />
+                        {createPerformanceReport.isPending ? "جارٍ إنشاء التقرير..." : "إنشاء ورفع التقرير"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-3 rounded-xl border border-dashed p-3 text-[10px] leading-5 text-muted-foreground">
+                    لا يوجد حاليًا مسؤول أعلى مرتبط بالمدرسة لاستلام التقرير.
+                  </p>
+                )}
               </div>
 
               <div className="mt-4 grid gap-2 xl:grid-cols-2">
