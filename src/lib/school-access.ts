@@ -7,6 +7,8 @@ export type SchoolMembershipAccess = {
   is_admin?: boolean | null;
   permissions?: Record<string, boolean> | null;
   data_scope?: Record<string, unknown> | null;
+  access_expires_at?: string | null;
+  access_expired?: boolean | null;
 } | null | undefined;
 
 const ADMIN_BYPASS_PATHS = ["/admin"] as const;
@@ -47,7 +49,7 @@ export function canOpenWorkspacePath(pathname: string, membership: SchoolMembers
   if (!membership) return true;
   if (ADMIN_BYPASS_PATHS.some((route) => matchesPath(pathname, route))) return true;
 
-  if (membership.member_status !== "active") {
+  if (membership.member_status !== "active" || membership.access_expired) {
     return ["/dashboard", "/school-team", "/profile", "/subscription"].some((route) =>
       matchesPath(pathname, route),
     );
