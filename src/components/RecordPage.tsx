@@ -22,7 +22,7 @@ import {
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { gradeAliases, stageAliases } from "@/lib/saudi-school";
+import { gradeAliases, normalizeSaudiGrade, normalizeSaudiStage, stageAliases } from "@/lib/saudi-school";
 import { useSchool } from "@/lib/school";
 import { exportToExcel, readExcel, toIsoDate } from "@/lib/sheet";
 
@@ -215,6 +215,31 @@ export function RecordPage({
     },
   });
 
+  const { data: studentClassroomRows = [] } = useQuery({
+    queryKey: ["student-classroom-options"],
+    enabled: config.key === "students",
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("stage,grade,classroom");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const selectedStudentStage = normalizeSaudiStage(
+    String(auto["stage"] ?? editing?.["stage"] ?? ""),
+  );
+  const selectedStudentGrade = normalizeSaudiGrade(
+    String(auto["grade"] ?? editing?.["grade"] ?? ""),
+    selectedStudentStage,
+  );
+  const classroomLookupCategory =
+    selectedStudentStage && selectedStudentGrade
+      ? `classrooms:${selectedStudentStage}:${selectedStudentGrade}`
+      : "";
+
   const optionsFor = (field: (typeof config.fields)[number]) =>
     mergeLookupOptions(
       field.options,
@@ -222,6 +247,41 @@ export function RecordPage({
         .filter((item) => item.category === field.lookupCategory)
         .map((item) => item.value ?? ""),
     );
+
+  const studentClassroomOptions = useMemo(() => {
+    if (config.key !== "students" || !selectedStudentStage || !selectedStudentGrade) {
+      return [];
+    }
+
+    const fromStudents = studentClassroomRows
+      .filter((item: any) => {
+        const stage = normalizeSaudiStage(item.stage) || normalizeSaudiStage(item.grade);
+        const grade = normalizeSaudiGrade(item.grade, stage);
+        return stage === selectedStudentStage && grade === selectedStudentGrade;
+      })
+      .map((item: any) => String(item.classroom ?? "").trim())
+      .filter(Boolean);
+
+    const configured = lookups
+      .filter((item) => item.category === classroomLookupCategory)
+      .map((item) => String(item.value ?? "").trim())
+      .filter(Boolean);
+
+    const currentClassroom = String(auto["classroom"] ?? editing?.["classroom"] ?? "").trim();
+    return mergeLookupOptions(
+      currentClassroom ? [currentClassroom] : [],
+      [...fromStudents, ...configured],
+    );
+  }, [
+    config.key,
+    studentClassroomRows,
+    lookups,
+    selectedStudentStage,
+    selectedStudentGrade,
+    classroomLookupCategory,
+    auto["classroom"],
+    editing?.["classroom"],
+  ]);
 
   async function addOption(category: string, label: string) {
     const value = window.prompt(`أدخل خياراً جديداً في ${label}`)?.trim();
@@ -432,6 +492,9 @@ export function RecordPage({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [config.table] });
+      if (config.key === "students") {
+        queryClient.invalidateQueries({ queryKey: ["student-classroom-options"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["student-profile"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["cases-followup-center"] });
@@ -1291,7 +1354,13 @@ export function RecordPage({
                 const fieldOptions =
                   config.key === "students" && f.name === "grade"
                     ? [...(GRADES_BY_STAGE[String(auto["stage"] ?? editing?.["stage"] ?? "")] ?? [])]
-                    : optionsFor(f);
+                    : config.key === "students" && f.name === "classroom"
+                      ? studentClassroomOptions
+                      : optionsFor(f);
+                const effectiveLookupCategory =
+                  config.key === "students" && f.name === "classroom"
+                    ? classroomLookupCategory
+                    : f.lookupCategory ?? "";
                 return (
                   <div key={f.name} className={f.type === "textarea" || f.student ? "sm:col-span-2" : ""}>
                     <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -1434,7 +1503,8 @@ export function RecordPage({
                               return next;
                             })
                           }
-                          className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                          disabled={config.key === "students" && f.name === "classroom" && (!selectedStudentStage || !selectedStudentGrade)}
+                          className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <option value="">—</option>
                           {fieldOptions.map((option) => (
@@ -1455,22 +1525,27 @@ export function RecordPage({
                             <X className="size-4" />
                           </Button>
                         )}
-                        {f.lookupCategory && (
+                        {effectiveLookupCategory && (
                           <Button
                             type="button"
                             variant="outline"
                             size="icon"
-                            title={`إضافة خيار إلى ${f.label}`}
+                            disabled={config.key === "students" && f.name === "classroom" && (!selectedStudentStage || !selectedStudentGrade)}
+                            title={
+                              config.key === "students" && f.name === "classroom"
+                                ? "إضافة فصل لهذا الصف"
+                                : `إضافة خيار إلى ${f.label}`
+                            }
                             aria-label={`إضافة خيار إلى ${f.label}`}
-                            onClick={() => addOption(f.lookupCategory ?? "", f.label)}
+                            onClick={() => addOption(effectiveLookupCategory, f.label)}
                           >
                             <Plus className="size-4" />
                           </Button>
                         )}
-                        {f.lookupCategory &&
+                        {effectiveLookupCategory &&
                           current &&
                           lookups.some(
-                            (item) => item.category === f.lookupCategory && item.value === current,
+                            (item) => item.category === effectiveLookupCategory && item.value === current,
                           ) && (
                             <Button
                               type="button"
@@ -1478,7 +1553,7 @@ export function RecordPage({
                               size="icon"
                               title={`حذف الخيار من ${f.label}`}
                               aria-label={`حذف الخيار من ${f.label}`}
-                              onClick={() => removeOption(f.lookupCategory ?? "", f.label, current)}
+                              onClick={() => removeOption(effectiveLookupCategory, f.label, current)}
                             >
                               <Trash2 className="size-4 text-destructive" />
                             </Button>
