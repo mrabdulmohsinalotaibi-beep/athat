@@ -5,7 +5,9 @@ import { ArrowLeft, FileText, Upload, FileCheck2 } from "lucide-react";
 import { RecordPage } from "@/components/RecordPage";
 import { EvidenceGallery, EvidenceUploadDialog } from "@/components/EvidenceUpload";
 import { Button } from "@/components/ui/button";
-import { recordByKey } from "@/lib/records";\nimport { supabase } from "@/integrations/supabase/client";\nimport { toast } from "sonner";
+import { recordByKey } from "@/lib/records";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/evidences")({
   head: () => ({
@@ -22,7 +24,8 @@ export const Route = createFileRoute("/_authenticated/evidences")({
 });
 
 function EvidencesPage() {
-  const [open, setOpen] = useState(false);\n  const submitApproval=async()=>{const title=window.prompt("عنوان الشاهد أو مجموعة الشواهد المراد اعتمادها","شواهد أعمال التوجيه الطلابي");if(!title)return;const notes=window.prompt("ملاحظة للمراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"evidence_bundle",p_item_id:null,p_title:title,p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع الشواهد للاعتماد.");};
+  const [open, setOpen] = useState(false);
+  const submitApproval=async()=>{const title=window.prompt("عنوان الشاهد أو مجموعة الشواهد المراد اعتمادها","شواهد أعمال التوجيه الطلابي");if(!title)return;const notes=window.prompt("ملاحظة للمراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"evidence_bundle",p_item_id:null,p_title:title,p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع الشواهد للاعتماد.");};
 
   return (
     <div className="reference-screen space-y-4 pb-10" dir="rtl">
