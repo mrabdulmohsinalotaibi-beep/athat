@@ -1185,11 +1185,11 @@ function Dashboard() {
           <div className="mt-2 grid gap-2 xl:grid-cols-2">
             {isCounselorDashboard && openRequests > 0 && (
               <Link
-                to="/posts"
+                to="/inbox"
                 className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/[0.04] p-2.5"
               >
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black text-primary">طلبات المدونة والخدمات</p>
+                  <p className="text-[10px] font-black text-primary">الوارد الموحد للتوجيه</p>
                   <p className="truncate text-xs font-black">
                     لديك {openRequests} طلب غير مغلق
                   </p>
