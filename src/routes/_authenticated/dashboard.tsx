@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/lib/school";
 import { formatHijriDate } from "@/lib/date";
 import { QuickActionLauncher } from "@/components/QuickActionLauncher";
+import { Button } from "@/components/ui/button";
 import { AiCounselorAssistant } from "@/components/AiCounselorAssistant";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -33,6 +34,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
     meta: [
       { title: "لوحة التحكم | الذات" },
       { name: "description", content: "لوحة قيادة مصغرة وتفاعلية لأعمال الموجه الطلابي." },
+      { property: "og:title", content: "لوحة العمل اليومية | الذات" },
+      { property: "og:description", content: "مساحة الموجه الطلابي اليومية للحالات والمهام والمقابلات والبرامج." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Dashboard,
@@ -398,13 +403,6 @@ function Dashboard() {
 
   const counselorStats = [
     {
-      label: "الطلاب",
-      value: data?.studentsCount ?? 0,
-      note: "المسجلون فعليًا",
-      to: "/students" as const,
-      icon: Users,
-    },
-    {
       label: "الحالات",
       value: activeCases.length,
       note: overdueCases.length ? `${overdueCases.length} متابعة مستحقة` : "لا توجد متابعة متأخرة",
@@ -412,20 +410,13 @@ function Dashboard() {
       icon: HeartHandshake,
     },
     {
-      label: "إنجاز الخطة",
-      value: `${planPercent}%`,
-      note: approvalReadyPlanTasks.length
-        ? `${approvalReadyPlanTasks.length} جاهزة لاعتماد التنفيذ`
-        : `${planDone} من ${planTasks.length}`,
-      to: "/plan" as const,
-      icon: ClipboardList,
+      label: "البرامج والأنشطة", value: programs.length, note: `${donePrograms.length} منفذ`, to: "/programs" as const, icon: Sparkles,
     },
     {
-      label: "طلبات واردة",
-      value: openRequests,
-      note: "استشارة / بلاغ / إحالة",
-      to: "/posts" as const,
-      icon: Inbox,
+      label: "المقابلات", value: data?.interviews.length ?? 0, note: `${upcomingFollowups.length} متابعة قريبة`, to: "/interviews" as const, icon: MessageSquareText,
+    },
+    {
+      label: "المهام", value: planTasks.filter((item) => item.exec_status !== "مكتمل").length + openSchoolTasks.length, note: `${latePlan.length + dueSchoolTasks.length} مستحقة`, to: "/plan" as const, icon: ClipboardList,
     },
   ];
 
@@ -822,38 +813,37 @@ function Dashboard() {
 
   return (
     <div dir="rtl" className="dashboard-shell space-y-3">
-      <section className="dashboard-hero relative overflow-hidden rounded-[1.75rem] border border-[#D9C0A3]/40 bg-gradient-to-bl from-[#E4ECDF] via-[#FFFDF9] to-[#EFE1D7] px-4 py-4 text-[#264938] shadow-[var(--shadow-soft)] sm:px-5 sm:py-5">
-        <div aria-hidden="true" className="pointer-events-none absolute -left-10 -top-14 size-44 rounded-full border-[26px] border-[#9A6C78]/[0.07]" />
+      <section className="dashboard-hero border-b border-border py-4 sm:py-5">
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold text-primary">{formatHijriDate(new Date())}</p>
-                <h1 className="truncate text-lg font-black sm:text-xl">
+                 <h1 className="text-xl font-black text-navy sm:text-2xl">
                   {schoolMembership?.display_name
                     ? `مرحبًا، ${schoolMembership.display_name}`
                     : school?.counselor_name
                       ? `مرحبًا، ${school.counselor_name}`
                       : dashboardTitle}
                 </h1>
-                <p className="truncate text-[10px] text-muted-foreground">
-                  {dashboardTitle} · {school?.school_name || "الذات"}
+                 <p className="text-xs text-muted-foreground">
+                   {dashboardTitle}{(data?.schoolContext?.school?.name || school?.school_name) ? ` · ${data?.schoolContext?.school?.name || school?.school_name}` : ""}
                 </p>
               </div>
             </div>
 
             <div className="dashboard-today-strip mt-4 grid grid-cols-3 gap-2">
-              <a href="#today-work" className="rounded-2xl border border-white/80 bg-white/75 px-2.5 py-2 text-center shadow-sm backdrop-blur-sm">
+              <a href="#today-work" className="rounded-xl border border-border bg-card px-2.5 py-2 text-center shadow-[var(--shadow-card)]">
                 <strong className="block text-base font-black">{attentionCount}</strong>
                 <span className="block truncate text-[9px] text-muted-foreground">تحتاج إجراء</span>
               </a>
-              <Link to="/calendar" className="rounded-2xl border border-white/80 bg-white/75 px-2.5 py-2 text-center shadow-sm backdrop-blur-sm">
+              <Link to="/calendar" className="rounded-xl border border-border bg-card px-2.5 py-2 text-center shadow-[var(--shadow-card)]">
                 <strong className="block text-base font-black">{todayAgenda.length}</strong>
                 <span className="block truncate text-[9px] text-muted-foreground">مواعيد اليوم</span>
               </Link>
               <Link
                 to={isCounselorDashboard ? "/execution" : "/school-tasks"}
-                className="rounded-2xl border border-white/80 bg-white/75 px-2.5 py-2 text-center shadow-sm backdrop-blur-sm"
+                className="rounded-xl border border-border bg-card px-2.5 py-2 text-center shadow-[var(--shadow-card)]"
               >
                 <strong className="block text-base font-black">{dashboardApprovalCount}</strong>
                 <span className="block truncate text-[9px] text-muted-foreground">بانتظار الاعتماد</span>
@@ -863,37 +853,34 @@ function Dashboard() {
 
           <div className="flex shrink-0 flex-col items-center gap-2">
             <div
-              className="dashboard-progress-ring grid size-[76px] place-items-center rounded-full p-[6px]"
-              style={{
-                background: `conic-gradient(#4A141F ${dashboardProgress}%, rgba(217,192,163,.42) 0)`,
-              }}
+              className="dashboard-progress-ring grid size-[76px] place-items-center rounded-full border-[6px] border-primary/40 bg-card"
               aria-label={`${dashboardProgressLabel} ${dashboardProgress}%`}
             >
-              <div className="grid size-full place-items-center rounded-full bg-white text-center shadow-inner">
+              <div className="grid size-full place-items-center rounded-full bg-card text-center">
                 <span>
                   <strong className="block text-lg font-black leading-none text-navy">{dashboardProgress}%</strong>
                   <span className="mt-1 block text-[8px] font-bold text-muted-foreground">{dashboardProgressLabel}</span>
                 </span>
               </div>
             </div>
-            <button
+            <Button variant="outline" size="sm"
               type="button"
               onClick={() => void refetch()}
               disabled={isFetching}
-              className="rounded-full border border-border bg-white/80 px-3 py-1 text-[9px] font-bold text-muted-foreground hover:border-primary/30 hover:text-primary disabled:opacity-60"
+              className="h-8 rounded-full text-[9px]"
             >
               {isFetching ? "تحديث…" : "تحديث البيانات"}
-            </button>
+            </Button>
           </div>
         </div>
 
         {dashboardDueCount > 0 && (
           <a
             href="#today-work"
-            className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-[#D9C0A3]/70 bg-[#F4ECE3]/90 px-3 py-2 text-[10px] font-bold text-[#4A141F]"
+            className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary px-3 py-2 text-[10px] font-bold text-secondary-foreground"
           >
             <span className="inline-flex min-w-0 items-center gap-1.5">
-              <BellRing className="size-3.5 shrink-0 text-[#4A141F]" />
+               <BellRing className="size-3.5 shrink-0 text-primary" />
               <span className="truncate">{dashboardDueCount} عنصر مستحق يحتاج متابعتك</span>
             </span>
             <ArrowLeft className="size-3.5 shrink-0" />
@@ -901,10 +888,10 @@ function Dashboard() {
         )}
       </section>
 
-      <section className="dashboard-actions-panel rounded-[1.75rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3.5 shadow-[var(--shadow-card)] sm:p-4">
+      <section className="dashboard-actions-panel rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-black">إجراء سريع · {schoolRoleLabel}</h2>
+            <h2 className="text-base font-black">إجراءات سريعة</h2>
             <p className="text-[10px] text-muted-foreground">{dashboardSubtitle}</p>
           </div>
           <QuickActionLauncher guidanceAllowed={isCounselorDashboard} />
@@ -916,9 +903,9 @@ function Dashboard() {
               <a
                 key={item.label}
                 href={item.to}
-                className="flex min-h-14 items-center gap-2 rounded-2xl border border-[#D9C0A3]/35 bg-[#FBF7F1] px-3 py-2.5 text-xs font-black text-[#264938] transition hover:-translate-y-0.5 hover:border-[#89AA74] hover:bg-[#E4ECDF]"
+                className="flex min-h-16 items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-xs font-black text-foreground transition hover:border-primary/40 hover:bg-secondary"
               >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#E4ECDF] text-[#264938]">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
                   <Icon className="size-4" />
                 </span>
                 <span>{item.label}</span>
@@ -948,17 +935,17 @@ function Dashboard() {
         </section>
       )}
 
-      <section className="dashboard-stat-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
+      <section className="dashboard-stat-grid grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="ملخص العمل">
         {stats.map((card) => {
           const Icon = card.icon;
           return (
             <Link
               key={card.label}
               to={card.to}
-              className="group rounded-[1.5rem] border border-[#D9C0A3]/35 bg-[#FFFDF9] p-3.5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-[#89AA74] hover:shadow-md"
+              className="group rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)] transition hover:border-primary/40 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="rounded-xl bg-[#E4ECDF] p-2 text-[#264938]">
+                <span className="rounded-lg bg-secondary p-2 text-primary">
                   <Icon className="size-4" />
                 </span>
                 <strong className="text-xl font-black sm:text-2xl">
@@ -1009,11 +996,10 @@ function Dashboard() {
         </div>
       </section>
 
-      {(actions.length > 0 || (isCounselorDashboard && (openRequests > 0 || missingDocumentation.length > 0))) && (
-        <section id="today-work" className="scroll-mt-28 rounded-3xl border border-primary/15 bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4">
+      <section id="today-work" className="scroll-mt-28 border-t border-border pt-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-black">مركز عمل اليوم</h2>
+              <h2 className="text-base font-black">مهامي اليوم</h2>
               <p className="text-[10px] text-muted-foreground">
                 {isCounselorDashboard
                   ? "عناصر مستخرجة من الحالات والخطة والبرامج والطلبات الواردة."
@@ -1070,9 +1056,12 @@ function Dashboard() {
                 <ArrowLeft className="size-4 shrink-0 text-primary" />
               </Link>
             ))}
+            {actions.length === 0 && openRequests === 0 && missingDocumentation.length === 0 && (
+              <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">لا توجد مهام تحتاج متابعة الآن.</p>
+            )}
           </div>
         </section>
-      )}
+      </section>
 
       <div className="grid gap-3 xl:grid-cols-2">
         <section className="rounded-2xl border bg-card p-3 shadow-sm">
@@ -1160,7 +1149,7 @@ function Dashboard() {
         <section className="rounded-2xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-black">أكمل من حيث توقفت</h2>
+              <h2 className="text-base font-black">آخر الأنشطة</h2>
               <p className="text-[10px] text-muted-foreground">آخر أعمالك المحفوظة في ذات.</p>
             </div>
             <Clock3 className="size-4 text-primary" />
