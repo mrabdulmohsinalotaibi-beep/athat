@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { recordByKey } from "@/lib/records";
 import { supabase } from "@/integrations/supabase/client";
 import { parseAttendanceWithDeepSeek } from "@/lib/deepseek.functions";
+import { hijriToIso } from "@/lib/date";
 
 type ImportedAttendance = {
   student_no: string;
@@ -34,8 +35,12 @@ function normalizeDigits(value: string) {
 
 function isoFromText(value: string) {
   const v = normalizeDigits(value);
-  const m = v.match(/(20\d{2})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  const m = v.match(/((?:14|20)\d{2})[\/-](\d{1,2})[\/-](\d{1,2})/);
   if (!m) return "";
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (year >= 1400 && year < 1600) return hijriToIso(year, month, day);
   return `${m[1]}-${m[2]!.padStart(2, "0")}-${m[3]!.padStart(2, "0")}`;
 }
 
@@ -46,12 +51,12 @@ function parseAttendanceText(text: string): ImportedAttendance[] {
     if (!/غياب|غائب|absent/i.test(line)) continue;
     const normalized = normalizeDigits(line);
     const id = normalized.match(/\b\d{6,12}\b/)?.[0] ?? "";
-    const dateMatch = normalized.match(/20\d{2}[\/-]\d{1,2}[\/-]\d{1,2}/)?.[0] ?? "";
+    const dateMatch = normalized.match(/(?:14|20)\d{2}[\/-]\d{1,2}[\/-]\d{1,2}/)?.[0] ?? "";
     const date = isoFromText(dateMatch);
     let name = line
       .replace(/غياب|غائب|absent/gi, " ")
       .replace(/[٠-٩۰-۹0-9]{6,12}/g, " ")
-      .replace(/20[٠-٩۰-۹0-9]{2}[\/-][٠-٩۰-۹0-9]{1,2}[\/-][٠-٩۰-۹0-9]{1,2}/g, " ")
+      .replace(/(?:14|20)[٠-٩۰-۹0-9]{2}[\/-][٠-٩۰-۹0-9]{1,2}[\/-][٠-٩۰-۹0-9]{1,2}/g, " ")
       .replace(/\s+/g, " ").trim();
     if (name.length < 2) name = "طالب من كشف إتقان";
     out.push({ student_no: id, student_name: name, adate: date, case_type: "غياب", count_days: 1, action: "متابعة الغياب", selected: true, source: line });
@@ -211,7 +216,13 @@ function AttendancePage() {
       for (let pageNo = 1; pageNo <= doc.numPages; pageNo++) {
         const page = await doc.getPage(pageNo);
         const content = await page.getTextContent();
-        pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
+        pages.push(
+          content.items
+            .map((item: any) => ("str" in item ? `${item.str}${item.hasEOL ? "\\n" : " "}` : ""))
+            .join("")
+            .replace(/[ \\t]+/g, " ")
+            .replace(/ *\\n */g, "\\n"),
+        );
       }
       let extractedText = pages.join("\n").trim();
       let usedOcr = false;
