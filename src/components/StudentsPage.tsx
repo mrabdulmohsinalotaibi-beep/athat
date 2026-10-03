@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useStudentOptions } from "@/components/StudentCombobox";
 import { normalizeSaudiGrade, normalizeSaudiStage, SAUDI_STAGE_GRADES } from "@/lib/saudi-school";
+import { hasPermission } from "@/lib/team-permissions";
 
 
 type StudentRow = Record<string, unknown>;
@@ -50,7 +51,25 @@ function Filter({
 }
 
 export function StudentsPage() {
-  const config = recordByKey("students");
+  const baseConfig = recordByKey("students");
+  const { data: accessContext } = useQuery({
+    queryKey: ["school-access-context"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_my_school_context");
+      if (error) throw error;
+      return data ?? { membership: null };
+    },
+    staleTime: 30_000,
+  });
+  const membership = accessContext?.membership ?? null;
+  const role = String(membership?.role ?? "");
+  const canEditStudents = hasPermission(membership, "students.edit");
+  const readOnly = Boolean(membership && !canEditStudents);
+  const config = {
+    ...baseConfig,
+    title: role === "student" ? "ملفي الطلابي" : role === "parent" ? "ملفات أبنائي" : role === "teacher" ? "طلابي" : baseConfig.title,
+    singular: role === "student" ? "الملف الطلابي" : role === "parent" ? "ملف طالب" : baseConfig.singular,
+  };
   const [importOpen, setImportOpen] = useState(false);
   const [profileStudent, setProfileStudent] = useState<StudentRow | null>(null);
   const [stage, setStage] = useState("");
@@ -127,9 +146,21 @@ export function StudentsPage() {
 
   return (
     <>
+      {readOnly && (
+        <div className="mb-4 rounded-2xl border border-primary/15 bg-primary/5 p-3 text-xs leading-6">
+          {role === "student"
+            ? "تعرض هذه الصفحة ملفك المرتبط بحسابك فقط. التعديل والإضافة محجوبان حسب صلاحياتك."
+            : role === "parent"
+              ? "تعرض هذه الصفحة الأبناء المرتبطين بحساب ولي الأمر فقط. لا يمكنك الوصول إلى بقية طلاب المدرسة."
+              : role === "teacher"
+                ? "تعرض هذه الصفحة الطلاب الموجودين داخل نطاقك فقط. صلاحيات التعديل يحددها مسؤول المدرسة."
+                : "تعرض هذه الصفحة البيانات المسموح لك بها فقط."}
+        </div>
+      )}
       <RecordPage
         config={config}
         hideImport
+        readOnly={readOnly}
         serverPagination
         serverFilters={{
           stage,
@@ -144,16 +175,17 @@ export function StudentsPage() {
           onClick: (row) => setProfileStudent(row as StudentRow),
         }}
         toolbarExtra={
-          <>
-            <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="size-4" /> استيراد من Excel
-            </Button>
-            <Button variant="outline" onClick={downloadStudentsTemplate}>
-              <FileSpreadsheet className="size-4" /> تحميل نموذج Excel
-            </Button>
-            <Button asChild variant="outline"><Link to="/integrations">استيراد من نور أو مدرستي</Link></Button>
-
-          </>
+          canEditStudents ? (
+            <>
+              <Button variant="outline" onClick={() => setImportOpen(true)}>
+                <Upload className="size-4" /> استيراد من Excel
+              </Button>
+              <Button variant="outline" onClick={downloadStudentsTemplate}>
+                <FileSpreadsheet className="size-4" /> تحميل نموذج Excel
+              </Button>
+              <Button asChild variant="outline"><Link to="/integrations">استيراد من نور أو مدرستي</Link></Button>
+            </>
+          ) : null
         }
         filters={
           <>
@@ -208,7 +240,7 @@ export function StudentsPage() {
           </>
         }
       />
-      <StudentsImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      {canEditStudents && <StudentsImportDialog open={importOpen} onOpenChange={setImportOpen} />}
       <StudentProfileDialog
         open={profileStudent !== null}
         onOpenChange={(open) => !open && setProfileStudent(null)}
