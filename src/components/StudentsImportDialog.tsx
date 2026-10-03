@@ -244,7 +244,7 @@ export function StudentsImportDialog({
       const { data: existing, error: existingError } = await supabase
         .from("students")
         .select(
-          "national_id,student_no,full_name,stage,grade,classroom,guardian_phone",
+          "id,student_no,full_name,national_id,nationality,gender,stage,grade,classroom,guardian_name,guardian_phone,address,health_status,social_status,status,notes",
         );
       if (existingError) throw existingError;
 
