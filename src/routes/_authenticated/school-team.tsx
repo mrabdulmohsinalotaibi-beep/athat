@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Check, Clipboard, KeyRound, RefreshCw, School, Send, Settings2, Share2, ShieldCheck, UserCheck, Users } from "lucide-react";
+import { Check, Clipboard, KeyRound, RefreshCw, Save, School, Send, Settings2, Share2, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -290,11 +290,11 @@ function SchoolTeamPage() {
   });
 
   const approve = useMutation({
-    mutationFn: async ({ id, role }: { id: string; role: Role }) => {
+    mutationFn: async ({ id, role, isAdmin }: { id: string; role: Role; isAdmin?: boolean }) => {
       const { error } = await (supabase as any).rpc("approve_school_member", {
         p_member_id: id,
         p_role: role,
-        p_is_admin: role === "principal" || role === "vice_principal",
+        p_is_admin: typeof isAdmin === "boolean" ? isAdmin : role === "principal" || role === "vice_principal",
       });
       if (error) throw error;
     },
@@ -565,25 +565,149 @@ function SchoolTeamPage() {
 
       {membership.is_admin && pending.length > 0 && (
         <section className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4">
-          <div className="mb-3 flex items-center gap-2"><UserCheck className="size-4" /><h2 className="font-black">طلبات انضمام تنتظر الاعتماد</h2></div>
-          <div className="grid gap-2">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <UserCheck className="size-4" />
+              <div>
+                <h2 className="font-black">طلبات انضمام تنتظر الاعتماد</h2>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">راجع الدور والصلاحيات ونطاق البيانات قبل منح الوصول.</p>
+              </div>
+            </div>
+            <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-800">{pending.length} طلب</span>
+          </div>
+          <div className="grid gap-3">
             {pending.map((member) => {
-              const selectedRole = pendingRoles[member.id] ?? member.role ?? "teacher";
+              const isReviewing = editingMemberId === member.id;
+              const memberPermissions = { ...permissionsForRole(member.role), ...(member.permissions ?? {}) };
+              const enabledCount = Object.values(memberPermissions).filter(Boolean).length;
+              const scopeText = scopeLabel(member.data_scope ?? { type: "school" });
               return (
-                <div key={member.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 xl:flex-row xl:items-center xl:justify-between">
-                  <div><p className="font-black">{member.display_name || "عضو جديد"}</p><p className="text-[11px] text-muted-foreground">طلب جديد للانضمام</p></div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <select
-                      value={selectedRole}
-                      onChange={(e) => setPendingRoles((current) => ({ ...current, [member.id]: e.target.value as Role }))}
-                      className="h-9 rounded-md border bg-background px-3 text-xs"
-                    >
-                      {SCHOOL_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
-                    </select>
-                    <Button size="sm" onClick={() => approve.mutate({ id: member.id, role: selectedRole })}><Check className="size-4" /> اعتماد</Button>
-                    <Button size="sm" variant="ghost" onClick={() => changeStatus.mutate({ id: member.id, status: "rejected" })}>رفض</Button>
+                <article key={member.id} className="rounded-2xl border bg-background p-3.5 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-black">{member.display_name || "عضو جديد"}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+                        <span className="rounded-full bg-primary/10 px-2 py-1 font-black text-primary">{roleLabel(member.role)}</span>
+                        <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{enabledCount} صلاحية</span>
+                        <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{scopeText}</span>
+                        {(member.linked_student_ids?.length ?? 0) > 0 && (
+                          <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{member.linked_student_ids?.length} طالب مرتبط</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (isReviewing) {
+                            setEditingMemberId("");
+                            return;
+                          }
+                          setEditingMemberId(member.id);
+                          setEditRole(member.role);
+                          setEditPermissions(memberPermissions);
+                          setEditScope(member.data_scope ?? { type: member.role === "teacher" ? "assigned" : member.role === "student" ? "self" : member.role === "parent" ? "children" : "school" });
+                          setEditStudentIds(member.linked_student_ids ?? []);
+                          setEditExpiry(member.access_expires_at ? String(member.access_expires_at).slice(0, 10) : "");
+                          setEditAdmin(member.is_admin || member.role === "principal" || member.role === "vice_principal");
+                          void permissionStudentsQuery.refetch();
+                        }}
+                      >
+                        <Settings2 className="size-4" /> {isReviewing ? "إغلاق المراجعة" : "مراجعة الصلاحيات"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={approve.isPending}
+                        onClick={() => approve.mutate({ id: member.id, role: member.role })}
+                      >
+                        <Check className="size-4" /> اعتماد كما هو
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => changeStatus.mutate({ id: member.id, status: "rejected" })}>رفض</Button>
+                    </div>
                   </div>
-                </div>
+
+                  {isReviewing && (
+                    <div className="mt-4 space-y-4 border-t pt-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <Label>الدور عند الاعتماد</Label>
+                          <select
+                            value={editRole}
+                            onChange={(event) => {
+                              const role = event.target.value as Role;
+                              setEditRole(role);
+                              setEditPermissions(permissionsForRole(role));
+                              setEditStudentIds([]);
+                              setEditScope({ type: role === "student" ? "self" : role === "parent" ? "children" : role === "teacher" ? "assigned" : "school" });
+                              setEditAdmin(role === "principal" || role === "vice_principal");
+                            }}
+                            className="mt-2 h-10 w-full rounded-xl border bg-background px-3 text-xs"
+                          >
+                            {SCHOOL_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                          </select>
+                        </div>
+                        <ScopeEditor
+                          value={editScope}
+                          onChange={(scope) => {
+                            setEditScope(scope);
+                            if (!["assigned", "self", "children"].includes(scope.type)) setEditStudentIds([]);
+                          }}
+                          students={permissionStudentsQuery.data ?? []}
+                          selectedStudentIds={editStudentIds}
+                          onSelectedStudentIdsChange={setEditStudentIds}
+                          compact
+                        />
+                      </div>
+
+                      <label className="flex items-center gap-2 rounded-xl border p-3 text-xs font-bold">
+                        <input type="checkbox" checked={editAdmin} onChange={(event) => setEditAdmin(event.target.checked)} />
+                        مسؤول إدارة الفريق
+                      </label>
+
+                      <div>
+                        <Label>انتهاء صلاحية الوصول (اختياري)</Label>
+                        <Input
+                          type="date"
+                          className="mt-2"
+                          value={editExpiry}
+                          onChange={(event) => setEditExpiry(event.target.value)}
+                        />
+                        <p className="mt-1 text-[10px] leading-5 text-muted-foreground">مفيد للتكليف المؤقت أو اللجان الموسمية. اتركه فارغًا للوصول الدائم.</p>
+                      </div>
+
+                      <PermissionEditor permissions={editPermissions} onChange={setEditPermissions} compact />
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={updateAccess.isPending || setExpiry.isPending}
+                          onClick={async () => {
+                            await updateAccess.mutateAsync(member.id);
+                            await setExpiry.mutateAsync({ id: member.id, value: editExpiry });
+                            setEditingMemberId(member.id);
+                            toast.success("تم حفظ إعدادات الطلب قبل الاعتماد.");
+                          }}
+                        >
+                          <Save className="size-4" /> حفظ المراجعة
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={updateAccess.isPending || setExpiry.isPending || approve.isPending}
+                          onClick={async () => {
+                            await updateAccess.mutateAsync(member.id);
+                            await setExpiry.mutateAsync({ id: member.id, value: editExpiry });
+                            await approve.mutateAsync({ id: member.id, role: editRole, isAdmin: editAdmin });
+                          }}
+                        >
+                          <Check className="size-4" /> حفظ واعتماد العضو
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingMemberId("")}>إلغاء</Button>
+                      </div>
+                    </div>
+                  )}
+                </article>
               );
             })}
           </div>
@@ -781,6 +905,19 @@ function SchoolTeamPage() {
   );
 }
 
+
+function scopeLabel(scope: DataScope) {
+  switch (scope.type) {
+    case "school": return "كل المدرسة";
+    case "stage": return scope.stage ? `مرحلة: ${scope.stage}` : "مرحلة محددة";
+    case "grade": return [scope.stage, scope.grade].filter(Boolean).join(" · ") || "صف محدد";
+    case "classroom": return [scope.stage, scope.grade, scope.classroom].filter(Boolean).join(" · ") || "فصل محدد";
+    case "assigned": return "طلاب محددون";
+    case "self": return "ملفه فقط";
+    case "children": return "أبناؤه فقط";
+    default: return "نطاق مخصص";
+  }
+}
 
 function ScopeEditor({
   value,
