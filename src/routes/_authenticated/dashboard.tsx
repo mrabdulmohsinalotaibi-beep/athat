@@ -93,6 +93,7 @@ function useDashboard() {
         ["posts", supabase.from("posts").select("id,is_public,kind")],
         ["schoolTasks", (supabase as any).from("school_tasks").select("id,title,status,due_date,priority,creator_member_id,assignee_member_id")],
         ["schoolHandoffs", (supabase as any).from("school_report_handoffs").select("id,status,recipient_member_id,sender_member_id,title,sent_at")],
+        ["initiatives", (supabase as any).rpc("get_my_initiatives")],
         ["auditLog", (supabase as any).from("audit_log").select("id,action,table_name,record_id,new_data,old_data,changed_at").order("changed_at", { ascending: false }).limit(8)],
       ] as const;
 
@@ -140,6 +141,7 @@ function useDashboard() {
       const posts = pick("posts");
       const schoolTasks = pick("schoolTasks");
       const schoolHandoffs = pick("schoolHandoffs");
+      const initiatives = pick("initiatives");
       const auditLog = pick("auditLog");
 
       const sources = {
@@ -157,6 +159,7 @@ function useDashboard() {
         posts,
         schoolTasks,
         schoolHandoffs,
+        initiatives,
         auditLog,
       };
 
@@ -182,6 +185,7 @@ function useDashboard() {
         posts: posts.error ? [] : posts.data ?? [],
         schoolTasks: schoolTasks.error ? [] : schoolTasks.data ?? [],
         schoolHandoffs: schoolHandoffs.error ? [] : schoolHandoffs.data ?? [],
+        initiatives: initiatives.error ? [] : initiatives.data ?? [],
         auditLog: auditLog.error ? [] : auditLog.data ?? [],
         schoolContext,
         failedSources,
@@ -525,7 +529,17 @@ function Dashboard() {
     },
   ];
 
+  const myInitiatives = (data?.initiatives ?? []).filter((item: any) => item.my_membership?.status === "active");
+  const initiativeStudents = myInitiatives.reduce((sum: number, item: any) => sum + Number(item.my_student_count ?? 0), 0);
+
   const teacherStats = [
+    {
+      label: "مبادراتي",
+      value: myInitiatives.length,
+      note: initiativeStudents ? `${initiativeStudents} طالب ضمن مبادراتك` : "المبادرات المسندة إليك",
+      to: "/initiative-teams" as const,
+      icon: Sparkles,
+    },
     {
       label: "طلابي",
       value: data?.studentsCount ?? 0,
@@ -546,13 +560,6 @@ function Dashboard() {
       note: "إحالة طالب أو متابعة إحالة",
       to: "/referrals" as const,
       icon: HeartHandshake,
-    },
-    {
-      label: "المراسلات",
-      value: unreadAdministrativeReports.length,
-      note: "تقارير ورسائل مرتبطة بدورك",
-      to: "/school-inbox" as const,
-      icon: Inbox,
     },
   ];
 
@@ -1138,6 +1145,29 @@ function Dashboard() {
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-[#89AA74] transition-all" style={{ width: `${planPercent}%` }} />
+          </div>
+        </section>
+      )}
+
+      {isTeacherDashboard && myInitiatives.length > 0 && (
+        <section className="rounded-2xl border bg-card p-4 shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-between gap-3">
+            <div><p className="text-[10px] font-black text-primary">عملي في المبادرات</p><h2 className="text-base font-black">مبادراتي النشطة</h2></div>
+            <Link to="/initiative-teams" className="text-[10px] font-black text-primary">عرض الكل</Link>
+          </div>
+          <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {myInitiatives.slice(0, 6).map((initiative: any) => (
+              <article key={initiative.id} className="rounded-xl border bg-background p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0"><p className="truncate text-sm font-black">{initiative.title}</p><p className="mt-1 text-[10px] text-muted-foreground">{initiative.my_membership?.role_title || "عضو المبادرة"}</p></div>
+                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">{initiative.latest_progress || 0}%</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-muted-foreground">{Number(initiative.my_student_count ?? 0)} طالب مسند</span>
+                  <a href={`/initiative-member-work?initiative=${encodeURIComponent(initiative.id)}`} className="rounded-lg bg-primary px-3 py-1.5 text-[10px] font-black text-primary-foreground">فتح مساحة عملي</a>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
       )}
