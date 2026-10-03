@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import {
   Bell,
   Check,
@@ -87,6 +88,24 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const accessRole = String(accessMembership?.role ?? "");
   const guidanceNavigationAllowed = !accessMembership || isGuidanceWorkspaceMember(accessMembership);
   const baseVisibleSections = filterWorkspaceSections(WORKSPACE_SECTIONS, accessMembership);
+  useEffect(() => {
+    if (!accessMembership) return;
+    if (canOpenWorkspacePath(pathname, accessMembership)) return;
+
+    // UI navigation is filtered already, but this also blocks direct URL entry
+    // for school members whose role/permissions do not allow the page.
+    toast.error("ليس لديك صلاحية لفتح هذه الصفحة.");
+    void navigate({ to: "/dashboard", replace: true });
+  }, [
+    pathname,
+    accessMembership?.id,
+    accessMembership?.member_status,
+    accessMembership?.access_expired,
+    accessMembership?.role,
+    accessMembership?.permissions,
+    accessMembership?.group_permissions,
+  ]);
+
   const visibleSections = baseVisibleSections.map((section) => {
     if (section.id === "students") {
       const title = accessRole === "student" ? "ملفي" : accessRole === "parent" ? "أبنائي" : accessRole === "teacher" ? "طلابي" : section.title;
