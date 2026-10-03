@@ -228,7 +228,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         : 0;
 
       const guidanceAlertsAllowed = !context?.membership || isGuidanceWorkspaceMember(context.membership);
-      const [cases, tasks, schoolTasks, handoffs, publicRequests, feedback] = await Promise.all([
+      const [cases, tasks, schoolTasks, handoffs, publicRequests, feedback, interviews, behavior, attendance] = await Promise.all([
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
         (supabase as any).from("school_tasks").select("id,status,due_date,creator_member_id,assignee_member_id"),
@@ -239,6 +239,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
         guidanceAlertsAllowed
           ? supabase.from("feedback_messages").select("id,status,category").in("category", ["استشارة فردية", "إحالة طالب", "إبلاغ سري"])
           : Promise.resolve({ data: [], error: null }),
+        guidanceAlertsAllowed ? supabase.from("interviews").select("id,followup_at") : Promise.resolve({ data: [], error: null }),
+        guidanceAlertsAllowed ? supabase.from("behavior").select("id,result,followup_at") : Promise.resolve({ data: [], error: null }),
+        guidanceAlertsAllowed ? supabase.from("attendance").select("id,student_id,student_no,student_name,case_type,count_days") : Promise.resolve({ data: [], error: null }),
       ]);
 
       // Alerts are supplementary UI. A missing/temporarily unavailable table
@@ -249,6 +252,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       if (handoffs.error) console.warn("[alerts] school_report_handoffs:", handoffs.error.message);
       if (publicRequests.error) console.warn("[alerts] public_requests:", publicRequests.error.message);
       if (feedback.error) console.warn("[alerts] feedback_messages:", feedback.error.message);
+      if (interviews.error) console.warn("[alerts] interviews:", interviews.error.message);
+      if (behavior.error) console.warn("[alerts] behavior:", behavior.error.message);
+      if (attendance.error) console.warn("[alerts] attendance:", attendance.error.message);
 
       const dueCases = (cases.error ? [] : cases.data ?? []).filter(
         (item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day,
@@ -284,9 +290,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
         (item: any) => !["تم الرد", "محفوظ"].includes(String(item.status ?? "")),
       ).length;
       const guidanceInbox = inboundRequests + inboundFeedback;
+      const dueInterviews = (interviews.error ? [] : interviews.data ?? []).filter(
+        (item: any) => item.followup_at && String(item.followup_at).slice(0, 10) <= day,
+      ).length;
+      const dueBehavior = (behavior.error ? [] : behavior.data ?? []).filter(
+        (item: any) =>
+          ["تحتاج متابعة", "تحسن جزئي"].includes(String(item.result ?? "")) &&
+          item.followup_at &&
+          String(item.followup_at).slice(0, 10) <= day,
+      ).length;
+      const attendanceGrouped = new Map<string, number>();
+      (attendance.error ? [] : attendance.data ?? []).forEach((item: any) => {
+        if (!["غياب", "تأخر", "هروب"].includes(String(item.case_type ?? ""))) return;
+        const key = String(item.student_id || item.student_no || item.student_name || "").trim();
+        if (!key) return;
+        attendanceGrouped.set(key, (attendanceGrouped.get(key) ?? 0) + Math.max(1, Number(item.count_days) || 1));
+      });
+      const repeatedAttendance = Array.from(attendanceGrouped.values()).filter((count) => count >= 3).length;
 
-      const total = dueCases + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers + guidanceInbox;
-      return { total, dueCases, attentionPlan, dueSchoolTasks, approvals, unreadReports, pendingMembers, guidanceInbox };
+      const total = dueCases + dueInterviews + dueBehavior + repeatedAttendance + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers + guidanceInbox;
+      return { total, dueCases, dueInterviews, dueBehavior, repeatedAttendance, attentionPlan, dueSchoolTasks, approvals, unreadReports, pendingMembers, guidanceInbox };
     },
     staleTime: 30_000,
     refetchInterval: 60_000,
@@ -569,6 +592,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     {alertCount ? (
                       <div className="mt-3 space-y-1.5 text-xs">
                         {(alertSummary?.dueCases ?? 0) > 0 && <AlertLink to="/cases" label="متابعات حالات مستحقة" count={alertSummary?.dueCases ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.dueInterviews ?? 0) > 0 && <AlertLink to="/interviews" label="متابعات مقابلات مستحقة" count={alertSummary?.dueInterviews ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.dueBehavior ?? 0) > 0 && <AlertLink to="/behavior" label="متابعات سلوكية مستحقة" count={alertSummary?.dueBehavior ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.repeatedAttendance ?? 0) > 0 && <AlertLink to="/attendance" label="طلاب يحتاجون متابعة مواظبة" count={alertSummary?.repeatedAttendance ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.attentionPlan ?? 0) > 0 && <AlertLink to="/plan" label="مهام خطة تحتاج إجراء" count={alertSummary?.attentionPlan ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.dueSchoolTasks ?? 0) > 0 && <AlertLink to="/school-tasks" label="مهام مدرسية مسندة لك" count={alertSummary?.dueSchoolTasks ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.approvals ?? 0) > 0 && <AlertLink to="/school-tasks" label="إنجازات تنتظر اعتمادك" count={alertSummary?.approvals ?? 0} close={() => setAlertsOpen(false)} />}
