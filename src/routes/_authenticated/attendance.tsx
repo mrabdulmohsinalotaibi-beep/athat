@@ -60,23 +60,62 @@ function isoFromText(value: string) {
 }
 
 function parseAttendanceText(text: string): ImportedAttendance[] {
-  const lines = text.split(/\n+/).map((x) => x.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const normalizedText = normalizeDigits(text).replace(/\r/g, "");
+  const datePattern = /(?:14|20)\d{2}[\/-]\d{1,2}[\/-]\d{1,2}/g;
+  const dates = Array.from(normalizedText.matchAll(datePattern));
   const out: ImportedAttendance[] = [];
-  for (const line of lines) {
-    if (!/غياب|غائب|absent/i.test(line)) continue;
-    const normalized = normalizeDigits(line);
-    const id = normalized.match(/\b\d{6,12}\b/)?.[0] ?? "";
-    const dateMatch = normalized.match(/(?:14|20)\d{2}[\/-]\d{1,2}[\/-]\d{1,2}/)?.[0] ?? "";
-    const date = isoFromText(dateMatch);
-    let name = line
-      .replace(/غياب|غائب|absent/gi, " ")
-      .replace(/[٠-٩۰-۹0-9]{6,12}/g, " ")
-      .replace(/(?:14|20)[٠-٩۰-۹0-9]{2}[\/-][٠-٩۰-۹0-9]{1,2}[\/-][٠-٩۰-۹0-9]{1,2}/g, " ")
-      .replace(/\s+/g, " ").trim();
-    if (name.length < 2) name = "طالب من كشف إتقان";
-    out.push({ student_no: id, student_name: name, adate: date, case_type: "غياب", count_days: 1, action: "متابعة الغياب", selected: true, source: line });
+
+  // PDF tables often lose visual row breaks. A date is a reliable row boundary
+  // in Noor/Itqan attendance exports, so parse the text around each occurrence.
+  for (let index = 0; index < dates.length; index++) {
+    const match = dates[index]!;
+    const start = Math.max(0, (dates[index - 1]?.index ?? match.index! - 260) + (index ? dates[index - 1]![0].length : 0));
+    const end = Math.min(normalizedText.length, dates[index + 1]?.index ?? match.index! + 300);
+    const chunk = normalizedText.slice(start, end).replace(/\s+/g, " ").trim();
+    const date = isoFromText(match[0]);
+    if (!date) continue;
+
+    const ids = Array.from(chunk.matchAll(/\b\d{6,12}\b/g))
+      .map((m) => m[0])
+      .filter((value) => !/^(14|20)\d{2}/.test(value));
+    const studentNo = ids[0] ?? "";
+
+    const arabicParts = chunk.match(/[\u0621-\u064A][\u0621-\u064A ]{5,}/g) ?? [];
+    const ignored = /غياب|غائب|بعذر|بدون عذر|نوع الغياب|نوع العذر|التاريخ|الهوية|الاسم|الصف|الفصل|الجوال|الفترة|الحصة|المادة|المعلم|الملاحظات/;
+    const name = arabicParts
+      .map((part) => part.replace(/\s+/g, " ").trim())
+      .filter((part) => !ignored.test(part))
+      .sort((a, b) => b.split(" ").length - a.split(" ").length)[0] ?? "طالب من كشف PDF";
+
+    out.push({
+      student_no: studentNo,
+      student_name: name,
+      adate: date,
+      case_type: "غياب",
+      count_days: 1,
+      action: "متابعة الغياب",
+      selected: true,
+      source: chunk,
+    });
   }
-  return out;
+
+  // Traditional line-based exports remain supported.
+  if (!out.length) {
+    const lines = normalizedText.split(/\n+/).map((x) => x.replace(/\s+/g, " ").trim()).filter(Boolean);
+    for (const line of lines) {
+      const dateMatch = line.match(/(?:14|20)\d{2}[\/-]\d{1,2}[\/-]\d{1,2}/)?.[0] ?? "";
+      if (!dateMatch) continue;
+      const id = line.match(/\b\d{6,12}\b/)?.[0] ?? "";
+      out.push({ student_no: id, student_name: "طالب من كشف PDF", adate: isoFromText(dateMatch), case_type: "غياب", count_days: 1, action: "متابعة الغياب", selected: true, source: line });
+    }
+  }
+
+  const unique = new Map<string, ImportedAttendance>();
+  out.forEach((row, index) => {
+    const key = `${row.student_no || normalizeStudentName(row.student_name) || index}|${row.adate}`;
+    if (!unique.has(key)) unique.set(key, row);
+  });
+  return Array.from(unique.values());
 }
 
 type OcrProgress = {
@@ -327,6 +366,7 @@ function AttendancePage() {
             selected: true,
             source: row.source || "",
           }));
+          if (!parsed.length) parsed = parseAttendanceText(extractedText);
         } catch (aiError) {
           console.warn("[Attendance] DeepSeek parsing failed; using local parser", aiError);
           parsed = parseAttendanceText(extractedText);
