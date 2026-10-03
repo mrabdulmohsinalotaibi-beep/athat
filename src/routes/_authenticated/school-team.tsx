@@ -1384,7 +1384,13 @@ function SchoolTeamPage() {
                                   ? "تم تعديل مجموعة صلاحيات."
                                   : row.action === "permission_group_deleted"
                                     ? "تم حذف مجموعة صلاحيات."
-                                    : row.action}
+                                    : row.action === "group_task_assigned"
+                                      ? "تم إسناد مهمة إلى مجموعة."
+                                      : row.action === "group_report_sent"
+                                        ? "تم رفع تقرير إلى مجموعة."
+                                        : row.action === "group_task_templates_activated"
+                                          ? "تم تفعيل قوالب مهام دورية لمجموعة."
+                                          : row.action}
                   </p>
                 </article>
               ))}
