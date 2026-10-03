@@ -257,7 +257,7 @@ function InitiativeDashboardPage() {
   );
 }
 
-function Status({ label, value }: { label: string; value?: string | null }) {
+function Status({ label, value }: { label: string; value: string | null | undefined }) {
   return <div className="rounded-xl bg-muted/20 p-2 text-center"><p className="text-[9px] text-muted-foreground">{label}</p><p className="mt-1 font-black">{value || "—"}</p></div>;
 }
 
