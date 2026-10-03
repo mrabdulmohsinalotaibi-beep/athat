@@ -528,7 +528,7 @@ function PublicContentSection({
             لا يوجد محتوى منشور في هذا القسم حتى الآن.
           </p>
         ) : (
-          <div className={compact ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "mt-8 grid gap-5 lg:grid-cols-2"}>
+          <div className={compact ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "mt-8 grid gap-5 lg:grid-cols-2"}>
             {items.map((post) => {
               const imageOnly = Boolean(post.cover_url && !post.body?.trim() && !post.excerpt?.trim());
               return (
@@ -538,7 +538,7 @@ function PublicContentSection({
                       <img
                         src={post.cover_url}
                         alt={post.title}
-                        className={"mx-auto block h-auto max-w-full rounded-lg object-contain " + (compact ? "max-h-[360px]" : (imageOnly ? "max-h-[760px]" : "max-h-[520px]"))}
+                        className={"mx-auto block h-auto w-auto max-w-full rounded-lg object-contain " + (compact ? "max-h-[70vh] sm:max-h-[520px]" : (imageOnly ? "max-h-[85vh]" : "max-h-[70vh]"))}
                       />
                     </div>
                   ) : (
