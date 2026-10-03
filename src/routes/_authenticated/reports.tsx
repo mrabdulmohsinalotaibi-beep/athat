@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, CheckSquare, FileText, RotateCcw, Send, ShieldCheck, Square } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CheckSquare, FileText, Loader2, RotateCcw, Send, ShieldCheck, Sparkles, Square } from "lucide-react";
 import { toast } from "sonner";
 import { HijriDatePicker } from "@/components/HijriDatePicker";
 
@@ -11,6 +11,7 @@ import { computeKpis, isPercentKpi, type KpiInput } from "@/lib/kpi";
 import { RECORDS, type FieldDef } from "@/lib/records";
 import { displayRecordValue } from "@/lib/display";
 import { formatHijriDate } from "@/lib/date";
+import { generateSmartFill } from "@/lib/deepseek.functions";
 
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,7 @@ function ReportsPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [narrative, setNarrative] = useState("");
+  const [aiNarrativeBusy, setAiNarrativeBusy] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>(["plan", "programs", "evidences"]);
   const [recipientMemberId, setRecipientMemberId] = useState("");
   const [handoffNote, setHandoffNote] = useState("");
@@ -282,6 +284,46 @@ function ReportsPage() {
         description: kpi.hint,
       }));
   }, [filteredSections, selectedKeySignature]);
+
+  async function generateNarrativeWithAi() {
+    if (!selectedRecords.length || aiNarrativeBusy) return;
+    setAiNarrativeBusy(true);
+    try {
+      const sectionSummary = selectedRecords.map((record) => ({
+        section: record.title,
+        count: filteredSections[record.key]?.length ?? 0,
+      }));
+      const result = await generateSmartFill({
+        data: {
+          recordType: "official_report",
+          recordTitle: reportTitle || "تقرير التوجيه الطلابي",
+          brief: [
+            "اكتب ملخصًا تنفيذيًا مهنيًا ومحايدًا للتقرير المدرسي اعتمادًا فقط على الأرقام والبيانات المرسلة.",
+            "لا تخترع أسماء أو نتائج أو أسبابًا غير موجودة. اختم بتوصيات عملية قصيرة قابلة للتعديل.",
+            period ? `الفترة: ${period}` : "",
+            fromDate || toDate ? `النطاق: ${fromDate || "البداية"} إلى ${toDate || "النهاية"}` : "",
+            `إجمالي الصفوف: ${totalRows}`,
+            `الأقسام: ${sectionSummary.map((item) => `${item.section}: ${item.count}`).join("، ")}`,
+            `إنجاز الخطة: ${planProgress}%، البرامج المنفذة: ${programDone} من ${programRows.length}، الشواهد: ${evidenceRows.length}`,
+          ].filter(Boolean).join("\n"),
+          schoolName: school?.school_name ?? "",
+          fields: [{ name: "narrative", label: "التحليل والملاحظات والتوصيات", type: "textarea" as const }],
+          values: narrative.trim() ? { narrative } : {},
+        },
+      });
+      const suggestion = String(result?.suggestions?.narrative ?? "").trim();
+      if (!suggestion) {
+        toast.info("لم تتوفر بيانات كافية لإنشاء ملخص.");
+        return;
+      }
+      setNarrative(suggestion);
+      toast.success("تم إنشاء مسودة الملخص بالذكاء الاصطناعي. راجعها قبل الاعتماد.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر إنشاء الملخص الذكي.");
+    } finally {
+      setAiNarrativeBusy(false);
+    }
+  }
 
   function toggleRecord(key: string) {
     setSelectedKeys((current) =>
@@ -741,7 +783,13 @@ function ReportsPage() {
           </div>
 
           <div>
-            <Label htmlFor="report-narrative">التحليل والملاحظات والتوصيات</Label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label htmlFor="report-narrative">التحليل والملاحظات والتوصيات</Label>
+              <Button type="button" variant="outline" size="sm" disabled={aiNarrativeBusy || isLoading || selectedRecords.length === 0} onClick={() => void generateNarrativeWithAi()}>
+                {aiNarrativeBusy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                {aiNarrativeBusy ? "جارٍ إعداد الملخص..." : "إنشاء ملخص ذكي"}
+              </Button>
+            </div>
             <textarea
               id="report-narrative"
               value={narrative}
