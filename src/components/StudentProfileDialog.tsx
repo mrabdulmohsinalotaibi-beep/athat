@@ -80,7 +80,7 @@ export function StudentProfileDialog({
     referrals: { view: "referrals.view", edit: "referrals.edit" },
   };
   const visibleLinkedSections = LINKED_SECTIONS.filter((section) =>
-    hasPermission(membership, sectionPermissions[section.key].view),
+    hasPermission(membership, sectionPermissions[section.key]?.view ?? "students.view"),
   );
   const canEditSection = (sectionKey: string) =>
     hasPermission(membership, sectionPermissions[sectionKey]?.edit ?? "students.edit");
