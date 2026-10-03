@@ -1,13 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Check, Clipboard, KeyRound, RefreshCw, School, Send, Share2, ShieldCheck, UserCheck, Users } from "lucide-react";
+import { Check, Clipboard, KeyRound, RefreshCw, School, Send, Settings2, Share2, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  PERMISSION_GROUPS,
+  SCHOOL_ROLES,
+  permissionsForRole,
+  roleLabel,
+  type DataScope,
+  type SchoolRole,
+} from "@/lib/team-permissions";
 
 export const Route = createFileRoute("/_authenticated/school-team")({
   head: () => ({
@@ -19,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/school-team")({
   component: SchoolTeamPage,
 });
 
-type Role = "principal" | "vice_principal" | "counselor" | "teacher" | "admin_staff" | "guard" | "observer";
+type Role = SchoolRole;
 type MemberStatus = "pending" | "active" | "rejected" | "suspended";
 
 type SchoolContext = {
@@ -29,6 +37,8 @@ type SchoolContext = {
     role: Role;
     member_status: MemberStatus;
     is_admin: boolean;
+    permissions?: Record<string, boolean> | null;
+    data_scope?: DataScope | null;
   };
   school: null | {
     id: string;
@@ -43,23 +53,14 @@ type SchoolContext = {
     role: Role;
     member_status: MemberStatus;
     is_admin: boolean;
+    permissions?: Record<string, boolean> | null;
+    data_scope?: DataScope | null;
     joined_at?: string | null;
     created_at: string;
   }>;
   join_code?: string | null;
 };
 
-const ROLES: Array<{ value: Role; label: string }> = [
-  { value: "principal", label: "مدير المدرسة" },
-  { value: "vice_principal", label: "وكيل المدرسة" },
-  { value: "counselor", label: "الموجه الطلابي" },
-  { value: "teacher", label: "معلم" },
-  { value: "admin_staff", label: "إداري" },
-  { value: "guard", label: "حارس" },
-  { value: "observer", label: "اطلاع فقط" },
-];
-
-const roleLabel = (role: Role) => ROLES.find((item) => item.value === role)?.label ?? role;
 
 function SchoolTeamPage() {
   const queryClient = useQueryClient();
@@ -69,10 +70,24 @@ function SchoolTeamPage() {
   const [educationOffice, setEducationOffice] = useState("");
   const [newSchoolRole, setNewSchoolRole] = useState<Role>("counselor");
   const [pendingRoles, setPendingRoles] = useState<Record<string, Role>>({});
+  const [inviteToken, setInviteToken] = useState("");
+  const [inviteBuilderOpen, setInviteBuilderOpen] = useState(false);
+  const [inviteRole, setInviteRole] = useState<Role>("teacher");
+  const [invitePermissions, setInvitePermissions] = useState<Record<string, boolean>>(permissionsForRole("teacher"));
+  const [inviteScope, setInviteScope] = useState<DataScope>({ type: "assigned" });
+  const [inviteUrl, setInviteUrl] = useState("");
+  const [editingMemberId, setEditingMemberId] = useState("");
+  const [editRole, setEditRole] = useState<Role>("teacher");
+  const [editPermissions, setEditPermissions] = useState<Record<string, boolean>>({});
+  const [editScope, setEditScope] = useState<DataScope>({ type: "school" });
+  const [editAdmin, setEditAdmin] = useState(false);
 
   useEffect(() => {
-    const invitedCode = new URLSearchParams(window.location.search).get("join");
+    const params = new URLSearchParams(window.location.search);
+    const invitedCode = params.get("join");
+    const invite = params.get("invite");
     if (invitedCode) setJoinCode(invitedCode.trim().toUpperCase());
+    if (invite) setInviteToken(invite.trim());
   }, []);
 
   function buildInviteUrl(code: string) {
@@ -142,6 +157,59 @@ function SchoolTeamPage() {
     onSuccess: async () => {
       await refresh();
       toast.success("تم إرسال طلب الانضمام إلى إدارة المدرسة.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
+  const requestInviteJoin = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase as any).rpc("request_join_school_invite", {
+        p_token: inviteToken.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await refresh();
+      toast.success("تم إرسال طلب الانضمام بالصلاحيات المحددة في الدعوة.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
+  const createInvite = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await (supabase as any).rpc("create_school_invite", {
+        p_role: inviteRole,
+        p_permissions: invitePermissions,
+        p_data_scope: inviteScope,
+        p_expires_days: 7,
+        p_max_uses: 1,
+      });
+      if (error) throw error;
+      return String(data ?? "");
+    },
+    onSuccess: (token) => {
+      const url = `${window.location.origin}/school-team?invite=${encodeURIComponent(token)}`;
+      setInviteUrl(url);
+      toast.success("تم إنشاء دعوة مخصصة. أرسل الرابط للشخص المطلوب.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
+  const updateAccess = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).rpc("update_school_member_access", {
+        p_member_id: id,
+        p_role: editRole,
+        p_permissions: editPermissions,
+        p_data_scope: editScope,
+        p_is_admin: editAdmin,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setEditingMemberId("");
+      await refresh();
+      toast.success("تم حفظ الدور والصلاحيات ونطاق البيانات.");
     },
     onError: (error) => toast.error((error as Error).message),
   });
@@ -234,7 +302,7 @@ function SchoolTeamPage() {
                   onChange={(e) => setNewSchoolRole(e.target.value as Role)}
                   className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
                 >
-                  {ROLES.filter((role) => role.value !== "observer").map((role) => (
+                  {SCHOOL_ROLES.filter((role) => role.value !== "observer" && role.value !== "student" && role.value !== "parent" && role.value !== "custom").map((role) => (
                     <option key={role.value} value={role.value}>{role.label}</option>
                   ))}
                 </select>
@@ -251,6 +319,15 @@ function SchoolTeamPage() {
             <h2 className="font-black">الانضمام إلى مدرسة</h2>
             <p className="mt-1 text-xs text-muted-foreground">سيصل طلبك لمسؤول المدرسة للموافقة وتحديد دورك.</p>
             <div className="mt-4 space-y-3">
+              {inviteToken && (
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
+                  <p className="text-xs font-black text-primary">دعوة مخصصة جاهزة</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted-foreground">هذه الدعوة تحمل الدور والصلاحيات التي حددها مسؤول المدرسة لك.</p>
+                  <Button className="mt-3 w-full" disabled={requestInviteJoin.isPending} onClick={() => requestInviteJoin.mutate()}>
+                    <UserCheck className="size-4" /> إرسال طلب الانضمام من الدعوة
+                  </Button>
+                </div>
+              )}
               <div><Label>رمز المدرسة</Label><Input dir="ltr" value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())} placeholder="XXXXXXXX" /></div>
               <Button disabled={joinCode.trim().length < 4 || requestJoin.isPending} onClick={() => requestJoin.mutate()}>
                 <KeyRound className="size-4" /> إرسال طلب الانضمام
@@ -315,8 +392,8 @@ function SchoolTeamPage() {
               <p className="mt-2 text-[11px] text-muted-foreground">أرسل الرمز للموظف فقط، ثم اعتمد طلبه وحدد دوره من هنا.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => void shareInvite(context.join_code || "", school.name)}>
-                <Share2 className="size-4" /> دعوة عضو
+              <Button onClick={() => { setInviteBuilderOpen((value) => !value); setInviteUrl(""); }}>
+                <Share2 className="size-4" /> دعوة عضو بصلاحيات
               </Button>
               <Button variant="outline" onClick={() => void copyInvite(context.join_code || "")}>
                 <Send className="size-4" /> نسخ رابط الدعوة
@@ -329,12 +406,79 @@ function SchoolTeamPage() {
         </section>
       )}
 
+      {membership.is_admin && inviteBuilderOpen && (
+        <section className="rounded-3xl border border-primary/20 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-primary">دعوة مخصصة</p>
+              <h2 className="mt-1 text-lg font-black">الدور + الصلاحيات + نطاق البيانات</h2>
+              <p className="mt-1 text-xs text-muted-foreground">الرابط الناتج لشخص واحد وينتهي تلقائيًا بعد 7 أيام.</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setInviteBuilderOpen(false)}>إغلاق</Button>
+          </div>
+
+          <div className="mt-4 grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
+            <div className="space-y-3">
+              <div>
+                <Label>الدور الأساسي</Label>
+                <select
+                  value={inviteRole}
+                  onChange={(event) => {
+                    const role = event.target.value as Role;
+                    setInviteRole(role);
+                    setInvitePermissions(permissionsForRole(role));
+                    setInviteScope({ type: role === "student" ? "self" : role === "parent" ? "children" : role === "teacher" ? "assigned" : "school" });
+                  }}
+                  className="mt-2 h-11 w-full rounded-xl border bg-background px-3 text-sm"
+                >
+                  {SCHOOL_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                </select>
+              </div>
+              <ScopeEditor value={inviteScope} onChange={setInviteScope} />
+              <Button className="w-full" disabled={createInvite.isPending} onClick={() => createInvite.mutate()}>
+                <KeyRound className="size-4" /> إنشاء رابط الدعوة
+              </Button>
+              {inviteUrl && (
+                <div className="rounded-2xl border bg-muted/20 p-3">
+                  <p className="text-[11px] font-black">الرابط جاهز</p>
+                  <div className="mt-2 flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(inviteUrl);
+                        toast.success("تم نسخ رابط الدعوة.");
+                      }}
+                    >
+                      <Clipboard className="size-4" /> نسخ
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        const text = `دعوة للانضمام إلى فريق ${school.name} في الذات | ATHAT\n${inviteUrl}`;
+                        if (navigator.share) void navigator.share({ title: "دعوة فريق المدرسة", text, url: inviteUrl }).catch(() => undefined);
+                        else window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                      }}
+                    >
+                      <Send className="size-4" /> مشاركة
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <PermissionEditor permissions={invitePermissions} onChange={setInvitePermissions} />
+          </div>
+        </section>
+      )}
+
       {membership.is_admin && pending.length > 0 && (
         <section className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4">
           <div className="mb-3 flex items-center gap-2"><UserCheck className="size-4" /><h2 className="font-black">طلبات انضمام تنتظر الاعتماد</h2></div>
           <div className="grid gap-2">
             {pending.map((member) => {
-              const selectedRole = pendingRoles[member.id] ?? "teacher";
+              const selectedRole = pendingRoles[member.id] ?? member.role ?? "teacher";
               return (
                 <div key={member.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 xl:flex-row xl:items-center xl:justify-between">
                   <div><p className="font-black">{member.display_name || "عضو جديد"}</p><p className="text-[11px] text-muted-foreground">طلب جديد للانضمام</p></div>
@@ -344,7 +488,7 @@ function SchoolTeamPage() {
                       onChange={(e) => setPendingRoles((current) => ({ ...current, [member.id]: e.target.value as Role }))}
                       className="h-9 rounded-md border bg-background px-3 text-xs"
                     >
-                      {ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                      {SCHOOL_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
                     </select>
                     <Button size="sm" onClick={() => approve.mutate({ id: member.id, role: selectedRole })}><Check className="size-4" /> اعتماد</Button>
                     <Button size="sm" variant="ghost" onClick={() => changeStatus.mutate({ id: member.id, status: "rejected" })}>رفض</Button>
@@ -371,23 +515,51 @@ function SchoolTeamPage() {
               {membership.is_admin && member.id !== membership.id && (
                 <div className="mt-3 space-y-2 border-t pt-3">
                   <div className="flex flex-wrap gap-2">
-                    <select
-                      value={pendingRoles[member.id] ?? member.role}
-                      onChange={(e) => setPendingRoles((current) => ({ ...current, [member.id]: e.target.value as Role }))}
-                      className="h-9 rounded-md border bg-background px-3 text-xs"
-                    >
-                      {ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
-                    </select>
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={(pendingRoles[member.id] ?? member.role) === member.role || approve.isPending}
-                      onClick={() => approve.mutate({ id: member.id, role: pendingRoles[member.id] ?? member.role })}
+                      onClick={() => {
+                        setEditingMemberId(editingMemberId === member.id ? "" : member.id);
+                        setEditRole(member.role);
+                        setEditPermissions({ ...permissionsForRole(member.role), ...(member.permissions ?? {}) });
+                        setEditScope(member.data_scope ?? { type: member.role === "teacher" ? "assigned" : member.role === "student" ? "self" : member.role === "parent" ? "children" : "school" });
+                        setEditAdmin(member.is_admin);
+                      }}
                     >
-                      حفظ الدور
+                      <Settings2 className="size-4" /> إدارة الصلاحيات
                     </Button>
+                    <Button size="sm" variant="ghost" onClick={() => changeStatus.mutate({ id: member.id, status: "suspended" })}>تعليق العضوية</Button>
                   </div>
-                  <Button size="sm" variant="ghost" onClick={() => changeStatus.mutate({ id: member.id, status: "suspended" })}>تعليق العضوية</Button>
+                  {editingMemberId === member.id && (
+                    <div className="mt-3 space-y-4 rounded-2xl border bg-background p-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <Label>الدور</Label>
+                          <select
+                            value={editRole}
+                            onChange={(event) => {
+                              const role = event.target.value as Role;
+                              setEditRole(role);
+                              setEditPermissions(permissionsForRole(role));
+                            }}
+                            className="mt-2 h-10 w-full rounded-xl border bg-background px-3 text-xs"
+                          >
+                            {SCHOOL_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                          </select>
+                        </div>
+                        <ScopeEditor value={editScope} onChange={setEditScope} compact />
+                      </div>
+                      <label className="flex items-center gap-2 rounded-xl border p-3 text-xs font-bold">
+                        <input type="checkbox" checked={editAdmin} onChange={(event) => setEditAdmin(event.target.checked)} />
+                        مسؤول إدارة الفريق
+                      </label>
+                      <PermissionEditor permissions={editPermissions} onChange={setEditPermissions} compact />
+                      <div className="flex gap-2">
+                        <Button size="sm" disabled={updateAccess.isPending} onClick={() => updateAccess.mutate(member.id)}>حفظ الصلاحيات</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingMemberId("")}>إلغاء</Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </article>
@@ -438,6 +610,93 @@ function SchoolTeamPage() {
           الحماية مطبقة في الواجهة وقاعدة البيانات معًا؛ كتابة رابط صفحة غير مصرح بها لا تمنح الوصول إلى بياناتها.
         </p>
       </section>
+    </div>
+  );
+}
+
+
+function ScopeEditor({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: DataScope;
+  onChange: (scope: DataScope) => void;
+  compact?: boolean;
+}) {
+  return (
+    <div>
+      <Label>نطاق البيانات</Label>
+      <select
+        value={value.type}
+        onChange={(event) => onChange({ type: event.target.value as DataScope["type"] })}
+        className={"mt-2 w-full rounded-xl border bg-background px-3 text-sm " + (compact ? "h-10" : "h-11")}
+      >
+        <option value="school">كل المدرسة</option>
+        <option value="stage">مرحلة محددة</option>
+        <option value="grade">صف محدد</option>
+        <option value="classroom">فصل محدد</option>
+        <option value="assigned">المسند إليه فقط</option>
+        <option value="self">بياناته فقط</option>
+        <option value="children">أبناؤه فقط</option>
+      </select>
+      {["stage", "grade", "classroom"].includes(value.type) && (
+        <Input
+          className="mt-2"
+          value={value.type === "stage" ? value.stage ?? "" : value.type === "grade" ? value.grade ?? "" : value.classroom ?? ""}
+          placeholder={value.type === "stage" ? "مثال: متوسط" : value.type === "grade" ? "مثال: الثالث" : "مثال: 3/1"}
+          onChange={(event) => {
+            const text = event.target.value;
+            onChange(value.type === "stage" ? { type: "stage", stage: text } : value.type === "grade" ? { type: "grade", grade: text } : { type: "classroom", classroom: text });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function PermissionEditor({
+  permissions,
+  onChange,
+  compact = false,
+}: {
+  permissions: Record<string, boolean>;
+  onChange: (permissions: Record<string, boolean>) => void;
+  compact?: boolean;
+}) {
+  return (
+    <div className={compact ? "space-y-3" : "grid gap-3 sm:grid-cols-2"}>
+      {PERMISSION_GROUPS.map((group) => (
+        <section key={group.title} className="rounded-2xl border bg-muted/15 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xs font-black">{group.title}</h3>
+            <button
+              type="button"
+              className="text-[10px] font-bold text-primary"
+              onClick={() => {
+                const next = { ...permissions };
+                const allOn = group.items.every((item) => Boolean(next[item.key]));
+                group.items.forEach((item) => { next[item.key] = !allOn; });
+                onChange(next);
+              }}
+            >
+              تحديد الكل
+            </button>
+          </div>
+          <div className="mt-2 grid gap-1.5">
+            {group.items.map((item) => (
+              <label key={item.key} className="flex items-center gap-2 rounded-xl px-2 py-2 text-[11px] hover:bg-background">
+                <input
+                  type="checkbox"
+                  checked={Boolean(permissions[item.key])}
+                  onChange={(event) => onChange({ ...permissions, [item.key]: event.target.checked })}
+                />
+                <span>{item.label}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
