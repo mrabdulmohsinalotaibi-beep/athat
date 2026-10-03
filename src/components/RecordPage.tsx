@@ -79,6 +79,7 @@ export function RecordPage({
   rowAction,
   serverPagination = false,
   serverFilters = {},
+  readOnly = false,
 }: {
   config: RecordConfig;
   hideImport?: boolean;
@@ -88,6 +89,7 @@ export function RecordPage({
   rowAction?: { icon: ReactNode; title: string; onClick: (row: Row) => void };
   serverPagination?: boolean;
   serverFilters?: Record<string, string>;
+  readOnly?: boolean;
 }) {
   const queryClient = useQueryClient();
   const { data: school } = useSchool();
@@ -162,6 +164,7 @@ export function RecordPage({
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const newMode = params.get("new");
+    if (readOnly) return;
     if (newMode !== "student" && newMode !== "1") return;
 
     if (newMode === "student") {
@@ -651,16 +654,18 @@ export function RecordPage({
           <p className="text-sm text-muted-foreground">{totalRows} سجل</p>
         </div>
         <div className="record-toolbar flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button
-            onClick={() => {
-              setAuto({});
-              setEditing({});
-            }}
-          >
-            <Plus className="size-4" /> إضافة {config.singular}
-          </Button>
+          {!readOnly && (
+            <Button
+              onClick={() => {
+                setAuto({});
+                setEditing({});
+              }}
+            >
+              <Plus className="size-4" /> إضافة {config.singular}
+            </Button>
+          )}
           {toolbarExtra}
-          {!hideImport && (
+          {!readOnly && !hideImport && (
             <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={importing}>
               <Upload className="size-4" /> استيراد Excel
             </Button>
@@ -840,49 +845,53 @@ export function RecordPage({
                       <span className="text-[10px]">{rowAction.title}</span>
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 shrink-0 rounded-xl"
-                    onClick={() => {
-                      setAuto({});
-                      setEditing(row);
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                    <span className="text-[10px]">تعديل</span>
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9 shrink-0 rounded-xl" onClick={() => setAttachFor(row)}>
-                    <Paperclip className="size-4" />
-                    <span className="text-[10px]">المرفقات</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 shrink-0 rounded-xl"
-                    onClick={() => {
-                      const copy: Record<string, string> = {};
-                      config.fields.filter((field) => !field.generated).forEach((field) => {
-                        copy[field.name] = String(row[field.name] ?? "");
-                      });
-                      setAuto(copy);
-                      setEditing({});
-                    }}
-                  >
-                    <Copy className="size-4" />
-                    <span className="text-[10px]">نسخ</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 shrink-0 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => {
-                      if (confirm("هل تريد حذف هذا السجل؟")) remove.mutate(row.id);
-                    }}
-                  >
-                    <Trash2 className="size-4" />
-                    <span className="text-[10px]">حذف</span>
-                  </Button>
+                  {!readOnly && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 shrink-0 rounded-xl"
+                        onClick={() => {
+                          setAuto({});
+                          setEditing(row);
+                        }}
+                      >
+                        <Pencil className="size-4" />
+                        <span className="text-[10px]">تعديل</span>
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-9 shrink-0 rounded-xl" onClick={() => setAttachFor(row)}>
+                        <Paperclip className="size-4" />
+                        <span className="text-[10px]">المرفقات</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 shrink-0 rounded-xl"
+                        onClick={() => {
+                          const copy: Record<string, string> = {};
+                          config.fields.filter((field) => !field.generated).forEach((field) => {
+                            copy[field.name] = String(row[field.name] ?? "");
+                          });
+                          setAuto(copy);
+                          setEditing({});
+                        }}
+                      >
+                        <Copy className="size-4" />
+                        <span className="text-[10px]">نسخ</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 shrink-0 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => {
+                          if (confirm("هل تريد حذف هذا السجل؟")) remove.mutate(row.id);
+                        }}
+                      >
+                        <Trash2 className="size-4" />
+                        <span className="text-[10px]">حذف</span>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </article>
             );
@@ -989,42 +998,46 @@ export function RecordPage({
                       >
                         <FileText className="size-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="تعديل السجل"
-                        onClick={() => {
-                          setAuto({});
-                          setEditing(row);
-                        }}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="نسخ السجل كنسخة جديدة"
-                        onClick={() => {
-                          const copy: Record<string, string> = {};
-                          config.fields
-                            .filter((field) => !field.generated)
-                            .forEach((field) => {
-                              copy[field.name] = String(row[field.name] ?? "");
-                            });
-                          setAuto(copy);
-                          setEditing({});
-                        }}
-                      >
-                        <Copy className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="المرفقات"
-                        onClick={() => setAttachFor(row)}
-                      >
-                        <Paperclip className="size-4" />
-                      </Button>
+                      {!readOnly && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="تعديل السجل"
+                            onClick={() => {
+                              setAuto({});
+                              setEditing(row);
+                            }}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="نسخ السجل كنسخة جديدة"
+                            onClick={() => {
+                              const copy: Record<string, string> = {};
+                              config.fields
+                                .filter((field) => !field.generated)
+                                .forEach((field) => {
+                                  copy[field.name] = String(row[field.name] ?? "");
+                                });
+                              setAuto(copy);
+                              setEditing({});
+                            }}
+                          >
+                            <Copy className="size-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="المرفقات"
+                            onClick={() => setAttachFor(row)}
+                          >
+                            <Paperclip className="size-4" />
+                          </Button>
+                        </>
+                      )}
                       {config.key === "referrals" && (
                         <Button
                           variant="ghost"
@@ -1049,15 +1062,17 @@ export function RecordPage({
                           <Send className="size-4" />
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          if (confirm("هل تريد حذف هذا السجل؟")) remove.mutate(row.id);
-                        }}
-                      >
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
+                      {!readOnly && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            if (confirm("هل تريد حذف هذا السجل؟")) remove.mutate(row.id);
+                          }}
+                        >
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
