@@ -234,7 +234,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         : 0;
 
       const guidanceAlertsAllowed = !context?.membership || isGuidanceWorkspaceMember(context.membership);
-      const [cases, tasks, schoolTasks, handoffs, publicRequests, feedback, interviews, behavior, attendance, guidanceRequests] = await Promise.all([
+      const [cases, tasks, schoolTasks, handoffs, publicRequests, feedback, interviews, behavior, attendance, guidanceRequests, guidanceNotifications] = await Promise.all([
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
         (supabase as any).from("school_tasks").select("id,status,due_date,creator_member_id,assignee_member_id"),
@@ -249,6 +249,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         guidanceAlertsAllowed ? supabase.from("behavior").select("id,result,followup_at") : Promise.resolve({ data: [], error: null }),
         guidanceAlertsAllowed ? supabase.from("attendance").select("id,student_id,student_no,student_name,case_type,count_days") : Promise.resolve({ data: [], error: null }),
         (supabase as any).from("guidance_requests").select("id,status,submitted_by,updated_at"),
+        (supabase as any).rpc("get_my_guidance_notifications", { p_limit: 100 }),
       ]);
 
       // Alerts are supplementary UI. A missing/temporarily unavailable table
@@ -300,6 +301,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       const guidanceRows = guidanceRequests.error ? [] : guidanceRequests.data ?? [];
       const memberGuidanceRequests = guidanceRows.filter((item: any) => item.submitted_by === context?.membership?.user_id && ["reviewed","in_progress","completed","rejected"].includes(String(item.status ?? ""))).length;
       const staffGuidanceInbox = guidanceAlertsAllowed ? guidanceRows.filter((item: any) => ["submitted","reviewed","in_progress"].includes(String(item.status ?? ""))).length : 0;
+      const unreadApprovalNotifications = (guidanceNotifications?.data ?? []).filter((item: any) => !item.is_read).length;
       const guidanceInbox = inboundRequests + inboundFeedback + staffGuidanceInbox + memberGuidanceRequests;
       const dueInterviews = (interviews.error ? [] : interviews.data ?? []).filter(
         (item: any) => item.followup_at && String(item.followup_at).slice(0, 10) <= day,
@@ -319,8 +321,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       });
       const repeatedAttendance = Array.from(attendanceGrouped.values()).filter((count) => count >= 3).length;
 
-      const total = dueCases + dueInterviews + dueBehavior + repeatedAttendance + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers + guidanceInbox;
-      return { total, dueCases, dueInterviews, dueBehavior, repeatedAttendance, attentionPlan, dueSchoolTasks, approvals, unreadReports, pendingMembers, guidanceInbox };
+      const total = dueCases + dueInterviews + dueBehavior + repeatedAttendance + attentionPlan + dueSchoolTasks + approvals + unreadReports + pendingMembers + guidanceInbox + unreadApprovalNotifications;
+      return { total, dueCases, dueInterviews, dueBehavior, repeatedAttendance, attentionPlan, dueSchoolTasks, approvals, unreadReports, pendingMembers, guidanceInbox, unreadApprovalNotifications };
     },
     staleTime: 30_000,
     refetchInterval: 60_000,
