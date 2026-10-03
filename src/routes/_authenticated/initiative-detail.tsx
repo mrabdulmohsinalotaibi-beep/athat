@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ArrowRight, BarChart3, ClipboardList, FileCheck2, FolderOpen, Settings, Target, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,9 @@ export const Route = createFileRoute("/_authenticated/initiative-detail")({
 function InitiativeDetailPage() {
   const { initiative: initiativeId } = Route.useSearch();
   const [tab, setTab] = useState<"overview"|"team"|"students"|"work"|"evidence"|"reports"|"settings">("overview");
+  const [assignMemberId, setAssignMemberId] = useState("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const qc = useQueryClient();
   const query = useQuery({
     queryKey: ["initiative-detail", initiativeId],
     queryFn: async () => {
@@ -33,6 +37,32 @@ function InitiativeDetailPage() {
       return data ?? [];
     },
     enabled: Boolean(initiativeId && item),
+  });
+  const followupsQuery = useQuery({
+    queryKey: ["initiative-detail-followups", initiativeId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_initiative_followups", { p_initiative_id: initiativeId });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: Boolean(initiativeId && item),
+  });
+  const assignStudents = useMutation({
+    mutationFn: async () => {
+      if (!assignMemberId) throw new Error("اختر المعلم أولًا");
+      const { error } = await (supabase as any).rpc("assign_initiative_students", {
+        p_initiative_id: initiativeId,
+        p_initiative_member_id: assignMemberId,
+        p_student_ids: selectedStudentIds,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("تم حفظ توزيع الطلاب.");
+      setSelectedStudentIds([]);
+      await qc.invalidateQueries({ queryKey: ["initiative-detail-students", initiativeId] });
+    },
+    onError: (e) => toast.error((e as Error).message),
   });
   const dashboardQuery = useQuery({
     queryKey: ["initiative-detail-dashboard", initiativeId],
@@ -77,9 +107,11 @@ function InitiativeDetailPage() {
 
     {tab==="team" && <section className="rounded-3xl border bg-card p-5"><div className="flex items-center justify-between gap-2"><h2 className="font-black">فريق المبادرة</h2>{item.is_manager&&<Button size="sm" variant="outline" onClick={()=>{window.location.href=`/initiative-teams?initiative=${encodeURIComponent(item.id)}&manage=1`;}}>إدارة الفريق</Button>}</div><div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(item.members??[]).map((m:any)=><article key={m.id} className="rounded-2xl border p-3"><p className="text-sm font-black">{m.display_name}</p><p className="text-[10px] text-primary">{m.role_title}</p><p className="mt-2 text-[10px] text-muted-foreground">{m.status==="active"?"فعال":m.status}</p>{m.assigned_tasks?.length>0&&<div className="mt-2 flex flex-wrap gap-1">{m.assigned_tasks.map((x:string)=><span key={x} className="rounded-full bg-muted px-2 py-1 text-[9px]">{x}</span>)}</div>}</article>)}</div></section>}
 
-    {tab==="students" && <section className="rounded-3xl border bg-card p-5"><div className="flex items-center justify-between gap-2"><h2 className="font-black">طلاب المبادرة</h2><span className="text-xs text-muted-foreground">{(studentsQuery.data??[]).length} طالب</span></div><div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(studentsQuery.data??[]).map((s:any)=><article key={s.id||s.student_id} className="rounded-2xl border p-3"><p className="text-sm font-black">{s.full_name}</p><p className="mt-1 text-[10px] text-muted-foreground">{[s.stage,s.grade,s.classroom].filter(Boolean).join(" · ")}</p>{s.assigned_member_name&&<p className="mt-2 text-[10px] text-primary">المعلم: {s.assigned_member_name}</p>}</article>)}</div>{item.is_manager&&<Button className="mt-4" variant="outline" onClick={()=>{window.location.href=`/initiative-teams?initiative=${encodeURIComponent(item.id)}&manage=1`;}}>توزيع الطلاب على المعلمين</Button>}</section>}
+    {tab==="students" && <section className="rounded-3xl border bg-card p-5"><div className="flex items-center justify-between gap-2"><h2 className="font-black">طلاب المبادرة</h2><span className="text-xs text-muted-foreground">{(studentsQuery.data??[]).length} طالب</span></div>
+      {item.is_manager&&<div className="mt-4 rounded-2xl border bg-muted/20 p-3"><p className="text-xs font-black">توزيع الطلاب على معلم</p><div className="mt-2 flex flex-wrap gap-2">{(item.members??[]).filter((m:any)=>m.status==="active").map((m:any)=><Button key={m.id} size="sm" variant={assignMemberId===m.id?"default":"outline"} onClick={()=>{setAssignMemberId(m.id);setSelectedStudentIds((studentsQuery.data??[]).filter((s:any)=>s.assigned_member_id===m.id).map((s:any)=>String(s.id)));}}>{m.display_name}</Button>)}</div>{assignMemberId&&<div className="mt-3"><p className="mb-2 text-[10px] text-muted-foreground">حدد الطلاب ثم احفظ. الطالب يكون مسندًا لمعلم واحد داخل المبادرة.</p><div className="grid max-h-80 gap-2 overflow-y-auto md:grid-cols-2 xl:grid-cols-3">{(studentsQuery.data??[]).map((s:any)=>{const id=String(s.id);const checked=selectedStudentIds.includes(id);return <label key={id} className="flex cursor-pointer items-center gap-2 rounded-xl border p-2 text-xs"><input type="checkbox" checked={checked} onChange={()=>setSelectedStudentIds(v=>checked?v.filter(x=>x!==id):[...v,id])}/><span className="min-w-0"><strong className="block truncate">{s.full_name}</strong><span className="text-[9px] text-muted-foreground">{[s.grade,s.classroom].filter(Boolean).join(" · ")}</span></span></label>})}</div><Button className="mt-3" disabled={assignStudents.isPending} onClick={()=>assignStudents.mutate()}>{assignStudents.isPending?"جارٍ الحفظ...":"حفظ توزيع الطلاب"}</Button></div>}</div>}
+      <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(studentsQuery.data??[]).map((s:any)=><article key={s.id||s.student_id} className="rounded-2xl border p-3"><p className="text-sm font-black">{s.full_name}</p><p className="mt-1 text-[10px] text-muted-foreground">{[s.stage,s.grade,s.classroom].filter(Boolean).join(" · ")}</p>{s.assigned_member_name&&<p className="mt-2 text-[10px] text-primary">المعلم: {s.assigned_member_name}</p>}{s.last_followup&&<p className="mt-2 text-[9px] text-muted-foreground">آخر متابعة: {String(s.last_followup.week_start??"")}</p>}</article>)}</div></section>}
 
-    {tab==="work" && <section className="rounded-3xl border bg-card p-5"><div className="flex items-center justify-between gap-2"><h2 className="font-black">الأعمال والمتابعة</h2>{item.my_membership?.status==="active"&&<Button size="sm" onClick={()=>{window.location.href=`/initiative-member-work?initiative=${encodeURIComponent(item.id)}`;}}>إضافة عمل أو متابعة</Button>}</div><div className="mt-3 space-y-2">{(item.updates??[]).map((u:any)=><article key={u.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><p className="text-sm font-black">{u.title}</p><span className="text-xs font-black text-primary">{u.progress_percent??"—"}%</span></div>{u.details&&<p className="mt-2 text-xs leading-6 text-muted-foreground">{u.details}</p>}<p className="mt-2 text-[10px] text-muted-foreground">{u.created_by_name}</p></article>)}</div></section>}
+    {tab==="work" && <section className="rounded-3xl border bg-card p-5"><div className="flex items-center justify-between gap-2"><h2 className="font-black">الأعمال والمتابعة</h2>{item.my_membership?.status==="active"&&<Button size="sm" onClick={()=>{window.location.href=`/initiative-member-work?initiative=${encodeURIComponent(item.id)}`;}}>إضافة عمل أو متابعة</Button>}</div><div className="mt-4 grid gap-2 md:grid-cols-2">{(followupsQuery.data??[]).slice(0,12).map((f:any)=><article key={f.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><p className="text-sm font-black">{f.student_name}</p><span className="text-[10px] text-primary">{f.week_start}</span></div><p className="mt-1 text-[10px] text-muted-foreground">{f.member_name} · {f.role_title}</p><p className="mt-2 text-xs">{f.next_action||f.advice||f.notes||"متابعة مسجلة"}</p></article>)}</div><h3 className="mt-5 text-sm font-black">سجل إنجاز المبادرة</h3><div className="mt-3 space-y-2">{(item.updates??[]).map((u:any)=><article key={u.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><p className="text-sm font-black">{u.title}</p><span className="text-xs font-black text-primary">{u.progress_percent??"—"}%</span></div>{u.details&&<p className="mt-2 text-xs leading-6 text-muted-foreground">{u.details}</p>}<p className="mt-2 text-[10px] text-muted-foreground">{u.created_by_name}</p></article>)}</div></section>}
 
     {tab==="evidence" && <section className="rounded-3xl border bg-card p-5"><div className="flex items-center gap-2"><FolderOpen className="size-5 text-primary"/><h2 className="font-black">شواهد المبادرة</h2></div><p className="mt-2 text-xs leading-6 text-muted-foreground">تجمع هنا الصور والملفات والشواهد المرفوعة من أعمال أعضاء المبادرة، وتظهر للمدير حسب صلاحياته.</p>{item.my_membership?.status==="active"&&<Button className="mt-4" onClick={()=>{window.location.href=`/initiative-member-work?initiative=${encodeURIComponent(item.id)}`;}}>رفع شاهد من مساحة عملي</Button>}</section>}
 
