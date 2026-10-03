@@ -673,6 +673,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         {(alertSummary?.attentionPlan ?? 0) > 0 && <AlertLink to="/plan" label="مهام خطة تحتاج إجراء" count={alertSummary?.attentionPlan ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.dueSchoolTasks ?? 0) > 0 && <AlertLink to="/school-tasks" label="مهام مدرسية مسندة لك" count={alertSummary?.dueSchoolTasks ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.approvals ?? 0) > 0 && <AlertLink to="/school-tasks" label="إنجازات تنتظر اعتمادك" count={alertSummary?.approvals ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.unreadApprovalNotifications ?? 0) > 0 && <AlertLink to="/guidance-approvals" label="تحديثات واعتمادات أعمال التوجيه" count={alertSummary?.unreadApprovalNotifications ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.guidanceInbox ?? 0) > 0 && <AlertLink to="/guidance-requests" label="طلبات وتحديثات التوجيه الطلابي" count={alertSummary?.guidanceInbox ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.unreadReports ?? 0) > 0 && <AlertLink to="/school-inbox" label="تقارير إدارية غير مقروءة" count={alertSummary?.unreadReports ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.pendingMembers ?? 0) > 0 && <AlertLink to="/school-team" label="طلبات انضمام للفريق" count={alertSummary?.pendingMembers ?? 0} close={() => setAlertsOpen(false)} />}
