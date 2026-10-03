@@ -24,12 +24,12 @@ function ApprovalPage(){
       if(error)throw error;
       const row=Array.isArray(data)?data[0]:data;
       if(!row)throw new Error("رابط الاعتماد غير صالح أو لم يعد متاحًا.");
-      return row as {document_title:string;record_type:string;document_snapshot:Record<string,unknown>;signer_name:string;signer_role:string;status:string;signed_at?:string};
+      return row as {document_title:string;record_type:string;document_snapshot:Record<string,unknown>;signer_name:string;signer_role:string;status:string;signed_at?:string;read_confirmed?:boolean;read_confirmed_at?:string};
     }
   });
   const sign=useMutation({
     mutationFn:async()=>{
-      const {error}=await (supabase as any).rpc("sign_document_request",{p_token:token,p_signature_data:signature,p_note:note.trim()||null});
+      const {error}=await (supabase as any).rpc("sign_document_request",{p_token:token,p_signature_data:signature,p_note:note.trim()||null,p_read_confirmed:confirmedRead});
       if(error)throw error;
     },
     onSuccess:()=>request.refetch()
@@ -47,7 +47,7 @@ function ApprovalPage(){
         <h1 className="mt-3 text-xl font-black">الذات | ATHAT</h1>
         <p className="mt-1 text-sm font-bold">طلب اعتماد وتوقيع إلكتروني</p>
       </header>
-      {signed&&<section className="rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-5 text-center"><CheckCircle2 className="mx-auto size-8"/><h2 className="mt-2 font-black">تم اعتماد وتوقيع المستند</h2><p className="mt-1 text-xs text-muted-foreground">تم حفظ الاعتماد بنجاح ولا يلزم إجراء آخر.</p></section>}
+      {signed&&<section className="rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-5 text-center"><CheckCircle2 className="mx-auto size-8"/><h2 className="mt-2 font-black">تم اعتماد وتوقيع المستند</h2><p className="mt-1 text-xs text-muted-foreground">تم حفظ الاعتماد بنجاح ولا يلزم إجراء آخر.</p>{r.read_confirmed&&<p className="mt-2 text-[11px] text-emerald-700">تم تسجيل إقرار قراءة المستند{r.read_confirmed_at ? " بتاريخ " + new Date(r.read_confirmed_at).toLocaleString("ar-SA") : ""}.</p>}</section>}
       <section className="rounded-2xl border bg-card p-5 shadow-sm">
         <div className="flex items-center gap-2 text-primary"><ShieldCheck className="size-4"/><span className="text-xs font-black">الموقّع المحدد</span></div>
         <h2 className="mt-2 text-lg font-black">{r.signer_name}</h2><p className="text-sm text-muted-foreground">{r.signer_role}</p>
