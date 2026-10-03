@@ -169,11 +169,48 @@ function SchoolTeamPage() {
     staleTime: 15_000,
   });
 
+  const invitesQuery = useQuery({
+    queryKey: ["school-invites"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_school_invites");
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        role: Role;
+        permissions: Record<string, boolean>;
+        data_scope: DataScope;
+        student_ids: string[];
+        expires_at: string;
+        max_uses: number;
+        used_count: number;
+        active: boolean;
+        created_at: string;
+      }>;
+    },
+    enabled: Boolean(contextQuery.data?.membership?.is_admin),
+    staleTime: 30_000,
+  });
+
+  const revokeInvite = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).rpc("revoke_school_invite", { p_invite_id: id });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["school-invites"] });
+      await queryClient.invalidateQueries({ queryKey: ["school-access-audit"] });
+      toast.success("تم إلغاء رابط الدعوة.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["school-team-context"] });
     await queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
     await queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
     await queryClient.invalidateQueries({ queryKey: ["school-access-context"] });
+    await queryClient.invalidateQueries({ queryKey: ["school-invites"] });
+    await queryClient.invalidateQueries({ queryKey: ["school-access-audit"] });
   };
 
   const createSchool = useMutation({
@@ -558,6 +595,61 @@ function SchoolTeamPage() {
               )}
             </div>
             <PermissionEditor permissions={invitePermissions} onChange={setInvitePermissions} />
+          </div>
+        </section>
+      )}
+
+      {membership.is_admin && (invitesQuery.data ?? []).length > 0 && (
+        <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-primary">الدعوات</p>
+              <h2 className="mt-1 font-black">روابط الدعوة المنشأة</h2>
+              <p className="mt-1 text-[11px] text-muted-foreground">يمكنك إلغاء أي رابط غير مستخدم أو منتهي الحاجة إليه.</p>
+            </div>
+            <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] text-muted-foreground">
+              {(invitesQuery.data ?? []).filter((invite) => invite.active && new Date(invite.expires_at).getTime() > Date.now()).length} نشط
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 xl:grid-cols-2">
+            {(invitesQuery.data ?? []).slice(0, 12).map((invite) => {
+              const expired = new Date(invite.expires_at).getTime() <= Date.now();
+              const active = invite.active && !expired && invite.used_count < invite.max_uses;
+              const count = Object.values({ ...permissionsForRole(invite.role), ...(invite.permissions ?? {}) }).filter(Boolean).length;
+              return (
+                <article key={invite.id} className="rounded-2xl border bg-muted/10 p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-black">{roleLabel(invite.role)}</p>
+                      <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-muted-foreground">
+                        <span>{count} صلاحية</span>
+                        <span>•</span>
+                        <span>{scopeLabel(invite.data_scope ?? { type: "school" })}</span>
+                        {(invite.student_ids?.length ?? 0) > 0 && <><span>•</span><span>{invite.student_ids.length} طالب</span></>}
+                      </div>
+                    </div>
+                    <span className={"rounded-full px-2 py-1 text-[10px] font-black " + (active ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")}>
+                      {active ? "نشطة" : expired ? "منتهية" : invite.used_count >= invite.max_uses ? "مستخدمة" : "ملغاة"}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
+                    <span className="text-[10px] text-muted-foreground">
+                      الاستخدام {invite.used_count}/{invite.max_uses} · تنتهي {String(invite.expires_at).slice(0, 10)}
+                    </span>
+                    {active && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={revokeInvite.isPending}
+                        onClick={() => revokeInvite.mutate(invite.id)}
+                      >
+                        إلغاء الرابط
+                      </Button>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
