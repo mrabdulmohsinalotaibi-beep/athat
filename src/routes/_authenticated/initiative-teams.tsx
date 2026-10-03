@@ -68,37 +68,22 @@ type Initiative = {
   my_membership?: { id: string; role_title: string; assigned_tasks: string[]; status: string } | null;
 };
 
-const FATHER_MENTOR = {
-  title: "مبادرة الأب الناصح",
-  slogan: "قدوةٌ ترعى، ونصيحةٌ تبني.",
-  idea:
-    "مبادرة تربوية تعزز دور المعلم بوصفه قدوةً ومربيًا يؤدي دور الأب الناصح داخل المدرسة؛ بالقرب من الطالب، والاستماع إليه، وتقديم النصح والتوجيه والإرشاد له، ومتابعة حضوره وانصرافه وسلوكه وأداء واجباته ومستواه الدراسي، بالتعاون مع الأسرة والموجه الطلابي.",
-  generalGoal:
-    "بناء علاقة تربوية قائمة على الثقة والاحترام بين المعلم والطالب، تسهم في تعزيز الانضباط وتحسين الأداء السلوكي والدراسي والاجتماعي.",
-  objectives: [
-    "تعزيز انتظام الطلاب في الحضور والانصراف والالتزام بالحصص.",
-    "تنمية السلوك الإيجابي ومعالجة السلوكيات الخاطئة والسلبية.",
-    "تحسين التحصيل الدراسي والالتزام بأداء الواجبات.",
-    "تعزيز المسؤولية والثقة بالنفس واحترام الآخرين.",
-    "توثيق الشراكة بين المدرسة والأسرة في متابعة الطالب.",
-  ],
-  mechanism: [
-    "توزيع الطلاب على المعلمين المشاركين، بحيث يتولى كل معلم متابعة مجموعة محددة.",
-    "عقد لقاء تعريفي مع الطلاب لبناء الثقة وتوضيح أهداف المبادرة.",
-    "متابعة الحضور والانصراف والسلوك والواجبات والمستوى الدراسي بصورة منتظمة.",
-    "تخصيص لقاء أسبوعي قصير للنصح والتحفيز والاستماع إلى احتياجات الطلاب.",
-    "التنسيق مع الأسرة والموجه الطلابي لمعالجة الصعوبات، مع مراعاة خصوصية الطالب وحفظ كرامته.",
-    "توثيق التقدم وتعزيز التحسن، ومراجعة نتائج المبادرة شهريًا.",
-  ],
-  results: [
-    "ارتفاع مستوى الانضباط وانخفاض الغياب والتأخر.",
-    "تحسن السلوك والتحصيل الدراسي والعلاقات الاجتماعية.",
-    "الحد من السلوكيات السلبية والعمل على استبدالها بسلوكيات إيجابية.",
-    "زيادة شعور الطالب بالاهتمام والانتماء إلى المدرسة.",
-    "تعزيز التزام الطلاب بواجباتهم ومسؤولياتهم.",
-  ],
-  indicators:
-    "مقارنة معدلات الغياب والتأخر والمخالفات السلوكية، ونسبة إنجاز الواجبات، ونتائج الطلاب قبل المبادرة وبعدها، مع استطلاع آراء الطلاب وأولياء الأمور حول أثرها.",
+type InitiativeTemplate = {
+  key: string;
+  title: string;
+  slogan?: string | null;
+  category: string;
+  audience?: string | null;
+  summary: string;
+  idea?: string | null;
+  general_goal?: string | null;
+  objectives: string[];
+  mechanism: string[];
+  expected_results: string[];
+  success_indicators?: string | null;
+  default_role_title: string;
+  default_tasks: string[];
+  recommended_weeks?: number | null;
 };
 
 function lines(value: string) {
@@ -151,6 +136,16 @@ function InitiativeTeamsPage() {
       return (data ?? []) as Initiative[];
     },
     staleTime: 15_000,
+  });
+
+  const templatesQuery = useQuery({
+    queryKey: ["initiative-template-library"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_initiative_templates");
+      if (error) throw error;
+      return (data ?? []) as InitiativeTemplate[];
+    },
+    staleTime: 60_000,
   });
 
   const managerStudentsQuery = useQuery({
@@ -227,6 +222,22 @@ function InitiativeTeamsPage() {
       setShowCreate(false);
       await refresh();
       toast.success("تم إنشاء المبادرة والفريق.");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const activateTemplate = useMutation({
+    mutationFn: async (templateKey: string) => {
+      const { data, error } = await (supabase as any).rpc("activate_initiative_template", {
+        p_template_key: templateKey,
+      });
+      if (error) throw error;
+      return String(data ?? "");
+    },
+    onSuccess: async (initiativeId) => {
+      await refresh();
+      setSelectedId(initiativeId);
+      toast.success("تم تفعيل المبادرة وإضافتها إلى مبادرات المدرسة.");
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -383,16 +394,19 @@ function InitiativeTeamsPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
-  function applyFatherTemplate() {
-    setTitle(FATHER_MENTOR.title);
-    setSlogan(FATHER_MENTOR.slogan);
-    setIdea(FATHER_MENTOR.idea);
-    setGeneralGoal(FATHER_MENTOR.generalGoal);
-    setObjectives(FATHER_MENTOR.objectives.join("\n"));
-    setMechanism(FATHER_MENTOR.mechanism.join("\n"));
-    setResults(FATHER_MENTOR.results.join("\n"));
-    setIndicators(FATHER_MENTOR.indicators);
+  function previewTemplate(template: InitiativeTemplate) {
+    setTitle(template.title);
+    setSlogan(template.slogan ?? "");
+    setIdea(template.idea ?? "");
+    setGeneralGoal(template.general_goal ?? "");
+    setObjectives((template.objectives ?? []).join("\n"));
+    setMechanism((template.mechanism ?? []).join("\n"));
+    setResults((template.expected_results ?? []).join("\n"));
+    setIndicators(template.success_indicators ?? "");
+    setInviteRole(template.default_role_title || "عضو المبادرة");
+    setInviteTasks((template.default_tasks ?? []).join("\n"));
     setShowCreate(true);
+    window.setTimeout(() => document.getElementById("initiative-create-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
   return (
@@ -408,14 +422,67 @@ function InitiativeTeamsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => void query.refetch()}><RefreshCw className="size-4" /> تحديث</Button>
-            <Button variant="outline" onClick={applyFatherTemplate}><Sparkles className="size-4" /> نموذج الأب الناصح</Button>
-            <Button onClick={() => setShowCreate((v) => !v)}><Plus className="size-4" /> مبادرة جديدة</Button>
+            <Button onClick={() => setShowCreate((v) => !v)}><Plus className="size-4" /> مبادرة مخصصة</Button>
           </div>
         </div>
       </section>
 
+      <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-black text-primary">مكتبة المبادرات الجاهزة</p>
+            <h2 className="mt-1 text-xl font-black">اختر المبادرة وفعّلها بضغطة واحدة</h2>
+            <p className="mt-2 text-xs leading-6 text-muted-foreground">
+              كل مبادرة تأتي بأهداف وآلية تنفيذ ونتائج ومؤشرات قياس ومهام مقترحة للفريق، ويمكنك معاينتها وتعديلها قبل الإنشاء.
+            </p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">
+            {(templatesQuery.data ?? []).length} مبادرات جاهزة
+          </span>
+        </div>
+
+        {templatesQuery.isLoading ? (
+          <p className="mt-4 rounded-2xl border border-dashed p-5 text-center text-xs text-muted-foreground">جارٍ تحميل مكتبة المبادرات...</p>
+        ) : templatesQuery.isError ? (
+          <p className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-center text-xs text-destructive">تعذر تحميل مكتبة المبادرات.</p>
+        ) : (
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {(templatesQuery.data ?? []).map((template) => (
+              <article key={template.key} className="flex min-h-[270px] flex-col rounded-3xl border bg-background p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">{template.category}</span>
+                    <h3 className="mt-3 text-lg font-black">{template.title}</h3>
+                    {template.slogan && <p className="mt-1 text-xs font-bold text-primary">{template.slogan}</p>}
+                  </div>
+                  <Sparkles className="size-5 shrink-0 text-primary" />
+                </div>
+                <p className="mt-3 text-xs leading-6 text-muted-foreground">{template.summary}</p>
+                <div className="mt-3 space-y-1 text-[10px] text-muted-foreground">
+                  {template.audience && <p><strong className="text-foreground">الفئة المستهدفة:</strong> {template.audience}</p>}
+                  {template.recommended_weeks && <p><strong className="text-foreground">المدة المقترحة:</strong> {template.recommended_weeks} أسابيع</p>}
+                  <p><strong className="text-foreground">دور العضو:</strong> {template.default_role_title}</p>
+                </div>
+                <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                  <Button
+                    size="sm"
+                    disabled={activateTemplate.isPending}
+                    onClick={() => activateTemplate.mutate(template.key)}
+                  >
+                    <ShieldCheck className="size-4" /> تفعيل المبادرة
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => previewTemplate(template)}>
+                    معاينة وتعديل
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       {showCreate && (
-        <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
+        <section id="initiative-create-form" className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
           <h2 className="font-black">بيانات المبادرة</h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div><Label>اسم المبادرة</Label><Input className="mt-2" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
