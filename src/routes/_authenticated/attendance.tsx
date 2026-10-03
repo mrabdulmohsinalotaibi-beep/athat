@@ -22,6 +22,7 @@ type ImportedAttendance = {
   source: string;
   reviewStatus?: "جديد" | "مكرر" | "يحتاج مراجعة";
   reviewReason?: string;
+  matchedStudentId?: string;
 };
 
 export const Route = createFileRoute("/_authenticated/attendance")({
@@ -31,6 +32,20 @@ export const Route = createFileRoute("/_authenticated/attendance")({
 
 function normalizeDigits(value: string) {
   return value.replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+}
+
+function normalizeStudentName(value: string) {
+  return normalizeDigits(value)
+    .normalize("NFKD")
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/[إأآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/[^\u0621-\u063A\u0641-\u064A0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function isoFromText(value: string) {
@@ -285,13 +300,43 @@ function AttendancePage() {
         );
       }
 
-      const { data: existingAttendance } = await supabase
-        .from("attendance")
-        .select("student_no,student_name,adate");
+      const [{ data: existingAttendance }, { data: importStudents, error: importStudentsError }] = await Promise.all([
+        supabase.from("attendance").select("student_id,student_no,student_name,adate"),
+        supabase.from("students").select("id,student_no,national_id,full_name"),
+      ]);
+      if (importStudentsError) throw importStudentsError;
+
+      const studentByNumber = new Map<string, string>();
+      const studentByName = new Map<string, string>();
+      const ambiguousNames = new Set<string>();
+      (importStudents ?? []).forEach((student: any) => {
+        const id = String(student.id ?? "");
+        [student.student_no, student.national_id].forEach((value) => {
+          const key = normalizeDigits(String(value ?? "")).trim();
+          if (key && id) studentByNumber.set(key, id);
+        });
+        const nameKey = normalizeStudentName(String(student.full_name ?? ""));
+        if (!nameKey || !id) return;
+        if (studentByName.has(nameKey) && studentByName.get(nameKey) !== id) ambiguousNames.add(nameKey);
+        else studentByName.set(nameKey, id);
+      });
+      ambiguousNames.forEach((name) => studentByName.delete(name));
+
+      const resolveStudentId = (row: ImportedAttendance) =>
+        studentByNumber.get(normalizeDigits(String(row.student_no ?? "")).trim()) ||
+        studentByName.get(normalizeStudentName(String(row.student_name ?? ""))) ||
+        "";
+
       const existingKeys = new Set(
-        (existingAttendance ?? []).map((item: any) =>
-          `${String(item.student_no ?? "").trim()}|${String(item.adate ?? "").slice(0, 10)}`,
-        ),
+        (existingAttendance ?? []).map((item: any) => {
+          const studentKey =
+            String(item.student_id ?? "") ||
+            studentByNumber.get(normalizeDigits(String(item.student_no ?? "")).trim()) ||
+            studentByName.get(normalizeStudentName(String(item.student_name ?? ""))) ||
+            normalizeStudentName(String(item.student_name ?? "")) ||
+            normalizeDigits(String(item.student_no ?? "")).trim();
+          return `${studentKey}|${String(item.adate ?? "").slice(0, 10)}`;
+        }),
       );
       const seenImportKeys = new Set<string>();
       const classified = parsed.map((row) => {
@@ -299,15 +344,20 @@ function AttendancePage() {
         if (!row.student_no) reasons.push("رقم الطالب غير مقروء");
         if (!row.adate) reasons.push("التاريخ غير مقروء");
         if (!row.student_name || row.student_name === "طالب من كشف إتقان") reasons.push("اسم الطالب يحتاج مراجعة");
-        const key = `${row.student_no.trim()}|${row.adate.slice(0, 10)}`;
-        const duplicateInFile = Boolean(row.student_no && row.adate && seenImportKeys.has(key));
-        const duplicateSaved = Boolean(row.student_no && row.adate && existingKeys.has(key));
+        const matchedStudentId = resolveStudentId(row);
+        const fallbackStudentKey = normalizeStudentName(row.student_name) || normalizeDigits(row.student_no).trim();
+        const studentKey = matchedStudentId || fallbackStudentKey;
+        if (!matchedStudentId) reasons.push("لم تتم مطابقة الطالب تلقائيًا مع سجل الطلاب");
+        const key = `${studentKey}|${row.adate.slice(0, 10)}`;
+        const duplicateInFile = Boolean(studentKey && row.adate && seenImportKeys.has(key));
+        const duplicateSaved = Boolean(studentKey && row.adate && existingKeys.has(key));
         const duplicate = duplicateInFile || duplicateSaved;
-        if (row.student_no && row.adate) seenImportKeys.add(key);
+        if (studentKey && row.adate) seenImportKeys.add(key);
         return {
           ...row,
           selected: !duplicate && reasons.length === 0,
           reviewStatus: duplicate ? "مكرر" as const : reasons.length ? "يحتاج مراجعة" as const : "جديد" as const,
+          matchedStudentId,
           reviewReason: duplicate
             ? duplicateInFile
               ? "مكرر داخل الملف لنفس الطالب ونفس يوم الغياب"
@@ -356,18 +406,19 @@ function AttendancePage() {
           const key = String(value ?? "").trim();
           if (key && id) byNumber.set(key, id);
         });
-        const name = String(student.full_name ?? "").trim();
+        const name = normalizeStudentName(String(student.full_name ?? ""));
         if (!name || !id) return;
         if (byName.has(name)) duplicateNames.add(name);
         else byName.set(name, id);
       });
       duplicateNames.forEach((name) => byName.delete(name));
 
-      const payload = fresh.map(({ selected: _selected, source: _source, reviewStatus: _reviewStatus, reviewReason: _reviewReason, ...r }) => ({
+      const payload = fresh.map(({ selected: _selected, source: _source, reviewStatus: _reviewStatus, reviewReason: _reviewReason, matchedStudentId, ...r }) => ({
         ...r,
         student_id:
-          byNumber.get(String(r.student_no ?? "").trim()) ||
-          byName.get(String(r.student_name ?? "").trim()) ||
+          matchedStudentId ||
+          byNumber.get(normalizeDigits(String(r.student_no ?? "")).trim()) ||
+          byName.get(normalizeStudentName(String(r.student_name ?? ""))) ||
           null,
         user_id: auth.user!.id,
       }));
