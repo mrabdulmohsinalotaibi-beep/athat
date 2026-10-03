@@ -459,6 +459,7 @@ function InitiativeTeamsPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{selected.latest_progress || 0}% إنجاز</span>
+                      {selected.can_view_dashboard && <Button size="sm" variant="outline" onClick={() => { window.location.href = `/initiative-dashboard?initiative=${encodeURIComponent(selected.id)}`; }}>فتح الداش بورد</Button>}
                       {selected.is_manager && <Button size="sm" variant="outline" onClick={() => createPublicView.mutate()}>رابط عرض عام</Button>}
                       {selected.is_manager && publicViewUrl && <Button size="sm" variant="ghost" onClick={() => revokePublicView.mutate()}>إيقاف الرابط</Button>}
                     </div>
