@@ -150,6 +150,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     }
     return section;
   });
+  const guidanceHubNavigation = { to: "/guidance-work" as const, label: "أعمال التوجيه", icon: ClipboardList, activeRoutes: ["/guidance-work"] };
   const restrictedBottomNavigation = [
     { to: "/dashboard" as const, label: "اليوم", icon: LayoutDashboard, activeRoutes: ["/dashboard"] },
     { to: "/school-tasks" as const, label: "مهامي", icon: ClipboardList, activeRoutes: ["/school-tasks"] },
@@ -203,9 +204,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const roleLabel =
     ({
       principal: "مدير المدرسة",
+      student_affairs_vice: "وكيل شؤون الطلاب",
+      academic_vice: "وكيل الشؤون التعليمية",
       vice_principal: "وكيل المدرسة",
       counselor: "الموجه الطلابي",
       teacher: "المعلم",
+      activity_leader: "رائد النشاط",
+      health_guide: "الموجه الصحي",
+      registrar: "الإداري / مسجل المعلومات",
       admin_staff: "الموظف الإداري",
       guard: "حارس المدرسة",
       observer: "اطلاع فقط",
