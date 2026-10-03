@@ -159,12 +159,20 @@ export function permissionsForRole(role: SchoolRole) {
 }
 
 export function hasPermission(
-  membership: { role?: string | null; is_admin?: boolean | null; permissions?: Record<string, boolean> | null } | null | undefined,
+  membership: {
+    role?: string | null;
+    is_admin?: boolean | null;
+    permissions?: Record<string, boolean> | null;
+    group_permissions?: Record<string, boolean> | null;
+  } | null | undefined,
   permission: PermissionKey,
 ) {
   if (!membership) return true;
   const role = membership.role as SchoolRole;
   const explicit = membership.permissions?.[permission];
-  if (typeof explicit === "boolean") return explicit;
+  if (explicit === true) return true;
+  const groupGrant = membership.group_permissions?.[permission];
+  if (groupGrant === true) return true;
+  if (explicit === false) return false;
   return Boolean(ROLE_PERMISSION_PRESETS[role]?.[permission]);
 }
