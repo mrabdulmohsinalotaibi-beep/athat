@@ -169,7 +169,15 @@ function OutgoingMessagesPage() {
         ]
       : [];
 
-    return [...studentRecipients, ...manualRecipient];
+    const unique = new Map<string, Recipient>();
+    [...studentRecipients, ...manualRecipient].forEach((recipient) => {
+      if (!recipient.phone) return;
+      const existing = unique.get(recipient.phone);
+      if (!existing || (existing.source === "manual" && recipient.source === "student")) {
+        unique.set(recipient.phone, recipient);
+      }
+    });
+    return Array.from(unique.values());
   }, [students, selectedStudentIds, manualName, manualPhone]);
 
   const recipientsWithoutPhone = useMemo(
@@ -325,6 +333,16 @@ function OutgoingMessagesPage() {
       if (!authData.user) throw new Error("انتهت جلسة الدخول.");
 
       const batchId = crypto.randomUUID();
+      const duplicateCount =
+        selectedStudentIds.filter((id) => {
+          const student = students.find((item) => item.id === id);
+          const phone = normalizeSaudiPhone(student?.guardian_phone);
+          return Boolean(phone) && recipients.filter((recipient) => recipient.phone === phone).length === 1;
+        }).length - recipients.filter((recipient) => recipient.source === "student").length;
+      if (duplicateCount > 0) {
+        toast.info(`تم دمج ${duplicateCount} مستلم مكرر له نفس رقم الجوال لتجنب إرسال الرسالة مرتين.`);
+      }
+
       const payload = recipients.map((recipient) => ({
         user_id: authData.user!.id,
         batch_id: batchId,
