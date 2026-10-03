@@ -27,6 +27,11 @@ type InviteInfo = {
   } | null;
   linked_student_count?: number | null;
   expires_at?: string | null;
+  initiative_id?: string | null;
+  initiative_title?: string | null;
+  initiative_slogan?: string | null;
+  initiative_role?: string | null;
+  initiative_tasks?: string[] | null;
 };
 
 export const Route = createFileRoute("/school-invite")({
@@ -218,6 +223,28 @@ function SchoolInvitePage() {
                   </div>
                 </div>
               </div>
+
+              {info.initiative_title && (
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="size-4 text-primary" />
+                    <p className="text-sm font-black">دعوة للانضمام إلى مبادرة</p>
+                  </div>
+                  <p className="mt-2 text-xl font-black text-primary">{info.initiative_title}</p>
+                  {info.initiative_slogan && <p className="mt-1 text-sm font-bold">{info.initiative_slogan}</p>}
+                  {info.initiative_role && <p className="mt-3 text-xs"><strong>دورك:</strong> {info.initiative_role}</p>}
+                  {(info.initiative_tasks ?? []).length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-black">الأعمال المطلوبة منك</p>
+                      <div className="mt-2 space-y-1.5">
+                        {(info.initiative_tasks ?? []).map((task) => (
+                          <div key={task} className="rounded-xl border bg-background px-3 py-2 text-xs">{task}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="rounded-2xl border bg-muted/15 p-4">
                 <div className="flex items-center gap-2">
