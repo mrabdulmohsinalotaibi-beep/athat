@@ -227,17 +227,19 @@ function InitiativeTeamsPage() {
   });
 
   const activateTemplate = useMutation({
-    mutationFn: async (templateKey: string) => {
+    mutationFn: async (template: InitiativeTemplate) => {
       const { data, error } = await (supabase as any).rpc("activate_initiative_template", {
-        p_template_key: templateKey,
+        p_template_key: template.key,
       });
       if (error) throw error;
-      return String(data ?? "");
+      return { initiativeId: String(data ?? ""), template };
     },
-    onSuccess: async (initiativeId) => {
+    onSuccess: async ({ initiativeId, template }) => {
+      setInviteRole(template.default_role_title || "عضو المبادرة");
+      setInviteTasks((template.default_tasks ?? []).join("\n"));
       await refresh();
       setSelectedId(initiativeId);
-      toast.success("تم تفعيل المبادرة وإضافتها إلى مبادرات المدرسة.");
+      toast.success("تم تفعيل المبادرة وتجهيز مهام فريقها.");
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -467,7 +469,7 @@ function InitiativeTeamsPage() {
                   <Button
                     size="sm"
                     disabled={activateTemplate.isPending}
-                    onClick={() => activateTemplate.mutate(template.key)}
+                    onClick={() => activateTemplate.mutate(template)}
                   >
                     <ShieldCheck className="size-4" /> تفعيل المبادرة
                   </Button>
