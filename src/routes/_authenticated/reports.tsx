@@ -370,6 +370,8 @@ function ReportsPage() {
     setWorkflowPlanTaskId("");
     setWorkflowProgramId("");
     setWorkflowDraftInitialized(false);
+    setSignatureReportId("");
+    setSignatureReportOpen(false);
     if (typeof window !== "undefined") {
       window.history.replaceState(window.history.state, "", window.location.pathname);
     }
@@ -1119,15 +1121,6 @@ function ReportsPage() {
           <OfficialFooter school={school} />
         </main>
       </div>
-    </div>
-  );
-}
-
-function ReportStat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-xl border border-paper-border bg-paper-muted p-3 text-center">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-black">{value}</p>
       {signatureReportId && (
         <SendForSignatureDialog
           open={signatureReportOpen}
@@ -1152,6 +1145,15 @@ function ReportStat({ label, value }: { label: string; value: number | string })
           }}
         />
       )}
+    </div>
+  );
+}
+
+function ReportStat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-xl border border-paper-border bg-paper-muted p-3 text-center">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-lg font-black">{value}</p>
     </div>
   );
 }
