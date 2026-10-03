@@ -388,7 +388,7 @@ export function WeeklyGuidancePoster() {
             {/* تذييل البوستر */}
             <div className="relative mt-8 flex items-center justify-between border-t border-[#c99a45]/40 pt-3 text-xs font-medium text-[#55717a]">
               <span>الموجه الطلابي: {school?.counselor_name || "—"}</span>
-              <span className="flex items-center gap-2"><img src="/athat-logo-final.png?v=20261002-vector" alt="شعار الذات" className="h-8 w-8 rounded-lg object-contain" /> الذات للتوجيه الطلابي</span>
+              <span className="flex items-center gap-2"><img src="/athat-logo-final.png?v=20261003-brand" alt="شعار الذات" className="h-8 w-8 rounded-lg object-contain" /> الذات للتوجيه الطلابي</span>
             </div>
           </div>
         </div>
