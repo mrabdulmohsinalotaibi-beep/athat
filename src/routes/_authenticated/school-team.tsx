@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Check, Clipboard, KeyRound, RefreshCw, Save, School, Send, Settings2, Share2, ShieldCheck, UserCheck, Users } from "lucide-react";
+import { Check, Clipboard, KeyRound, Plus, RefreshCw, Save, School, Send, Settings2, Share2, ShieldCheck, Trash2, UserCheck, Users, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +90,12 @@ function SchoolTeamPage() {
   const [editStudentIds, setEditStudentIds] = useState<string[]>([]);
   const [editExpiry, setEditExpiry] = useState("");
   const [auditOpen, setAuditOpen] = useState(false);
+  const [groupEditorOpen, setGroupEditorOpen] = useState(false);
+  const [editingGroupId, setEditingGroupId] = useState("");
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
+  const [groupPermissions, setGroupPermissions] = useState<Record<string, boolean>>({});
+  const [groupMemberIds, setGroupMemberIds] = useState<string[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -169,6 +175,24 @@ function SchoolTeamPage() {
     staleTime: 15_000,
   });
 
+  const groupsQuery = useQuery({
+    queryKey: ["school-permission-groups"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_school_permission_groups");
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        permissions: Record<string, boolean>;
+        member_ids: string[];
+        created_at: string;
+      }>;
+    },
+    enabled: Boolean(contextQuery.data?.membership),
+    staleTime: 30_000,
+  });
+
   const invitesQuery = useQuery({
     queryKey: ["school-invites"],
     queryFn: async () => {
@@ -189,6 +213,47 @@ function SchoolTeamPage() {
     },
     enabled: Boolean(contextQuery.data?.membership?.is_admin),
     staleTime: 30_000,
+  });
+
+  const saveGroup = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase as any).rpc("save_school_permission_group", {
+        p_group_id: editingGroupId || null,
+        p_name: groupName.trim(),
+        p_description: groupDescription.trim() || null,
+        p_permissions: groupPermissions,
+        p_member_ids: groupMemberIds,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setGroupEditorOpen(false);
+      setEditingGroupId("");
+      setGroupName("");
+      setGroupDescription("");
+      setGroupPermissions({});
+      setGroupMemberIds([]);
+      await queryClient.invalidateQueries({ queryKey: ["school-permission-groups"] });
+      await queryClient.invalidateQueries({ queryKey: ["school-access-audit"] });
+    await queryClient.invalidateQueries({ queryKey: ["school-permission-groups"] });
+      toast.success("تم حفظ مجموعة الصلاحيات.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
+  const deleteGroup = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).rpc("delete_school_permission_group", {
+        p_group_id: id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["school-permission-groups"] });
+      await queryClient.invalidateQueries({ queryKey: ["school-access-audit"] });
+      toast.success("تم حذف المجموعة.");
+    },
+    onError: (error) => toast.error((error as Error).message),
   });
 
   const revokeInvite = useMutation({
@@ -907,6 +972,162 @@ function SchoolTeamPage() {
           ))}
         </div>
       </section>
+
+      {membership.is_admin && (
+        <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 text-primary">
+                <UsersRound className="size-4" />
+                <p className="text-xs font-black">مجموعات الصلاحيات</p>
+              </div>
+              <h2 className="mt-1 font-black">طبّق صلاحيات موحّدة على عدة أعضاء</h2>
+              <p className="mt-1 text-[11px] text-muted-foreground">مثال: معلمو الثالث متوسط، لجنة الانضباط، فريق الأنشطة، الإدارة.</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditingGroupId("");
+                setGroupName("");
+                setGroupDescription("");
+                setGroupPermissions({});
+                setGroupMemberIds([]);
+                setGroupEditorOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> مجموعة جديدة
+            </Button>
+          </div>
+
+          {(groupsQuery.data ?? []).length > 0 ? (
+            <div className="mt-4 grid gap-2 xl:grid-cols-2">
+              {(groupsQuery.data ?? []).map((group) => {
+                const enabledCount = Object.values(group.permissions ?? {}).filter(Boolean).length;
+                return (
+                  <article key={group.id} className="rounded-2xl border bg-muted/10 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black">{group.name}</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">{group.description || "مجموعة صلاحيات مدرسية"}</p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">{group.member_ids?.length ?? 0} عضو</span>
+                          <span className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">{enabledCount} صلاحية إضافية</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingGroupId(group.id);
+                            setGroupName(group.name);
+                            setGroupDescription(group.description ?? "");
+                            setGroupPermissions(group.permissions ?? {});
+                            setGroupMemberIds(group.member_ids ?? []);
+                            setGroupEditorOpen(true);
+                          }}
+                        >
+                          <Settings2 className="size-4" /> تعديل
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={deleteGroup.isPending}
+                          title="حذف المجموعة"
+                          onClick={() => {
+                            if (confirm(`حذف مجموعة «${group.name}»؟ لن تُحذف حسابات الأعضاء.`)) deleteGroup.mutate(group.id);
+                          }}
+                        >
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    {(group.member_ids?.length ?? 0) > 0 && (
+                      <div className="mt-3 border-t pt-2">
+                        <p className="mb-1 text-[10px] font-black text-muted-foreground">الأعضاء</p>
+                        <div className="flex flex-wrap gap-1">
+                          {group.member_ids.slice(0, 8).map((id) => {
+                            const member = active.find((item) => item.id === id);
+                            return (
+                              <span key={id} className="rounded-full border bg-background px-2 py-1 text-[10px]">
+                                {member?.display_name || "عضو"}
+                              </span>
+                            );
+                          })}
+                          {group.member_ids.length > 8 && <span className="text-[10px] text-muted-foreground">+{group.member_ids.length - 8}</span>}
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-2xl border border-dashed p-5 text-center text-xs text-muted-foreground">لا توجد مجموعات بعد. أنشئ أول مجموعة لتطبيق صلاحيات على عدة أعضاء مرة واحدة.</p>
+          )}
+
+          {groupEditorOpen && (
+            <div className="mt-4 rounded-2xl border border-primary/15 bg-background p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-black">{editingGroupId ? "تعديل المجموعة" : "إنشاء مجموعة صلاحيات"}</h3>
+                  <p className="mt-1 text-[10px] text-muted-foreground">صلاحيات المجموعة تُضاف إلى صلاحيات العضو الأساسية، ولا تلغي ما لديه.</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setGroupEditorOpen(false)}>إغلاق</Button>
+              </div>
+
+              <div className="mt-4 grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
+                <div className="space-y-3">
+                  <div>
+                    <Label>اسم المجموعة</Label>
+                    <Input className="mt-2" value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="مثال: معلمو الثالث متوسط" />
+                  </div>
+                  <div>
+                    <Label>وصف مختصر</Label>
+                    <Input className="mt-2" value={groupDescription} onChange={(e) => setGroupDescription(e.target.value)} placeholder="اختياري" />
+                  </div>
+
+                  <div>
+                    <Label>الأعضاء</Label>
+                    <div className="mt-2 max-h-64 space-y-1 overflow-y-auto rounded-2xl border bg-muted/10 p-2">
+                      {active.map((member) => {
+                        const checked = groupMemberIds.includes(member.id);
+                        return (
+                          <label key={member.id} className="flex cursor-pointer items-center gap-2 rounded-xl bg-background px-2.5 py-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                setGroupMemberIds((current) =>
+                                  checked ? current.filter((id) => id !== member.id) : [...current, member.id],
+                                )
+                              }
+                            />
+                            <span className="min-w-0 flex-1">
+                              <strong className="block truncate">{member.display_name || "عضو المدرسة"}</strong>
+                              <span className="text-[10px] text-muted-foreground">{roleLabel(member.role)}</span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{groupMemberIds.length} عضو محدد</p>
+                  </div>
+                </div>
+
+                <PermissionEditor permissions={groupPermissions} onChange={setGroupPermissions} />
+
+                <div className="xl:col-span-2 flex flex-wrap justify-end gap-2 border-t pt-3">
+                  <Button variant="ghost" onClick={() => setGroupEditorOpen(false)}>إلغاء</Button>
+                  <Button disabled={!groupName.trim() || saveGroup.isPending} onClick={() => saveGroup.mutate()}>
+                    <Save className="size-4" /> حفظ المجموعة
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {membership.is_admin && (
         <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
