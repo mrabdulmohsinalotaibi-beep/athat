@@ -196,6 +196,11 @@ function InitiativeTeamsPage() {
     [query.data, selectedId],
   );
 
+  const hasManagedInitiative = useMemo(
+    () => (query.data ?? []).some((item) => item.is_manager),
+    [query.data],
+  );
+
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: ["initiative-teams"] });
     await qc.invalidateQueries({ queryKey: ["initiative-students"] });
@@ -416,20 +421,22 @@ function InitiativeTeamsPage() {
       <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black text-primary">الفرق والمبادرات</p>
-            <h1 className="mt-1 text-2xl font-black">فرق المبادرات المدرسية</h1>
+            <p className="text-xs font-black text-primary">{hasManagedInitiative ? "إدارة المبادرات" : "مساحة المعلم"}</p>
+            <h1 className="mt-1 text-2xl font-black">{hasManagedInitiative ? "فرق المبادرات المدرسية" : "مبادراتي"}</h1>
             <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              أنشئ مبادرة، حدد أعمال أعضائها، ثم أرسل لكل عضو رابطًا خاصًا ينضم منه إلى الفريق بصلاحياته ومهامه المحددة.
+              {hasManagedInitiative
+                ? "أنشئ المبادرات، وزّع المعلمين والطلاب، وتابع التنفيذ والإنجاز من لوحة واحدة."
+                : "هنا تظهر المبادرات المسندة إليك داخل حسابك مباشرة. افتح مساحة عملك لمتابعة طلابك وتوثيق إنجازك دون الحاجة إلى رابط خارجي."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => void query.refetch()}><RefreshCw className="size-4" /> تحديث</Button>
-            <Button onClick={() => setShowCreate((v) => !v)}><Plus className="size-4" /> مبادرة مخصصة</Button>
+            {hasManagedInitiative && <Button onClick={() => setShowCreate((v) => !v)}><Plus className="size-4" /> مبادرة مخصصة</Button>}
           </div>
         </div>
       </section>
 
-      <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
+      {hasManagedInitiative && <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-black text-primary">مكتبة المبادرات الجاهزة</p>
@@ -481,9 +488,9 @@ function InitiativeTeamsPage() {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
-      {showCreate && (
+      {hasManagedInitiative && showCreate && (
         <section id="initiative-create-form" className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
           <h2 className="font-black">بيانات المبادرة</h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -550,7 +557,7 @@ function InitiativeTeamsPage() {
                   {selected.success_indicators && <div className="mt-4 rounded-2xl border p-4"><p className="text-xs font-black">مؤشرات قياس النجاح</p><p className="mt-2 text-sm leading-7 text-muted-foreground">{selected.success_indicators}</p></div>}
                 </section>
 
-                <section className="rounded-3xl border bg-card p-5">
+                {selected.is_manager && <section className="rounded-3xl border bg-card p-5">
                   <div className="flex items-center gap-2"><UsersRound className="size-5 text-primary" /><h2 className="font-black">أعضاء الفريق</h2></div>
                   <div className="mt-4 space-y-2">
                     {selected.members.map((member) => (
@@ -599,7 +606,7 @@ function InitiativeTeamsPage() {
                       })}
                     </div>
                   )}
-                </section>
+                </section>}
 
                 {selected.is_manager && (
                   <section className="rounded-3xl border bg-card p-5">
