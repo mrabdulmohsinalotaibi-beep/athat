@@ -234,7 +234,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         : 0;
 
       const guidanceAlertsAllowed = !context?.membership || isGuidanceWorkspaceMember(context.membership);
-      const [cases, tasks, schoolTasks, handoffs, publicRequests, feedback, interviews, behavior, attendance] = await Promise.all([
+      const [cases, tasks, schoolTasks, handoffs, publicRequests, feedback, interviews, behavior, attendance, guidanceRequests] = await Promise.all([
         supabase.from("counseling_cases").select("id,case_status,followup_at"),
         supabase.from("plan_tasks").select("id,exec_status,due_date,doc_status"),
         (supabase as any).from("school_tasks").select("id,status,due_date,creator_member_id,assignee_member_id"),
@@ -248,6 +248,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         guidanceAlertsAllowed ? supabase.from("interviews").select("id,followup_at") : Promise.resolve({ data: [], error: null }),
         guidanceAlertsAllowed ? supabase.from("behavior").select("id,result,followup_at") : Promise.resolve({ data: [], error: null }),
         guidanceAlertsAllowed ? supabase.from("attendance").select("id,student_id,student_no,student_name,case_type,count_days") : Promise.resolve({ data: [], error: null }),
+        (supabase as any).from("guidance_requests").select("id,status,submitted_by,updated_at"),
       ]);
 
       // Alerts are supplementary UI. A missing/temporarily unavailable table
@@ -261,6 +262,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       if (interviews.error) console.warn("[alerts] interviews:", interviews.error.message);
       if (behavior.error) console.warn("[alerts] behavior:", behavior.error.message);
       if (attendance.error) console.warn("[alerts] attendance:", attendance.error.message);
+      if (guidanceRequests.error) console.warn("[alerts] guidance_requests:", guidanceRequests.error.message);
 
       const dueCases = (cases.error ? [] : cases.data ?? []).filter(
         (item) => item.case_status !== "مغلقة" && item.followup_at && String(item.followup_at).slice(0, 10) <= day,
@@ -295,7 +297,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
       const inboundFeedback = (feedback.error ? [] : feedback.data ?? []).filter(
         (item: any) => !["تم الرد", "محفوظ"].includes(String(item.status ?? "")),
       ).length;
-      const guidanceInbox = inboundRequests + inboundFeedback;
+      const guidanceRows = guidanceRequests.error ? [] : guidanceRequests.data ?? [];
+      const memberGuidanceRequests = guidanceRows.filter((item: any) => item.submitted_by === context?.membership?.user_id && ["reviewed","in_progress","completed","rejected"].includes(String(item.status ?? ""))).length;
+      const staffGuidanceInbox = guidanceAlertsAllowed ? guidanceRows.filter((item: any) => ["submitted","reviewed","in_progress"].includes(String(item.status ?? ""))).length : 0;
+      const guidanceInbox = inboundRequests + inboundFeedback + staffGuidanceInbox + memberGuidanceRequests;
       const dueInterviews = (interviews.error ? [] : interviews.data ?? []).filter(
         (item: any) => item.followup_at && String(item.followup_at).slice(0, 10) <= day,
       ).length;
@@ -346,6 +351,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "behavior" }, () => {
         void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
         void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "guidance_requests" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["guidance-requests"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "attendance" }, () => {
         void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
@@ -662,7 +671,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         {(alertSummary?.attentionPlan ?? 0) > 0 && <AlertLink to="/plan" label="مهام خطة تحتاج إجراء" count={alertSummary?.attentionPlan ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.dueSchoolTasks ?? 0) > 0 && <AlertLink to="/school-tasks" label="مهام مدرسية مسندة لك" count={alertSummary?.dueSchoolTasks ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.approvals ?? 0) > 0 && <AlertLink to="/school-tasks" label="إنجازات تنتظر اعتمادك" count={alertSummary?.approvals ?? 0} close={() => setAlertsOpen(false)} />}
-                        {(alertSummary?.guidanceInbox ?? 0) > 0 && <AlertLink to="/inbox" label="وارد جديد للتوجيه الطلابي" count={alertSummary?.guidanceInbox ?? 0} close={() => setAlertsOpen(false)} />}
+                        {(alertSummary?.guidanceInbox ?? 0) > 0 && <AlertLink to="/guidance-requests" label="طلبات وتحديثات التوجيه الطلابي" count={alertSummary?.guidanceInbox ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.unreadReports ?? 0) > 0 && <AlertLink to="/school-inbox" label="تقارير إدارية غير مقروءة" count={alertSummary?.unreadReports ?? 0} close={() => setAlertsOpen(false)} />}
                         {(alertSummary?.pendingMembers ?? 0) > 0 && <AlertLink to="/school-team" label="طلبات انضمام للفريق" count={alertSummary?.pendingMembers ?? 0} close={() => setAlertsOpen(false)} />}
                       </div>
