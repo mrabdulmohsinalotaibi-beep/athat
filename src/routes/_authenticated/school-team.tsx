@@ -40,6 +40,8 @@ type SchoolContext = {
     permissions?: Record<string, boolean> | null;
     data_scope?: DataScope | null;
     linked_student_ids?: string[];
+    access_expires_at?: string | null;
+    access_expired?: boolean | null;
   };
   school: null | {
     id: string;
@@ -57,6 +59,8 @@ type SchoolContext = {
     permissions?: Record<string, boolean> | null;
     data_scope?: DataScope | null;
     linked_student_ids?: string[];
+    access_expires_at?: string | null;
+    access_expired?: boolean | null;
     joined_at?: string | null;
     created_at: string;
   }>;
@@ -85,6 +89,8 @@ function SchoolTeamPage() {
   const [editScope, setEditScope] = useState<DataScope>({ type: "school" });
   const [editAdmin, setEditAdmin] = useState(false);
   const [editStudentIds, setEditStudentIds] = useState<string[]>([]);
+  const [editExpiry, setEditExpiry] = useState("");
+  const [auditOpen, setAuditOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -134,6 +140,24 @@ function SchoolTeamPage() {
     },
     enabled: false,
     staleTime: 60_000,
+  });
+
+  const auditQuery = useQuery({
+    queryKey: ["school-access-audit"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_school_access_audit", { p_limit: 80 });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        actor_name: string;
+        target_name: string;
+        action: string;
+        details: Record<string, unknown>;
+        created_at: string;
+      }>;
+    },
+    enabled: auditOpen,
+    staleTime: 30_000,
   });
 
   const contextQuery = useQuery({
@@ -245,6 +269,22 @@ function SchoolTeamPage() {
       setEditingMemberId("");
       await refresh();
       toast.success("تم حفظ الدور والصلاحيات ونطاق البيانات.");
+    },
+    onError: (error) => toast.error((error as Error).message),
+  });
+
+  const setExpiry = useMutation({
+    mutationFn: async ({ id, value }: { id: string; value: string }) => {
+      const { error } = await (supabase as any).rpc("set_school_member_access_expiry", {
+        p_member_id: id,
+        p_access_expires_at: value ? new Date(value + "T23:59:59").toISOString() : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await refresh();
+      await queryClient.invalidateQueries({ queryKey: ["school-access-audit"] });
+      toast.success("تم تحديث مدة الوصول.");
     },
     onError: (error) => toast.error((error as Error).message),
   });
@@ -560,7 +600,11 @@ function SchoolTeamPage() {
                   <p className="truncate text-sm font-black">{member.display_name || "عضو المدرسة"}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{roleLabel(member.role)}</p>
                 </div>
-                {member.is_admin && <span className="rounded-full bg-[#E4ECDF] px-2 py-1 text-[10px] font-black text-primary">مسؤول</span>}
+                <div className="flex flex-wrap items-center gap-1">
+                  {member.access_expired && <span className="rounded-full bg-destructive/10 px-2 py-1 text-[10px] font-black text-destructive">منتهي</span>}
+                  {member.access_expires_at && !member.access_expired && <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-black text-amber-700">مؤقت حتى {String(member.access_expires_at).slice(0, 10)}</span>}
+                  {member.is_admin && <span className="rounded-full bg-[#E4ECDF] px-2 py-1 text-[10px] font-black text-primary">مسؤول</span>}
+                </div>
               </div>
               {membership.is_admin && member.id !== membership.id && (
                 <div className="mt-3 space-y-2 border-t pt-3">
@@ -574,6 +618,7 @@ function SchoolTeamPage() {
                         setEditPermissions({ ...permissionsForRole(member.role), ...(member.permissions ?? {}) });
                         setEditScope(member.data_scope ?? { type: member.role === "teacher" ? "assigned" : member.role === "student" ? "self" : member.role === "parent" ? "children" : "school" });
                         setEditStudentIds(member.linked_student_ids ?? []);
+                        setEditExpiry(member.access_expires_at ? String(member.access_expires_at).slice(0, 10) : "");
                         setEditAdmin(member.is_admin);
                         void permissionStudentsQuery.refetch();
                       }}
@@ -615,9 +660,28 @@ function SchoolTeamPage() {
                         <input type="checkbox" checked={editAdmin} onChange={(event) => setEditAdmin(event.target.checked)} />
                         مسؤول إدارة الفريق
                       </label>
+                      <div>
+                        <Label>انتهاء صلاحية الوصول (اختياري)</Label>
+                        <Input
+                          type="date"
+                          className="mt-2"
+                          value={editExpiry}
+                          onChange={(event) => setEditExpiry(event.target.value)}
+                        />
+                        <p className="mt-1 text-[10px] leading-5 text-muted-foreground">اتركه فارغًا للوصول الدائم. بعد التاريخ المحدد يتوقف الوصول تلقائيًا.</p>
+                      </div>
                       <PermissionEditor permissions={editPermissions} onChange={setEditPermissions} compact />
                       <div className="flex gap-2">
-                        <Button size="sm" disabled={updateAccess.isPending} onClick={() => updateAccess.mutate(member.id)}>حفظ الصلاحيات</Button>
+                        <Button
+                          size="sm"
+                          disabled={updateAccess.isPending || setExpiry.isPending}
+                          onClick={async () => {
+                            await updateAccess.mutateAsync(member.id);
+                            await setExpiry.mutateAsync({ id: member.id, value: editExpiry });
+                          }}
+                        >
+                          حفظ الصلاحيات
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditingMemberId("")}>إلغاء</Button>
                       </div>
                     </div>
@@ -628,6 +692,47 @@ function SchoolTeamPage() {
           ))}
         </div>
       </section>
+
+      {membership.is_admin && (
+        <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-primary">الرقابة والأمان</p>
+              <h2 className="mt-1 font-black">سجل تغييرات الصلاحيات</h2>
+              <p className="mt-1 text-[11px] text-muted-foreground">يوضح من غيّر صلاحية عضو ومتى، مع الاحتفاظ بالتغييرات السابقة.</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAuditOpen((value) => !value);
+                if (!auditOpen) void auditQuery.refetch();
+              }}
+            >
+              <ShieldCheck className="size-4" /> {auditOpen ? "إخفاء السجل" : "عرض السجل"}
+            </Button>
+          </div>
+          {auditOpen && (
+            <div className="mt-4 space-y-2">
+              {auditQuery.isLoading && <p className="rounded-xl border p-4 text-center text-xs text-muted-foreground">جارٍ تحميل السجل...</p>}
+              {!auditQuery.isLoading && (auditQuery.data ?? []).length === 0 && (
+                <p className="rounded-xl border border-dashed p-4 text-center text-xs text-muted-foreground">لا توجد تغييرات مسجلة حتى الآن.</p>
+              )}
+              {(auditQuery.data ?? []).map((row) => (
+                <article key={row.id} className="rounded-xl border bg-muted/10 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-black">{row.actor_name} ← {row.target_name}</p>
+                    <span className="text-[10px] text-muted-foreground">{new Date(row.created_at).toLocaleString("ar-SA")}</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {row.action === "access_updated" ? "تم تعديل الدور أو الصلاحيات أو نطاق البيانات." : row.action === "expiry_updated" ? "تم تعديل مدة صلاحية الوصول." : row.action}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {membership.is_admin && suspended.length > 0 && (
         <section className="rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-card)]">
