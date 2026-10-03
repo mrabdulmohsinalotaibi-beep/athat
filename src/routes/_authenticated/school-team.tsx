@@ -223,7 +223,11 @@ function SchoolTeamPage() {
     const invitedCode = params.get("join");
     const invite = params.get("invite");
     if (invitedCode) setJoinCode(invitedCode.trim().toUpperCase());
-    if (invite) setInviteToken(invite.trim());
+    if (invite) {
+      const token = invite.trim();
+      setInviteToken(token);
+      window.location.replace(`/school-invite?invite=${encodeURIComponent(token)}`);
+    }
   }, []);
 
   function buildInviteUrl(code: string) {
@@ -458,7 +462,7 @@ function SchoolTeamPage() {
       return String(data ?? "");
     },
     onSuccess: (token) => {
-      const url = `${window.location.origin}/school-team?invite=${encodeURIComponent(token)}`;
+      const url = `${window.location.origin}/school-invite?invite=${encodeURIComponent(token)}`;
       setInviteUrl(url);
       toast.success("تم إنشاء دعوة مخصصة. أرسل الرابط للشخص المطلوب.");
     },
