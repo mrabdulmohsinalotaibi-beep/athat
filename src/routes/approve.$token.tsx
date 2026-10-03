@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2, FileCheck2, Loader2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +16,7 @@ function ApprovalPage(){
   const {token}=Route.useParams();
   const [signature,setSignature]=useState("");
   const [note,setNote]=useState("");
+  const [confirmedRead,setConfirmedRead]=useState(false);
   const request=useQuery({
     queryKey:["signature-request",token],
     queryFn:async()=>{
@@ -60,8 +61,12 @@ function ApprovalPage(){
         <div className="rounded-xl border bg-muted/30 p-3 text-xs leading-6">بتوقيعك وحفظك، فإنك تؤكد أنك قرأت المستند الظاهر أعلاه وتعتمد محتواه بهذه الصفة.</div>
         <SignaturePad label="التوقيع الإلكتروني" value={signature} onChange={setSignature}/>
         <div><p className="mb-2 text-sm font-bold">ملاحظة (اختياري)</p><Textarea value={note} onChange={e=>setNote(e.target.value)} rows={3}/></div>
+        <label className="flex items-start gap-3 rounded-xl border bg-muted/20 p-3 text-xs leading-6">
+          <input type="checkbox" className="mt-1 size-4 shrink-0" checked={confirmedRead} onChange={e=>setConfirmedRead(e.target.checked)}/>
+          <span>أقر بأنني قرأت المستند الظاهر أعلاه، وأن الاسم والصفة المعروضين يخصان طلب التوقيع المرسل إليّ، وأرغب في اعتماد هذه النسخة.</span>
+        </label>
         {sign.isError&&<p className="text-sm text-destructive">{(sign.error as Error).message}</p>}
-        <Button className="w-full" size="lg" disabled={!signature||sign.isPending} onClick={()=>sign.mutate()}>{sign.isPending?<Loader2 className="size-4 animate-spin"/>:<CheckCircle2 className="size-4"/>}اعتماد وتوقيع وحفظ</Button>
+        <Button className="w-full" size="lg" disabled={!signature||!confirmedRead||sign.isPending} onClick={()=>sign.mutate()}>{sign.isPending?<Loader2 className="size-4 animate-spin"/>:<CheckCircle2 className="size-4"/>}اعتماد وتوقيع وحفظ</Button>
       </section>}
       <p className="pb-6 text-center text-[10px] text-muted-foreground">هذا الاعتماد سجل إلكتروني داخل الذات | ATHAT، وليس توقيعًا رقميًا حكوميًا موثقًا ما لم تتم إضافة خدمة توثيق معتمدة.</p>
     </div>
