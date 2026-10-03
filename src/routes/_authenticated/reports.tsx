@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
+import { ApprovedSignatures } from "@/components/ApprovedSignatures";
 
 
 
@@ -1118,6 +1119,7 @@ function ReportsPage() {
             </div>
           </section>
 
+          <ApprovedSignatures recordTable="generated_reports" recordId={signatureReportId || null} />
           <OfficialFooter school={school} />
         </main>
       </div>
