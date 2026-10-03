@@ -1,5 +1,6 @@
 import { createFileRoute,Link } from "@tanstack/react-router";
 import { useQuery,useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { CheckCircle2,Clock3,FileCheck2,XCircle,ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 export const Route=createFileRoute("/_authenticated/guidance-approvals")({component:Page,head:()=>({meta:[{title:"اعتمادات التوجيه | الذات"}]})});
 const statusLabel:Record<string,string>={submitted:"بانتظار المراجعة",reviewed:"تمت المراجعة",approved:"معتمد",rejected:"معاد/مرفوض"};
 function Page(){const qc=useQueryClient();
+ useEffect(()=>{void (supabase as any).rpc("mark_guidance_notifications_read").then(()=>qc.invalidateQueries({queryKey:["app-alert-summary"]}));},[qc]);
  const ctx=useQuery({queryKey:["my-guidance-workspace"],queryFn:async()=>{const {data,error}=await (supabase as any).rpc("get_my_guidance_workspace");if(error)throw error;return data as any}});
  const q=useQuery({queryKey:["guidance-approvals"],queryFn:async()=>{const {data,error}=await (supabase as any).from("guidance_approvals").select("*").order("submitted_at",{ascending:false});if(error)throw error;return data??[]}});
  const role=String(ctx.data?.role||"");const canReview=Boolean(ctx.data?.is_admin)||["counselor","student_affairs_vice","principal"].includes(role);const canDecide=Boolean(ctx.data?.is_admin)||["student_affairs_vice","principal"].includes(role);
