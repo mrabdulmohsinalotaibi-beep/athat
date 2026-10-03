@@ -49,7 +49,7 @@ async function withDashboardTimeout<T>(request: PromiseLike<T>, label: string): 
   return await Promise.race([
     Promise.resolve(request),
     new Promise<never>((_, reject) =>
-      window.setTimeout(
+      globalThis.setTimeout(
         () => reject(new Error(`تأخر تحميل ${label} من قاعدة البيانات`)),
         9_000,
       ),
