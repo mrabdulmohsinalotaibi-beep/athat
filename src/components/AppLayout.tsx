@@ -316,6 +316,64 @@ export function AppLayout({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: true,
   });
   const alertCount = alertSummary?.total ?? 0;
+
+  useEffect(() => {
+    if (!guidanceNavigationAllowed) return;
+    const channel = supabase
+      .channel("athat-live-alerts")
+      .on("postgres_changes", { event: "*", schema: "public", table: "public_requests" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_messages" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "counseling_cases" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "interviews" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "behavior" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "attendance" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [guidanceNavigationAllowed, queryClient]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("athat-live-school-alerts")
+      .on("postgres_changes", { event: "*", schema: "public", table: "school_tasks" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "school_report_handoffs" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "plan_tasks" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["app-alert-summary"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard-live-v2"] });
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   const currentSection = visibleSections.find((section) =>
     section.items.some((item) => isPathActive(pathname, item.to)),
   );
