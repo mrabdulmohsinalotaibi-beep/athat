@@ -30,6 +30,104 @@ export const Route = createFileRoute("/_authenticated/school-team")({
 type Role = SchoolRole;
 type MemberStatus = "pending" | "active" | "rejected" | "suspended";
 
+const GROUP_TEMPLATES: Array<{
+  id: string;
+  name: string;
+  description: string;
+  suggestedRoles: Role[];
+  permissions: Record<string, boolean>;
+}> = [
+  {
+    id: "teachers",
+    name: "معلمو الصفوف",
+    description: "عرض الطلاب المسندين، الإحالات، المهام والمراسلات دون فتح سجلات التوجيه الحساسة.",
+    suggestedRoles: ["teacher"],
+    permissions: {
+      "dashboard.view": true,
+      "students.view": true,
+      "referrals.view": true,
+      "referrals.edit": true,
+      "tasks.view": true,
+      "messages.view": true,
+      "messages.send": true,
+    },
+  },
+  {
+    id: "discipline",
+    name: "لجنة الانضباط",
+    description: "متابعة المواظبة والسلوك والإحالات والتقارير المتعلقة بالانضباط.",
+    suggestedRoles: ["vice_principal", "counselor", "teacher", "admin_staff"],
+    permissions: {
+      "dashboard.view": true,
+      "students.view": true,
+      "attendance.view": true,
+      "attendance.edit": true,
+      "referrals.view": true,
+      "referrals.edit": true,
+      "reports.view": true,
+      "reports.create": true,
+      "messages.view": true,
+      "messages.send": true,
+    },
+  },
+  {
+    id: "activities",
+    name: "فريق الأنشطة والبرامج",
+    description: "إدارة البرامج والأنشطة والشواهد المرتبطة بها مع التقارير.",
+    suggestedRoles: ["counselor", "teacher", "admin_staff"],
+    permissions: {
+      "dashboard.view": true,
+      "programs.view": true,
+      "programs.edit": true,
+      "reports.view": true,
+      "reports.create": true,
+      "documents.view": true,
+      "documents.edit": true,
+      "messages.view": true,
+    },
+  },
+  {
+    id: "management",
+    name: "الإدارة المدرسية",
+    description: "إدارة الفريق والمهام والاعتمادات والتقارير والمراسلات والإعدادات الأساسية.",
+    suggestedRoles: ["principal", "vice_principal"],
+    permissions: {
+      "dashboard.view": true,
+      "team.view": true,
+      "team.manage": true,
+      "tasks.view": true,
+      "tasks.manage": true,
+      "reports.view": true,
+      "reports.create": true,
+      "reports.approve": true,
+      "messages.view": true,
+      "messages.send": true,
+      "documents.view": true,
+      "documents.edit": true,
+      "settings.view": true,
+    },
+  },
+  {
+    id: "guidance-committee",
+    name: "لجنة التوجيه الطلابي",
+    description: "صلاحيات موسعة للحالات والمقابلات والإحالات للعضو المخول فقط.",
+    suggestedRoles: ["counselor", "vice_principal"],
+    permissions: {
+      "dashboard.view": true,
+      "students.view": true,
+      "cases.view": true,
+      "cases.edit": true,
+      "interviews.view": true,
+      "interviews.edit": true,
+      "referrals.view": true,
+      "referrals.edit": true,
+      "reports.view": true,
+      "messages.view": true,
+      "messages.send": true,
+    },
+  },
+];
+
 type SchoolContext = {
   membership: null | {
     id: string;
@@ -100,6 +198,25 @@ function SchoolTeamPage() {
   const [groupDescription, setGroupDescription] = useState("");
   const [groupPermissions, setGroupPermissions] = useState<Record<string, boolean>>({});
   const [groupMemberIds, setGroupMemberIds] = useState<string[]>([]);
+
+  function applyGroupTemplate(templateId: string, autoSelectMembers = false) {
+    const template = GROUP_TEMPLATES.find((item) => item.id === templateId);
+    if (!template) return;
+    setEditingGroupId("");
+    setGroupName(template.name);
+    setGroupDescription(template.description);
+    setGroupPermissions({ ...template.permissions });
+    if (autoSelectMembers) {
+      setGroupMemberIds(
+        active
+          .filter((member) => template.suggestedRoles.includes(member.role))
+          .map((member) => member.id),
+      );
+    } else {
+      setGroupMemberIds([]);
+    }
+    setGroupEditorOpen(true);
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1027,6 +1144,31 @@ function SchoolTeamPage() {
             </Button>
           </div>
 
+          <div className="mt-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-black">قوالب جاهزة</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">ابدأ بقالب ثم عدّل الصلاحيات والأعضاء قبل الحفظ.</p>
+              </div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+              {GROUP_TEMPLATES.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => applyGroupTemplate(template.id, false)}
+                  className="rounded-2xl border bg-muted/10 p-3 text-right transition hover:border-primary/35 hover:bg-primary/[0.03]"
+                >
+                  <p className="text-xs font-black">{template.name}</p>
+                  <p className="mt-1 line-clamp-3 text-[10px] leading-5 text-muted-foreground">{template.description}</p>
+                  <span className="mt-2 inline-flex rounded-full bg-primary/10 px-2 py-1 text-[9px] font-black text-primary">
+                    {Object.values(template.permissions).filter(Boolean).length} صلاحية
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {(groupsQuery.data ?? []).length > 0 ? (
             <div className="mt-4 grid gap-2 xl:grid-cols-2">
               {(groupsQuery.data ?? []).map((group) => {
@@ -1106,6 +1248,43 @@ function SchoolTeamPage() {
 
               <div className="mt-4 grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
                 <div className="space-y-3">
+                  {!editingGroupId && (
+                    <div className="rounded-2xl border bg-muted/10 p-3">
+                      <Label>قالب البداية</Label>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {GROUP_TEMPLATES.map((template) => (
+                          <Button
+                            key={template.id}
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => applyGroupTemplate(template.id, false)}
+                          >
+                            {template.name}
+                          </Button>
+                        ))}
+                      </div>
+                      {GROUP_TEMPLATES.some((template) => template.name === groupName) && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="mt-2"
+                          onClick={() => {
+                            const template = GROUP_TEMPLATES.find((item) => item.name === groupName);
+                            if (!template) return;
+                            setGroupMemberIds(
+                              active
+                                .filter((member) => template.suggestedRoles.includes(member.role))
+                                .map((member) => member.id),
+                            );
+                          }}
+                        >
+                          <Users className="size-4" /> اختيار الأعضاء المقترحين تلقائيًا
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   <div>
                     <Label>اسم المجموعة</Label>
                     <Input className="mt-2" value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="مثال: معلمو الثالث متوسط" />
@@ -1189,7 +1368,23 @@ function SchoolTeamPage() {
                     <span className="text-[10px] text-muted-foreground">{new Date(row.created_at).toLocaleString("ar-SA")}</span>
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    {row.action === "access_updated" ? "تم تعديل الدور أو الصلاحيات أو نطاق البيانات." : row.action === "expiry_updated" ? "تم تعديل مدة صلاحية الوصول." : row.action}
+                    {row.action === "access_updated"
+                      ? "تم تعديل الدور أو الصلاحيات أو نطاق البيانات."
+                      : row.action === "expiry_updated"
+                        ? "تم تعديل مدة صلاحية الوصول."
+                        : row.action === "member_approved"
+                          ? "تم اعتماد عضو في فريق المدرسة."
+                          : row.action === "member_status_changed"
+                            ? "تم تغيير حالة عضوية أحد أعضاء الفريق."
+                            : row.action === "invite_revoked"
+                              ? "تم إلغاء رابط دعوة."
+                              : row.action === "permission_group_created"
+                                ? "تم إنشاء مجموعة صلاحيات."
+                                : row.action === "permission_group_updated"
+                                  ? "تم تعديل مجموعة صلاحيات."
+                                  : row.action === "permission_group_deleted"
+                                    ? "تم حذف مجموعة صلاحيات."
+                                    : row.action}
                   </p>
                 </article>
               ))}
