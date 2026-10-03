@@ -69,8 +69,9 @@ function mergeStudentValues(
 ): StudentImportValues {
   const merged = { ...primary };
   for (const field of STUDENT_IMPORT_FIELDS) {
-    if (!merged[field.name] && secondary[field.name]) {
-      merged[field.name] = secondary[field.name];
+    const nextValue = secondary[field.name] ?? "";
+    if (!merged[field.name] && nextValue) {
+      merged[field.name] = nextValue;
     }
   }
   return merged;
@@ -197,7 +198,7 @@ export function StudentsImportDialog({
         duplicateIndexes.add(item.sourceIndex);
         details.push({
           row: item.rowNo,
-          name: item.values.full_name,
+          name: String(item.values["full_name"] ?? ""),
           reason: "مكرر داخل ملف الاستيراد",
         });
         continue;
@@ -329,19 +330,19 @@ export function StudentsImportDialog({
           if (current?.id && Object.keys(patch).length) {
             const { error: updateError } = await supabase.from("students").update(patch as never).eq("id", current.id);
             if (updateError) {
-              errors.push({ row: item.rowNo, name: item.values.full_name, reason: `تعذر استكمال بيانات الطالب الموجود: ${updateError.message}` });
+              errors.push({ row: item.rowNo, name: String(item.values["full_name"] ?? ""), reason: `تعذر استكمال بيانات الطالب الموجود: ${updateError.message}` });
             } else {
               updatedExisting += 1;
               duplicateExisting.push({
                 row: item.rowNo,
-                name: item.values.full_name,
+                name: String(item.values["full_name"] ?? ""),
                 reason: `الطالب موجود مسبقًا؛ تم استكمال ${Object.keys(patch).length} خانة فارغة دون استبدال بياناته الحالية.`,
               });
             }
           } else {
             duplicateExisting.push({
               row: item.rowNo,
-              name: item.values.full_name,
+              name: String(item.values["full_name"] ?? ""),
               reason: "الطالب موجود مسبقًا في الموقع؛ لم تتم إضافته مرة أخرى ولم تُستبدل بياناته الحالية.",
             });
           }
@@ -367,7 +368,7 @@ export function StudentsImportDialog({
           chunk.forEach((item) =>
             errors.push({
               row: item.rowNo,
-              name: item.values.full_name || "—",
+              name: String(item.values["full_name"] ?? "") || "—",
               reason: `خطأ في الحفظ: ${error.message}`,
             }),
           );
