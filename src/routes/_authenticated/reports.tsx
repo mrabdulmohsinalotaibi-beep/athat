@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 
 import { Label } from "@/components/ui/label";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
+import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
 
 
 
@@ -107,6 +108,8 @@ function ReportsPage() {
   const [workflowPlanTaskId, setWorkflowPlanTaskId] = useState("");
   const [workflowProgramId, setWorkflowProgramId] = useState("");
   const [workflowDraftInitialized, setWorkflowDraftInitialized] = useState(false);
+  const [signatureReportOpen, setSignatureReportOpen] = useState(false);
+  const [signatureReportId, setSignatureReportId] = useState("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -117,6 +120,8 @@ function ReportsPage() {
     setWorkflowPlanTaskId(planTaskId);
     setWorkflowProgramId(programId);
     setWorkflowDraftInitialized(false);
+    setSignatureReportId("");
+    setSignatureReportOpen(false);
     setReportMode("combined");
     setSelectedKeys(["plan", "programs", "evidences"]);
     setReportTitle("تقرير تنفيذ مهمة الخطة");
@@ -539,6 +544,17 @@ function ReportsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <PdfPreviewButton elementRef={reportRef} filename={`تقرير-${reportTitle || "الذات"}`} title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"} disabled={isLoading} />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isLoading || selectedRecords.length === 0}
+              onClick={() => {
+                if (!signatureReportId) setSignatureReportId(crypto.randomUUID());
+                setSignatureReportOpen(true);
+              }}
+            >
+              <Send className="size-4" /> إرسال للاعتماد والتوقيع
+            </Button>
             <Button type="button" variant="ghost" onClick={reset}>
               <RotateCcw className="size-4" />
               إعادة ضبط
@@ -1112,6 +1128,30 @@ function ReportStat({ label, value }: { label: string; value: number | string })
     <div className="rounded-xl border border-paper-border bg-paper-muted p-3 text-center">
       <p className="text-[11px] text-muted-foreground">{label}</p>
       <p className="mt-1 text-lg font-black">{value}</p>
+      {signatureReportId && (
+        <SendForSignatureDialog
+          open={signatureReportOpen}
+          onOpenChange={setSignatureReportOpen}
+          recordTable="generated_reports"
+          recordId={signatureReportId}
+          recordType="تقرير رسمي"
+          title={reportTitle || "التقرير الرسمي للتوجيه الطلابي"}
+          snapshot={{
+            "عنوان التقرير": reportTitle || "التقرير الرسمي للتوجيه الطلابي",
+            "رقم المستند": documentNo || null,
+            "الفترة": period || null,
+            "من تاريخ": fromDate || null,
+            "إلى تاريخ": toDate || null,
+            "إجمالي الصفوف": totalRows,
+            "الأقسام": selectedRecords.map((record) => ({
+              القسم: record.title,
+              العدد: filteredSections[record.key]?.length ?? 0,
+            })),
+            "الملخص": narrative || null,
+            "وضع مسار التنفيذ": workflowMode,
+          }}
+        />
+      )}
     </div>
   );
 }
