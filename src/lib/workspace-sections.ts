@@ -97,6 +97,7 @@ export const WORKSPACE_SECTIONS: WorkspaceSection[] = [
       { to: "/school-inbox", label: "الاعتمادات والمراسلات", icon: ShieldCheck },
       { to: "/school-tasks", label: "المهام المدرسية", icon: ClipboardList },
       { to: "/school-team", label: "فريق المدرسة والصلاحيات", icon: UsersRound },
+      { to: "/initiative-teams", label: "فرق المبادرات", icon: UsersRound },
       { to: "/committees", label: "الاجتماعات واللجان", icon: UsersRound },
       { to: "/toolkit", label: "النماذج والأدوات", icon: Wrench },
       { to: "/settings", label: "بيانات المدرسة", icon: Settings },
