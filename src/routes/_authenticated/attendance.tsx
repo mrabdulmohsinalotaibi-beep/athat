@@ -196,6 +196,38 @@ function AttendancePage() {
     staleTime: 60_000,
   });
 
+  const matchStudentManually = (index: number, student: any) => {
+    setRows((current) => current.map((row, i) => {
+      if (i !== index) return row;
+      const studentId = String(student.id ?? "");
+      const date = String(row.adate ?? "").slice(0, 10);
+      const duplicateInImport = current.some((other, otherIndex) =>
+        otherIndex !== index &&
+        String(other.matchedStudentId ?? "") === studentId &&
+        String(other.adate ?? "").slice(0, 10) === date
+      );
+      const duplicateSaved = attendanceRows.some((saved: any) =>
+        String(saved.student_id ?? "") === studentId &&
+        String(saved.adate ?? "").slice(0, 10) === date
+      );
+      const duplicate = Boolean(date && (duplicateInImport || duplicateSaved));
+      return {
+        ...row,
+        matchedStudentId: studentId,
+        student_no: String(student.student_no || student.national_id || row.student_no || ""),
+        student_name: String(student.full_name || row.student_name),
+        selected: Boolean(date) && !duplicate,
+        reviewStatus: duplicate ? "مكرر" as const : date ? "جديد" as const : "يحتاج مراجعة" as const,
+        reviewReason: duplicate
+          ? duplicateInImport
+            ? "مكرر داخل الملف لنفس الطالب ونفس يوم الغياب"
+            : "محفوظ مسبقًا لنفس الطالب ونفس يوم الغياب"
+          : date ? "" : "التاريخ غير مقروء",
+      };
+    }));
+    setStudentSearch((current) => ({ ...current, [index]: "" }));
+  };
+
   const repeatedAbsence = useMemo(() => {
     const grouped = new Map<string, { student_id?: string | null; student_no: string; student_name: string; count: number; lastDate: string }>();
     attendanceRows.forEach((row: any) => {
