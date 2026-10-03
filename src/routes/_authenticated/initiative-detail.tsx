@@ -152,10 +152,10 @@ function InitiativeDetailPage() {
   if (query.isLoading) return <div dir="rtl" className="rounded-3xl border p-8 text-center text-sm text-muted-foreground">جارٍ تحميل ملف المبادرة...</div>;
   if (!item) return <div dir="rtl" className="space-y-4 rounded-3xl border p-8 text-center"><p className="font-black">تعذر العثور على المبادرة أو لا تملك صلاحية الوصول إليها.</p><Button variant="outline" onClick={() => { window.location.href="/initiative-teams"; }}>العودة للمبادرات</Button></div>;
 
-  const memberCount = (item.members ?? []).filter((m:any)=>m.status==="active").length;
+  const submitApproval=async()=>{const notes=window.prompt("ملاحظة للمدير/المراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"initiative",p_item_id:initiativeId,p_title:item.title||"مبادرة",p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع المبادرة للاعتماد.");};\n  const memberCount = (item.members ?? []).filter((m:any)=>m.status==="active").length;
   return <div dir="rtl" className="space-y-5">
     <section className="rounded-3xl border bg-card p-5 shadow-[var(--shadow-card)]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3"><Button size="sm" variant="outline" onClick={submitApproval}><FileCheck2 className="size-4"/> رفع للاعتماد</Button>
         <div><button className="mb-3 inline-flex items-center gap-1 text-xs font-black text-primary" onClick={()=>history.back()}><ArrowRight className="size-4"/> المبادرات</button><p className="text-xs font-black text-primary">ملف المبادرة</p><h1 className="mt-1 text-2xl font-black">{item.title}</h1>{item.slogan && <p className="mt-2 font-bold text-primary">{item.slogan}</p>}</div>
         <div className="flex flex-wrap gap-2">{item.is_manager&&<Button size="sm" variant="outline" onClick={beginEdit}><Pencil className="size-4"/> تعديل المبادرة</Button>}<span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{item.latest_progress || 0}% إنجاز</span>{item.my_membership?.status==="active" && <Button size="sm" onClick={()=>{window.location.href=`/initiative-member-work?initiative=${encodeURIComponent(item.id)}`;}}>مساحة عملي</Button>}{item.can_view_dashboard && <Button size="sm" variant="outline" onClick={()=>{window.location.href=`/initiative-dashboard?initiative=${encodeURIComponent(item.id)}`;}}>الداشبورد التنفيذي</Button>}</div>
       </div>
