@@ -75,7 +75,6 @@ function SchoolTeamPage() {
   const [educationDept, setEducationDept] = useState("");
   const [educationOffice, setEducationOffice] = useState("");
   const [newSchoolRole, setNewSchoolRole] = useState<Role>("counselor");
-  const [pendingRoles, setPendingRoles] = useState<Record<string, Role>>({});
   const [inviteToken, setInviteToken] = useState("");
   const [inviteBuilderOpen, setInviteBuilderOpen] = useState(false);
   const [inviteRole, setInviteRole] = useState<Role>("teacher");
