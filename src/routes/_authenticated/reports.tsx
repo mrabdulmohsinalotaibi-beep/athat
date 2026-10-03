@@ -111,7 +111,8 @@ function ReportsPage() {
   const [workflowDraftInitialized, setWorkflowDraftInitialized] = useState(false);
   const [signatureReportOpen, setSignatureReportOpen] = useState(false);
   const [signatureReportId, setSignatureReportId] = useState("");
-  const submitReportApproval=async()=>{const notes=window.prompt("ملاحظة للمراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"report",p_item_id:null,p_title:reportTitle||"تقرير التوجيه الطلابي",p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع التقرير للاعتماد.");};
+  const approvalQuery=useQuery({queryKey:["report-approvals"],queryFn:async()=>{const {data,error}=await (supabase as any).from("guidance_approvals").select("id,title,status,review_notes,submitted_at").eq("item_type","report").order("submitted_at",{ascending:false}).limit(5);if(error)throw error;return data??[]}});
+  const submitReportApproval=async()=>{const notes=window.prompt("ملاحظة للمراجع (اختياري):")||null;const {error}=await (supabase as any).rpc("submit_guidance_approval",{p_item_type:"report",p_item_id:null,p_title:reportTitle||"تقرير التوجيه الطلابي",p_notes:notes,p_confidentiality:"team"});if(error)return toast.error(error.message);toast.success("تم رفع التقرير للاعتماد.");await queryClient.invalidateQueries({queryKey:["report-approvals"]});};
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -536,6 +537,7 @@ function ReportsPage() {
 
   return (
     <div className="reference-screen min-w-0 space-y-4" dir="rtl">
+      {(approvalQuery.data||[]).length>0&&<section className="rounded-2xl border bg-card p-4"><h2 className="text-sm font-black">حالة اعتماد التقارير</h2><div className="mt-2 grid gap-2 md:grid-cols-2">{(approvalQuery.data||[]).map((a:any)=><div key={a.id} className="rounded-xl border p-3 text-xs"><div className="flex justify-between gap-2"><b>{a.title}</b><span className="text-primary">{a.status==="approved"?"معتمد":a.status==="rejected"?"معاد بملاحظة":a.status==="reviewed"?"تمت المراجعة":"بانتظار المراجعة"}</span></div>{a.review_notes&&<p className="mt-2 text-muted-foreground">{a.review_notes}</p>}</div>)}</div></section>}
       <section className="reference-hero relative overflow-hidden rounded-3xl border border-[#D9C0A3]/35 bg-[#FFFDF9] p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
