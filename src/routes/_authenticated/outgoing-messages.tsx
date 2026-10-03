@@ -27,6 +27,7 @@ import { useStudentOptions } from "@/components/StudentCombobox";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
 import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
+import { ApprovedSignatures } from "@/components/ApprovedSignatures";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -987,6 +988,10 @@ function OutgoingMessagesPage() {
                   <strong>إيضاح:</strong> يثبت هذا المستند تسجيل الرسالة ونصها والمستلم وقناة الإرسال وحالتها داخل منصة الذات. أما إثبات التسليم أو القراءة داخل واتساب فيعتمد على بيانات التطبيق الخارجي.
                 </div>
               </main>
+              <ApprovedSignatures
+                recordTable={proofRows.length === 1 ? "outgoing_messages" : "outgoing_messages_batch"}
+                recordId={proofRows[0]?.id ?? null}
+              />
               <OfficialFooter school={school} />
             </article>
           </div>
