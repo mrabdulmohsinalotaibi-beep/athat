@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">الذات</title>
+  <desc id="desc">ملامح جانبية إنسانية تتفتح منها أوراق النمو</desc>
+  <rect width="512" height="512" rx="112" fill="#F6F1E8"/>
+  <path d="M317 102c-90-32-184 17-207 107-10 39-4 77 15 107 11 17 17 31 15 47l-6 37c-1 10 7 18 17 18h168c11 0 18-8 17-18l-4-47c-1-10 5-20 15-23l30-10c12-4 16-17 9-26l-25-34c-6-8-7-17-7-27 0-57-14-105-37-131Z" fill="#103B4B"/>
+  <path d="M166 291c18 13 42 19 65 16m-4-59c9-6 20-7 30-2" fill="none" stroke="#F6F1E8" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+  <path d="M298 123c-9-39 3-75 30-93m-25 107c23-51 62-72 109-73m-104 84c35-20 77-18 110-2" fill="none" stroke="#367E76" stroke-width="9" stroke-linecap="round"/>
+  <path d="M328 30c-3 29-13 46-34 56-5-26 4-46 34-56Zm84 34c-11 31-33 47-64 45 13-30 34-46 64-45Zm6 82c-24 23-49 27-74 15 20-23 46-29 74-15Z" fill="#78A68A"/>
+  <path d="M266 117c-21-15-28-34-22-59 24 12 32 32 22 59Z" fill="#C49A58"/>
+  <circle cx="351" cy="201" r="10" fill="#C49A58"/>
+</svg>
