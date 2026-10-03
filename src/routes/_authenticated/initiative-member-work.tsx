@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, CalendarCheck, ClipboardList, Save, UsersRound } from "lucide-react";
+import { ArrowRight, CalendarCheck, ClipboardList, Pencil, Save, Trash2, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -120,6 +120,24 @@ function InitiativeMemberWorkPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const loadFollowup = (f: Followup) => {
+    setStudentId(f.student_id); setWeekStart(f.week_start); setAttendanceStatus(f.attendance_status||"منتظم");
+    setPunctualityStatus(f.punctuality_status||"ملتزم"); setBehaviorStatus(f.behavior_status||"إيجابي");
+    setHomeworkStatus(f.homework_status||"ملتزم"); setAcademicStatus(f.academic_status||"مستقر");
+    setMeetingHeld(Boolean(f.meeting_held)); setFamilyContacted(Boolean(f.family_contacted)); setStrengths(f.strengths||"");
+    setConcerns(f.concerns||""); setAdvice(f.advice||""); setNextAction(f.next_action||""); setNotes(f.notes||"");
+    window.scrollTo({top:0,behavior:"smooth"}); toast.info("تم تحميل المتابعة للتعديل. عدّل ثم اضغط حفظ المتابعة.");
+  };
+  const deleteFollowup = async (id:string) => {
+    if(!window.confirm("حذف هذه المتابعة؟")) return;
+    const {error}=await (supabase as any).rpc("delete_initiative_followup",{p_followup_id:id});
+    if(error){toast.error(error.message);return;} await qc.invalidateQueries({queryKey:["my-initiative-workspace",initiative]}); toast.success("تم حذف المتابعة.");
+  };
+  const deleteUpdate = async (id:string) => {
+    if(!window.confirm("حذف تحديث الإنجاز؟")) return;
+    const {error}=await (supabase as any).rpc("delete_initiative_update",{p_update_id:id});
+    if(error){toast.error(error.message);return;} await qc.invalidateQueries({queryKey:["my-initiative-workspace",initiative]}); toast.success("تم حذف التحديث.");
+  };
   const addUpdate = useMutation({
     mutationFn: async () => {
       const { error } = await (supabase as any).rpc("add_initiative_update", {
@@ -212,7 +230,7 @@ function InitiativeMemberWorkPage() {
             <h2 className="font-black">سجل متابعاتي</h2>
             <div className="mt-3 space-y-2">
               {data.followups.length === 0 ? <p className="rounded-xl border border-dashed p-4 text-center text-xs text-muted-foreground">لا توجد متابعات بعد.</p> :
-              data.followups.map((f)=><article key={f.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-3"><p className="font-black">{studentName(f.student_id)}</p><span className="text-[10px] text-muted-foreground">{new Date(f.week_start).toLocaleDateString("ar-SA")}</span></div><p className="mt-2 text-[10px] text-muted-foreground">{[f.attendance_status,f.behavior_status,f.homework_status,f.academic_status].filter(Boolean).join(" · ")}</p>{f.next_action && <p className="mt-2 text-xs"><strong>الإجراء القادم:</strong> {f.next_action}</p>}</article>)}
+              data.followups.map((f)=><article key={f.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-3"><p className="font-black">{studentName(f.student_id)}</p><span className="text-[10px] text-muted-foreground">{new Date(f.week_start).toLocaleDateString("ar-SA")}</span></div><p className="mt-2 text-[10px] text-muted-foreground">{[f.attendance_status,f.behavior_status,f.homework_status,f.academic_status].filter(Boolean).join(" · ")}</p>{f.next_action && <p className="mt-2 text-xs"><strong>الإجراء القادم:</strong> {f.next_action}</p>}<div className="mt-3 flex gap-2"><Button size="sm" variant="outline" onClick={()=>loadFollowup(f)}><Pencil className="size-4"/> تعديل</Button><Button size="sm" variant="destructive" onClick={()=>void deleteFollowup(f.id)}><Trash2 className="size-4"/> حذف</Button></div></article>)}
             </div>
           </section>
 
@@ -224,6 +242,7 @@ function InitiativeMemberWorkPage() {
               <div className="sm:col-span-2"><Label>التفاصيل</Label><Textarea className="mt-2" value={updateDetails} onChange={(e)=>setUpdateDetails(e.target.value)} /></div>
             </div>
             <Button className="mt-3" disabled={!updateTitle.trim() || addUpdate.isPending} onClick={()=>addUpdate.mutate()}>حفظ التحديث</Button>
+            <div className="mt-4 space-y-2">{data.entries.map((e)=><article key={e.id} className="rounded-2xl border p-3"><div className="flex items-start justify-between gap-2"><div><p className="text-sm font-black">{e.title}</p>{e.details&&<p className="mt-1 text-xs text-muted-foreground">{e.details}</p>}</div><span className="text-xs font-black text-primary">{e.progress_percent??0}%</span></div><div className="mt-3 flex gap-2"><Button size="sm" variant="outline" onClick={()=>{setUpdateTitle(e.title);setUpdateDetails(e.details||"");setProgress(String(e.progress_percent??0));toast.info("عدّل البيانات ثم احفظ كتحديث جديد، أو احذف السجل القديم.");}}><Pencil className="size-4"/> نسخ للتعديل</Button><Button size="sm" variant="destructive" onClick={()=>void deleteUpdate(e.id)}><Trash2 className="size-4"/> حذف</Button></div></article>)}</div>
           </section>
         </div>
       </div>
