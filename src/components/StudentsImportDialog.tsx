@@ -44,6 +44,7 @@ type ReportRow = {
 
 type ImportResult = {
   inserted: number;
+  updatedExisting: number;
   duplicateFile: ReportRow[];
   duplicateExisting: ReportRow[];
   warnings: ReportRow[];
@@ -248,6 +249,7 @@ export function StudentsImportDialog({
       if (existingError) throw existingError;
 
       const existingKeys = new Set<string>();
+      const existingByKey = new Map<string, any>();
       for (const student of existing ?? []) {
         studentIdentityKeys({
           national_id: String(student.national_id ?? ""),
@@ -257,7 +259,10 @@ export function StudentsImportDialog({
           grade: String(student.grade ?? ""),
           classroom: String(student.classroom ?? ""),
           guardian_phone: String(student.guardian_phone ?? ""),
-        }).forEach((key) => existingKeys.add(key));
+        }).forEach((key) => {
+          existingKeys.add(key);
+          existingByKey.set(key, student);
+        });
       }
 
       const duplicateFile: ReportRow[] = [];
@@ -310,13 +315,36 @@ export function StudentsImportDialog({
       }
 
       const rowsToInsert: PreparedRow[] = [];
+      let updatedExisting = 0;
       for (const item of uniqueRows) {
-        if (item.keys.some((key) => existingKeys.has(key))) {
-          duplicateExisting.push({
-            row: item.rowNo,
-            name: item.values.full_name,
-            reason: "الطالب موجود مسبقًا في الموقع؛ لم تتم إضافته مرة أخرى.",
-          });
+        const matchedKey = item.keys.find((key) => existingKeys.has(key));
+        if (matchedKey) {
+          const current = existingByKey.get(matchedKey);
+          const patch: Record<string, string> = {};
+          for (const field of STUDENT_IMPORT_FIELDS) {
+            const incoming = item.values[field.name];
+            const oldValue = String(current?.[field.name] ?? "").trim();
+            if (!oldValue && incoming) patch[field.name] = incoming;
+          }
+          if (current?.id && Object.keys(patch).length) {
+            const { error: updateError } = await supabase.from("students").update(patch as never).eq("id", current.id);
+            if (updateError) {
+              errors.push({ row: item.rowNo, name: item.values.full_name, reason: `تعذر استكمال بيانات الطالب الموجود: ${updateError.message}` });
+            } else {
+              updatedExisting += 1;
+              duplicateExisting.push({
+                row: item.rowNo,
+                name: item.values.full_name,
+                reason: `الطالب موجود مسبقًا؛ تم استكمال ${Object.keys(patch).length} خانة فارغة دون استبدال بياناته الحالية.`,
+              });
+            }
+          } else {
+            duplicateExisting.push({
+              row: item.rowNo,
+              name: item.values.full_name,
+              reason: "الطالب موجود مسبقًا في الموقع؛ لم تتم إضافته مرة أخرى ولم تُستبدل بياناته الحالية.",
+            });
+          }
           continue;
         }
         rowsToInsert.push(item);
@@ -357,6 +385,7 @@ export function StudentsImportDialog({
 
       setResult({
         inserted,
+        updatedExisting,
         duplicateFile,
         duplicateExisting,
         warnings,
@@ -655,6 +684,7 @@ export function StudentsImportDialog({
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Metric label="تمت إضافتهم" value={result.inserted} />
+                <Metric label="تم استكمال بياناتهم" value={result.updatedExisting} />
                 <Metric
                   label="مكرر داخل الملف"
                   value={result.duplicateFile.length}
@@ -675,7 +705,7 @@ export function StudentsImportDialog({
               <div className="flex items-start gap-2 rounded-lg border bg-muted/40 p-4 text-sm leading-6">
                 <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
                 <span>
-                  اكتمل الاستيراد. أضيف الجديد فقط، وتم استبعاد التكرار تلقائيًا.
+                  اكتمل الاستيراد. أضيف الجديد فقط، وتم دمج التكرار داخل الملف، واستُكملت الخانات الفارغة للطلاب الموجودين دون استبدال بياناتهم الحالية.
                   {result.warnings.length > 0 &&
                     ` يوجد ${result.warnings.length} ملاحظة جودة على البيانات المستوردة.`}
                 </span>
