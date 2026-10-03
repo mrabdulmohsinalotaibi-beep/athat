@@ -12,9 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/initiative-space")({
-  validateSearch: (search: Record<string, unknown>): { access?: string } => ({
-    access: typeof search["access"] === "string" ? search["access"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { access?: string } =>
+    typeof search["access"] === "string" ? { access: search["access"] } : {},
   head: () => ({
     meta: [
       { title: "مساحة المبادرة | الذات" },
