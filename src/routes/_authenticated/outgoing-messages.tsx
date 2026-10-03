@@ -26,6 +26,7 @@ import { formatHijriDateTime } from "@/lib/date";
 import { useStudentOptions } from "@/components/StudentCombobox";
 import { OfficialFooter, OfficialHeader } from "@/components/OfficialHeader";
 import { PdfPreviewButton } from "@/components/PdfPreviewButton";
+import { SendForSignatureDialog } from "@/components/SendForSignatureDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,6 +110,7 @@ function OutgoingMessagesPage() {
   const [selectedProofIds, setSelectedProofIds] = useState<string[]>([]);
   const [proofRows, setProofRows] = useState<OutgoingMessage[]>([]);
   const proofRef = useRef<HTMLDivElement>(null);
+  const [signatureProofOpen, setSignatureProofOpen] = useState(false);
 
   const { data: rows = [], isLoading: historyLoading } = useQuery({
     queryKey: ["outgoing-messages"],
@@ -910,15 +912,20 @@ function OutgoingMessagesPage() {
                 يمكن طباعته لرسالة واحدة أو لمجموعة من الرسائل المحددة.
               </p>
             </div>
-            <PdfPreviewButton
-              elementRef={proofRef}
-              filename={
-                proofRows.length === 1
-                  ? `إثبات-رسالة-${proofRows[0]!.id.slice(0, 8)}.pdf`
-                  : `كشف-رسائل-${proofRows.length}.pdf`
-              }
-              title={proofRows.length === 1 ? "إثبات رسالة صادرة" : "كشف الرسائل الصادرة"}
-            />
+            <div className="flex flex-wrap gap-2">
+              <PdfPreviewButton
+                elementRef={proofRef}
+                filename={
+                  proofRows.length === 1
+                    ? `إثبات-رسالة-${proofRows[0]!.id.slice(0, 8)}.pdf`
+                    : `كشف-رسائل-${proofRows.length}.pdf`
+                }
+                title={proofRows.length === 1 ? "إثبات رسالة صادرة" : "كشف الرسائل الصادرة"}
+              />
+              <Button type="button" variant="outline" onClick={() => setSignatureProofOpen(true)}>
+                <Send className="size-4" /> إرسال للاعتماد والتوقيع
+              </Button>
+            </div>
           </div>
 
           <div className="overflow-auto rounded-xl bg-muted/30 p-2 sm:p-4">
@@ -984,6 +991,26 @@ function OutgoingMessagesPage() {
             </article>
           </div>
         </section>
+      )}
+      {proofRows.length > 0 && (
+        <SendForSignatureDialog
+          open={signatureProofOpen}
+          onOpenChange={setSignatureProofOpen}
+          recordTable={proofRows.length === 1 ? "outgoing_messages" : "outgoing_messages_batch"}
+          recordId={proofRows[0]!.id}
+          recordType={proofRows.length === 1 ? "إثبات رسالة صادرة" : "كشف رسائل صادرة"}
+          title={proofRows.length === 1 ? "إثبات رسالة صادرة" : `كشف ${proofRows.length} رسائل صادرة`}
+          snapshot={{
+            "عدد الرسائل": proofRows.length,
+            "الرسائل": proofRows.map((row) => ({
+              المستلم: row.student_name || row.recipient_name || "مستلم",
+              الجوال: row.phone,
+              الحالة: STATUS_LABEL[row.status],
+              النص: row.message,
+              التاريخ: row.sent_at || row.opened_at || row.created_at,
+            })),
+          }}
+        />
       )}
     </div>
   );
