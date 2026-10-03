@@ -317,7 +317,7 @@ function ReportsPage() {
           values: {},
         },
       });
-      const suggestion = String(result?.suggestions?.narrative ?? "").trim();
+      const suggestion = String(result?.suggestions?.["narrative"] ?? "").trim();
       if (!suggestion) {
         toast.info("لم تتوفر بيانات كافية لإنشاء ملخص.");
         return;
