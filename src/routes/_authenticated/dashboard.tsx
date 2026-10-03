@@ -763,30 +763,30 @@ function Dashboard() {
     { label: "إضافة برنامج", to: "/programs?new=1", icon: Sparkles },
     { label: "مسار التنفيذ", to: "/execution", icon: CheckCircle2 },
     { label: "إنشاء تقرير", to: "/reports", icon: FileCheck2 },
-    { label: "مهام المدرسة", to: "/school-tasks", icon: ClipboardCheck },
+    { label: "مهام المدرسة", to: "/school-tasks" as const, icon: ClipboardCheck },
   ];
   const managementQuickActions = [
-    { label: "إسناد مهمة", to: "/school-tasks", icon: ClipboardCheck },
+    { label: "إسناد مهمة", to: "/school-tasks" as const, icon: ClipboardCheck },
     { label: "فريق المدرسة", to: "/school-team", icon: Users },
-    { label: "اعتماد الإنجاز", to: "/school-tasks", icon: CheckCircle2 },
+    { label: "اعتماد الإنجاز", to: "/school-tasks" as const, icon: CheckCircle2 },
     { label: "المراسلات الإدارية", to: "/school-inbox", icon: Inbox },
     { label: "بيانات المدرسة", to: "/settings", icon: FileCheck2 },
   ];
   const staffQuickActions = [
-    { label: "مهامي اليوم", to: "/school-tasks", icon: ClipboardCheck },
-    { label: "رفع تقرير إنجاز", to: "/school-tasks", icon: FileCheck2 },
+    { label: "مهامي اليوم", to: "/school-tasks" as const, icon: ClipboardCheck },
+    { label: "رفع تقرير إنجاز", to: "/school-tasks" as const, icon: FileCheck2 },
     { label: "المراسلات الإدارية", to: "/school-inbox", icon: Inbox },
   ];
   const teacherQuickActions = [
-    { label: "فتح طلابي", to: "/students", icon: Users },
-    { label: "إحالة طالب", to: "/referrals?new=1", icon: HeartHandshake },
-    { label: "مهامي اليوم", to: "/school-tasks", icon: ClipboardCheck },
-    { label: "الرسائل", to: "/messages", icon: MessageSquareText },
+    { label: "فتح طلابي", to: "/students" as const, icon: Users },
+    { label: "إحالة طالب", to: "/referrals?new=1" as const, icon: HeartHandshake },
+    { label: "مهامي اليوم", to: "/school-tasks" as const, icon: ClipboardCheck },
+    { label: "الرسائل", to: "/messages" as const, icon: MessageSquareText },
   ];
   const personalQuickActions = [
-    { label: isStudentDashboard ? "فتح ملفي" : "عرض الأبناء", to: "/students", icon: Users },
-    { label: "الرسائل والخدمات", to: "/messages", icon: MessageSquareText },
-    { label: "المستندات", to: "/free-documents", icon: FileCheck2 },
+    { label: isStudentDashboard ? "فتح ملفي" : "عرض الأبناء", to: "/students" as const, icon: Users },
+    { label: "الرسائل والخدمات", to: "/messages" as const, icon: MessageSquareText },
+    { label: "المستندات", to: "/free-documents" as const, icon: FileCheck2 },
   ];
   const quickActions = isManagementDashboard
     ? managementQuickActions
